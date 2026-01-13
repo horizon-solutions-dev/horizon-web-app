@@ -2,7 +2,7 @@ trigger:
 - main
 
 pool:
-  vmImage: ubuntu-latest
+  name: local-agent
 
 steps:
 - task: AzureStaticWebApp@0
