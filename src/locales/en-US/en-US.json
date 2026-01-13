@@ -1,0 +1,28 @@
+{
+  "login": {
+    "title": "Sign in",
+    "passwordTitle": "Enter password",
+    "companyTitle": "Select company",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "next": "Next",
+    "enter": "Sign in",
+    "access": "Access",
+    "forgotPassword": "Forgot password",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create one!",
+    "cannotAccess": "Can't access your account?",
+    "back": "Back",
+    "loading": "Signing in..."
+  },
+  "toast": {
+    "loginSuccess": "Successfully logged into company: {{company}}",
+    "loginError": "Login failed. Please try again."
+  },
+  "validation": {
+    "emailInvalid": "Invalid email",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "companyRequired": "Please select a company"
+  }
+}

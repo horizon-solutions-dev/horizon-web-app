@@ -1,0 +1,295 @@
+.login-container {
+  position: fixed; /* Fixa na tela */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f2f2f2; /* Cor de fundo */
+  padding: 20px;
+  overflow: auto; /* Permite scroll apenas se necessário */
+}
+
+.login-wrapper {
+  width: 100%;
+  max-width: 440px;
+}
+
+.logo-section {
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flex-between-center {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  width: 70px;
+  img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 600;
+  color: #5e5e5e;
+}
+
+.login-card {
+  background: white;
+  padding: 44px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1b1b1b;
+  margin-bottom: 16px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #1b1b1b;
+  margin-bottom: 24px;
+}
+
+.input-wrapper {
+  margin-bottom: 24px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  border: none;
+  border-bottom: 2px solid #8a8886;
+  background-color: #f8f8f8;
+  color: #323130;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.input-field:hover {
+  background-color: white;
+  border-bottom-color: #323130;
+}
+
+.input-field:focus {
+  border-bottom-color: #0067b8;
+  background-color: white;
+}
+
+.link-section {
+  margin-bottom: 24px;
+}
+
+.text-link {
+  background: none;
+  border: none;
+  color: #0067b8;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  display: inline;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.text-normal {
+  font-size: 13px;
+  color: #323130;
+}
+
+.link-item {
+  margin-bottom: 12px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-primary {
+  background-color: #0067b8;
+  color: white;
+  border: none;
+  padding: 11px 32px;
+  font-size: 15px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.btn-primary:hover {
+  background-color: #005a9e;
+}
+
+.btn-primary:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.back-button:hover {
+  color: #000;
+}
+
+.company-list {
+  margin-bottom: 24px;
+}
+
+.company-card {
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 8px;
+  border: 2px solid #8a8886;
+  background: white;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.company-card:hover {
+  border-color: #605e5c;
+  background-color: #f3f2f1;
+}
+
+.company-card {
+  border-radius: 16px;
+  &.selected {
+    border-color: #0067b8;
+    background-color: #f3f9fd;
+  }
+}
+
+.company-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #d2d0ce;
+  flex-shrink: 0;
+  font-size: 20px;
+}
+
+.company-card {
+  selected {
+    .company-icon {
+      background-color: #0067b8;
+      color: white;
+    }
+  }
+}
+
+.company-info {
+  flex: 1;
+}
+
+.company-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #323130;
+  margin-bottom: 4px;
+}
+
+.company-role {
+  font-size: 13px;
+  color: #605e5c;
+}
+
+.sign-in-options {
+  margin-top: 16px;
+}
+
+.btn-options {
+  width: 100%;
+  background: white;
+  border: 1px solid #8a8886;
+  padding: 12px;
+  font-size: 15px;
+  color: #323130;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s;
+}
+
+.btn-options:hover {
+  background-color: #f3f2f1;
+}
+
+// Estilos para erros
+.error-message {
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 4px;
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.input-error {
+  border-color: #d32f2f !important;
+  
+  &:focus {
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 1px rgba(211, 47, 47, 0.2) !important;
+  }
+}
+
+// Ajuste para garantir que o campo de input tenha espaço para o erro
+.input-wrapper {
+  margin-bottom: 8px;
+  position: relative;
+}
+
+// Ajuste no container dos botões para evitar sobreposição
+.button-container {
+  margin-top: 16px;
+}
+
+// Ajuste para o card da empresa selecionada
+.company-card.selected {
+  border-color: #0078d4;
+  background-color: rgba(0, 120, 212, 0.05);
+}
+
+.company-card {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #0078d4;
+  }
+}

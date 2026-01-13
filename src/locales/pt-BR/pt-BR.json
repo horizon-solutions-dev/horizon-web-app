@@ -1,0 +1,28 @@
+{
+  "login": {
+    "title": "Entrar",
+    "passwordTitle": "Inserir senha",
+    "companyTitle": "Selecionar empresa",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Senha",
+    "next": "Avançar",
+    "enter": "Entrar",
+    "access": "Acessar",
+    "forgotPassword": "Esqueci minha senha",
+    "noAccount": "Não tem uma conta?",
+    "createAccount": "Criar uma!",
+    "cannotAccess": "Não consegue acessar sua conta?",
+    "back": "Voltar",
+    "loading": "Entrando..."
+  },
+  "toast": {
+    "loginSuccess": "Login realizado com sucesso na empresa: {{company}}",
+    "loginError": "Erro ao realizar login. Tente novamente."
+  },
+  "validation": {
+    "emailInvalid": "Email inválido",
+    "emailRequired": "Email é obrigatório",
+    "passwordRequired": "Senha é obrigatória",
+    "companyRequired": "Selecione uma empresa"
+  }
+}
