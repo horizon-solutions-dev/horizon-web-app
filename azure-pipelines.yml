@@ -1,0 +1,21 @@
+trigger:
+  branches:
+    include:
+      - main
+      - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- checkout: self
+  persistCredentials: true
+
+- script: |
+    git config --global user.email "ci@azure.com"
+    git config --global user.name "Azure Pipeline"
+
+    git remote add github https://$(GITHUB_TOKEN)git@github.com:michelmartins9164/integration.git
+
+    git push github --mirror
+  displayName: 'Mirror para GitHub'
