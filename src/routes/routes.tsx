@@ -4,6 +4,8 @@ import {
 import LoginFlow from "../components/Login";
 import MainLayout from "../components/Layout/MainLayout";
 import Dashboard from "../components/Dashboard/Dashboard";
+import { ProtectedRoute } from "./ProtectedRoute";
+import { PublicRoute } from "./PublicRoute";
 
 // Reservas
 import ReservasTipo from "../components/Reservas/ReservasTipo";
@@ -12,9 +14,7 @@ import ReservasCalendario from "../components/Reservas/ReservasCalendario";
 import ReservasDisponibilidade from "../components/Reservas/ReservasDisponibilidade";
 
 // Financeiro
-import BoletosView from "../components/Financeiro/Boletos/BoletosView";
-import BoletosDownload from "../components/Financeiro/Boletos/BoletosDownload";
-import BoletosAnexos from "../components/Financeiro/Boletos/BoletosAnexos";
+import Boletos from "../components/Boletos";
 import BalancetesView from "../components/Financeiro/Balancetes/BalancetesView";
 import BalancetesDownload from "../components/Financeiro/Balancetes/BalancetesDownload";
 import BalancetesRelatorio from "../components/Financeiro/Balancetes/BalancetesRelatorio";
@@ -43,20 +43,24 @@ import RouteNames from "./routeNames";
 
 
 const router = createBrowserRouter([
-	// Public routes
+	// Public routes - Login
 	{
 		path: "/",
-		element: <LoginFlow />,
+		element: <PublicRoute><LoginFlow /></PublicRoute>,
 	},
 	{
 		path: RouteNames.Login,
-		element: <LoginFlow />,
+		element: <PublicRoute><LoginFlow /></PublicRoute>,
 	},
 	
 	// Protected routes with MainLayout
 	{
 		path: "/",
-		element: <MainLayout />,
+		element: (
+			<ProtectedRoute>
+				<MainLayout />
+			</ProtectedRoute>
+		),
 		children: [
 			{
 				path: RouteNames.Dashboard,
@@ -84,15 +88,7 @@ const router = createBrowserRouter([
 			// Financeiro - Boletos
 			{
 				path: RouteNames.FinanceiroBoletos,
-				element: <BoletosView />,
-			},
-			{
-				path: RouteNames.FinanceiroBoletosDownload,
-				element: <BoletosDownload />,
-			},
-			{
-				path: RouteNames.FinanceiroBoletosAnexos,
-				element: <BoletosAnexos />,
+				element: <Boletos />,
 			},
 			
 			// Financeiro - Balancetes

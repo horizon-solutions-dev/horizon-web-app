@@ -3,7 +3,6 @@ import {
   MdEventAvailable,
   MdAttachMoney,
   MdLocalShipping,
-  //MdTrendingUp,
   MdWarning,
 } from "react-icons/md";
 import "./Dashboard.scss";
@@ -74,10 +73,6 @@ export default function Dashboard() {
               <h3 className="stat-title">{stat.title}</h3>
               <div className="stat-value-row">
                 <span className="stat-value">{stat.value}</span>
-                {/* TODO - avaliar se vai ter porcentagem de crescimento */}
-               {/*  <span className={`stat-trend ${stat.trend.startsWith('-') ? 'negative' : 'positive'}`}>
-                  <MdTrendingUp /> {stat.trend}
-                </span> */}
               </div>
             </div>
           </div>

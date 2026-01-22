@@ -4,13 +4,14 @@ import { MdNotifications, MdAccountCircle, MdLogout, MdMenu } from "react-icons/
 import { useState } from "react";
 import "./MainLayout.scss";
 import NotificationsModal, { type Notification } from "../NotificationsModal/NotificationsModal";
+import { useAuth } from "../../contexts/useAuth";
 
 export default function MainLayout() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  // Mocked notifications data
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: "1",
@@ -55,8 +56,8 @@ export default function MainLayout() {
   ]);
 
   const handleLogout = () => {
-    // TODO: Implement logout logic
-    navigate("/");
+    logout();
+    navigate("/login");
   };
 
   const handleMarkAsRead = (id: string) => {

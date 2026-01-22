@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -6,7 +6,9 @@ import "./login.scss";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { IoIosArrowBack } from "react-icons/io";
-import RouteNames from "../../routes/routeNames";
+import PasswordRecovery from "./PasswordRecovery";
+import SignUp from "./SignUp";
+import { AuthService } from "../../services/authService";
 
 interface Company {
   id: number;
@@ -35,53 +37,48 @@ const STEP_CONFIG = {
 export default function MultiStepLogin() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  
+  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
+
   const validationSchema = Yup.object({
     email: Yup.string()
       .email(t("validation.emailInvalid"))
       .required(t("validation.emailRequired")),
-  
-    password: Yup.string()
-      .required(t("validation.passwordRequired")),
-  
-    company: Yup.object()
-      .nullable()
-      .required(t("validation.companyRequired")),
+    password: Yup.string().required(t("validation.passwordRequired")),
+    company: Yup.object().nullable().required(t("validation.companyRequired")),
   });
 
-  const [step, setStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const formik = useFormik<LoginFormValues>({
-    initialValues: {
-      email: "",
-      password: "",
-      company: null,
-    },
+    initialValues: { email: "", password: "", company: null },
     validationSchema,
     onSubmit: async (values) => {
       setIsSubmitting(true);
-
       try {
-        // Simulação de chamada à API
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        
-        // Salvar dados de login no localStorage (temporário, até implementar autenticação real)
-        localStorage.setItem('userEmail', values.email);
-        localStorage.setItem('userCompany', JSON.stringify(values.company));
-        localStorage.setItem('isAuthenticated', 'true');
-        
+        const response = await AuthService.login({
+          login: values.email,
+          pass: values.password,
+          dataSource: "web",
+          languageId: "pt-br",
+          version: "1.0.0",
+        });
+
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("refreshToken", response.refreshToken);
+        localStorage.setItem("userEmail", values.email);
+        localStorage.setItem("userCompany", JSON.stringify(values.company));
+        localStorage.setItem("isAuthenticated", "true");
+
         toast.success(
-          t("toast.loginSuccess", { company: values.company?.name })
+          t("toast.loginSuccess", { company: values.company?.name }),
         );
-        
-        // Redirecionar para o Dashboard após login bem-sucedido
-        setTimeout(() => {
-          navigate(RouteNames.Dashboard);
-        }, 500);
+
+        navigate("/dashboard");
       } catch (error) {
-        console.error("Erro no login:", error);
-        toast.error(t("toast.loginError"));
+        toast.error(
+          error instanceof Error ? error.message : t("toast.loginError"),
+        );
       } finally {
         setIsSubmitting(false);
       }
@@ -116,7 +113,10 @@ export default function MultiStepLogin() {
     if (step > 1) setStep(step - 1);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent, handler: () => void) => {
+  const handleKeyPress = (
+    e: React.KeyboardEvent,
+    handler: () => void,
+  ) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handler();
@@ -132,218 +132,251 @@ export default function MultiStepLogin() {
 
   const getStepTitle = () => {
     switch (step) {
-      case 1: return t("login.title");
-      case 2: return t("login.passwordTitle");
-      case 3: return t("login.companyTitle");
-      default: return "";
+      case 1:
+        return t("login.title");
+      case 2:
+        return t("login.passwordTitle");
+      case 3:
+        return t("login.companyTitle");
+      default:
+        return "";
     }
   };
 
-  const renderStep = () => {
-    const config = STEP_CONFIG[step as keyof typeof STEP_CONFIG];
+  const renderStepOne = () => (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleEmailNext();
+      }}
+    >
+      <div className="step-header">
+        <div className="logo">
+          <img src="/src/assets/logo.svg" alt="Logo" />
+        </div>
+      </div>
 
+      <h1 className="title">{getStepTitle()}</h1>
+
+      <div className="input-wrapper">
+        <input
+          type="email"
+          name="email"
+          value={formik.values.email}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder={t("login.emailPlaceholder")}
+          className={`input-field ${
+            formik.touched.email && formik.errors.email ? "input-error" : ""
+          }`}
+          onKeyPress={(e) => handleKeyPress(e, handleEmailNext)}
+          autoFocus
+        />
+        {formik.touched.email && formik.errors.email && (
+          <div className="error-message">{formik.errors.email}</div>
+        )}
+      </div>
+
+      <div className="link-section">
+        <div>
+          <span className="text-normal">{t("login.noAccount")} </span>
+          <button
+            type="button"
+            className="text-link"
+            onClick={() => setIsSignUpMode(true)}
+          >
+            {t("login.createAccount")}
+          </button>
+        </div>
+        <button
+          type="button"
+          className="text-link"
+          onClick={() => setIsRecoveryMode(true)}
+        >
+          {t("login.cannotAccess")}
+        </button>
+      </div>
+
+      <div className="button-container">
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={!canGoNext() || isSubmitting}
+        >
+          {t(`login.${STEP_CONFIG[1].nextButton}`)}
+        </button>
+      </div>
+    </form>
+  );
+
+  const renderStepTwo = () => (
+    <>
+      <div className="step-header flex-between-center">
+        <div className="logo">
+          <img src="/src/assets/logo.svg" alt="Logo" />
+        </div>
+        <button
+          onClick={handleBack}
+          className="back-button"
+          disabled={isSubmitting}
+        >
+          <IoIosArrowBack />
+          {t("login.back")}
+        </button>
+      </div>
+
+      <h1 className="title">{getStepTitle()}</h1>
+      <div className="subtitle">{formik.values.email}</div>
+
+      <div className="input-wrapper">
+        <input
+          type="password"
+          name="password"
+          value={formik.values.password}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder={t("login.passwordPlaceholder")}
+          className={`input-field ${
+            formik.touched.password && formik.errors.password
+              ? "input-error"
+              : ""
+          }`}
+          onKeyPress={(e) => handleKeyPress(e, handlePasswordNext)}
+          autoFocus
+        />
+        {formik.touched.password && formik.errors.password && (
+          <div className="error-message">{formik.errors.password}</div>
+        )}
+      </div>
+
+      <div className="link-section">
+        <button
+          type="button"
+          className="text-link"
+          onClick={() => setIsRecoveryMode(true)}
+        >
+          {t("login.forgotPassword")}
+        </button>
+      </div>
+
+      <div className="button-container">
+        <button
+          onClick={handlePasswordNext}
+          className="btn-primary"
+          disabled={!canGoNext() || isSubmitting}
+        >
+          {t(`login.${STEP_CONFIG[2].nextButton}`)}
+        </button>
+      </div>
+    </>
+  );
+
+  const renderStepThree = () => (
+    <>
+      <div className="step-header flex-between-center">
+        <div className="logo">
+          <img src="/src/assets/logo.svg" alt="Logo" />
+        </div>
+        <button
+          onClick={handleBack}
+          className="back-button"
+          disabled={isSubmitting}
+        >
+          <IoIosArrowBack />
+          {t("login.back")}
+        </button>
+      </div>
+
+      <h1 className="title">{getStepTitle()}</h1>
+      <div className="subtitle">{formik.values.email}</div>
+
+      <div className="company-list">
+        {COMPANIES.map((company) => (
+          <button
+            key={company.id}
+            onClick={() => formik.setFieldValue("company", company)}
+            className={`company-card ${
+              formik.values.company?.id === company.id ? "selected" : ""
+            }`}
+            type="button"
+            disabled={isSubmitting}
+          >
+            <div className="company-icon">🏢</div>
+            <div className="company-info">
+              <div className="company-name">{company.name}</div>
+              <div className="company-role">{company.role}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {formik.submitCount > 0 && formik.errors.company && (
+        <div className="error-message text-center">
+          {formik.errors.company}
+        </div>
+      )}
+
+      <div className="button-container">
+        <button
+          onClick={handleFinalLogin}
+          className="btn-primary"
+          disabled={!canGoNext() || isSubmitting}
+        >
+          {isSubmitting
+            ? t("login.loading")
+            : t(`login.${STEP_CONFIG[3].nextButton}`)}
+        </button>
+      </div>
+    </>
+  );
+
+  const renderStep = () => {
     switch (step) {
       case 1:
-        return (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleEmailNext();
-            }}
-          >
-            <div className="step-header">
-              <div className="logo">
-                <img src="/src/assets/logo.svg" alt="Logo" />
-              </div>
-            </div>
-
-            <h1 className="title">{getStepTitle()}</h1>
-
-            <div className="input-wrapper">
-              <input
-                type="email"
-                name="email"
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                placeholder={t("login.emailPlaceholder")}
-                className={`input-field ${
-                  formik.touched.email && formik.errors.email
-                    ? "input-error"
-                    : ""
-                }`}
-                onKeyPress={(e) => handleKeyPress(e, handleEmailNext)}
-                autoFocus
-              />
-              {formik.touched.email && formik.errors.email && (
-                <div className="error-message">{formik.errors.email}</div>
-              )}
-            </div>
-
-            <div className="link-section">
-              <div>
-                <span className="text-normal">{t("login.noAccount")} </span>
-                <button type="button" className="text-link">
-                  {t("login.createAccount")}
-                </button>
-              </div>
-              <button type="button" className="text-link">
-                {t("login.cannotAccess")}
-              </button>
-            </div>
-
-            <div className="button-container">
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={!canGoNext() || isSubmitting}
-              >
-                {t(`login.${config.nextButton}`)}
-              </button>
-            </div>
-          </form>
-        );
-
+        return renderStepOne();
       case 2:
-        return (
-          <>
-            <div className="step-header flex-between-center">
-              <div className="logo">
-                <img src="/src/assets/logo.svg" alt="Logo" />
-              </div>
-              <button
-                onClick={handleBack}
-                className="back-button"
-                disabled={isSubmitting}
-              >
-               <IoIosArrowBack />
-{t("login.back")}
-              </button>
-            </div>
-
-            <h1 className="title">{getStepTitle()}</h1>
-            <div className="subtitle">{formik.values.email}</div>
-
-            <div className="input-wrapper">
-              <input
-                type="password"
-                name="password"
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                placeholder={t("login.passwordPlaceholder")}
-                className={`input-field ${
-                  formik.touched.password && formik.errors.password
-                    ? "input-error"
-                    : ""
-                }`}
-                onKeyPress={(e) => handleKeyPress(e, handlePasswordNext)}
-                autoFocus
-              />
-              {formik.touched.password && formik.errors.password && (
-                <div className="error-message">{formik.errors.password}</div>
-              )}
-            </div>
-
-            <div className="link-section">
-              <button type="button" className="text-link">
-                {t("login.forgotPassword")}
-              </button>
-            </div>
-
-            <div className="button-container">
-              <button
-                onClick={handlePasswordNext}
-                className="btn-primary"
-                disabled={!canGoNext() || isSubmitting}
-              >
-                {t(`login.${config.nextButton}`)}
-              </button>
-            </div>
-          </>
-        );
-
+        return renderStepTwo();
       case 3:
-        return (
-          <>
-            <div className="step-header flex-between-center">
-              <div className="logo">
-                <img src="/src/assets/logo.svg" alt="Logo" />
-              </div>
-              <button
-                onClick={handleBack}
-                className="back-button"
-                disabled={isSubmitting}
-              >
-                               <IoIosArrowBack />
- {t("login.back")}
-              </button>
-            </div>
-
-            <h1 className="title">{getStepTitle()}</h1>
-            <div className="subtitle">{formik.values.email}</div>
-
-            <div className="company-list">
-              {COMPANIES.map((company) => (
-                <button
-                  key={company.id}
-                  onClick={() => formik.setFieldValue("company", company)}
-                  className={`company-card ${
-                    formik.values.company?.id === company.id ? "selected" : ""
-                  }`}
-                  type="button"
-                  disabled={isSubmitting}
-                >
-                  <div className="company-icon">🏢</div>
-                  <div className="company-info">
-                    <div className="company-name">{company.name}</div>
-                    <div className="company-role">{company.role}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {formik.submitCount > 0 && formik.errors.company && (
-              <div className="error-message text-center">
-                {formik.errors.company}
-              </div>
-            )}
-
-            <div className="button-container">
-              <button
-                onClick={handleFinalLogin}
-                className="btn-primary"
-                disabled={!canGoNext() || isSubmitting}
-              >
-                {isSubmitting ? t("login.loading") : t(`login.${config.nextButton}`)}
-              </button>
-            </div>
-          </>
-        );
-
+        return renderStepThree();
       default:
         return null;
     }
   };
 
   return (
-    <div className="login-container">
-      <div className="login-wrapper">
-        <div className="login-card">
-          {renderStep()}
-
-          <div className="step-indicator">
-            {[1, 2, 3].map((stepNumber) => (
-              <div
-                key={stepNumber}
-                className={`step-dot ${stepNumber === step ? "active" : ""} ${
-                  stepNumber < step ? "completed" : ""
-                }`}
-              />
-            ))}
+    <>
+      {isRecoveryMode ? (
+        <PasswordRecovery onBack={() => setIsRecoveryMode(false)} />
+      ) : isSignUpMode ? (
+        <SignUp
+          onBack={() => setIsSignUpMode(false)}
+          onSuccess={() => {
+            setIsSignUpMode(false);
+            toast.info(
+              t("toast.accountCreatedRedirect") ||
+                "Conta criada! Faça login com suas credenciais.",
+            );
+          }}
+        />
+      ) : (
+        <div className="login-container">
+          <div className="login-wrapper">
+            <div className="login-card">
+              {renderStep()}
+              <div className="step-indicator">
+                {[1, 2, 3].map((stepNumber) => (
+                  <div
+                    key={stepNumber}
+                    className={`step-dot ${stepNumber === step ? "active" : ""} ${
+                      stepNumber < step ? "completed" : ""
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
