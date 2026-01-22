@@ -31,7 +31,7 @@
 }
 
 .logo {
-  width: 70px;
+  width: 110px;
   img {
     width: 100%;
     height: auto;
@@ -47,7 +47,24 @@
 .login-card {
   background: white;
   padding: 44px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  height: 520px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .title {
@@ -130,16 +147,27 @@
   font-size: 15px;
   font-weight: 400;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: all 0.2s ease;
+  position: relative;
+  min-width: 108px;
 }
 
 .btn-primary:hover {
   background-color: #005a9e;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 103, 184, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-primary:disabled {
-  background-color: #ccc;
+  background-color: #d2d0ce;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.6;
 }
 
 .back-button {
@@ -159,6 +187,8 @@
 
 .company-list {
   margin-bottom: 24px;
+  overflow-y: auto;
+  max-height: 200px;
 }
 
 .company-card {
@@ -292,4 +322,30 @@
   &:hover {
     border-color: #0078d4;
   }
+}
+
+// Step Indicator Styles
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #d2d0ce;
+  transition: all 0.3s ease;
+}
+
+.step-dot.active {
+  background-color: #0067b8;
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(0, 103, 184, 0.5);
+}
+
+.step-dot.completed {
+  background-color: #0067b8;
 }
