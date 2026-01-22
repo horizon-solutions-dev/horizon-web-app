@@ -1,9 +1,12 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import "./login.scss";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import { IoIosArrowBack } from "react-icons/io";
+import RouteNames from "../../routes/routeNames";
 
 interface Company {
   id: number;
@@ -31,6 +34,7 @@ const STEP_CONFIG = {
 
 export default function MultiStepLogin() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   
   const validationSchema = Yup.object({
     email: Yup.string()
@@ -59,10 +63,22 @@ export default function MultiStepLogin() {
       setIsSubmitting(true);
 
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // Simulação de chamada à API
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        
+        // Salvar dados de login no localStorage (temporário, até implementar autenticação real)
+        localStorage.setItem('userEmail', values.email);
+        localStorage.setItem('userCompany', JSON.stringify(values.company));
+        localStorage.setItem('isAuthenticated', 'true');
+        
         toast.success(
           t("toast.loginSuccess", { company: values.company?.name })
         );
+        
+        // Redirecionar para o Dashboard após login bem-sucedido
+        setTimeout(() => {
+          navigate(RouteNames.Dashboard);
+        }, 500);
       } catch (error) {
         console.error("Erro no login:", error);
         toast.error(t("toast.loginError"));
@@ -137,7 +153,7 @@ export default function MultiStepLogin() {
           >
             <div className="step-header">
               <div className="logo">
-                <img src="/src/assets/logo.png" alt="Logo" />
+                <img src="/src/assets/logo.svg" alt="Logo" />
               </div>
             </div>
 
@@ -193,14 +209,15 @@ export default function MultiStepLogin() {
           <>
             <div className="step-header flex-between-center">
               <div className="logo">
-                <img src="/src/assets/logo.png" alt="Logo" />
+                <img src="/src/assets/logo.svg" alt="Logo" />
               </div>
               <button
                 onClick={handleBack}
                 className="back-button"
                 disabled={isSubmitting}
               >
-                ← {t("login.back")}
+               <IoIosArrowBack />
+{t("login.back")}
               </button>
             </div>
 
@@ -251,14 +268,15 @@ export default function MultiStepLogin() {
           <>
             <div className="step-header flex-between-center">
               <div className="logo">
-                <img src="/src/assets/logo.png" alt="Logo" />
+                <img src="/src/assets/logo.svg" alt="Logo" />
               </div>
               <button
                 onClick={handleBack}
                 className="back-button"
                 disabled={isSubmitting}
               >
-                ← {t("login.back")}
+                               <IoIosArrowBack />
+ {t("login.back")}
               </button>
             </div>
 

@@ -10,11 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-     "@emotion/react": "^11.13.3",
+    "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@loadable/component": "^5.16.4",
+    "@mui/icons-material": "^7.3.7",
     "@mui/material": "^6.1.3",
     "@mui/x-charts": "^7.23.2",
     "@pathofdev/react-tag-input": "^1.0.7",
@@ -35,11 +34,13 @@
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.46",
     "primereact": "^10.8.5",
+    "react": "^19.2.0",
     "react-bootstrap": "^2.10.5",
     "react-bootstrap-maskedinput": "^0.5.0",
     "react-bootstrap-sidebar-menu": "^2.0.3",
     "react-checkbox-tree": "^1.8.0",
     "react-datepicker": "^7.4.0",
+    "react-dom": "^19.2.0",
     "react-i18next": "^15.0.3",
     "react-icons": "^5.3.0",
     "react-infinite-scroller": "^1.2.6",
@@ -71,6 +72,5 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"
-   
   }
 }

@@ -5,6 +5,48 @@ const CommonRoutes = {
   RecuperarSenha: "/recuperar-senha/:recoveryToken",
 };
 
+const CondominioRoutes = {
+  Dashboard: "/dashboard",
+  
+  // Reservas
+  ReservasTipo: "/reservas/tipo",
+  ReservasListagem: "/reservas/listagem",
+  ReservasCalendario: "/reservas/calendario",
+  ReservasDisponibilidade: "/reservas/disponibilidade",
+  
+  // Financeiro - Boletos
+  FinanceiroBoletos: "/financeiro/boletos",
+  FinanceiroBoletosDownload: "/financeiro/boletos/download",
+  FinanceiroBoletosAnexos: "/financeiro/boletos/anexos",
+  
+  // Financeiro - Balancetes
+  FinanceiroBalancetes: "/financeiro/balancetes",
+  FinanceiroBalancetesDownload: "/financeiro/balancetes/download",
+  FinanceiroBalancetesRelatorio: "/financeiro/balancetes/relatorio",
+  
+  // Financeiro - Despesas
+  FinanceiroDespesas: "/financeiro/despesas",
+  FinanceiroDespesasAnexo: "/financeiro/despesas/anexo",
+  
+  // Portaria
+  PortariaUsuarios: "/portaria/usuarios",
+  PortariaLiberacao: "/portaria/liberacao",
+  PortariaRelatorios: "/portaria/relatorios",
+  
+  // Moradores
+  Moradores: "/moradores",
+  
+  // Veículos
+  Veiculos: "/veiculos",
+  
+  // Fale Conosco
+  FaleConosco: "/fale-conosco",
+  
+  // Encomendas
+  EncomendasRecebimento: "/encomendas/recebimento",
+  EncomendasNotificacao: "/encomendas/notificacao",
+};
+
 const PersonalRoutes = {
 	LojaHome: "/loja/home",
 	LojaFinalizarCesta: "/loja/home/finalizacao",
@@ -42,6 +84,8 @@ const AdminRoutes = {
 const RouteNames = {
   //common routes
   ...CommonRoutes,
+  //condominio routes
+  ...CondominioRoutes,
   //e-commerce routes
   ...PersonalRoutes,
 
