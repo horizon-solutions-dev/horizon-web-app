@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -19,7 +19,8 @@ import {
   Avatar,
   Chip,
   TablePagination,
-  Tooltip
+  Tooltip,
+  CircularProgress
 } from '@mui/material';
 import {
   Add,
@@ -32,24 +33,54 @@ import {
   Badge,
   FilterList
 } from '@mui/icons-material';
-import { initialMoradores, type Morador } from '../../services/mockData';
 import MoradorForm from './MoradorForm';
 import './Moradores.scss';
 
+export interface Morador {
+  id?: string;
+  nome: string;
+  cpf: string;
+  unidade: string;
+  telefone: string;
+  email: string;
+  foto?: string | null;
+  status: 'ativo' | 'inativo';
+}
+
 const Moradores: React.FC = () => {
-  const [moradores, setMoradores] = useState<Morador[]>(initialMoradores);
+  const [moradores, setMoradores] = useState<Morador[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [openForm, setOpenForm] = useState(false);
   const [selectedMorador, setSelectedMorador] = useState<Morador | null>(null);
-/*   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [menuMorador, setMenuMorador] = useState<Morador | null>(null); */
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ 
     open: false, 
     message: '', 
     severity: 'success' as 'success' | 'error' 
   });
+
+  // Buscar moradores na API
+  useEffect(() => {
+    loadMoradores();
+  }, []);
+
+  const loadMoradores = async () => {
+    try {
+      setLoading(true);
+      // TODO: Implementar quando API estiver disponível
+      setMoradores([]);
+    } catch (error) {
+      setSnackbar({ 
+        open: true, 
+        message: 'Erro ao carregar moradores!', 
+        severity: 'error' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenForm = (morador?: Morador) => {
     setSelectedMorador(morador || null);
@@ -61,42 +92,49 @@ const Moradores: React.FC = () => {
     setSelectedMorador(null);
   };
 
-  const handleSaveMorador = (moradorData: Omit<Morador, 'id'>) => {
-    if (selectedMorador) {
-      setMoradores(moradores.map(m => 
-        m.id === selectedMorador.id ? { ...moradorData, id: selectedMorador.id } : m
-      ));
+  const handleSaveMorador = async () => {
+    try {
+      // TODO: Implementar quando API estiver disponível
       setSnackbar({ 
         open: true, 
-        message: 'Morador atualizado com sucesso!', 
+        message: 'Morador salvo com sucesso!', 
         severity: 'success' 
       });
-    } else {
-      const newId = Math.max(...moradores.map(m => m.id), 0) + 1;
-      setMoradores([...moradores, { ...moradorData, id: newId }]);
+      handleCloseForm();
+      loadMoradores();
+    } catch (error) {
       setSnackbar({ 
         open: true, 
-        message: 'Morador cadastrado com sucesso!', 
-        severity: 'success' 
+        message: 'Erro ao salvar morador!', 
+        severity: 'error' 
       });
     }
-    handleCloseForm();
   };
 
-  const handleDeleteMorador = (morador: Morador) => {
+  const handleDeleteMorador = async (morador: Morador) => {
     if (window.confirm(`Deseja realmente excluir o morador ${morador.nome}?`)) {
-      setMoradores(moradores.filter(m => m.id !== morador.id));
-      setSnackbar({ 
-        open: true, 
-        message: 'Morador excluído com sucesso!', 
-        severity: 'success' 
-      });
+      try {
+        // TODO: Implementar quando API estiver disponível
+        setSnackbar({ 
+          open: true, 
+          message: 'Morador excluído com sucesso!', 
+          severity: 'success' 
+        });
+        await loadMoradores();
+      } catch (error) {
+        setSnackbar({ 
+          open: true, 
+          message: 'Erro ao excluir morador!', 
+          severity: 'error' 
+        });
+      }
     }
   };
 
 
 const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
   setPage(newPage);
+  loadMoradores();
 };
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
@@ -164,6 +202,11 @@ const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement> | null, ne
             </Box>
 
             <TableContainer className="table-container">
+              {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
               <Table>
                 <TableHead className="table-header">
                   <TableRow>
@@ -270,6 +313,7 @@ const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement> | null, ne
                   )}
                 </TableBody>
               </Table>
+              )}
             </TableContainer>
 
             {filteredMoradores.length > 0 && (

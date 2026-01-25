@@ -26,11 +26,10 @@ import PortariaUsuarios from "../components/Portaria/PortariaUsuarios";
 import PortariaLiberacao from "../components/Portaria/PortariaLiberacao";
 import PortariaRelatorios from "../components/Portaria/PortariaRelatorios";
 
-// Moradores
-import Moradores from "../components/Moradores/Moradores";
 
-// Veículos
-import Veiculos from "../components/Veiculos/Veiculos";
+
+// Condominio
+import CondominioForm from "../components/Condominio/Condominio";
 
 // Fale Conosco
 import FaleConosco from "../components/FaleConosco/FaleConosco";
@@ -40,6 +39,8 @@ import EncomendasRecebimento from "../components/Encomendas/EncomendasRecebiment
 import EncomendasNotificacao from "../components/Encomendas/EncomendasNotificacao";
 
 import RouteNames from "./routeNames";
+import Moradores from "../components/Moradores/Moradores";
+import Veiculos from "../components/Veiculos/Veiculos";
 
 
 const router = createBrowserRouter([
@@ -129,8 +130,12 @@ const router = createBrowserRouter([
 				element: <PortariaRelatorios />,
 			},
 			
-			// Moradores
+			// Condominio
 			{
+				path: RouteNames.Condominio,
+				element: <CondominioForm />,
+			},
+					{
 				path: RouteNames.Moradores,
 				element: <Moradores />,
 			},

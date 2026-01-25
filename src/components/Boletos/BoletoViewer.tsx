@@ -22,9 +22,6 @@ import {
   Description,
   Person,
   Business,
-  CheckCircle,
-  Pending,
-  Cancel,
   Image as ImageIcon
 } from '@mui/icons-material';
 import './Boletos.scss';
@@ -61,15 +58,6 @@ const BoletoViewer: React.FC<BoletoViewerProps> = ({ open, onClose, boleto, onDo
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pago': return <CheckCircle />;
-      case 'pendente': return <Pending />;
-      case 'vencido': return <Cancel />;
-      default: return null;
-    }
-  };
-
   const handlePrint = () => {
     window.print();
   };
@@ -90,7 +78,6 @@ const BoletoViewer: React.FC<BoletoViewerProps> = ({ open, onClose, boleto, onDo
           </Box>
           <Box display="flex" gap={1}>
             <Chip
-              icon={getStatusIcon(boleto.status)}
               label={boleto.status.toUpperCase()}
               color={getStatusColor(boleto.status) as any}
               className="status-chip-large"

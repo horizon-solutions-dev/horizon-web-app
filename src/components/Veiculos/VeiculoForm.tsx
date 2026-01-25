@@ -9,14 +9,23 @@ import {
   Grid,
   Box,
   Typography,
-  MenuItem,
   IconButton,
-  InputAdornment,
   Autocomplete
 } from '@mui/material';
-import { Close, Search } from '@mui/icons-material';
+import { Close } from '@mui/icons-material';
 import './Veiculos.scss';
-import { type Veiculo, type Morador, initialMoradores } from '../../services/mockData';
+import { type Veiculo } from '../../services/veiculoService';
+
+export interface Morador {
+  id?: string;
+  nome: string;
+  cpf: string;
+  unidade: string;
+  telefone: string;
+  email: string;
+  foto?: string | null;
+  status: 'ativo' | 'inativo';
+}
 
 interface VeiculoFormProps {
   open: boolean;
@@ -31,18 +40,22 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
     modelo: '',
     marca: '',
     cor: '',
-    moradorId: 0,
+    moradorId: '',
     moradorNome: '',
     ano: ''
   });
 
+  const [moradores] = useState<Morador[]>([]);
   const [selectedMorador, setSelectedMorador] = useState<Morador | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    // Carregar moradores aqui se necessário
+    // Para este formulário, vamos assumir que os moradores estão disponíveis
+  }, []);
+
+  useEffect(() => {
     if (veiculo) {
-      const morador = initialMoradores.find(m => m.id === veiculo.moradorId) || null;
-      setSelectedMorador(morador);
       setFormData({
         placa: veiculo.placa,
         modelo: veiculo.modelo,
@@ -59,7 +72,7 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
         modelo: '',
         marca: '',
         cor: '',
-        moradorId: 0,
+        moradorId: '',
         moradorNome: '',
         ano: ''
       });
@@ -79,14 +92,14 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
     if (newValue) {
       setFormData(prev => ({
         ...prev,
-        moradorId: newValue.id,
+        moradorId: newValue.id || '',
         moradorNome: newValue.nome
       }));
       if (errors.morador) setErrors(prev => ({ ...prev, morador: '' }));
     } else {
       setFormData(prev => ({
         ...prev,
-        moradorId: 0,
+        moradorId: '',
         moradorNome: ''
       }));
     }
@@ -128,7 +141,7 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Autocomplete
-              options={initialMoradores}
+              options={moradores}
               getOptionLabel={(option) => `${option.nome} - ${option.unidade}`}
               value={selectedMorador}
               onChange={handleMoradorChange}

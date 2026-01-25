@@ -10,7 +10,7 @@ export class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: API_BASE_URL,
+   //   baseURL: API_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -75,6 +75,7 @@ export class ApiClient {
       const response = await this.client.post<T>(url, data);
       return response.data;
     } catch (error) {
+      console.log('POST response data:', url)
       this.handleError(error);
     }
   }

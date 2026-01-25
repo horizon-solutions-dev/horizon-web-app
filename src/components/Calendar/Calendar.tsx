@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Typography,
@@ -32,8 +32,8 @@ import './Calendar.scss';
 
 const BookingCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [bookings, setBookings] = useState([
     { date: new Date(2026, 0, 5), time: '10:00' },
     { date: new Date(2026, 0, 5), time: '14:00' },
@@ -53,11 +53,13 @@ const BookingCalendar = () => {
     return [...emptyDays, ...days];
   };
 
-  const isDateBooked = (date) => {
+  const isDateBooked = (date: Date | null) => {
+    if (!date) return false;
     return bookings.some(booking => isSameDay(booking.date, date));
   };
 
-  const isTimeBooked = (date, time) => {
+  const isTimeBooked = (date: Date | null, time: string) => {
+    if (!date) return false;
     return bookings.some(booking => 
       isSameDay(booking.date, date) && booking.time === time
     );
@@ -71,8 +73,8 @@ const BookingCalendar = () => {
     setCurrentDate(addMonths(currentDate, 1));
   };
 
-  const handleDateClick = (date) => {
-    if (!isBefore(date, startOfDay(new Date()))) {
+  const handleDateClick = (date: Date | null) => {
+    if (date && !isBefore(date, startOfDay(new Date()))) {
       setSelectedDate(date);
       setSelectedTime(null);
     }

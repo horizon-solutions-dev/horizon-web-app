@@ -2,7 +2,7 @@
   "login": {
     "title": "Sign in",
     "passwordTitle": "Enter password",
-    "companyTitle": "Select company",
+    "companyTitle": "Select condominium",
     "emailPlaceholder": "Email",
     "passwordPlaceholder": "Password",
     "next": "Next",
@@ -13,7 +13,9 @@
     "createAccount": "Create one!",
     "cannotAccess": "Can't access your account?",
     "back": "Back",
-    "loading": "Signing in..."
+    "loading": "Signing in...",
+    "loadingCondominiums": "Loading condominiums...",
+    "noCondominiums": "No condominiums available."
   },
   "recovery": {
     "title": "Recover Password",
@@ -50,7 +52,7 @@
     "special": "One special character (!@#$%^&*)"
   },
   "toast": {
-    "loginSuccess": "Successfully logged into company: {{company}}",
+    "loginSuccess": "Successfully logged into condominium: {{company}}",
     "loginError": "Login failed. Please try again.",
     "recoveryCodeSent": "Verification code sent to your email",
     "codeVerified": "Code verified successfully",
@@ -64,7 +66,7 @@
     "emailInvalid": "Invalid email",
     "emailRequired": "Email is required",
     "passwordRequired": "Password is required",
-    "companyRequired": "Please select a company",
+    "companyRequired": "Please select a condominium",
     "codeLength": "The code must be 6 digits",
     "codeRequired": "Code is required",
     "passwordMinLength": "Minimum 8 characters",

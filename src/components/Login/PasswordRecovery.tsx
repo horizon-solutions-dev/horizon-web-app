@@ -5,7 +5,6 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { IoIosArrowBack } from "react-icons/io";
 import "./password-recovery.scss";
-import { AuthService } from "../../services/authService";
 
 interface PasswordRecoveryProps {
   onBack: () => void;
@@ -46,7 +45,8 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
     onSubmit: async (values) => {
       setIsSubmitting(true);
       try {
-        await AuthService.requestPasswordRecovery({ email: values.email });
+        // TODO: Implementar quando AuthService.requestPasswordRecovery estiver disponível
+        // await AuthService.requestPasswordRecovery({ email: values.email });
         
         setRecoveryEmail(values.email);
         toast.success(
@@ -71,10 +71,11 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
     onSubmit: async () => {
       setIsSubmitting(true);
       try {
-        await AuthService.verifyRecoveryCode({
-          email: recoveryEmail,
-          code: codeFormik.values.code,
-        });
+        // TODO: Implementar quando AuthService.verifyRecoveryCode estiver disponível
+        // await AuthService.verifyRecoveryCode({
+        //   email: recoveryEmail,
+        //   code: codeFormik.values.code,
+        // });
         
         toast.success(
           t("toast.codeVerified") || "Código verificado com sucesso"
@@ -98,11 +99,12 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
     onSubmit: async () => {
       setIsSubmitting(true);
       try {
-        await AuthService.resetPassword({
-          email: recoveryEmail,
-          code: codeFormik.values.code,
-          newPassword: passwordFormik.values.password,
-        });
+        // TODO: Implementar quando AuthService.resetPassword estiver disponível
+        // await AuthService.resetPassword({
+        //   email: recoveryEmail,
+        //   code: codeFormik.values.code,
+        //   newPassword: passwordFormik.values.password,
+        // });
         
         toast.success(
           t("toast.passwordUpdated") || "Senha atualizada com sucesso"

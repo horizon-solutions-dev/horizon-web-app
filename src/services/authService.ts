@@ -4,19 +4,13 @@ import type {
   LoginResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
-  PasswordRecoveryRequest,
-  PasswordRecoveryResponse,
-  VerifyRecoveryCodeRequest,
-  VerifyRecoveryCodeResponse,
-  ResetPasswordRequest,
-  ResetPasswordResponse,
 } from '../models/api.model';
 
-const BASE_PATH = '/api/v1/auth';
+const BASE_PATH = 'https://horizonauthapi-dfbah3fghze8f9gb.australiaeast-01.azurewebsites.net/api/v1/auth';
 
 export class AuthService {
   /**
-   * Realiza login do usuário
+   * Realiza login do usuario
    */
   static async login(payload: LoginRequest): Promise<LoginResponse> {
     return apiClient.post<LoginResponse>(`${BASE_PATH}/login`, payload);
@@ -29,29 +23,6 @@ export class AuthService {
     return apiClient.post<RefreshTokenResponse>(`${BASE_PATH}/refresh-token`, payload);
   }
 
-  /**
-   * Solicita código de recuperação de senha por email
-   * (Este endpoint pode não existir na API atual, será necessário criar no backend)
-   */
-  static async requestPasswordRecovery(payload: PasswordRecoveryRequest): Promise<PasswordRecoveryResponse> {
-    return apiClient.post<PasswordRecoveryResponse>(`${BASE_PATH}/password-recovery/request`, payload);
-  }
-
-  /**
-   * Verifica o código de recuperação de senha
-   * (Este endpoint pode não existir na API atual, será necessário criar no backend)
-   */
-  static async verifyRecoveryCode(payload: VerifyRecoveryCodeRequest): Promise<VerifyRecoveryCodeResponse> {
-    return apiClient.post<VerifyRecoveryCodeResponse>(`${BASE_PATH}/password-recovery/verify`, payload);
-  }
-
-  /**
-   * Reseta a senha do usuário com código de recuperação
-   * (Este endpoint pode não existir na API atual, será necessário criar no backend)
-   */
-  static async resetPassword(payload: ResetPasswordRequest): Promise<ResetPasswordResponse> {
-    return apiClient.post<ResetPasswordResponse>(`${BASE_PATH}/password-recovery/reset`, payload);
-  }
 
   /**
    * Faz logout do usuário
@@ -60,7 +31,9 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userEmail');
-    localStorage.removeItem('userCompany');
+    localStorage.removeItem('condominiumId');
+    localStorage.removeItem('condominium');
+    localStorage.removeItem('organizationId');
     localStorage.removeItem('isAuthenticated');
   }
 

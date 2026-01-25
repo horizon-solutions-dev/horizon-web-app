@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import "./login.scss";
@@ -9,72 +8,60 @@ import { IoIosArrowBack } from "react-icons/io";
 import PasswordRecovery from "./PasswordRecovery";
 import SignUp from "./SignUp";
 import { AuthService } from "../../services/authService";
-
-interface Company {
-  id: number;
-  name: string;
-  role: string;
-}
+import { condominiumService, type Condominium } from "../../services/condominiumService";
+import { organizationService } from "../../services/organizationService";
 
 interface LoginFormValues {
   email: string;
   password: string;
-  company: Company | null;
+  condominium: Condominium | null;
 }
-
-const COMPANIES: Company[] = [
-  { id: 1, name: "Empresa Alpha Ltda", role: "Administrador" },
-  { id: 2, name: "Beta Corporation", role: "Usuário" },
-  { id: 3, name: "Gamma Tech Solutions", role: "Gerente" },
-];
 
 const STEP_CONFIG = {
   1: { fields: ["email"], nextButton: "next" },
   2: { fields: ["password"], nextButton: "enter" },
-  3: { fields: ["company"], nextButton: "access" },
+  3: { fields: ["condominium"], nextButton: "access" },
 } as const;
 
 export default function MultiStepLogin() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [condominiums, setCondominiums] = useState<Condominium[]>([]);
+  const [isLoadingCondominiums, setIsLoadingCondominiums] = useState(false);
 
   const validationSchema = Yup.object({
     email: Yup.string()
       .email(t("validation.emailInvalid"))
       .required(t("validation.emailRequired")),
     password: Yup.string().required(t("validation.passwordRequired")),
-    company: Yup.object().nullable().required(t("validation.companyRequired")),
+    condominium: Yup.object()
+      .nullable()
+      .required(t("validation.companyRequired")),
   });
 
   const formik = useFormik<LoginFormValues>({
-    initialValues: { email: "", password: "", company: null },
+    initialValues: { email: "", password: "", condominium: null },
     validationSchema,
     onSubmit: async (values) => {
       setIsSubmitting(true);
       try {
-        const response = await AuthService.login({
-          login: values.email,
-          pass: values.password,
-          dataSource: "web",
-          languageId: "pt-br",
-          version: "1.0.0",
-        });
+        if (!values.condominium) {
+          return;
+        }
 
-        localStorage.setItem("token", response.token);
-        localStorage.setItem("refreshToken", response.refreshToken);
         localStorage.setItem("userEmail", values.email);
-        localStorage.setItem("userCompany", JSON.stringify(values.company));
+        localStorage.setItem("condominiumId", values.condominium.condominiumId);
+        localStorage.setItem("condominium", JSON.stringify(values.condominium));
         localStorage.setItem("isAuthenticated", "true");
 
         toast.success(
-          t("toast.loginSuccess", { company: values.company?.name }),
+          t("toast.loginSuccess", { company: values.condominium.name }),
         );
 
-        navigate("/dashboard");
+       window.location.href = "/dashboard";
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : t("toast.loginError"),
@@ -95,9 +82,44 @@ export default function MultiStepLogin() {
 
   const handlePasswordNext = () => {
     formik.validateField("password").then(() => {
-      if (!formik.errors.password && formik.values.password) {
-        setStep(3);
+      if (formik.errors.password || !formik.values.password) {
+        return;
       }
+
+      if (condominiums.length > 0) {
+        setStep(3);
+        return;
+      }
+
+      setIsSubmitting(true);
+      setIsLoadingCondominiums(true);
+      AuthService.login({
+        login: formik.values.email,
+        pass: formik.values.password,
+        dataSource: "web",
+        languageId: "pt-br",
+        version: "1.0.0",
+      })
+        .then(async (response) => {
+          localStorage.setItem("token", response.token);
+          localStorage.setItem("refreshToken", response.refreshToken);
+
+          const organizationId = await organizationService.getMyOrganizationId();
+          localStorage.setItem("organizationId", organizationId);
+
+          const data = await condominiumService.getCondominiums(organizationId);
+          setCondominiums(data);
+          setStep(3);
+        })
+        .catch((error) => {
+          toast.error(
+            error instanceof Error ? error.message : t("toast.loginError"),
+          );
+        })
+        .finally(() => {
+          setIsSubmitting(false);
+          setIsLoadingCondominiums(false);
+        });
     });
   };
 
@@ -126,7 +148,8 @@ export default function MultiStepLogin() {
   const canGoNext = () => {
     if (step === 1) return !formik.errors.email && !!formik.values.email;
     if (step === 2) return !formik.errors.password && !!formik.values.password;
-    if (step === 3) return !formik.errors.company && !!formik.values.company;
+    if (step === 3)
+      return !formik.errors.condominium && !!formik.values.condominium;
     return false;
   };
 
@@ -290,29 +313,44 @@ export default function MultiStepLogin() {
       <h1 className="title">{getStepTitle()}</h1>
       <div className="subtitle">{formik.values.email}</div>
 
-      <div className="company-list">
-        {COMPANIES.map((company) => (
-          <button
-            key={company.id}
-            onClick={() => formik.setFieldValue("company", company)}
-            className={`company-card ${
-              formik.values.company?.id === company.id ? "selected" : ""
-            }`}
-            type="button"
-            disabled={isSubmitting}
-          >
-            <div className="company-icon">🏢</div>
-            <div className="company-info">
-              <div className="company-name">{company.name}</div>
-              <div className="company-role">{company.role}</div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {formik.submitCount > 0 && formik.errors.company && (
+      {isLoadingCondominiums ? (
+        <div className="loading-message">
+          {t("login.loadingCondominiums") || "Carregando condominios..."}
+        </div>
+      ) : condominiums.length === 0 ? (
         <div className="error-message text-center">
-          {formik.errors.company}
+          {t("login.noCondominiums") || "Nenhum condominio disponivel."}
+        </div>
+      ) : (
+        <div className="company-list">
+          {condominiums.map((condominium) => (
+            <button
+              key={condominium.condominiumId}
+              onClick={() => formik.setFieldValue("condominium", condominium)}
+              className={`company-card ${
+                formik.values.condominium?.condominiumId ===
+                condominium.condominiumId
+                  ? "selected"
+                  : ""
+              }`}
+              type="button"
+              disabled={isSubmitting}
+            >
+              <div className="company-icon">C</div>
+              <div className="company-info">
+                <div className="company-name">{condominium.name}</div>
+                <div className="company-role">
+                  {condominium.city} - {condominium.state}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {formik.submitCount > 0 && formik.errors.condominium && (
+        <div className="error-message text-center">
+          {formik.errors.condominium}
         </div>
       )}
 

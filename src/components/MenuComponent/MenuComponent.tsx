@@ -9,6 +9,7 @@ import {
   MdDirectionsCar,
   MdEmail,
   MdLocalShipping,
+  MdApartment,
   MdExpandMore,
   MdExpandLess,
 } from "react-icons/md";
@@ -29,6 +30,12 @@ const menuItems: MenuItem[] = [
     label: "Dashboard",
     icon: <MdDashboard />,
     path: RouteNames.Dashboard,
+  },
+  {
+    id: "condominio",
+    label: "Condominio",
+    icon: <MdApartment />,
+    path: RouteNames.Condominio,
   },
   {
     id: "reservas",

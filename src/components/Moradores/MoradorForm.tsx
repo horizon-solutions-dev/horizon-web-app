@@ -16,7 +16,17 @@ import {
 import { Close, CloudUpload } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
 import './Moradores.scss';
-import type { Morador } from '../../services/mockData';
+
+export interface Morador {
+  id?: string;
+  nome: string;
+  cpf: string;
+  unidade: string;
+  telefone: string;
+  email: string;
+  foto?: string | null;
+  status: 'ativo' | 'inativo';
+}
 
 interface MoradorFormProps {
   open: boolean;
@@ -46,7 +56,7 @@ const MoradorForm: React.FC<MoradorFormProps> = ({ open, onClose, onSave, morado
         unidade: morador.unidade,
         telefone: morador.telefone,
         email: morador.email,
-        foto: morador.foto,
+        foto: morador.foto || null,
         status: morador.status
       });
     } else {

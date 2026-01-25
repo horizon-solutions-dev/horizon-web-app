@@ -2,7 +2,7 @@
   "login": {
     "title": "Entrar",
     "passwordTitle": "Inserir senha",
-    "companyTitle": "Selecionar empresa",
+    "companyTitle": "Selecionar condominio",
     "emailPlaceholder": "Email",
     "passwordPlaceholder": "Senha",
     "next": "Avançar",
@@ -13,7 +13,9 @@
     "createAccount": "Criar uma!",
     "cannotAccess": "Não consegue acessar sua conta?",
     "back": "Voltar",
-    "loading": "Entrando..."
+    "loading": "Entrando...",
+    "loadingCondominiums": "Carregando condominios...",
+    "noCondominiums": "Nenhum condominio disponivel."
   },
   "recovery": {
     "title": "Recuperar Senha",
@@ -50,7 +52,7 @@
     "special": "Um caractere especial (!@#$%^&*)"
   },
   "toast": {
-    "loginSuccess": "Login realizado com sucesso na empresa: {{company}}",
+    "loginSuccess": "Login realizado com sucesso no condominio: {{company}}",
     "loginError": "Erro ao realizar login. Tente novamente.",
     "recoveryCodeSent": "Código de verificação enviado para seu e-mail",
     "codeVerified": "Código verificado com sucesso",
@@ -64,7 +66,7 @@
     "emailInvalid": "Email inválido",
     "emailRequired": "Email é obrigatório",
     "passwordRequired": "Senha é obrigatória",
-    "companyRequired": "Selecione uma empresa",
+    "companyRequired": "Selecione um condominio",
     "codeLength": "O código deve ter 6 dígitos",
     "codeRequired": "Código é obrigatório",
     "passwordMinLength": "Mínimo 8 caracteres",

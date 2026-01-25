@@ -16,8 +16,6 @@ interface SignUpProps {
 export default function SignUp({ onBack, onSuccess }: SignUpProps) {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
-  const [documentAvailable, setDocumentAvailable] = useState<boolean | null>(null);
 
   const validationSchema = Yup.object({
     name: Yup.string()
@@ -90,20 +88,6 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
       setIsSubmitting(true);
 
       try {
-        const emailCheck = await AccountService.validateEmail(values.email);
-        if (emailCheck.exists) {
-          toast.error(t("validation.emailInUse") || "Este email já está em uso");
-          setIsSubmitting(false);
-          return;
-        }
-
-        const docCheck = await AccountService.validateDocument(values.doc.replace(/\D/g, ""), values.docType);
-        if (docCheck.exists) {
-          toast.error(t("validation.documentInUse") || "Este documento já está registrado");
-          setIsSubmitting(false);
-          return;
-        }
-
         const payload: CreateAccountRequest = {
           name: values.name,
           surname: values.surname,
@@ -129,39 +113,6 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
       }
     },
   });
-
-  const validateEmail = async (email: string) => {
-    if (!email || !formik.values.email) return;
-    
-    try {
-      const result = await AccountService.validateEmail(email);
-      setEmailAvailable(!result.exists);
-      
-      if (result.exists) {
-        toast.warning(t("validation.emailInUse") || "Este email já está em uso");
-      }
-    } catch (error) {
-      console.error("Erro ao validar email:", error);
-    }
-  };
-
-  const validateDocument = async (doc: string) => {
-    if (!doc || doc.length < 5) return;
-    
-    try {
-      const result = await AccountService.validateDocument(
-        doc.replace(/\D/g, ""),
-        formik.values.docType
-      );
-      setDocumentAvailable(!result.exists);
-      
-      if (result.exists) {
-        toast.warning(t("validation.documentInUse") || "Este documento já está registrado");
-      }
-    } catch (error) {
-      console.error("Erro ao validar documento:", error);
-    }
-  };
 
   const handleKeyPress = (e: React.KeyboardEvent, handler?: () => void) => {
     if (e.key === "Enter" && handler) {
@@ -275,21 +226,15 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
                   name="email"
                   value={formik.values.email}
                   onChange={formik.handleChange}
-                  onBlur={(e) => {
-                    formik.handleBlur(e);
-                    validateEmail(formik.values.email);
-                  }}
+                  onBlur={formik.handleBlur}
                   placeholder="seu@email.com"
                   className={`input-field ${
                     formik.touched.email && formik.errors.email ? "input-error" : ""
-                  } ${emailAvailable === false ? "input-error" : ""} ${emailAvailable === true ? "input-success" : ""}`}
+                  }`}
                   disabled={isSubmitting}
                 />
                 {formik.touched.email && formik.errors.email && (
                   <div className="error-message">{formik.errors.email}</div>
-                )}
-                {emailAvailable === true && (
-                  <div className="success-message">✓ Email disponível</div>
                 )}
               </div>
 
@@ -337,21 +282,15 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
                   name="doc"
                   value={formik.values.doc}
                   onChange={(e) => handleDocumentChange(e.target.value)}
-                  onBlur={(e) => {
-                    formik.handleBlur(e);
-                    validateDocument(formik.values.doc);
-                  }}
+                  onBlur={formik.handleBlur}
                   placeholder={formik.values.docType === "CNPJ" ? "00.000.000/0000-00" : "000.000.000-00"}
                   className={`input-field ${
                     formik.touched.doc && formik.errors.doc ? "input-error" : ""
-                  } ${documentAvailable === false ? "input-error" : ""} ${documentAvailable === true ? "input-success" : ""}`}
+                  }`}
                   disabled={isSubmitting}
                 />
                 {formik.touched.doc && formik.errors.doc && (
                   <div className="error-message">{formik.errors.doc}</div>
-                )}
-                {documentAvailable === true && (
-                  <div className="success-message">✓ Documento disponível</div>
                 )}
               </div>
             </div>

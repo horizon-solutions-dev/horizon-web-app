@@ -7,7 +7,7 @@ import type {
   ChangePasswordRequest,
 } from '../models/api.model';
 
-const BASE_PATH = '/api/v1/accounts';
+const BASE_PATH = 'https://horizonauthapi-dfbah3fghze8f9gb.australiaeast-01.azurewebsites.net/api/v1/accounts';
 
 export class AccountService {
   /**
@@ -73,19 +73,5 @@ export class AccountService {
    */
   static async createAccountStatus(statusId: number): Promise<CreateAccountResponse> {
     return apiClient.post<CreateAccountResponse>(`${BASE_PATH}/status`, { statusId });
-  }
-
-  /**
-   * Valida se um email já existe
-   */
-  static async validateEmail(email: string): Promise<{ exists: boolean }> {
-    return apiClient.get<{ exists: boolean }>(`${BASE_PATH}/validate/email?email=${email}`);
-  }
-
-  /**
-   * Valida se um documento já existe
-   */
-  static async validateDocument(doc: string, docType: string): Promise<{ exists: boolean }> {
-    return apiClient.get<{ exists: boolean }>(`${BASE_PATH}/validate/document?doc=${doc}&docType=${docType}`);
   }
 }

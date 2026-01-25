@@ -12,13 +12,8 @@ import {
   CardContent,
   CardActions,
   CardMedia,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Chip,
   InputAdornment,
-  Tooltip,
   Menu,
   MenuItem,
   Alert,
@@ -35,10 +30,7 @@ import {
   MoreVert,
   AttachMoney,
   CalendarToday,
-  Description,
-  CheckCircle,
-  Pending,
-  Cancel
+  Description
 } from '@mui/icons-material';
 import BoletoForm from './BoletoForm';
 import BoletoViewer from './BoletoViewer';
@@ -190,15 +182,6 @@ const Boletos: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pago': return <CheckCircle />;
-      case 'pendente': return <Pending />;
-      case 'vencido': return <Cancel />;
-      default: return null;
-    }
-  };
-
   return (
     <Box className="boletos-container">
       <Container maxWidth="xl">
@@ -285,7 +268,6 @@ const Boletos: React.FC = () => {
                     <CardContent className="boleto-content">
                       <Box className="boleto-status-row">
                         <Chip
-                          icon={getStatusIcon(boleto.status)}
                           label={boleto.status.toUpperCase()}
                           color={getStatusColor(boleto.status) as any}
                           size="small"

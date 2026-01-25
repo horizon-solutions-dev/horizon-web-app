@@ -33,12 +33,13 @@ const CondominioRoutes = {
   PortariaLiberacao: "/portaria/liberacao",
   PortariaRelatorios: "/portaria/relatorios",
   
-  // Moradores
+  // Condominio
+  Condominio: "/condominio",
+    // Moradores
   Moradores: "/moradores",
   
   // Veículos
   Veiculos: "/veiculos",
-  
   // Fale Conosco
   FaleConosco: "/fale-conosco",
   
