@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { IoIosArrowBack } from "react-icons/io";
+import { IoChevronBack } from "react-icons/io5";
 import "./password-recovery.scss";
 
 interface PasswordRecoveryProps {
@@ -205,16 +205,20 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
               codeFormik.handleSubmit();
             }}
           >
+            <button
+              onClick={() => setStep(1)}
+              className="back-button"
+              disabled={isSubmitting}
+              type="button"
+            >
+              <IoChevronBack />
+              <span>Voltar</span>
+            </button>
+
             <div className="step-header">
-              <button
-                onClick={() => setStep(1)}
-                className="back-button"
-                disabled={isSubmitting}
-                type="button"
-              >
-                <IoIosArrowBack />
-                {t("login.back") || "Voltar"}
-              </button>
+              <div className="logo">
+                <img src="/src/assets/logo.svg" alt="Logo" />
+              </div>
             </div>
 
             <h1 className="title">{t("recovery.verifyCode") || "Verificar Código"}</h1>
@@ -284,16 +288,20 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
               passwordFormik.handleSubmit();
             }}
           >
+            <button
+              onClick={() => setStep(2)}
+              className="back-button"
+              disabled={isSubmitting}
+              type="button"
+            >
+              <IoChevronBack />
+              <span>Voltar</span>
+            </button>
+
             <div className="step-header">
-              <button
-                onClick={() => setStep(2)}
-                className="back-button"
-                disabled={isSubmitting}
-                type="button"
-              >
-                <IoIosArrowBack />
-                {t("login.back") || "Voltar"}
-              </button>
+              <div className="logo">
+                <img src="/src/assets/logo.svg" alt="Logo" />
+              </div>
             </div>
 
             <h1 className="title">{t("recovery.newPassword") || "Nova Senha"}</h1>
