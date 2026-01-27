@@ -310,15 +310,6 @@ export default function MultiStepLogin() {
 
   const renderStepThree = () => (
     <>
-      <button
-        onClick={handleBack}
-        className="back-indicator"
-        disabled={isSubmitting}
-      >
-        <IoIosArrowBack />
-        <span>{t("login.back")}</span>
-      </button>
-
       <div className="logo-section">
         <div className="logo">
           <img src="/src/assets/logo.svg" alt="Logo" />
