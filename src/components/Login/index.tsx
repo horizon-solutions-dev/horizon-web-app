@@ -31,6 +31,7 @@ export default function MultiStepLogin() {
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [isLoadingCondominiums, setIsLoadingCondominiums] = useState(false);
+  const [loginError, setLoginError] = useState<string>("");
 
   const validationSchema = Yup.object({
     email: Yup.string()
@@ -81,6 +82,7 @@ export default function MultiStepLogin() {
   };
 
   const handlePasswordNext = () => {
+    setLoginError("");
     formik.validateField("password").then(() => {
       if (formik.errors.password || !formik.values.password) {
         return;
@@ -112,9 +114,8 @@ export default function MultiStepLogin() {
           setStep(3);
         })
         .catch((error) => {
-          toast.error(
-            error instanceof Error ? error.message : t("toast.loginError"),
-          );
+          // Exibir erro simplificado embaixo do campo de senha
+          setLoginError(t("validation.incorrectPassword") || "Senha incorreta");
         })
         .finally(() => {
           setIsSubmitting(false);
@@ -132,7 +133,13 @@ export default function MultiStepLogin() {
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
+    if (step > 1) {
+      // Limpar erros ao voltar
+      formik.setErrors({});
+      formik.setTouched({});
+      setLoginError("");
+      setStep(step - 1);
+    }
   };
 
   const handleKeyPress = (
@@ -173,7 +180,7 @@ export default function MultiStepLogin() {
         handleEmailNext();
       }}
     >
-      <div className="step-header">
+      <div className="logo-section">
         <div className="logo">
           <img src="/src/assets/logo.svg" alt="Logo" />
         </div>
@@ -234,18 +241,19 @@ export default function MultiStepLogin() {
 
   const renderStepTwo = () => (
     <>
-      <div className="step-header flex-between-center">
+      <button
+        onClick={handleBack}
+        className="back-indicator"
+        disabled={isSubmitting}
+      >
+        <IoIosArrowBack />
+        <span>{t("login.back")}</span>
+      </button>
+
+      <div className="logo-section">
         <div className="logo">
           <img src="/src/assets/logo.svg" alt="Logo" />
         </div>
-        <button
-          onClick={handleBack}
-          className="back-button"
-          disabled={isSubmitting}
-        >
-          <IoIosArrowBack />
-          {t("login.back")}
-        </button>
       </div>
 
       <h1 className="title">{getStepTitle()}</h1>
@@ -256,11 +264,14 @@ export default function MultiStepLogin() {
           type="password"
           name="password"
           value={formik.values.password}
-          onChange={formik.handleChange}
+          onChange={(e) => {
+            formik.handleChange(e);
+            setLoginError("");
+          }}
           onBlur={formik.handleBlur}
           placeholder={t("login.passwordPlaceholder")}
           className={`input-field ${
-            formik.touched.password && formik.errors.password
+            (formik.touched.password && formik.errors.password) || loginError
               ? "input-error"
               : ""
           }`}
@@ -269,6 +280,9 @@ export default function MultiStepLogin() {
         />
         {formik.touched.password && formik.errors.password && (
           <div className="error-message">{formik.errors.password}</div>
+        )}
+        {loginError && (
+          <div className="error-message">{loginError}</div>
         )}
       </div>
 
@@ -296,18 +310,10 @@ export default function MultiStepLogin() {
 
   const renderStepThree = () => (
     <>
-      <div className="step-header flex-between-center">
+      <div className="logo-section">
         <div className="logo">
           <img src="/src/assets/logo.svg" alt="Logo" />
         </div>
-        <button
-          onClick={handleBack}
-          className="back-button"
-          disabled={isSubmitting}
-        >
-          <IoIosArrowBack />
-          {t("login.back")}
-        </button>
       </div>
 
       <h1 className="title">{getStepTitle()}</h1>

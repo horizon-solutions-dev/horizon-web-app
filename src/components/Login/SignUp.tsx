@@ -155,16 +155,20 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
     <div className="signup-container">
       <div className="signup-wrapper">
         <div className="signup-card">
-          <div className="step-header">
-            <button
-              onClick={onBack}
-              className="back-button"
-              disabled={isSubmitting}
-              type="button"
-            >
-              <IoIosArrowBack />
-              {t("login.back") || "Voltar"}
-            </button>
+          <button
+            onClick={onBack}
+            className="back-indicator"
+            disabled={isSubmitting}
+            type="button"
+          >
+            <IoIosArrowBack />
+            <span>{t("login.back") || "Voltar"}</span>
+          </button>
+
+          <div className="logo-section">
+            <div className="logo">
+              <img src="/src/assets/logo.svg" alt="Logo" />
+            </div>
           </div>
 
           <h1 className="title">{t("signup.title") || "Criar Conta"}</h1>
@@ -354,11 +358,11 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
               {t("signup.passwordRequirements") || "Requisitos de senha:"}
             </p>
             <ul>
-              <li>✓ {t("signup.minChars") || "Mínimo 8 caracteres"}</li>
-              <li>✓ {t("signup.uppercase") || "Uma letra maiúscula"}</li>
-              <li>✓ {t("signup.lowercase") || "Uma letra minúscula"}</li>
-              <li>✓ {t("signup.number") || "Um número"}</li>
-              <li>✓ {t("signup.special") || "Um caractere especial (!@#$%^&*)"}</li>
+              <li>{t("signup.minChars") || "Mínimo 8 caracteres"}</li>
+              <li>{t("signup.uppercase") || "Uma letra maiúscula"}</li>
+              <li>{t("signup.lowercase") || "Uma letra minúscula"}</li>
+              <li>{t("signup.number") || "Um número"}</li>
+              <li>{t("signup.special") || "Um caractere especial (!@#$%^&*)"}</li>
             </ul>
           </div>
         </div>
