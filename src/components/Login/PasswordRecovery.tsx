@@ -129,6 +129,21 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
     }
   };
 
+  const handleBackStep = (targetStep: number) => {
+    // Limpar erros ao voltar
+    if (targetStep === 1) {
+      emailFormik.setErrors({});
+      emailFormik.setTouched({});
+    } else if (targetStep === 2) {
+      codeFormik.setErrors({});
+      codeFormik.setTouched({});
+    } else if (targetStep === 3) {
+      passwordFormik.setErrors({});
+      passwordFormik.setTouched({});
+    }
+    setStep(targetStep);
+  };
+
   const renderRecoveryStep = () => {
     switch (step) {
       case 1:
@@ -205,16 +220,20 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
               codeFormik.handleSubmit();
             }}
           >
+            <button
+              onClick={() => handleBackStep(1)}
+              className="back-indicator"
+              disabled={isSubmitting}
+              type="button"
+            >
+              <IoIosArrowBack />
+              <span>{t("login.back") || "Voltar"}</span>
+            </button>
+
             <div className="step-header">
-              <button
-                onClick={() => setStep(1)}
-                className="back-button"
-                disabled={isSubmitting}
-                type="button"
-              >
-                <IoIosArrowBack />
-                {t("login.back") || "Voltar"}
-              </button>
+              <div className="logo">
+                <img src="/src/assets/logo.svg" alt="Logo" />
+              </div>
             </div>
 
             <h1 className="title">{t("recovery.verifyCode") || "Verificar Código"}</h1>
@@ -255,7 +274,7 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
               <button
                 type="button"
                 className="text-link"
-                onClick={() => setStep(1)}
+                onClick={() => handleBackStep(1)}
                 disabled={isSubmitting}
               >
                 {t("recovery.resendCode") || "Reenviar Código"}
@@ -284,16 +303,20 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
               passwordFormik.handleSubmit();
             }}
           >
+            <button
+              onClick={() => handleBackStep(2)}
+              className="back-indicator"
+              disabled={isSubmitting}
+              type="button"
+            >
+              <IoIosArrowBack />
+              <span>{t("login.back") || "Voltar"}</span>
+            </button>
+
             <div className="step-header">
-              <button
-                onClick={() => setStep(2)}
-                className="back-button"
-                disabled={isSubmitting}
-                type="button"
-              >
-                <IoIosArrowBack />
-                {t("login.back") || "Voltar"}
-              </button>
+              <div className="logo">
+                <img src="/src/assets/logo.svg" alt="Logo" />
+              </div>
             </div>
 
             <h1 className="title">{t("recovery.newPassword") || "Nova Senha"}</h1>
