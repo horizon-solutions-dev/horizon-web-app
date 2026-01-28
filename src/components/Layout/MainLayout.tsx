@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import MenuComponent from "../MenuComponent/MenuComponent";
 import { MdNotifications, MdAccountCircle, MdLogout, MdMenu } from "react-icons/md";
 import { useState } from "react";
@@ -8,9 +8,39 @@ import { useAuth } from "../../contexts/useAuth";
 
 export default function MainLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  // Nome do morador - depois pode vir de um contexto/API
+  const residentName = "João Silva";
+  const residentApartment = "Apto 301";
+
+  // Mapear rotas para títulos
+  const getPageTitle = () => {
+    const path = location.pathname;
+    const titleMap: { [key: string]: string } = {
+      '/dashboard': 'Dashboard',
+      '/condominio': 'Condomínio',
+      '/reservas/tipo': 'Tipo de Reserva',
+      '/reservas/listagem': 'Listagem de Reservas',
+      '/reservas/calendario': 'Calendário de Reservas',
+      '/reservas/disponibilidade': 'Disponibilidade',
+      '/financeiro/boletos': 'Boletos',
+      '/financeiro/balancetes': 'Balancetes',
+      '/financeiro/despesas': 'Despesas',
+      '/portaria/usuarios': 'Usuários da Portaria',
+      '/portaria/liberacao': 'Liberação de Acesso',
+      '/portaria/relatorios': 'Relatórios da Portaria',
+      '/moradores': 'Moradores',
+      '/veiculos': 'Veículos',
+      '/fale-conosco': 'Fale Conosco',
+      '/encomendas/recebimento': 'Recebimento de Encomendas',
+      '/encomendas/notificacao': 'Notificação de Encomendas',
+    };
+    return titleMap[path] || 'Dashboard';
+  };
 
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -91,7 +121,7 @@ export default function MainLayout() {
             >
               <MdMenu />
             </button>
-            <h1 className="header-title">Sistema de Gestão de Condomínio</h1>
+            <h1 className="header-title">{getPageTitle()}</h1>
           </div>
 
           <div className="header-right">
@@ -109,8 +139,8 @@ export default function MainLayout() {
             <div className="header-user">
               <MdAccountCircle className="user-avatar" />
               <div className="user-info">
-                <span className="user-name">Usuário Admin</span>
-                <span className="user-role">Administrador</span>
+                <span className="user-name">{residentName}</span>
+                <span className="user-role">{residentApartment}</span>
               </div>
             </div>
 

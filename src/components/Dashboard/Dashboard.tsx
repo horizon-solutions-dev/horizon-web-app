@@ -58,11 +58,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h1>Dashboard</h1>
-        <p>Bem-vindo ao sistema de gestão do condomínio</p>
-      </div>
-
       <div className="stats-grid">
         {stats.map((stat) => (
           <div key={stat.id} className="stat-card">
