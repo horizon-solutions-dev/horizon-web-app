@@ -18,7 +18,7 @@ export default function MainLayout() {
   // Nome do morador - depois pode vir de um contexto/API
 
   // Mapear rotas para títulos
-  const getPageTitle = () => {
+ /*  const getPageTitle = () => {
     const path = location.pathname;
     const titleMap: { [key: string]: string } = {
       '/dashboard': 'Dashboard',
@@ -40,7 +40,7 @@ export default function MainLayout() {
       '/encomendas/notificacao': 'Notificação de Encomendas',
     };
     return titleMap[path] || 'Dashboard';
-  };
+  }; */
 
   const [notifications, setNotifications] = useState<Notification[]>([
     {
