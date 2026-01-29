@@ -741,7 +741,7 @@ const CondominioForm: React.FC = () => {
                             Editar
                           </Button>
                         ),
-                        accentColor: index % 2 === 0 ? '#eef6ee' : '#fdecef',
+                     //   accentColor: index % 2 === 0 ? '#eef6ee' : '#fdecef',
                       }))}
                   />
                 )}
