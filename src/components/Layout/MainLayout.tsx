@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import MenuComponent from "../MenuComponent/MenuComponent";
 import { MdNotifications, MdAccountCircle, MdLogout, MdMenu } from "react-icons/md";
@@ -15,8 +16,6 @@ export default function MainLayout() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   // Nome do morador - depois pode vir de um contexto/API
-  const residentName = "João Silva";
-  const residentApartment = "Apto 301";
 
   // Mapear rotas para títulos
   const getPageTitle = () => {
