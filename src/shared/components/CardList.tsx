@@ -11,7 +11,7 @@ import {
   PaginationItem,
 } from '@mui/material';
 import { Add, Search, Tune, ArrowBack, ArrowForward } from '@mui/icons-material';
-
+import Falback from '../../assets/falback.jpg'
 export interface CardListItem {
   id: string;
   title: string;
@@ -142,15 +142,17 @@ export default function CardList({
                   }}
                 >
                   {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
                   ) : (
-                    <Typography variant="caption" color="text.secondary">
-                      Sem imagem
-                    </Typography>
+                      <img
+                        src={Falback}
+                        alt="Imagem padrão"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
                   )}
                 </Box>
               </Paper>
