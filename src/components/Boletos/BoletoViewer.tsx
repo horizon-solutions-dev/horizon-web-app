@@ -66,7 +66,7 @@ const BoletoViewer: React.FC<BoletoViewerProps> = ({ open, onClose, boleto, onDo
     <Dialog 
       open={open} 
       onClose={onClose} 
-      maxWidth="md" 
+      maxWidth="xl" 
       fullWidth
       className="boleto-viewer-dialog"
     >

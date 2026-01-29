@@ -72,6 +72,14 @@ export class ApiClient {
 
   public async post<T>(url: string, data?: unknown): Promise<T> {
     try {
+      if (data instanceof FormData) {
+        const response = await this.client.post<T>(url, data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response.data;
+      }
       const response = await this.client.post<T>(url, data);
       return response.data;
     } catch (error) {

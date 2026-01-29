@@ -43,7 +43,7 @@ const Perfis: React.FC = () => {
 
   return (
     <Box className="page-container" sx={{ py: 4 }}>
-      <Container maxWidth="md">
+      <Container maxWidth="xl">
         <Paper elevation={3} sx={{ p: 3 }}>
           <Typography variant="h4" sx={{ mb: 2 }}>
             Perfis
