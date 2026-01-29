@@ -11,6 +11,7 @@ import { AuthService } from "../../services/authService";
 import { organizationService, type OrganizationMeResponse } from "../../services/organizationService";
 import { IoIosArrowBack } from "react-icons/io";
 
+
 interface LoginFormValues {
   email: string;
   password: string;
