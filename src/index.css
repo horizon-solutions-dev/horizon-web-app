@@ -113,6 +113,14 @@ ul {
 	list-style: none;
 }
 
+li::marker {
+	content: '';
+}
+
+li::before {
+	content: none;
+}
+
 blockquote,
 q {
 	quotes: none;

@@ -125,7 +125,7 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth className="veiculo-form-dialog">
+    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth className="veiculo-form-dialog">
       <DialogTitle className="form-title">
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">
