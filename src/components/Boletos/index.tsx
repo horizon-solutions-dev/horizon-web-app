@@ -7,12 +7,6 @@ import {
   Button,
   TextField,
   Grid,
-  IconButton,
-  Card,
-  CardContent,
-  CardActions,
-  CardMedia,
-  Chip,
   InputAdornment,
   Menu,
   MenuItem,
@@ -27,13 +21,11 @@ import {
   Delete,
   Edit,
   Visibility,
-  MoreVert,
-  AttachMoney,
-  CalendarToday,
   Description
 } from '@mui/icons-material';
 import BoletoForm from './BoletoForm';
 import BoletoViewer from './BoletoViewer';
+import { BoletoCard } from './BoletoCard';
 import './Boletos.scss';
 
 interface Boleto {
@@ -249,80 +241,13 @@ const Boletos: React.FC = () => {
             <Grid container spacing={3} className="boletos-grid">
               {filteredBoletos.map((boleto) => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={boleto.id}>
-                  <Card className="boleto-card">
-                    <CardMedia
-                      component="div"
-                      className="boleto-image"
-                      onClick={() => handleOpenViewer(boleto)}
-                    >
-                      {boleto.imagem ? (
-                        <img src={boleto.imagem} alt={`Boleto ${boleto.numero}`} />
-                      ) : (
-                        <Box className="no-image">
-                          <Description className="no-image-icon" />
-                          <Typography variant="caption">Sem imagem</Typography>
-                        </Box>
-                      )}
-                    </CardMedia>
-
-                    <CardContent className="boleto-content">
-                      <Box className="boleto-status-row">
-                        <Chip
-                          label={boleto.status.toUpperCase()}
-                          color={getStatusColor(boleto.status) as any}
-                          size="small"
-                          className="status-chip"
-                        />
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleOpenMenu(e, boleto)}
-                        >
-                          <MoreVert />
-                        </IconButton>
-                      </Box>
-
-                      <Typography variant="h6" className="boleto-title">
-                        {boleto.descricao}
-                      </Typography>
-
-                      <Box className="boleto-info">
-                        <Box className="info-row">
-                          <AttachMoney className="info-icon" />
-                          <Typography variant="body2">
-                            R$ {boleto.valor.toFixed(2)}
-                          </Typography>
-                        </Box>
-                        <Box className="info-row">
-                          <CalendarToday className="info-icon" />
-                          <Typography variant="body2">
-                            {new Date(boleto.vencimento).toLocaleDateString('pt-BR')}
-                          </Typography>
-                        </Box>
-                      </Box>
-
-                      <Typography variant="caption" className="boleto-numero">
-                        {boleto.numero}
-                      </Typography>
-                    </CardContent>
-
-                    <CardActions className="boleto-actions">
-                      <Button
-                        size="small"
-                        startIcon={<Visibility />}
-                        onClick={() => handleOpenViewer(boleto)}
-                      >
-                        Visualizar
-                      </Button>
-                      <Button
-                        size="small"
-                        startIcon={<Download />}
-                        onClick={() => handleDownload(boleto)}
-                        disabled={!boleto.imagem}
-                      >
-                        Download
-                      </Button>
-                    </CardActions>
-                  </Card>
+                  <BoletoCard
+                    boleto={boleto}
+                    onViewer={handleOpenViewer}
+                    onDownload={handleDownload}
+                    onMenu={handleOpenMenu}
+                    getStatusColor={getStatusColor}
+                  />
                 </Grid>
               ))}
             </Grid>

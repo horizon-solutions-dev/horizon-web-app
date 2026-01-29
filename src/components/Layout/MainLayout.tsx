@@ -1,14 +1,17 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import MenuComponent from "../MenuComponent/MenuComponent";
 import { MdNotifications, MdAccountCircle, MdLogout, MdMenu } from "react-icons/md";
 import { useState } from "react";
 import "./MainLayout.scss";
 import NotificationsModal, { type Notification } from "../NotificationsModal/NotificationsModal";
 import { useAuth } from "../../contexts/useAuth";
+import RouteNames from "../../routes/routeNames";
 
 export default function MainLayout() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const location = useLocation();
+  const { logout, user } = useAuth();
+  console.log("User in MainLayout:", user, 'teste');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -18,30 +21,30 @@ export default function MainLayout() {
       type: "delivery",
       title: "Nova encomenda recebida",
       message: "Uma encomenda foi registrada para o apartamento 301. Por favor, notifique o morador.",
-      time: "H√° 5 minutos",
+      time: "H· 5 minutos",
       read: false,
     },
     {
       id: "2",
       type: "warning",
-      title: "Boleto pr√≥ximo do vencimento",
-      message: "O boleto do condom√≠nio vence em 2 dias. N√£o se esque√ßa de realizar o pagamento.",
-      time: "H√° 2 horas",
+      title: "Boleto prÛximo do vencimento",
+      message: "O boleto do condomÌnio vence em 2 dias. N„o se esqueÁa de realizar o pagamento.",
+      time: "H· 2 horas",
       read: false,
     },
     {
       id: "3",
       type: "success",
       title: "Reserva confirmada",
-      message: "Sua reserva do sal√£o de festas para o dia 20/01 foi confirmada com sucesso.",
-      time: "H√° 5 horas",
+      message: "Sua reserva do sal„o de festas para o dia 20/01 foi confirmada com sucesso.",
+      time: "H· 5 horas",
       read: false,
     },
     {
       id: "4",
       type: "info",
-      title: "Manuten√ß√£o programada",
-      message: "Haver√° manuten√ß√£o no elevador social no dia 18/01 das 9h √†s 12h.",
+      title: "ManutenÁ„o programada",
+      message: "Haver· manutenÁ„o no elevador social no dia 18/01 das 9h ‡s 12h.",
       time: "Ontem",
       read: true,
     },
@@ -50,7 +53,7 @@ export default function MainLayout() {
       type: "delivery",
       title: "Encomenda retirada",
       message: "A encomenda do apartamento 205 foi retirada com sucesso.",
-      time: "H√° 2 dias",
+      time: "H· 2 dias",
       read: true,
     },
   ]);
@@ -76,6 +79,55 @@ export default function MainLayout() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  const routeTitles: Record<string, { label: string; parent?: string }> = {
+    [RouteNames.Dashboard]: { label: "Dashboard" },
+    [RouteNames.Condominio]: { label: "Condominio" },
+    [RouteNames.Moradores]: { label: "Moradores" },
+    [RouteNames.Veiculos]: { label: "Veiculos" },
+    [RouteNames.FaleConosco]: { label: "Fale Conosco" },
+
+    [RouteNames.ReservasTipo]: { label: "Tipo de Reserva", parent: "Reservas" },
+    [RouteNames.ReservasListagem]: { label: "Listagem", parent: "Reservas" },
+    [RouteNames.ReservasCalendario]: { label: "Calendario", parent: "Reservas" },
+    [RouteNames.ReservasDisponibilidade]: { label: "Disponibilidade", parent: "Reservas" },
+
+    [RouteNames.FinanceiroBoletos]: { label: "Boletos", parent: "Financeiro" },
+    [RouteNames.FinanceiroBoletosDownload]: { label: "Download", parent: "Financeiro / Boletos" },
+    [RouteNames.FinanceiroBoletosAnexos]: { label: "Anexos", parent: "Financeiro / Boletos" },
+    [RouteNames.FinanceiroBalancetes]: { label: "Balancetes", parent: "Financeiro" },
+    [RouteNames.FinanceiroBalancetesDownload]: { label: "Download", parent: "Financeiro / Balancetes" },
+    [RouteNames.FinanceiroBalancetesRelatorio]: { label: "Relatorio", parent: "Financeiro / Balancetes" },
+    [RouteNames.FinanceiroDespesas]: { label: "Despesas", parent: "Financeiro" },
+    [RouteNames.FinanceiroDespesasAnexo]: { label: "Anexos", parent: "Financeiro / Despesas" },
+
+    [RouteNames.PortariaUsuarios]: { label: "Usuarios", parent: "Portaria" },
+    [RouteNames.PortariaLiberacao]: { label: "Liberacao", parent: "Portaria" },
+    [RouteNames.PortariaRelatorios]: { label: "Relatorios", parent: "Portaria" },
+
+    [RouteNames.EncomendasRecebimento]: { label: "Recebimento", parent: "Encomendas" },
+    [RouteNames.EncomendasNotificacao]: { label: "Notificacao", parent: "Encomendas" },
+
+    [RouteNames.CadastrosBlocos]: { label: "Blocos", parent: "Cadastros" },
+    [RouteNames.CadastrosUnidades]: { label: "Unidades", parent: "Cadastros" },
+    [RouteNames.CadastrosResidentes]: { label: "Residentes", parent: "Cadastros" },
+    [RouteNames.CadastrosOrganizacoes]: { label: "Organizacoes", parent: "Cadastros" },
+    [RouteNames.CadastrosPerfis]: { label: "Perfis", parent: "Cadastros" },
+  };
+
+  const getHeaderTitle = () => {
+    const current = routeTitles[location.pathname];
+    if (current) {
+      return current.parent ? `${current.parent} / ${current.label}` : current.label;
+    }
+
+    const segments = location.pathname.split("/").filter(Boolean);
+    if (segments.length === 0) return "Dashboard";
+    return segments
+      .map((segment) => segment.replace(/-/g, " "))
+      .map((segment) => segment.replace(/\b\w/g, (char) => char.toUpperCase()))
+      .join(" / ");
+  };
+
   return (
     <div className="main-layout">
       <aside className={`main-layout-sidebar ${mobileMenuOpen ? "mobile-open" : ""}`}>
@@ -91,13 +143,13 @@ export default function MainLayout() {
             >
               <MdMenu />
             </button>
-            <h1 className="header-title">Sistema de Gest√£o de Condom√≠nio</h1>
+            <h1 className="header-title">{getHeaderTitle()}</h1>
           </div>
 
           <div className="header-right">
             <button 
               className="header-icon-btn" 
-              title="Notifica√ß√µes"
+              title="NotificaÁıes"
               onClick={() => setNotificationsOpen(!notificationsOpen)}
             >
               <MdNotifications />
@@ -109,9 +161,9 @@ export default function MainLayout() {
             <div className="header-user">
               <MdAccountCircle className="user-avatar" />
               <div className="user-info">
-                <span className="user-name">Usu√°rio Admin</span>
-                <span className="user-role">Administrador</span>
-              </div>
+                <span className="user-name">{user?.name}</span>
+{/*                 <span className="user-role">{user?.role || 'Sem cargo'}</span>
+ */}              </div>
             </div>
 
             <button className="header-icon-btn logout-btn" onClick={handleLogout} title="Sair">
