@@ -76,14 +76,10 @@ const CondominioForm: React.FC = () => {
     try {
       let organizationId = localStorage.getItem('organizationId') || '';
       if (!organizationId) {
-        organizationId = await organizationService.getMyOrganizationId();
+        organizationId = await organizationService.getMyOrganizationId() || '';
         localStorage.setItem('organizationId', organizationId);
       }
-
-      if (!organizationId) {
-        throw new Error('OrganizationId nao encontrado.');
-      }
-
+      
       setFormData((prev) => ({ ...prev, organizationId }));
 
       const data = await condominiumService.getCondominiums(organizationId);

@@ -1,19 +1,46 @@
-// Botão Voltar Simplificado - Moderno e Leve
+// ============================================
+// MENSAGENS DE ERRO
+// ============================================
+.auth-error-message {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-top: 8px;
+  text-align: left;
+  font-weight: 400;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-top: 8px;
+  text-align: left;
+  font-weight: 400;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+// ============================================
+// BOTÃO VOLTAR 
+// ============================================
 .back-indicator {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  height: 36px;
+  position: absolute !important;
+  top: 12px !important;
+  left: 12px !important;
+  height: 40px;
   background: transparent;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-  padding: 0 8px;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
   color: #666;
-  border-radius: 8px;
+  border-radius: 10px;
   transition: all 0.2s ease;
   z-index: 10;
   
@@ -34,7 +61,7 @@
   }
   
   &:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
   }
   
   &:disabled {
@@ -49,7 +76,11 @@
   }
 }
 
+// ============================================
+// CONTAINER E LAYOUT PRINCIPAL
+// ============================================
 .login-container {
+  position: fixed;
   position: fixed;
   top: 0;
   left: 0;
@@ -59,12 +90,15 @@
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
   padding: 20px;
+  overflow: auto;
   overflow: auto;
 }
 
 .login-wrapper {
   width: 100%;
+  max-width: 460px;
   max-width: 460px;
 }
 
@@ -74,9 +108,11 @@
   border-radius: 20px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   display: flex;
   flex-direction: column;
+  animation: slideIn 0.4s ease-out;
+  position: relative;
   animation: slideIn 0.4s ease-out;
   position: relative;
 }
@@ -84,7 +120,7 @@
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-30px) scale(0.95);
+    transform: translateY(-20px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -92,22 +128,29 @@
   }
 }
 
+// ============================================
+// LOGO E CABEÇALHO
+// ============================================
 .logo-section {
   margin: 32px 0 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
+  justify-content: center;
+  text-align: center;
 }
 
 .logo {
-  width: 120px;
+  width: 180px;
   display: flex;
   justify-content: center;
+  margin: 0 auto;
   
   img {
     width: 100%;
     height: auto;
+    display: block;
+    margin: 0 auto;
     filter: drop-shadow(0 2px 8px rgba(0, 103, 184, 0.08));
   }
 }
@@ -123,7 +166,7 @@
   font-size: 24px;
   font-weight: 600;
   color: #1b1b1b;
-  margin-bottom: 8px;
+  margin-bottom: 40px !important;
   text-align: center;
   letter-spacing: -0.3px;
 }
@@ -131,12 +174,20 @@
 .subtitle {
   font-size: 14px;
   color: #666;
+  font-size: 14px;
+  color: #666;
   margin-bottom: 24px;
+  text-align: center;
+  font-weight: 400;
   text-align: center;
   font-weight: 400;
 }
 
+// ============================================
+// INPUTS E FORMULÁRIOS
+// ============================================
 .input-wrapper {
+  margin-top: 32px !important;
   margin-bottom: 16px;
   position: relative;
 }
@@ -148,8 +199,27 @@
   border: 2px solid #e0e0e0;
   border-radius: 12px;
   background-color: white;
+  padding: 14px 16px;
+  font-size: 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background-color: white;
   color: #323130;
   outline: none;
+  transition: all 0.2s ease;
+  
+  &::placeholder {
+    color: #999;
+  }
+  
+  &:hover {
+    border-color: #c0c0c0;
+  }
+  
+  &:focus {
+    border-color: #0067b8;
+    box-shadow: 0 0 0 3px rgba(0, 103, 184, 0.08);
+  }
   transition: all 0.2s ease;
   
   &::placeholder {
@@ -175,24 +245,12 @@
   }
 }
 
-.error-message {
-  color: #d32f2f;
-  font-size: 12px;
-  margin-top: 6px;
-  text-align: left;
-  font-weight: 500;
-  animation: shake 0.3s ease;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
-}
-
+// ============================================
+// LINKS E TEXTOS
+// ============================================
 .link-section {
-  margin-bottom: 6px !important;
-  margin-top: 8px !important;
+  margin-bottom: 12px;
+  margin-top: 8px;
   text-align: center;
 }
 
@@ -212,6 +270,13 @@
     color: #005a9e;
     text-decoration: underline;
   }
+  font-weight: 500;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: #005a9e;
+    text-decoration: underline;
+  }
 }
 
 .text-normal {
@@ -219,20 +284,34 @@
   color: #666;
 }
 
+.text-center {
+  text-align: center;
+}
+
+// ============================================
+// BOTÕES
+// ============================================
 .button-container {
   display: flex;
+  justify-content: center;
+  margin-top: 0;
   justify-content: center;
   margin-top: 0;
 }
 
 .btn-primary {
   background: #0067b8;
+  background: #0067b8;
   color: white;
   border: none;
   padding: 14px 40px;
   font-size: 14px;
   font-weight: 500;
+  padding: 14px 40px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  border-radius: 12px;
   border-radius: 12px;
   transition: all 0.2s ease;
   position: relative;
@@ -256,9 +335,60 @@
   }
 }
 
+// ============================================
+// LISTA DE EMPRESAS
+// ============================================
 .company-list {
   margin-bottom: 20px;
+  margin-bottom: 20px;
   overflow-y: auto;
+  max-height: 280px;
+  padding: 4px;
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 8px 0;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(0, 103, 184, 0.2) 0%, rgba(0, 103, 184, 0.4) 100%);
+    border-radius: 10px;
+    border: 2px solid white;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: linear-gradient(180deg, rgba(0, 103, 184, 0.4) 0%, rgba(0, 103, 184, 0.6) 100%);
+      border-width: 1px;
+    }
+  }
+  
+  &::before {
+    content: '';
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to bottom, white 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  &::after {
+    content: '';
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to top, white 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
   max-height: 280px;
   padding: 4px;
   
@@ -313,11 +443,51 @@
   padding: 20px;
   margin-bottom: 14px;
   border: 2px solid rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  margin-bottom: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.06);
   background: white;
   cursor: pointer;
   text-align: left;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
+  align-items: center;
+  gap: 16px;
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    transition: left 0.6s ease;
+  }
+  
+  &:hover {
+    border-color: rgba(0, 103, 184, 0.3);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 32px rgba(0, 103, 184, 0.15);
+    
+    &::before {
+      left: 100%;
+    }
+    
+    .company-icon {
+      transform: scale(1.1) rotate(5deg);
+    }
+  }
+  
+  &:active {
+    transform: translateY(-2px) scale(0.99);
+  }
+  
   align-items: center;
   gap: 16px;
   border-radius: 18px;
@@ -382,6 +552,32 @@
       color: #0067b8;
       font-weight: 700;
     }
+    background: linear-gradient(135deg, #e8f4ff 0%, #d4ebff 100%);
+    box-shadow: 0 8px 28px rgba(0, 103, 184, 0.25);
+    transform: translateY(-2px);
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #0067b8 0%, #005a9e 100%);
+      border-radius: 18px 0 0 18px;
+    }
+    
+    .company-icon {
+      background: linear-gradient(135deg, #0067b8 0%, #005a9e 100%);
+      color: white;
+      box-shadow: 0 6px 20px rgba(0, 103, 184, 0.4);
+      transform: scale(1.1);
+    }
+    
+    .company-name {
+      color: #0067b8;
+      font-weight: 700;
+    }
   }
 }
 
@@ -389,11 +585,18 @@
   width: 52px;
   height: 52px;
   border-radius: 14px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
   flex-shrink: 0;
+  font-size: 24px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   font-size: 24px;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -405,8 +608,12 @@
 
 .company-name {
   font-size: 16px;
+  font-size: 16px;
   font-weight: 600;
   color: #323130;
+  margin-bottom: 5px;
+  transition: all 0.3s ease;
+  letter-spacing: 0.2px;
   margin-bottom: 5px;
   transition: all 0.3s ease;
   letter-spacing: 0.2px;
@@ -419,10 +626,9 @@
   letter-spacing: 0.3px;
 }
 
-.text-center {
-  text-align: center;
-}
-
+// ============================================
+// INDICADOR DE ETAPAS
+// ============================================
 .step-indicator {
   display: flex;
   justify-content: center;
@@ -430,9 +636,13 @@
   margin-top: 24px;
   padding-top: 20px;
   border-top: 1px solid #f0f0f0;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .step-dot {
+  width: 7px;
+  height: 7px;
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -449,13 +659,16 @@
   }
 }
 
+// ============================================
+// RESPONSIVIDADE
+// ============================================
 @media (max-width: 480px) {
   .login-card {
     padding: 36px 24px 32px;
   }
   
   .logo {
-    width: 90px;
+    width: 140px;
   }
   
   .title {
@@ -463,10 +676,10 @@
   }
   
   .back-indicator {
-    top: 16px;
-    left: 16px;
-    height: 34px;
-    padding: 0 6px;
+    top: 10px !important;
+    left: 10px !important;
+    height: 36px;
+    padding: 0 12px;
     
     span {
       font-size: 13px;
