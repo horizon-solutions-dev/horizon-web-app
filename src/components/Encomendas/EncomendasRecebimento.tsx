@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../shared/components/PagePlaceholder';
+
 export default function EncomendasRecebimento() {
   return (
-    <div className="page-container">
-      <h1>Recebimento de Encomendas</h1>
-      <p>Sinalizar encomenda recebida</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-        <p>Conteúdo em desenvolvimento...</p>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Recebimento de Encomendas"
+      subtitle="Registro e controle de encomendas recebidas."
+      actions={[
+        { label: 'Registrar', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Morador', 'Volume', 'Status'],
+        rows: [
+          ['Apto 301', 'Caixa', 'Recebida'],
+          ['Apto 205', 'Envelope', 'Aguardando'],
+        ],
+      }}
+    />
   );
 }
