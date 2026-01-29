@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../shared/components/PagePlaceholder';
+
 export default function PortariaRelatorios() {
   return (
-    <div className="page-container">
-      <h1>Relatórios</h1>
-      <p>Gerar relatórios da portaria</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-        <p>Conteúdo em desenvolvimento...</p>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Portaria - Relatorios"
+      subtitle="Relatorios e auditoria."
+      actions={[
+        { label: 'Gerar relatorio', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Relatorio', 'Periodo', 'Status'],
+        rows: [
+          ['Acessos', '01/2026', 'Gerado'],
+          ['Visitantes', '12/2025', 'Gerado'],
+        ],
+      }}
+    />
   );
 }

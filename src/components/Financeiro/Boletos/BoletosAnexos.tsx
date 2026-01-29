@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../../shared/components/PagePlaceholder';
+
 export default function BoletosAnexos() {
   return (
-    <div className="page-container">
-      <h1>Boletos com Anexos</h1>
-      <p>Listar boletos com imagens anexadas</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-        <p>Conteúdo em desenvolvimento...</p>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Boletos - Anexos"
+      subtitle="Gestao de anexos de boletos."
+      actions={[
+        { label: 'Enviar anexo', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Documento', 'Boleto', 'Status'],
+        rows: [
+          ['Comprovante.pdf', '01/2026', 'Validado'],
+          ['Recibo.jpg', '12/2025', 'Pendente'],
+        ],
+      }}
+    />
   );
 }

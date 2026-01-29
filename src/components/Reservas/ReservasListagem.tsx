@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../shared/components/PagePlaceholder';
 
 export default function ReservasListagem() {
   return (
-    <div className="page-container">
-      <h1>Listagem de Reservas</h1>
-      <p>Listar reservas disponíveis</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Reservas - Listagem"
+      subtitle="Listagem completa das reservas."
+      actions={[
+        { label: 'Nova reserva', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Morador', 'Espaco', 'Status'],
+        rows: [
+          ['Ana Costa', 'Salao de festas', 'Confirmada'],
+          ['Bruno Alves', 'Piscina', 'Pendente'],
+        ],
+      }}
+    />
   );
 }

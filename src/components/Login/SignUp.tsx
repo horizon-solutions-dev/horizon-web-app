@@ -3,11 +3,11 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { IoIosArrowBack } from "react-icons/io";
+import { IoChevronBack } from "react-icons/io5";
 import "./sign-up.scss";
 import { AccountService } from "../../services/accountService";
 import type { CreateAccountRequest } from "../../models/api.model";
-
+import Logo from "../../assets/logo.svg";
 interface SignUpProps {
   onBack: () => void;
   onSuccess: () => void;
@@ -161,13 +161,13 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
             disabled={isSubmitting}
             type="button"
           >
-            <IoIosArrowBack />
+            <IoChevronBack />
             <span>{t("login.back") || "Voltar"}</span>
           </button>
 
           <div className="logo-section">
             <div className="logo">
-              <img src="/src/assets/logo.svg" alt="Logo" />
+              <img src={Logo} alt="Logo" />
             </div>
           </div>
 
@@ -358,6 +358,11 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
               {t("signup.passwordRequirements") || "Requisitos de senha:"}
             </p>
             <ul>
+              <li>{t("signup.minChars") || "Mínimo 8 caracteres"}</li>
+              <li>{t("signup.uppercase") || "Uma letra maiúscula"}</li>
+              <li>{t("signup.lowercase") || "Uma letra minúscula"}</li>
+              <li>{t("signup.number") || "Um número"}</li>
+              <li>{t("signup.special") || "Um caractere especial (!@#$%^&*)"}</li>
               <li>{t("signup.minChars") || "Mínimo 8 caracteres"}</li>
               <li>{t("signup.uppercase") || "Uma letra maiúscula"}</li>
               <li>{t("signup.lowercase") || "Uma letra minúscula"}</li>

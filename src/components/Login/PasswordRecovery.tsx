@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { IoIosArrowBack } from "react-icons/io";
+import { IoChevronBack } from "react-icons/io5";
 import "./password-recovery.scss";
 
 interface PasswordRecoveryProps {

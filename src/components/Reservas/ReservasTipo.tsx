@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../shared/components/PagePlaceholder';
+
 export default function ReservasTipo() {
   return (
-    <div className="page-container">
-      <h1>Tipo de Reserva</h1>
-      <p>Selecione o tipo de reserva desejada (salão, quadra, etc.)</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-        <p>Conteúdo em desenvolvimento...</p>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Reservas - Tipo"
+      subtitle="Tipos de reservas cadastrados."
+      actions={[
+        { label: 'Novo tipo', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Tipo', 'Limite', 'Status'],
+        rows: [
+          ['Salao de festas', '1 por dia', 'Ativo'],
+          ['Churrasqueira', '2 por dia', 'Ativo'],
+        ],
+      }}
+    />
   );
 }

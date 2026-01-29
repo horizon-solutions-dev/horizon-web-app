@@ -124,6 +124,71 @@
   margin-top: 1.5rem;
 }
 
+.boleto-info-card-wrapper {
+  position: relative;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .info-card {
+    height: 100% !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .boleto-card-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    
+    .boleto-status-chip {
+      z-index: 10;
+      
+      .status-chip {
+        font-weight: 600 !important;
+        font-size: 0.7rem !important;
+      }
+    }
+    
+    .boleto-card-actions {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 0.5rem;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      
+      .action-btn {
+        font-size: 0.75rem !important;
+        padding: 0.25rem 0.5rem !important;
+        text-transform: none !important;
+        font-weight: 600 !important;
+        
+        &:hover {
+          background-color: rgba(25, 118, 210, 0.1);
+        }
+      }
+      
+      .menu-btn {
+        padding: 0.25rem !important;
+      }
+    }
+  }
+}
+
 .boleto-card {
   border-radius: 16px !important;
   height: 100%;

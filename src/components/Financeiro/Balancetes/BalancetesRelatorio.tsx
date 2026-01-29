@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../../shared/components/PagePlaceholder';
+
 export default function BalancetesRelatorio() {
   return (
-    <div className="page-container">
-      <h1>Relatório de Balancetes</h1>
-      <p>Montar relatório para exibição</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-        <p>Conteúdo em desenvolvimento...</p>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Balancetes - Relatorio"
+      subtitle="Relatorios consolidados."
+      actions={[
+        { label: 'Gerar relatorio', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Tipo', 'Periodo', 'Status'],
+        rows: [
+          ['Consolidado', '01/2026', 'Gerado'],
+          ['Analitico', '12/2025', 'Gerado'],
+        ],
+      }}
+    />
   );
 }

@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../shared/components/PagePlaceholder';
+
 export default function EncomendasNotificacao() {
   return (
-    <div className="page-container">
-      <h1>Notificação de Encomendas</h1>
-      <p>Notificar morador (app/push/email/plataforma)</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-        <p>Conteúdo em desenvolvimento...</p>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Notificacoes de Encomendas"
+      subtitle="Envio e acompanhamento de notificacoes."
+      actions={[
+        { label: 'Nova notificacao', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Morador', 'Canal', 'Status'],
+        rows: [
+          ['Apto 301', 'App', 'Enviado'],
+          ['Apto 205', 'Email', 'Pendente'],
+        ],
+      }}
+    />
   );
 }

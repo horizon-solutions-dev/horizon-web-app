@@ -41,6 +41,11 @@ import EncomendasNotificacao from "../components/Encomendas/EncomendasNotificaca
 import RouteNames from "./routeNames";
 import Moradores from "../components/Moradores/Moradores";
 import Veiculos from "../components/Veiculos/Veiculos";
+import Blocos from "../components/Blocos/Blocos";
+import Unidades from "../components/Unidades/Unidades";
+import Residentes from "../components/Residentes/Residentes";
+import Organizacoes from "../components/Organizacoes/Organizacoes";
+import Perfis from "../components/Perfis/Perfis";
 
 
 const router = createBrowserRouter([
@@ -135,9 +140,31 @@ const router = createBrowserRouter([
 				path: RouteNames.Condominio,
 				element: <CondominioForm />,
 			},
-					{
+			{
 				path: RouteNames.Moradores,
 				element: <Moradores />,
+			},
+			
+			// Cadastros
+			{
+				path: RouteNames.CadastrosBlocos,
+				element: <Blocos />,
+			},
+			{
+				path: RouteNames.CadastrosUnidades,
+				element: <Unidades />,
+			},
+			{
+				path: RouteNames.CadastrosResidentes,
+				element: <Residentes />,
+			},
+			{
+				path: RouteNames.CadastrosOrganizacoes,
+				element: <Organizacoes />,
+			},
+			{
+				path: RouteNames.CadastrosPerfis,
+				element: <Perfis />,
 			},
 			
 			// Veículos

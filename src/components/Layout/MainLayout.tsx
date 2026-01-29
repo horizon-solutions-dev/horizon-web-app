@@ -1,16 +1,46 @@
-import { Outlet, useNavigate } from "react-router-dom";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import MenuComponent from "../MenuComponent/MenuComponent";
 import { MdNotifications, MdAccountCircle, MdLogout, MdMenu } from "react-icons/md";
 import { useState } from "react";
 import "./MainLayout.scss";
 import NotificationsModal, { type Notification } from "../NotificationsModal/NotificationsModal";
 import { useAuth } from "../../contexts/useAuth";
+import RouteNames from "../../routes/routeNames";
 
 export default function MainLayout() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const location = useLocation();
+  const { logout, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  // Nome do morador - depois pode vir de um contexto/API
+
+  // Mapear rotas para títulos
+ /*  const getPageTitle = () => {
+    const path = location.pathname;
+    const titleMap: { [key: string]: string } = {
+      '/dashboard': 'Dashboard',
+      '/condominio': 'Condomínio',
+      '/reservas/tipo': 'Tipo de Reserva',
+      '/reservas/listagem': 'Listagem de Reservas',
+      '/reservas/calendario': 'Calendário de Reservas',
+      '/reservas/disponibilidade': 'Disponibilidade',
+      '/financeiro/boletos': 'Boletos',
+      '/financeiro/balancetes': 'Balancetes',
+      '/financeiro/despesas': 'Despesas',
+      '/portaria/usuarios': 'Usuários da Portaria',
+      '/portaria/liberacao': 'Liberação de Acesso',
+      '/portaria/relatorios': 'Relatórios da Portaria',
+      '/moradores': 'Moradores',
+      '/veiculos': 'Veículos',
+      '/fale-conosco': 'Fale Conosco',
+      '/encomendas/recebimento': 'Recebimento de Encomendas',
+      '/encomendas/notificacao': 'Notificação de Encomendas',
+    };
+    return titleMap[path] || 'Dashboard';
+  }; */
 
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -18,30 +48,30 @@ export default function MainLayout() {
       type: "delivery",
       title: "Nova encomenda recebida",
       message: "Uma encomenda foi registrada para o apartamento 301. Por favor, notifique o morador.",
-      time: "Há 5 minutos",
+      time: "H� 5 minutos",
       read: false,
     },
     {
       id: "2",
       type: "warning",
-      title: "Boleto próximo do vencimento",
-      message: "O boleto do condomínio vence em 2 dias. Não se esqueça de realizar o pagamento.",
-      time: "Há 2 horas",
+      title: "Boleto pr�ximo do vencimento",
+      message: "O boleto do condom�nio vence em 2 dias. N�o se esque�a de realizar o pagamento.",
+      time: "H� 2 horas",
       read: false,
     },
     {
       id: "3",
       type: "success",
       title: "Reserva confirmada",
-      message: "Sua reserva do salão de festas para o dia 20/01 foi confirmada com sucesso.",
-      time: "Há 5 horas",
+      message: "Sua reserva do sal�o de festas para o dia 20/01 foi confirmada com sucesso.",
+      time: "H� 5 horas",
       read: false,
     },
     {
       id: "4",
       type: "info",
-      title: "Manutenção programada",
-      message: "Haverá manutenção no elevador social no dia 18/01 das 9h às 12h.",
+      title: "Manuten��o programada",
+      message: "Haver� manuten��o no elevador social no dia 18/01 das 9h �s 12h.",
       time: "Ontem",
       read: true,
     },
@@ -50,7 +80,7 @@ export default function MainLayout() {
       type: "delivery",
       title: "Encomenda retirada",
       message: "A encomenda do apartamento 205 foi retirada com sucesso.",
-      time: "Há 2 dias",
+      time: "H� 2 dias",
       read: true,
     },
   ]);
@@ -76,6 +106,55 @@ export default function MainLayout() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  const routeTitles: Record<string, { label: string; parent?: string }> = {
+    [RouteNames.Dashboard]: { label: "Dashboard" },
+    [RouteNames.Condominio]: { label: "Condominio" },
+    [RouteNames.Moradores]: { label: "Moradores" },
+    [RouteNames.Veiculos]: { label: "Veiculos" },
+    [RouteNames.FaleConosco]: { label: "Fale Conosco" },
+
+    [RouteNames.ReservasTipo]: { label: "Tipo de Reserva", parent: "Reservas" },
+    [RouteNames.ReservasListagem]: { label: "Listagem", parent: "Reservas" },
+    [RouteNames.ReservasCalendario]: { label: "Calendario", parent: "Reservas" },
+    [RouteNames.ReservasDisponibilidade]: { label: "Disponibilidade", parent: "Reservas" },
+
+    [RouteNames.FinanceiroBoletos]: { label: "Boletos", parent: "Financeiro" },
+    [RouteNames.FinanceiroBoletosDownload]: { label: "Download", parent: "Financeiro / Boletos" },
+    [RouteNames.FinanceiroBoletosAnexos]: { label: "Anexos", parent: "Financeiro / Boletos" },
+    [RouteNames.FinanceiroBalancetes]: { label: "Balancetes", parent: "Financeiro" },
+    [RouteNames.FinanceiroBalancetesDownload]: { label: "Download", parent: "Financeiro / Balancetes" },
+    [RouteNames.FinanceiroBalancetesRelatorio]: { label: "Relatorio", parent: "Financeiro / Balancetes" },
+    [RouteNames.FinanceiroDespesas]: { label: "Despesas", parent: "Financeiro" },
+    [RouteNames.FinanceiroDespesasAnexo]: { label: "Anexos", parent: "Financeiro / Despesas" },
+
+    [RouteNames.PortariaUsuarios]: { label: "Usuarios", parent: "Portaria" },
+    [RouteNames.PortariaLiberacao]: { label: "Liberacao", parent: "Portaria" },
+    [RouteNames.PortariaRelatorios]: { label: "Relatorios", parent: "Portaria" },
+
+    [RouteNames.EncomendasRecebimento]: { label: "Recebimento", parent: "Encomendas" },
+    [RouteNames.EncomendasNotificacao]: { label: "Notificacao", parent: "Encomendas" },
+
+    [RouteNames.CadastrosBlocos]: { label: "Blocos", parent: "Cadastros" },
+    [RouteNames.CadastrosUnidades]: { label: "Unidades", parent: "Cadastros" },
+    [RouteNames.CadastrosResidentes]: { label: "Residentes", parent: "Cadastros" },
+    [RouteNames.CadastrosOrganizacoes]: { label: "Organizacoes", parent: "Cadastros" },
+    [RouteNames.CadastrosPerfis]: { label: "Perfis", parent: "Cadastros" },
+  };
+
+  const getHeaderTitle = () => {
+    const current = routeTitles[location.pathname];
+    if (current) {
+      return current.parent ? `${current.parent} / ${current.label}` : current.label;
+    }
+
+    const segments = location.pathname.split("/").filter(Boolean);
+    if (segments.length === 0) return "Dashboard";
+    return segments
+      .map((segment) => segment.replace(/-/g, " "))
+      .map((segment) => segment.replace(/\b\w/g, (char) => char.toUpperCase()))
+      .join(" / ");
+  };
+
   return (
     <div className="main-layout">
       <aside className={`main-layout-sidebar ${mobileMenuOpen ? "mobile-open" : ""}`}>
@@ -91,13 +170,13 @@ export default function MainLayout() {
             >
               <MdMenu />
             </button>
-            <h1 className="header-title">Sistema de Gestão de Condomínio</h1>
+            <h1 className="header-title">{getHeaderTitle()}</h1>
           </div>
 
           <div className="header-right">
             <button 
               className="header-icon-btn" 
-              title="Notificações"
+              title="Notifica��es"
               onClick={() => setNotificationsOpen(!notificationsOpen)}
             >
               <MdNotifications />
@@ -109,9 +188,9 @@ export default function MainLayout() {
             <div className="header-user">
               <MdAccountCircle className="user-avatar" />
               <div className="user-info">
-                <span className="user-name">Usuário Admin</span>
-                <span className="user-role">Administrador</span>
-              </div>
+                <span className="user-name">{user?.name}</span>
+{/*                 <span className="user-role">{user?.role || 'Sem cargo'}</span>
+ */}              </div>
             </div>
 
             <button className="header-icon-btn logout-btn" onClick={handleLogout} title="Sair">

@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../../shared/components/PagePlaceholder';
+
 export default function BoletosDownload() {
   return (
-    <div className="page-container">
-      <h1>Download de Boletos</h1>
-      <p>Baixar boletos em PDF</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-        <p>Conteúdo em desenvolvimento...</p>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Boletos - Download"
+      subtitle="Central de downloads de boletos."
+      actions={[
+        { label: 'Gerar lote', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Arquivo', 'Periodo', 'Status'],
+        rows: [
+          ['Boletos_01_2026.pdf', '01/2026', 'Disponivel'],
+          ['Boletos_12_2025.pdf', '12/2025', 'Disponivel'],
+        ],
+      }}
+    />
   );
 }
