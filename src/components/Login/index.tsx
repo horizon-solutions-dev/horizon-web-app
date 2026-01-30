@@ -33,6 +33,7 @@ export default function MultiStepLogin() {
   const [condominiums, setCondominiums] = useState<OrganizationMeResponse[]>([]);
   const [isLoadingCondominiums, setIsLoadingCondominiums] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const validationSchema = Yup.object({
     email: Yup.string()
@@ -49,6 +50,7 @@ export default function MultiStepLogin() {
     validationSchema,
     onSubmit: async (values) => {
       setIsSubmitting(true);
+      setIsLoggingIn(true);
       try {
         if (!values.condominium) {
           return;
@@ -66,6 +68,7 @@ export default function MultiStepLogin() {
        window.location.href = "/dashboard";
        localStorage.setItem('organizationId', values.condominium.organizationId || '');
       } catch (error) {
+        setIsLoggingIn(false);
         toast.error(
           error instanceof Error ? error.message : t("toast.loginError"),
         );
@@ -193,11 +196,11 @@ export default function MultiStepLogin() {
     );
   };
 
-// Função para obter as iniciais baseadas no tipo de organização
+
 const getOrganizationInitials = (org: OrganizationMeResponse): string => {
   const name = org.name;
 
-  // Se o nome tem menos de 2 caracteres
+  
   if (name.length < 2) {
     return name.charAt(0).toUpperCase();
   }
@@ -213,9 +216,9 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
   const getOrganizationColorClass = (org: OrganizationMeResponse): string => {
     // orgType: 1 = PropertyManagementCompany, 2 = ManagedCondominium
     if (org.orgType === 1) {
-      return "org-type-company"; // Administradora
+      return "org-type-company";
     } else if (org.orgType === 2) {
-      return "org-type-condo"; // Condomínio
+      return "org-type-condo";
     }
     return "org-type-default";
   };
@@ -473,6 +476,22 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
               </div>
             </div>
           </div>
+
+          {/* Loading Overlay */}
+          {isLoggingIn && (
+            <div className="login-loading-overlay">
+              <div className="login-loading-content">
+                <div className="login-loader">
+                  <div className="loader-ring"></div>
+                  <div className="loader-ring"></div>
+                  <div className="loader-ring"></div>
+                </div>
+                <p className="loading-text">
+                  {t("login.accessingOrganization") || "Acessando organização..."}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

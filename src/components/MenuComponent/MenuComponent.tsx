@@ -13,6 +13,8 @@ import {
   MdSettings,
   MdExpandMore,
   MdExpandLess,
+  MdChevronLeft,
+  MdChevronRight,
 } from "react-icons/md";
 import "./MenuComponent.scss";
 import RouteNames from "../../routes/routeNames";
@@ -23,6 +25,11 @@ interface MenuItem {
   icon: JSX.Element;
   path?: string;
   children?: MenuItem[];
+}
+
+interface MenuComponentProps {
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 const menuItems: MenuItem[] = [
@@ -110,11 +117,13 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-export default function MenuComponent() {
+export default function MenuComponent({ collapsed = false, onToggleCollapse }: MenuComponentProps) {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const toggleExpand = (itemId: string) => {
+    if (collapsed) return; // Não expande quando colapsado
+    
     setExpandedItems((prev) =>
       prev.includes(itemId)
         ? prev.filter((id) => id !== itemId)
@@ -142,17 +151,22 @@ export default function MenuComponent() {
       return (
         <div key={item.id} className="menu-item-wrapper">
           <div
-            className={`menu-item ${parentActive ? "parent-active" : ""}`}
+            className={`menu-item ${parentActive ? "parent-active" : ""} ${collapsed ? "collapsed" : ""}`}
             onClick={() => toggleExpand(item.id)}
-            style={{ paddingLeft: `${level * 16 + 16}px` }}
+            style={{ paddingLeft: collapsed ? '0' : `${level * 16 + 16}px` }}
+            title={collapsed ? item.label : undefined}
           >
             <span className="menu-icon">{item.icon}</span>
-            <span className="menu-label">{item.label}</span>
-            <span className="menu-expand-icon">
-              {isExpanded ? <MdExpandLess /> : <MdExpandMore />}
-            </span>
+            {!collapsed && (
+              <>
+                <span className="menu-label">{item.label}</span>
+                <span className="menu-expand-icon">
+                  {isExpanded ? <MdExpandLess /> : <MdExpandMore />}
+                </span>
+              </>
+            )}
           </div>
-          {isExpanded && (
+          {!collapsed && isExpanded && (
             <div className="menu-submenu">
               {item.children?.map((child) => renderMenuItem(child, level + 1))}
             </div>
@@ -165,21 +179,37 @@ export default function MenuComponent() {
       <Link
         key={item.id}
         to={item.path || "#"}
-        className={`menu-item ${itemIsActive ? "active" : ""}`}
-        style={{ paddingLeft: `${level * 16 + 16}px` }}
+        className={`menu-item ${itemIsActive ? "active" : ""} ${collapsed ? "collapsed" : ""}`}
+        style={{ paddingLeft: collapsed ? '0' : `${level * 16 + 16}px` }}
+        title={collapsed ? item.label : undefined}
       >
         {level === 0 && <span className="menu-icon">{item.icon}</span>}
-        <span className="menu-label">{item.label}</span>
+        {!collapsed && <span className="menu-label">{item.label}</span>}
       </Link>
     );
   };
 
   return (
-    <div className="menu-component">
+    <div className={`menu-component ${collapsed ? "collapsed" : ""}`}>
       <div className="menu-header">
-        <img src="/src/assets/logo.svg" alt="Horizon Logo" className="menu-logo" />
-        <h2 className="menu-title">Horizon</h2>
+        <img 
+          src="/src/assets/logo.svg" 
+          alt="Horizon Logo" 
+          className={`menu-logo ${collapsed ? "collapsed" : ""}`}
+        />
+        {!collapsed && <h2 className="menu-title">Horizon</h2>}
       </div>
+
+      {/* Botão de Colapso */}
+      <button 
+        className="collapse-toggle" 
+        onClick={onToggleCollapse}
+        title={collapsed ? "Expandir menu" : "Recolher menu"}
+        aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+      >
+        {collapsed ? <MdChevronRight /> : <MdChevronLeft />}
+      </button>
+
       <nav className="menu-nav">
         {menuItems.map((item) => renderMenuItem(item))}
       </nav>

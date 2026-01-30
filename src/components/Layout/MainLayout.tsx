@@ -14,6 +14,7 @@ export default function MainLayout() {
   const { logout, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Nome do morador - depois pode vir de um contexto/API
 
@@ -48,30 +49,30 @@ export default function MainLayout() {
       type: "delivery",
       title: "Nova encomenda recebida",
       message: "Uma encomenda foi registrada para o apartamento 301. Por favor, notifique o morador.",
-      time: "H� 5 minutos",
+      time: "Há 5 minutos",
       read: false,
     },
     {
       id: "2",
       type: "warning",
-      title: "Boleto pr�ximo do vencimento",
-      message: "O boleto do condom�nio vence em 2 dias. N�o se esque�a de realizar o pagamento.",
-      time: "H� 2 horas",
+      title: "Boleto próximo do vencimento",
+      message: "O boleto do condomínio vence em 2 dias. Não se esqueça de realizar o pagamento.",
+      time: "Há 2 horas",
       read: false,
     },
     {
       id: "3",
       type: "success",
       title: "Reserva confirmada",
-      message: "Sua reserva do sal�o de festas para o dia 20/01 foi confirmada com sucesso.",
-      time: "H� 5 horas",
+      message: "Sua reserva do salão de festas para o dia 20/01 foi confirmada com sucesso.",
+      time: "Há 5 horas",
       read: false,
     },
     {
       id: "4",
       type: "info",
-      title: "Manuten��o programada",
-      message: "Haver� manuten��o no elevador social no dia 18/01 das 9h �s 12h.",
+      title: "Manutenção programada",
+      message: "Haverá manutenção no elevador social no dia 18/01 das 9h às 12h.",
       time: "Ontem",
       read: true,
     },
@@ -80,7 +81,7 @@ export default function MainLayout() {
       type: "delivery",
       title: "Encomenda retirada",
       message: "A encomenda do apartamento 205 foi retirada com sucesso.",
-      time: "H� 2 dias",
+      time: "Há 2 dias",
       read: true,
     },
   ]);
@@ -157,8 +158,11 @@ export default function MainLayout() {
 
   return (
     <div className="main-layout">
-      <aside className={`main-layout-sidebar ${mobileMenuOpen ? "mobile-open" : ""}`}>
-        <MenuComponent />
+      <aside className={`main-layout-sidebar ${mobileMenuOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
+        <MenuComponent 
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
       </aside>
 
       <div className="main-layout-content">
@@ -176,7 +180,7 @@ export default function MainLayout() {
           <div className="header-right">
             <button 
               className="header-icon-btn" 
-              title="Notifica��es"
+              title="Notificações"
               onClick={() => setNotificationsOpen(!notificationsOpen)}
             >
               <MdNotifications />
