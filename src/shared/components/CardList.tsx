@@ -9,14 +9,15 @@ import {
   Grid,
   Pagination,
   PaginationItem,
+  InputAdornment,
 } from '@mui/material';
-import { Add, Search, Tune, ArrowBack, ArrowForward } from '@mui/icons-material';
-import Falback from '../../assets/falback.jpg'
+import { Add, Search, Tune, ArrowBack, ArrowForward, Close } from '@mui/icons-material';
+
 export interface CardListItem {
   id: string;
   title: string;
-  subtitle?: string;
-  meta?: string;
+  subtitle?: React.ReactNode;
+  meta?: React.ReactNode;
   imageUrl?: string;
   actions?: React.ReactNode;
   accentColor?: string;
@@ -24,11 +25,20 @@ export interface CardListItem {
 
 interface CardListProps {
   title: string;
+  headerIcon?: React.ReactNode;
+  breadcrumb?: string;
+  onClose?: () => void;
+  closeLabel?: string;
   items: CardListItem[];
   searchPlaceholder?: string;
   onSearchChange?: (value: string) => void;
   onAddClick?: () => void;
   addLabel?: string;
+  showTitle?: boolean;
+  showFilters?: boolean;
+  filtersLabel?: string;
+  addButtonPlacement?: 'header' | 'toolbar';
+  emptyImageLabel?: string;
   page?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
@@ -37,6 +47,10 @@ interface CardListProps {
 
 export default function CardList({
   title,
+  headerIcon,
+  breadcrumb,
+  onClose,
+  closeLabel = 'Fechar',
   items,
   searchPlaceholder = 'Buscar...',
   onSearchChange,
@@ -45,26 +59,62 @@ export default function CardList({
   totalPages = 1,
   onPageChange,
   showPagination = true,
+  showTitle = true,
+  showFilters = true,
+  filtersLabel = 'Filtros',
+  addButtonPlacement = 'header',
+  emptyImageLabel = 'Sem imagem',
 }: CardListProps) {
   return (
     <Fragment>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h6">{title}</Typography>
-        {onAddClick ? (
-          <IconButton
-            onClick={onAddClick}
-            sx={{
-              width: 40,
-              height: 40,
-              background: 'linear-gradient(135deg, #7f5bff 0%, #6c63ff 100%)',
-              color: '#fff',
-              '&:hover': { background: 'linear-gradient(135deg, #6c63ff 0%, #5a52e6 100%)' },
-            }}
-          >
-            <Add />
-          </IconButton>
-        ) : null}
-      </Box>
+      {showTitle ? (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {headerIcon ? (
+              <Box sx={{ color: '#1976d2', display: 'flex', alignItems: 'center' }}>
+                {headerIcon}
+              </Box>
+            ) : null}
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                {title}
+              </Typography>
+              {breadcrumb ? (
+                <Typography variant="caption" sx={{ color: '#d32f2f', fontWeight: 600 }}>
+                  {breadcrumb}
+                </Typography>
+              ) : null}
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {onClose ? (
+              <Button
+                color="error"
+                startIcon={<Close />}
+                onClick={onClose}
+                variant="text"
+                sx={{ fontWeight: 600 }}
+              >
+                {closeLabel}
+              </Button>
+            ) : null}
+            {onAddClick && addButtonPlacement === 'header' ? (
+              <IconButton
+                onClick={onAddClick}
+                sx={{
+                  width: 40,
+                  height: 40,
+                  background: 'linear-gradient(135deg, #7f5bff 0%, #6c63ff 100%)',
+                  color: '#fff',
+                  '&:hover': { background: 'linear-gradient(135deg, #6c63ff 0%, #5a52e6 100%)' },
+                }}
+              >
+                <Add />
+              </IconButton>
+            ) : null}
+          </Box>
+        </Box>
+      ) : null}
 
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
         <Box sx={{ flex: 1 }}>
@@ -73,13 +123,43 @@ export default function CardList({
             placeholder={searchPlaceholder}
             onChange={(e) => onSearchChange?.(e.target.value)}
             InputProps={{
-              startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search sx={{ color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                backgroundColor: '#fff',
+              },
             }}
           />
         </Box>
-        <Button variant="outlined" startIcon={<Tune />}>
-          Filtros
-        </Button>
+        {showFilters ? (
+          <Button
+            variant="outlined"
+            startIcon={<Tune />}
+            sx={{ borderRadius: 2, fontWeight: 600, textTransform: 'uppercase' }}
+          >
+            {filtersLabel}
+          </Button>
+        ) : null}
+        {onAddClick && addButtonPlacement === 'toolbar' ? (
+          <IconButton
+            onClick={onAddClick}
+            sx={{
+              width: 44,
+              height: 44,
+              background: 'linear-gradient(135deg, #7f5bff 0%, #6c63ff 100%)',
+              color: '#fff',
+              '&:hover': { background: 'linear-gradient(135deg, #6c63ff 0%, #5a52e6 100%)' },
+            }}
+          >
+            <Add />
+          </IconButton>
+        ) : null}
       </Box>
 
       <Grid container spacing={2}>
@@ -142,17 +222,15 @@ export default function CardList({
                   }}
                 >
                   {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
                   ) : (
-                      <img
-                        src={Falback}
-                        alt="Imagem padrão"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
+                    <Typography variant="caption" color="text.secondary">
+                      {emptyImageLabel}
+                    </Typography>
                   )}
                 </Box>
               </Paper>
