@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -18,8 +19,20 @@ import {
   Stepper,
   Step,
   StepLabel,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
-import { Business, CheckCircle } from '@mui/icons-material';
+import {
+  Business,
+  CheckCircle,
+  DeleteOutline,
+  EditOutlined,
+  HomeOutlined,
+  BusinessOutlined,
+  ApartmentOutlined,
+  LocationOnOutlined,
+  Close,
+} from '@mui/icons-material';
 import {
   condominiumService,
   type Condominium,
@@ -33,6 +46,7 @@ import CardList from '../../shared/components/CardList';
 import './Condominio.scss';
 
 const CondominioForm: React.FC = () => {
+  const navigate = useNavigate();
   const initialFormData: CondominiumRequest = {
     organizationId: localStorage.getItem('organizationId') || '',
     name: '',
@@ -61,6 +75,10 @@ const CondominioForm: React.FC = () => {
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [condominiumImages, setCondominiumImages] = useState<Record<string, string>>({});
   const [searchText, setSearchText] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
+  const [listPage, setListPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 4;
   const [condominiumTypes, setCondominiumTypes] = useState<CondominiumTypeEnum[]>([]);
   const [typesLoading, setTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
@@ -83,7 +101,7 @@ const CondominioForm: React.FC = () => {
 
   const steps = ['Informacoes Basicas', 'Endereco', 'Configuracoes e Rateio'];
 
-  const loadCondominiums = async () => {
+  const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
     setListError(null);
     try {
@@ -95,8 +113,20 @@ const CondominioForm: React.FC = () => {
 
       setFormData((prev) => ({ ...prev, organizationId }));
 
-      const data = await condominiumService.getCondominiums(organizationId);
-      const normalized = data ?? [];
+      const response = await condominiumService.getCondominiums(organizationId, pageNumber, pageSize);
+      if (!organizationName) {
+        try {
+          const organizations = await organizationService.getMyOrganization();
+          const orgName = organizations?.[0]?.name || organizations?.[0]?.legalName;
+          if (orgName) setOrganizationName(orgName);
+        } catch {
+          // ignore organization name errors
+        }
+      }
+      const normalized = response?.data ?? [];
+      const computedTotalPages = response?.totalPages ?? Math.max(1, Math.ceil((response?.total ?? normalized.length) / pageSize));
+      setListPage(response?.pageNumber ?? pageNumber);
+      setTotalPages(computedTotalPages);
       setCondominiums(normalized);
       await loadCondominiumImages(normalized);
     } catch (error) {
@@ -162,7 +192,7 @@ const CondominioForm: React.FC = () => {
   };
 
   useEffect(() => {
-    loadCondominiums();
+    loadCondominiums(1);
     loadCondominiumTypes();
     loadAllocationTypes();
   }, []);
@@ -359,6 +389,16 @@ const CondominioForm: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = (condominium: Condominium) => {
+    const confirmed = window.confirm(`Deseja excluir o condominio ${condominium.name}?`);
+    if (!confirmed) return;
+    setSnackbar({
+      open: true,
+      message: 'Exclusao ainda nao esta disponivel.',
+      severity: 'error',
+    });
   };
 
   const renderStepContent = (step: number) => {
@@ -682,11 +722,32 @@ const CondominioForm: React.FC = () => {
     <Box className="condominio-container">
       <Container maxWidth="xl">
         <Paper elevation={3} sx={{ p: 4 }}>
-          <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Business sx={{ fontSize: 40, color: '#1976d2' }} />
-            <Typography variant="h4" fontWeight="bold">
-              {editingId ? 'Editar Condominio' : 'Criar Condominio'}
-            </Typography>
+          <Box sx={{ mb: 4, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Business sx={{ fontSize: 40, color: '#1976d2' }} />
+              <Box>
+                <Typography variant="h4" fontWeight="bold">
+                  {organizationName}
+                </Typography>
+              </Box>
+            </Box>
+            <Tooltip title="Fechar">
+              <IconButton
+                color="error"
+                onClick={() => {
+                  navigate('/dashboard');
+                  setIsCadastroOpen(false);
+                  setEditingId(null);
+                  setActiveStep(0);
+                }}
+                sx={{
+                  borderColor: 'divider',
+                  backgroundColor: '#f5f5f5',
+                }}
+              >
+                <Close />
+              </IconButton>
+            </Tooltip>
           </Box>
 
           {!isCadastroOpen ? (
@@ -706,6 +767,7 @@ const CondominioForm: React.FC = () => {
                 ) : (
                   <CardList
                     title="Condominios da organizacao"
+                    showTitle={false}
                     searchPlaceholder="Buscar condominio..."
                     onSearchChange={setSearchText}
                     onAddClick={() => {
@@ -718,6 +780,14 @@ const CondominioForm: React.FC = () => {
                       setIsCadastroOpen(true);
                     }}
                     addLabel="Novo"
+                    addButtonPlacement="toolbar"
+                    emptyImageLabel="Sem imagem"
+                    page={listPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => {
+                      setListPage(page);
+                      loadCondominiums(page);
+                    }}
                     items={condominiums
                       .filter((condominium) =>
                         [condominium.name, condominium.city, condominium.state]
@@ -729,17 +799,46 @@ const CondominioForm: React.FC = () => {
                       .map((condominium, index) => ({
                         id: condominium.condominiumId,
                         title: condominium.name,
-                        subtitle: `${condominium.city} - ${condominium.state}`,
-                        meta: getCondominiumTypeLabel(condominium.condominiumType),
+                        subtitle: (
+                          <>
+                            <LocationOnOutlined sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                            {condominium.city} - {condominium.state}
+                          </>
+                        ),
+                        meta: (
+                          <>
+                            {(condominium.condominiumType === 'Commercial' ||
+                              getCondominiumTypeLabel(condominium.condominiumType) === 'Comercial') ? (
+                              <BusinessOutlined sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                            ) : getCondominiumTypeLabel(condominium.condominiumType) === 'Residencial' ? (
+                              <HomeOutlined sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                            ) : (
+                              <ApartmentOutlined sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                            )}
+                            {getCondominiumTypeLabel(condominium.condominiumType)}
+                          </>
+                        ),
                         imageUrl: condominiumImages[condominium.condominiumId],
                         actions: (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleEdit(condominium)}
-                          >
-                            Editar
-                          </Button>
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<EditOutlined />}
+                              onClick={() => handleEdit(condominium)}
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              startIcon={<DeleteOutline />}
+                              onClick={() => handleDelete(condominium)}
+                            >
+                              Deletar
+                            </Button>
+                          </Box>
                         ),
                         accentColor: index % 2 === 0 ? '#eef6ee' : '#fdecef',
                       }))}
