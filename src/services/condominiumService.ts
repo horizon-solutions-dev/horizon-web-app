@@ -75,7 +75,7 @@ class CondominiumService {
           data: response,
           total: response.length,
           pageNumber: pageNumber ?? 1,
-          pageSize: pageSize ?? response.length || 1,
+          pageSize: pageSize || response.length || 1,
           totalPages: 1,
         } satisfies CondominiumPagedResponse;
       }
