@@ -10,6 +10,7 @@ import SignUp from "./SignUp";
 import { AuthService } from "../../services/authService";
 import { organizationService, type OrganizationMeResponse } from "../../services/organizationService";
 import { IoIosArrowBack } from "react-icons/io";
+import { useNavigate } from 'react-router-dom';
 
 
 interface LoginFormValues {
@@ -34,7 +35,7 @@ export default function MultiStepLogin() {
   const [isLoadingCondominiums, setIsLoadingCondominiums] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-
+  const navigate = useNavigate();
   const validationSchema = Yup.object({
     email: Yup.string()
       .email(t("validation.emailInvalid"))
@@ -60,12 +61,13 @@ export default function MultiStepLogin() {
         localStorage.setItem("condominiumId", values.condominium.organizationId || "");
         localStorage.setItem("condominium", JSON.stringify(values.condominium));
         localStorage.setItem("isAuthenticated", "true");
+        window.dispatchEvent(new Event("storage"));
 
         toast.success(
           t("toast.loginSuccess", { company: values.condominium.name }),
         );
 
-       window.location.href = "/dashboard";
+       navigate('/dashboard');
        localStorage.setItem('organizationId', values.condominium.organizationId || '');
       } catch (error) {
         setIsLoggingIn(false);
