@@ -1,151 +1,328 @@
+/* ============================================
+   MENU COMPONENT - BOTÃO DE COLAPSO CORRIGIDO
+   ============================================ */
+
 .menu-component {
-  width: 260px;
-  height: 100vh;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  width: 260px !important;
+  height: 100vh !important;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: visible !important; /* CRÍTICO: Permite o botão aparecer completo */
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3) !important;
+  position: relative !important;
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1) !important;
 
-  /* Scrollbar */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
+  /* Estado Colapsado */
+  &.collapsed {
+    width: 80px !important;
 
-  &::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-  }
+    .menu-header {
+      padding: 20px 0 !important;
+      min-height: 90px !important;
+      
+      .menu-logo {
+        width: 55px !important;
+        height: 55px !important;
+      }
+    }
 
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+    .menu-item {
+      justify-content: center !important;
+      padding: 14px 12px !important;
+      margin: 4px 8px !important;
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.3);
+      .menu-icon {
+        margin: 0 !important;
+      }
     }
   }
 }
 
-/* ===== HEADER (LOGO) ===== */
+/* ============================================
+   HEADER (LOGO)
+   ============================================ */
 .menu-header {
-  height: 88px;               /* controla o tamanho do bloco */
-  padding: 0 16px;            /* remove padding vertical excessivo */
+  min-height: 110px !important;
+  padding: 30px 20px !important;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 12px;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.15);
+  background: rgba(0, 0, 0, 0.15);
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+
+  /* Linha decorativa */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(79, 172, 254, 0.5) 50%, transparent 100%);
+  }
 
   .menu-logo {
-    width: 110px;             /* LOGO MAIOR */
-    height: auto;
+    width: 160px !important; /* LOGO BEM MAIOR */
+    height: auto !important;
+    max-height: 70px;
     object-fit: contain;
-    filter: brightness(0) invert(1)
-      drop-shadow(0 6px 20px rgba(79, 172, 254, 0.5));
-    transition: transform 0.3s ease, filter 0.3s ease;
+    filter: brightness(0) invert(1) drop-shadow(0 8px 24px rgba(79, 172, 254, 0.6));
+    transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
-      transform: scale(1.05);
-      filter: brightness(0) invert(1)
-        drop-shadow(0 10px 28px rgba(79, 172, 254, 0.7));
+      transform: scale(1.08) translateY(-2px);
+      filter: brightness(0) invert(1) drop-shadow(0 12px 32px rgba(79, 172, 254, 0.8));
+    }
+
+    &.collapsed {
+      width: 55px !important;
+      height: 55px !important;
+      filter: brightness(0) invert(1) drop-shadow(0 6px 16px rgba(79, 172, 254, 0.6));
     }
   }
 
   .menu-title {
-    display: none;
+    display: none; /* Remover para não aparecer */
   }
 }
 
-/* ===== NAV ===== */
-.menu-nav {
-  flex: 1;
-  padding: 12px 0;
+/* ============================================
+   BOTÃO DE COLAPSO - ELEGANTE SEM ANIMAÇÃO
+   ============================================ */
+.collapse-toggle {
+  position: absolute !important;
+  top: 50px !important;
+  right: -20px !important; /* Posicionado fora da sidebar */
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+  border: 4px solid #1a1a2e !important;
+  color: white !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  z-index: 10000 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6) !important;
+  overflow: visible !important;
+  
+  svg {
+    font-size: 24px !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  &:hover {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%) !important;
+    transform: scale(1.15) !important;
+    box-shadow: 0 8px 28px rgba(79, 172, 254, 0.8) !important;
+
+    svg {
+      transform: rotate(180deg) !important;
+    }
+  }
+  
+  &:active {
+    transform: scale(1.05) !important;
+  }
 }
 
-/* ===== MENU ITEMS ===== */
+/* ============================================
+   NAVEGAÇÃO
+   ============================================ */
+.menu-nav {
+  flex: 1 !important;
+  padding: 16px 0 !important;
+  overflow-y: auto !important; /* Scroll aqui, não no componente principal */
+  overflow-x: hidden !important;
+
+  /* Scrollbar Elegante */
+  &::-webkit-scrollbar {
+    width: 6px !important;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(79, 172, 254, 0.3) 0%, rgba(0, 242, 254, 0.2) 100%) !important;
+    border-radius: 10px !important;
+
+    &:hover {
+      background: linear-gradient(180deg, rgba(79, 172, 254, 0.5) 0%, rgba(0, 242, 254, 0.3) 100%) !important;
+    }
+  }
+}
+
+/* ============================================
+   SUBMENUS
+   ============================================ */
 .menu-item-wrapper {
   .menu-submenu {
-    background: rgba(0, 0, 0, 0.15);
-    border-left: 2px solid rgba(79, 172, 254, 0.3);
-    margin-left: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 3px solid rgba(79, 172, 254, 0.4);
+    margin-left: 20px;
+    padding: 6px 0;
+    animation: slideDown 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 2px 0 8px rgba(0, 0, 0, 0.2);
   }
 }
 
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 600px;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   MENU ITEMS - ELEGANTE E SMOOTH
+   ============================================ */
 .menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
-  text-decoration: none;
-  cursor: pointer;
-  position: relative;
-  transition: background 0.3s ease, color 0.3s ease;
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 14px 20px !important;
+  margin: 4px 12px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  position: relative !important;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  overflow: hidden !important;
+
+  /* Efeito de brilho */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(79, 172, 254, 0.25), transparent);
+    transition: left 0.6s ease;
+  }
 
   .menu-icon {
-    min-width: 20px;
-    font-size: 20px;
-    color: rgba(255, 255, 255, 0.6);
-    transition: color 0.3s ease;
+    min-width: 22px !important;
+    font-size: 22px !important;
+    color: rgba(255, 255, 255, 0.65) !important;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .menu-label {
-    flex: 1;
+    flex: 1 !important;
+    white-space: nowrap !important;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 
   .menu-expand-icon {
-    font-size: 18px;
-    color: rgba(255, 255, 255, 0.5);
-    transition: transform 0.3s ease;
+    font-size: 20px !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 
+  /* HOVER STATE */
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    background: rgba(79, 172, 254, 0.18) !important;
+    color: #ffffff !important;
+    transform: translateX(8px) scale(1.02) !important;
+    box-shadow: 0 4px 16px rgba(79, 172, 254, 0.3) !important;
+
+    &::before {
+      left: 100%;
+    }
 
     .menu-icon {
-      color: #4facfe;
+      color: #4facfe !important;
+      transform: scale(1.25) rotate(8deg) !important;
+      filter: drop-shadow(0 0 10px rgba(79, 172, 254, 0.8)) !important;
+    }
+
+    .menu-expand-icon {
+      color: #4facfe !important;
+      transform: translateX(4px) !important;
     }
   }
 
+  /* COLLAPSED STATE */
+  &.collapsed {
+    justify-content: center !important;
+    margin: 4px 8px !important;
+    padding: 14px !important;
+    
+    &:hover {
+      transform: translateX(0) scale(1.1) !important;
+    }
+  }
+
+  /* ACTIVE STATE */
   &.active {
     background: linear-gradient(
       90deg,
-      rgba(79, 172, 254, 0.2) 0%,
-      rgba(0, 242, 254, 0.1) 100%
-    );
-    color: #ffffff;
+      rgba(79, 172, 254, 0.3) 0%,
+      rgba(0, 242, 254, 0.18) 100%
+    ) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 18px rgba(79, 172, 254, 0.35) !important;
 
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+    &::after {
+      content: '' !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      width: 5px !important;
+      background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%) !important;
+      border-radius: 0 4px 4px 0 !important;
+      box-shadow: 0 0 15px rgba(79, 172, 254, 0.9), inset 0 0 10px rgba(255, 255, 255, 0.3) !important;
     }
 
     .menu-icon {
-      color: #4facfe;
+      color: #4facfe !important;
+      filter: drop-shadow(0 0 12px rgba(79, 172, 254, 0.9)) !important;
+      transform: scale(1.15) !important;
     }
   }
 
+  /* PARENT ACTIVE */
   &.parent-active {
-    color: rgba(79, 172, 254, 0.9);
+    color: rgba(79, 172, 254, 0.95) !important;
+    background: rgba(79, 172, 254, 0.08) !important;
 
     .menu-icon {
-      color: rgba(79, 172, 254, 0.8);
+      color: rgba(79, 172, 254, 0.9) !important;
     }
   }
 }
 
-/* ===== MOBILE ===== */
+/* ============================================
+   RESPONSIVIDADE MOBILE
+   ============================================ */
 @media (max-width: 768px) {
   .menu-component {
-    width: 100%;
+    width: 260px !important;
     height: auto;
     max-height: 100vh;
     position: fixed;
@@ -156,13 +333,34 @@
     &.mobile-open {
       transform: translateX(0);
     }
+
+    &.collapsed {
+      width: 260px !important;
+    }
   }
 
   .menu-header {
-    height: 72px;
+    min-height: 100px !important;
+    padding: 24px 20px !important;
 
     .menu-logo {
-      width: 96px;
+      width: 140px !important;
+
+      &.collapsed {
+        width: 140px !important;
+      }
+    }
+  }
+
+  .collapse-toggle {
+    display: none !important;
+  }
+
+  .menu-item {
+    margin: 4px 10px !important;
+
+    &:hover {
+      transform: translateX(4px) scale(1.01) !important;
     }
   }
 }
