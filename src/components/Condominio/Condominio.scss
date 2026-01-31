@@ -49,14 +49,14 @@
       align-items: center !important;
       gap: 20px !important;
 
-      // Ícone Business com background
-      .MuiSvgIcon-root {
-        font-size: 40px !important;
-        padding: 20px !important;
-        background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
-        color: white !important;
-        border-radius: 16px !important;
-        box-shadow: 0 8px 24px rgba(25, 118, 210, 0.3) !important;
+      // Ícone Business SIMPLES (sem background)
+      & > .MuiSvgIcon-root {
+        font-size: 48px !important;
+        color: #1976d2 !important;
+        padding: 0 !important;
+        background: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
       }
 
       // Container do texto
@@ -77,8 +77,8 @@
     }
 
     // Botão Fechar
-    .MuiTooltip-popper + .MuiIconButton-root,
-    & > .MuiIconButton-root {
+    & > .MuiIconButton-root,
+    .MuiTooltip-popper + .MuiIconButton-root {
       width: 48px !important;
       height: 48px !important;
       background: #f5f7fa !important;
@@ -102,6 +102,7 @@
         background: none !important;
         box-shadow: none !important;
         border-radius: 0 !important;
+        color: inherit !important;
       }
     }
 
@@ -244,7 +245,7 @@
   
   // Wrapper de cada card
   .MuiBox-root:has(> .MuiCard-root) {
-    margin-bottom: 20px !important;
+    margin-bottom: 16px !important;
 
     &:last-of-type {
       margin-bottom: 0 !important;
@@ -292,9 +293,9 @@
 
     // Conteúdo do card
     .MuiCardContent-root {
-      padding: 24px !important;
+      padding: 20px !important;
       display: flex !important;
-      gap: 24px !important;
+      gap: 20px !important;
       align-items: center !important;
 
       @media (max-width: 768px) {
@@ -302,11 +303,11 @@
         align-items: flex-start !important;
       }
 
-      // Container da imagem
+      // Container da imagem (MENOR)
       & > div:first-child {
         flex-shrink: 0 !important;
-        width: 140px !important;
-        height: 140px !important;
+        width: 90px !important;
+        height: 90px !important;
         border-radius: 12px !important;
         overflow: hidden !important;
         background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%) !important;
@@ -316,7 +317,7 @@
 
         @media (max-width: 768px) {
           width: 100% !important;
-          height: 200px !important;
+          height: 160px !important;
         }
 
         img,
@@ -329,7 +330,7 @@
 
         // Placeholder "Sem imagem"
         .MuiTypography-root {
-          font-size: 13px !important;
+          font-size: 12px !important;
           color: #999 !important;
           font-weight: 500 !important;
           text-align: center !important;
@@ -341,11 +342,11 @@
         flex: 1 !important;
         display: flex !important;
         flex-direction: column !important;
-        gap: 12px !important;
+        gap: 8px !important;
 
         // Título
         .MuiTypography-root:first-child {
-          font-size: 22px !important;
+          font-size: 19px !important;
           font-weight: 700 !important;
           color: #1a1a2e !important;
           line-height: 1.3 !important;
@@ -355,7 +356,7 @@
 
         // Subtitle (localização)
         .MuiTypography-root:nth-child(2) {
-          font-size: 15px !important;
+          font-size: 14px !important;
           color: #666 !important;
           display: flex !important;
           align-items: center !important;
@@ -363,17 +364,17 @@
           margin: 0 !important;
 
           .MuiSvgIcon-root {
-            font-size: 18px !important;
+            font-size: 16px !important;
             color: #1976d2 !important;
           }
         }
 
         // Meta (tipo de condomínio)
         .MuiTypography-root:nth-child(3) {
-          font-size: 14px !important;
+          font-size: 13px !important;
           color: #1976d2 !important;
           background: rgba(25, 118, 210, 0.08) !important;
-          padding: 8px 14px !important;
+          padding: 6px 12px !important;
           border-radius: 8px !important;
           display: inline-flex !important;
           align-items: center !important;
@@ -382,15 +383,14 @@
           font-weight: 600 !important;
 
           .MuiSvgIcon-root {
-            font-size: 18px !important;
+            font-size: 16px !important;
             color: #1976d2 !important;
           }
         }
       }
 
       // Container dos botões (ações)
-      & > div:last-child,
-      .MuiBox-root:has(> .MuiButton-root) {
+      & > div:last-child {
         display: flex !important;
         gap: 12px !important;
         align-items: center !important;
@@ -400,74 +400,82 @@
           width: 100% !important;
           flex-direction: column !important;
         }
+      }
+    }
+  }
 
-        // Botão Editar
-        .MuiButton-root:first-child {
-          min-width: 110px !important;
-          height: 44px !important;
-          border-radius: 10px !important;
-          border: 2px solid #1976d2 !important;
-          background: white !important;
-          color: #1976d2 !important;
-          font-weight: 600 !important;
-          font-size: 14px !important;
-          text-transform: none !important;
-          padding: 0 20px !important;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  // ============================================
+  // BOTÕES DE AÇÃO - EDITAR E DELETAR
+  // ============================================
+  
+  // Botão Editar
+  .action-button-edit {
+    min-width: 110px !important;
+    height: 42px !important;
+    border-radius: 10px !important;
+    border: 2px solid #1976d2 !important;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+    color: #1565c0 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    text-transform: none !important;
+    padding: 0 20px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 
-          @media (max-width: 768px) {
-            width: 100% !important;
-          }
+    @media (max-width: 768px) {
+      width: 100% !important;
+    }
 
-          &:hover {
-            background: rgba(25, 118, 210, 0.08) !important;
-            border-color: #1565c0 !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2) !important;
-          }
+    .MuiButton-startIcon .MuiSvgIcon-root {
+      font-size: 20px !important;
+      color: #1976d2 !important;
+    }
 
-          .MuiButton-startIcon {
-            margin-right: 8px !important;
+    &:hover {
+      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+      border-color: #1976d2 !important;
+      color: white !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 16px rgba(25, 118, 210, 0.4) !important;
 
-            .MuiSvgIcon-root {
-              font-size: 18px !important;
-            }
-          }
-        }
+      .MuiButton-startIcon .MuiSvgIcon-root {
+        color: white !important;
+      }
+    }
+  }
 
-        // Botão Excluir
-        .MuiButton-root:last-child {
-          min-width: 110px !important;
-          height: 44px !important;
-          border-radius: 10px !important;
-          border: 2px solid #d32f2f !important;
-          background: white !important;
-          color: #d32f2f !important;
-          font-weight: 600 !important;
-          font-size: 14px !important;
-          text-transform: none !important;
-          padding: 0 20px !important;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  // Botão Deletar
+  .action-button-delete {
+    min-width: 110px !important;
+    height: 42px !important;
+    border-radius: 10px !important;
+    border: 2px solid #d32f2f !important;
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%) !important;
+    color: #c62828 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    text-transform: none !important;
+    padding: 0 20px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 
-          @media (max-width: 768px) {
-            width: 100% !important;
-          }
+    @media (max-width: 768px) {
+      width: 100% !important;
+    }
 
-          &:hover {
-            background: rgba(211, 47, 47, 0.08) !important;
-            border-color: #c62828 !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2) !important;
-          }
+    .MuiButton-startIcon .MuiSvgIcon-root {
+      font-size: 20px !important;
+      color: #d32f2f !important;
+    }
 
-          .MuiButton-startIcon {
-            margin-right: 8px !important;
+    &:hover {
+      background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%) !important;
+      border-color: #d32f2f !important;
+      color: white !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 16px rgba(211, 47, 47, 0.4) !important;
 
-            .MuiSvgIcon-root {
-              font-size: 18px !important;
-            }
-          }
-        }
+      .MuiButton-startIcon .MuiSvgIcon-root {
+        color: white !important;
       }
     }
   }
