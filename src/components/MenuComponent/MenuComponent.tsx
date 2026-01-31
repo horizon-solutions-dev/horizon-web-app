@@ -1,4 +1,4 @@
-import { useState, type JSX } from "react";
+import { useEffect, useState, type JSX } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   MdDashboard,
@@ -15,6 +15,7 @@ import {
   MdExpandLess,
   MdChevronLeft,
   MdChevronRight,
+  MdBusiness,
 } from "react-icons/md";
 import "./MenuComponent.scss";
 import RouteNames from "../../routes/routeNames";
@@ -120,6 +121,39 @@ const menuItems: MenuItem[] = [
 export default function MenuComponent({ collapsed = false, onToggleCollapse }: MenuComponentProps) {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [organizationName, setOrganizationName] = useState<string>("");
+
+  useEffect(() => {
+    const loadOrganization = () => {
+      const stored = localStorage.getItem("condominium");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as { name?: string; legalName?: string };
+          const name = parsed?.name || parsed?.legalName || "";
+          setOrganizationName(name);
+          return;
+        } catch {
+          // ignore JSON parse errors
+        }
+      }
+      const fallback = localStorage.getItem("organizationName") || "";
+      setOrganizationName(fallback);
+    };
+
+    loadOrganization();
+    window.addEventListener("storage", loadOrganization);
+    return () => window.removeEventListener("storage", loadOrganization);
+  }, []);
+
+  const getOrganizationInitials = (name: string) => {
+    const safeName = name.trim();
+    if (!safeName) return "SA";
+    const parts = safeName.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  };
 
   const toggleExpand = (itemId: string) => {
     if (collapsed) return; // Não expande quando colapsado
@@ -198,6 +232,16 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
           className={`menu-logo ${collapsed ? "collapsed" : ""}`}
         />
         {!collapsed && <h2 className="menu-title">Horizon</h2>}
+        <div className="menu-org">
+          <div className="menu-org-avatar">
+            {organizationName ? getOrganizationInitials(organizationName) : <MdBusiness />}
+          </div>
+          {!collapsed && (
+            <div className="menu-org-name" title={organizationName || "Sao Gabriel"}>
+              {organizationName || "Sao Gabriel"}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Botão de Colapso */}

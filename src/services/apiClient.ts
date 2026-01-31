@@ -83,7 +83,6 @@ export class ApiClient {
       const response = await this.client.post<T>(url, data);
       return response.data;
     } catch (error) {
-      console.log('POST response data:', url)
       this.handleError(error);
     }
   }
@@ -119,7 +118,21 @@ export class ApiClient {
 
   private handleError(error: unknown): never {
     if (axios.isAxiosError(error)) {
-      const message = error.response?.data?.message || error.message;
+      const data = error.response?.data as
+        | { message?: string; validations?: Array<{ field: string; message: string }> }
+        | string
+        | undefined;
+
+      if (typeof data === 'string') {
+        throw new Error(data);
+      }
+
+      if (data?.validations?.length) {
+        const validationMessage = data.validations.map((item) => item.message).join('\n');
+        throw new Error(validationMessage);
+      }
+
+      const message = data?.message || error.message;
       throw new Error(message);
     }
     throw error;

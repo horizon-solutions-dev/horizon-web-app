@@ -10,13 +10,8 @@ import {
   Alert,
   CircularProgress,
   MenuItem,
-  Stepper,
-  Step,
-  StepLabel,
-  Grid,
   FormControlLabel,
   Checkbox,
-  Stack,
 } from '@mui/material';
 import { organizationService, type OrganizationRequest, type OrganizationTypeEnum } from '../../services/organizationService';
 import { profileService, type Profile } from '../../services/profileService';
@@ -24,6 +19,7 @@ import { condominiumService, type CondominiumRequest, type CondominiumTypeEnum, 
 import { condominiumImageService, type ImageTypeEnum, type ImageType, type CondominiumImage } from '../../services/condominiumImageService';
 import { AuthService } from '../../services/authService';
 import { TokenService } from '../../services/tokenService';
+import StepWizardCard from '../../shared/components/StepWizardCard';
 
 const sequenceStorageKey = 'organizationSequence';
 
@@ -411,24 +407,16 @@ const Organizacoes: React.FC = () => {
   return (
     <Box className="page-container" sx={{ py: 4 }}>
       <Container maxWidth="lg">
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h4" sx={{ mb: 1 }}>
-            Cadastro Sequencial
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Salve cada etapa separadamente e continue quando quiser.
-          </Typography>
-          <Stepper activeStep={activeStep} sx={{ mt: 3 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-        </Paper>
 
         {activeStep === 0 ? (
-          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <StepWizardCard
+            title="Criar organizacao"
+            subtitle={steps[activeStep]}
+            steps={steps}
+            activeStep={activeStep}
+            showBack={activeStep > 0 && activeStep < steps.length - 1}
+            onBack={() => setActiveStep((prev) => prev - 1)}
+          >
             <Typography variant="h6" sx={{ mb: 2 }}>
               Organizacao
             </Typography>
@@ -438,32 +426,32 @@ const Organizacoes: React.FC = () => {
               </Alert>
             ) : null}
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
                 <TextField
                   fullWidth
                   label="Nome"
                   value={organizationForm.name}
                   onChange={(e) => setOrganizationForm((prev) => ({ ...prev, name: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Razao Social"
                   value={organizationForm.legalName}
                   onChange={(e) => setOrganizationForm((prev) => ({ ...prev, legalName: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Documento (CNPJ)"
                   value={organizationForm.doc}
                   onChange={(e) => setOrganizationForm((prev) => ({ ...prev, doc: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Tipo de Organizacao"
@@ -485,42 +473,42 @@ const Organizacoes: React.FC = () => {
                     <MenuItem value="PropertyManagementCompany">Administradora</MenuItem>
                   )}
                 </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Email"
                   value={organizationForm.email}
                   onChange={(e) => setOrganizationForm((prev) => ({ ...prev, email: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Telefone"
                   value={organizationForm.phone}
                   onChange={(e) => setOrganizationForm((prev) => ({ ...prev, phone: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Cidade"
                   value={organizationForm.city}
                   onChange={(e) => setOrganizationForm((prev) => ({ ...prev, city: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Estado"
                   value={organizationForm.state}
                   onChange={(e) => setOrganizationForm((prev) => ({ ...prev, state: e.target.value }))}
                 />
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
               <Button variant="contained" onClick={handleCreateOrganization} disabled={loading}>
                 {loading ? <CircularProgress size={20} /> : 'Salvar e avancar'}
               </Button>
@@ -536,12 +524,19 @@ const Organizacoes: React.FC = () => {
               <Button variant="outlined" onClick={() => handleUseExistingId('organizationId', existingOrganizationId)}>
                 Usar ID existente
               </Button>
-            </Stack>
-          </Paper>
+            </Box>
+          </StepWizardCard>
         ) : null}
 
         {activeStep === 1 ? (
-          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <StepWizardCard
+            title="Criar organizacao"
+            subtitle={steps[activeStep]}
+            steps={steps}
+            activeStep={activeStep}
+            showBack={activeStep > 0 && activeStep < steps.length - 1}
+            onBack={() => setActiveStep((prev) => prev - 1)}
+          >
             <Typography variant="h6" sx={{ mb: 2 }}>
               Vincular usuario
             </Typography>
@@ -556,14 +551,14 @@ const Organizacoes: React.FC = () => {
               </Alert>
             ) : null}
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
                 <TextField fullWidth label="OrganizationId" value={sequence.organizationId} disabled />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField fullWidth label="UserId (token)" value={tokenUserId} disabled />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Perfil"
@@ -588,16 +583,16 @@ const Organizacoes: React.FC = () => {
                     <MenuItem value={1}>Administrador</MenuItem>
                   )}
                 </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <FormControlLabel
                   control={<Checkbox checked={owner} onChange={(e) => setOwner(e.target.checked)} />}
                   label="Owner"
                 />
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
               <Button variant="contained" onClick={handleLinkUser} disabled={loading}>
                 {loading ? <CircularProgress size={20} /> : 'Salvar e avancar'}
               </Button>
@@ -610,12 +605,19 @@ const Organizacoes: React.FC = () => {
               >
                 Pular por agora
               </Button>
-            </Stack>
-          </Paper>
+            </Box>
+          </StepWizardCard>
         ) : null}
 
         {activeStep === 2 ? (
-          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <StepWizardCard
+            title="Criar organizacao"
+            subtitle={steps[activeStep]}
+            steps={steps}
+            activeStep={activeStep}
+            showBack={activeStep > 0 && activeStep < steps.length - 1}
+            onBack={() => setActiveStep((prev) => prev - 1)}
+          >
             <Typography variant="h6" sx={{ mb: 2 }}>
               Condominio
             </Typography>
@@ -630,8 +632,8 @@ const Organizacoes: React.FC = () => {
               </Alert>
             ) : null}
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
                 <TextField
                   fullWidth
                   label="CEP"
@@ -642,72 +644,72 @@ const Organizacoes: React.FC = () => {
                   helperText={cepError || 'Informe o CEP para buscar o endereco'}
                   InputProps={{ endAdornment: cepLoading ? <CircularProgress size={18} /> : null }}
                 />
-              </Grid>
-              <Grid item xs={12} md={8}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Endereco"
                   value={condoForm.address}
                   onChange={(e) => setCondoForm((prev) => ({ ...prev, address: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={4}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Numero"
                   value={condoForm.addressNumber}
                   onChange={(e) => setCondoForm((prev) => ({ ...prev, addressNumber: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={8}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Complemento"
                   value={condoForm.complement}
                   onChange={(e) => setCondoForm((prev) => ({ ...prev, complement: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Bairro"
                   value={condoForm.neighborhood}
                   onChange={(e) => setCondoForm((prev) => ({ ...prev, neighborhood: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={4}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Cidade"
                   value={condoForm.city}
                   onChange={(e) => setCondoForm((prev) => ({ ...prev, city: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={2}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="UF"
                   value={condoForm.state}
                   onChange={(e) => setCondoForm((prev) => ({ ...prev, state: e.target.value.toUpperCase() }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Nome do condominio"
                   value={condoForm.name}
                   onChange={(e) => setCondoForm((prev) => ({ ...prev, name: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="CNPJ"
                   value={condoForm.doc}
                   onChange={(e) => setCondoForm((prev) => ({ ...prev, doc: e.target.value }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Tipo de condominio"
@@ -729,8 +731,8 @@ const Organizacoes: React.FC = () => {
                     <MenuItem value="Residential">Residencial</MenuItem>
                   )}
                 </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Quantidade de unidades"
@@ -738,8 +740,8 @@ const Organizacoes: React.FC = () => {
                   value={condoForm.unitCount}
                   onChange={(e) => setCondoForm((prev) => ({ ...prev, unitCount: Number(e.target.value) }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Tipo de rateio"
@@ -761,8 +763,8 @@ const Organizacoes: React.FC = () => {
                     <MenuItem value="FractionalAllocation">Fracionario</MenuItem>
                   )}
                 </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Percentual de rateio (%)"
@@ -770,34 +772,34 @@ const Organizacoes: React.FC = () => {
                   value={condoForm.allocationValuePerc}
                   onChange={(e) => setCondoForm((prev) => ({ ...prev, allocationValuePerc: Number(e.target.value) }))}
                 />
-              </Grid>
-              <Grid item xs={12} md={3}>
+              </Box>
+              <Box>
                 <FormControlLabel
                   control={<Checkbox checked={condoForm.hasBlocks} onChange={(e) => setCondoForm((prev) => ({ ...prev, hasBlocks: e.target.checked }))} />}
                   label="Possui blocos"
                 />
-              </Grid>
-              <Grid item xs={12} md={3}>
+              </Box>
+              <Box>
                 <FormControlLabel
                   control={<Checkbox checked={condoForm.hasWaterIndividual} onChange={(e) => setCondoForm((prev) => ({ ...prev, hasWaterIndividual: e.target.checked }))} />}
                   label="Agua individual"
                 />
-              </Grid>
-              <Grid item xs={12} md={3}>
+              </Box>
+              <Box>
                 <FormControlLabel
                   control={<Checkbox checked={condoForm.hasPowerByBlock} onChange={(e) => setCondoForm((prev) => ({ ...prev, hasPowerByBlock: e.target.checked }))} />}
                   label="Energia por bloco"
                 />
-              </Grid>
-              <Grid item xs={12} md={3}>
+              </Box>
+              <Box>
                 <FormControlLabel
                   control={<Checkbox checked={condoForm.hasGasByBlock} onChange={(e) => setCondoForm((prev) => ({ ...prev, hasGasByBlock: e.target.checked }))} />}
                   label="Gas por bloco"
                 />
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
               <Button variant="contained" onClick={handleCreateCondominium} disabled={loading}>
                 {loading ? <CircularProgress size={20} /> : 'Salvar e avancar'}
               </Button>
@@ -813,20 +815,27 @@ const Organizacoes: React.FC = () => {
               <Button variant="outlined" onClick={() => handleUseExistingId('condominiumId', existingCondominiumId)}>
                 Usar ID existente
               </Button>
-            </Stack>
-          </Paper>
+            </Box>
+          </StepWizardCard>
         ) : null}
 
         {activeStep === 3 ? (
-          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <StepWizardCard
+            title="Criar organizacao"
+            subtitle={steps[activeStep]}
+            steps={steps}
+            activeStep={activeStep}
+            showBack={activeStep > 0 && activeStep < steps.length - 1}
+            onBack={() => setActiveStep((prev) => prev - 1)}
+          >
             <Typography variant="h6" sx={{ mb: 2 }}>
               Imagens do condominio
             </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
                 <TextField fullWidth label="CondominiumId" value={sequence.condominiumId} disabled />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              </Box>
+              <Box>
                 <TextField
                   fullWidth
                   label="Tipo de imagem"
@@ -851,8 +860,8 @@ const Organizacoes: React.FC = () => {
                     <MenuItem value="Logo">Logo</MenuItem>
                   )}
                 </TextField>
-              </Grid>
-              <Grid item xs={12}>
+              </Box>
+              <Box>
                 <Button variant="outlined" component="label">
                   Selecionar arquivo
                   <input
@@ -866,10 +875,10 @@ const Organizacoes: React.FC = () => {
                     {imageFile.name}
                   </Typography>
                 ) : null}
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
               <Button variant="contained" onClick={handleUploadImage} disabled={loading}>
                 {loading ? <CircularProgress size={20} /> : 'Enviar imagem'}
               </Button>
@@ -879,14 +888,14 @@ const Organizacoes: React.FC = () => {
               <Button variant="outlined" onClick={resetSequence}>
                 Reiniciar sequencia
               </Button>
-            </Stack>
+            </Box>
 
             <Box sx={{ mt: 4 }}>
               <Typography variant="subtitle1" sx={{ mb: 2 }}>
                 Imagens cadastradas
               </Typography>
-              <Grid container spacing={2} sx={{ mb: 2 }}>
-                <Grid item xs={12} md={6}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box>
                   <TextField
                     fullWidth
                     label="Filtrar por tipo"
@@ -901,16 +910,16 @@ const Organizacoes: React.FC = () => {
                       </MenuItem>
                     ))}
                   </TextField>
-                </Grid>
-              </Grid>
-              <Grid container spacing={2}>
+                </Box>
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {images.length === 0 ? (
-                  <Grid item xs={12}>
+                  <Box>
                     <Alert severity="info">Nenhuma imagem encontrada.</Alert>
-                  </Grid>
+                  </Box>
                 ) : (
                   images.map((item) => (
-                    <Grid item xs={12} sm={6} md={4} key={item.condominiumImageId}>
+                    <Box>
                       <Paper elevation={2} sx={{ p: 2 }}>
                         <Box
                           sx={{
@@ -944,12 +953,12 @@ const Organizacoes: React.FC = () => {
                           {item.condominiumImageId}
                         </Typography>
                       </Paper>
-                    </Grid>
+                    </Box>
                   ))
                 )}
-              </Grid>
+              </Box>
             </Box>
-          </Paper>
+          </StepWizardCard>
         ) : null}
       </Container>
 

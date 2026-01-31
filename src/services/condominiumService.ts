@@ -50,12 +50,9 @@ class CondominiumService {
   private baseUrl = 'https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/condominiums';
 
   async createCondominium(condominium: CondominiumRequest) {
-    try {
-      return await apiClient.post<{ condominiumId: string }>(this.baseUrl, condominium);
-    } catch (error) {
-      console.error('Erro ao criar condomÃ­nio:', error);
-      throw error;
-    }
+    const data = await apiClient.post<{ condominiumId: string }>(this.baseUrl, condominium);
+    console.log('Condominium created with ID:', data);
+    return data;
   }
 
   async getCondominiums(organizationId: string, pageNumber?: number, pageSize?: number) {
@@ -82,7 +79,7 @@ class CondominiumService {
 
       return response;
     } catch (error) {
-      console.error('Erro ao buscar condomÃ­nios:', error);
+      console.error('Erro ao buscar Condominios:', error);
       throw error;
     }
   }
@@ -91,7 +88,7 @@ class CondominiumService {
     try {
       return await apiClient.get<Condominium>(`${this.baseUrl}/${id}`);
     } catch (error) {
-      console.error('Erro ao buscar condomÃ­nio:', error);
+      console.error('Erro ao buscar Condominio:', error);
       throw error;
     }
   }
@@ -100,7 +97,7 @@ class CondominiumService {
     try {
       return await apiClient.put<{ condominiumId: string }>(`${this.baseUrl}/${id}`, condominium);
     } catch (error) {
-      console.error('Erro ao atualizar condomÃ­nio:', error);
+      console.error('Erro ao atualizar Condominio:', error);
       throw error;
     }
   }
@@ -109,7 +106,7 @@ class CondominiumService {
     try {
       return await apiClient.get<CondominiumTypeEnum[]>(`${this.baseUrl}/types`);
     } catch (error) {
-      console.error('Erro ao buscar tipos de condomÃ­nio:', error);
+      console.error('Erro ao buscar tipos de Condominio:', error);
       throw error;
     }
   }

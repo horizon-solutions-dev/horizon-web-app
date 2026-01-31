@@ -17,15 +17,13 @@ import {
   MenuItem,
   FormControlLabel,
   Checkbox,
-  Stepper,
-  Step,
-  StepLabel,
 } from '@mui/material';
 import {
   unitResidentService,
   type CondominiumUnitResident,
   type CondominiumUnitResidentRequest,
 } from '../../services/unitResidentService';
+import StepWizardCard from '../../shared/components/StepWizardCard';
 
 const initialForm: CondominiumUnitResidentRequest = {
   condominiumUnitId: '',
@@ -168,20 +166,17 @@ const Residentes: React.FC = () => {
           </Table>
         </Paper>
 
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Novo residente
-          </Typography>
-          <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
+        <StepWizardCard
+          title="Criar residente"
+          subtitle={steps[activeStep]}
+          steps={steps}
+          activeStep={activeStep}
+          showBack={activeStep > 0 && activeStep < steps.length - 1}
+          onBack={() => setActiveStep((prev) => prev - 1)}
+        >
 
           {activeStep === 0 ? (
-            <Box sx={{ display: 'grid', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
                 label="CondominiumUnitId"
                 value={formData.condominiumUnitId}
@@ -208,7 +203,7 @@ const Residentes: React.FC = () => {
           ) : null}
 
           {activeStep === 1 ? (
-            <Box sx={{ display: 'grid', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
                 label="Inicio"
                 type="datetime-local"
@@ -229,7 +224,7 @@ const Residentes: React.FC = () => {
           ) : null}
 
           {activeStep === 2 ? (
-            <Box sx={{ display: 'grid', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                 <FormControlLabel
                   control={
@@ -268,7 +263,7 @@ const Residentes: React.FC = () => {
                   label="Acesso portaria"
                 />
               </Box>
-              <Box sx={{ display: 'grid', gap: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Typography variant="subtitle2">
                   Unidade: {formData.condominiumUnitId || '-'}
                 </Typography>
@@ -280,14 +275,7 @@ const Residentes: React.FC = () => {
             </Box>
           ) : null}
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-            <Button
-              variant="outlined"
-              disabled={activeStep === 0 || loading}
-              onClick={() => setActiveStep((prev) => prev - 1)}
-            >
-              Voltar
-            </Button>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
             {activeStep === steps.length - 1 ? (
               <Button variant="contained" onClick={handleSubmit} disabled={loading}>
                 {loading ? <CircularProgress size={20} /> : 'Criar residente'}
@@ -298,7 +286,7 @@ const Residentes: React.FC = () => {
               </Button>
             )}
           </Box>
-        </Paper>
+        </StepWizardCard>
       </Container>
 
       <Snackbar

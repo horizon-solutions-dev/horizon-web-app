@@ -3,10 +3,10 @@
 // ============================================
 
 .condominio-container {
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%) !important;
-  min-height: 100vh !important;
+  //background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%) !important;
+  //min-height: 100vh !important;
   width: 100% !important;
-  padding: 24px !important;
+  //padding: 24px !important;
 
   // ============================================
   // PAPER PRINCIPAL - CONTAINER
@@ -829,4 +829,87 @@
       }
     }
   }
+}
+.condominio-login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.condominio-login-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 980px;
+  padding: 28px 32px 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.condominio-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.condominio-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #0b4ea2;
+
+  svg {
+    font-size: 34px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #0b4ea2;
+  }
+}
+
+.condominio-stepper {
+  margin-bottom: 18px;
+
+  .MuiStepLabel-label {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .MuiStepConnector-line {
+    border-color: #c9c9c9;
+  }
+}
+
+.condominio-form {
+  margin-top: 8px;
+
+  .MuiOutlinedInput-root {
+    border-radius: 12px;
+    background-color: #fff;
+  }
+
+  .MuiOutlinedInput-notchedOutline {
+    border: 2px solid #e0e0e0;
+  }
+
+  .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #0067b8;
+    box-shadow: 0 0 0 3px rgba(0, 103, 184, 0.08);
+  }
+}
+
+.condominio-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
 }
