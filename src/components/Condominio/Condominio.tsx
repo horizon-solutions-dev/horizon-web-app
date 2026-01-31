@@ -23,6 +23,7 @@ import {
   IconButton,
   Tooltip,
 } from '@mui/material';
+
 import {
   Business,
   CheckCircle,
@@ -44,7 +45,6 @@ import {
 import { condominiumImageService } from '../../services/condominiumImageService';
 import { organizationService } from '../../services/organizationService';
 import CardList from '../../shared/components/CardList';
-import './Condominio.scss';
 
 const CondominioForm: React.FC = () => {
   const navigate = useNavigate();
@@ -821,10 +821,11 @@ const CondominioForm: React.FC = () => {
                         ),
                         imageUrl: condominiumImages[condominium.condominiumId],
                         actions: (
-                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
                             <Button
                               size="small"
                               variant="outlined"
+                              className="action-button-edit"
                               startIcon={<EditOutlined />}
                               onClick={() => handleEdit(condominium)}
                             >
@@ -833,7 +834,7 @@ const CondominioForm: React.FC = () => {
                             <Button
                               size="small"
                               variant="outlined"
-                              color="error"
+                              className="action-button-delete"
                               startIcon={<DeleteOutline />}
                               onClick={() => handleDelete(condominium)}
                             >
