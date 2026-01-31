@@ -470,8 +470,12 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
                 {[1, 2, 3].map((stepNumber) => (
                   <div
                     key={stepNumber}
-                    className={`step-dot ${stepNumber === step ? "active" : ""} ${
+                    className={`step-dot ${
+                      stepNumber === step ? "active" : ""
+                    } ${
                       stepNumber < step ? "completed" : ""
+                    } ${
+                      stepNumber === 3 && isLoadingCondominiums ? "loading" : ""
                     }`}
                   />
                 ))}

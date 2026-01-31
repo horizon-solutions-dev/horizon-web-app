@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import './Condominio.scss';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
