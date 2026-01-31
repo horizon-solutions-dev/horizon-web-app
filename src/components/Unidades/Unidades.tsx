@@ -15,9 +15,6 @@ import {
   TableCell,
   TableBody,
   MenuItem,
-  Stepper,
-  Step,
-  StepLabel,
 } from '@mui/material';
 import {
   unitService,
@@ -25,6 +22,7 @@ import {
   type CondominiumUnitRequest,
   type UnitTypeEnum,
 } from '../../services/unitService';
+import StepWizardCard from '../../shared/components/StepWizardCard';
 
 const initialForm: CondominiumUnitRequest = {
   condominiumId: '',
@@ -177,7 +175,7 @@ const Unidades: React.FC = () => {
   const renderStepContent = () => {
     if (activeStep === 0) {
       return (
-        <Box sx={{ display: 'grid', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
             label="CondominiumId"
             value={formData.condominiumId}
@@ -210,7 +208,7 @@ const Unidades: React.FC = () => {
     }
 
     return (
-      <Box sx={{ display: 'grid', gap: 1 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <Typography variant="subtitle2">CondominiumId: {formData.condominiumId || '-'}</Typography>
         <Typography variant="subtitle2">
           CondominiumBlockId: {formData.condominiumBlockId || '-'}
@@ -283,33 +281,21 @@ const Unidades: React.FC = () => {
           </Table>
         </Paper>
 
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            {editingId ? 'Editar unidade' : 'Nova unidade'}
-          </Typography>
+        <StepWizardCard
+          title="Criar unidade"
+          subtitle={steps[activeStep]}
+          steps={steps}
+          activeStep={activeStep}
+          showBack={activeStep > 0 && activeStep < steps.length - 1}
+          onBack={() => setActiveStep((prev) => prev - 1)}
+        >
           {typesError ? (
             <Alert severity="error" sx={{ mb: 2 }}>
               {typesError}
             </Alert>
           ) : null}
-          <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
           {renderStepContent()}
-
-          <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-            <Button
-              variant="outlined"
-              disabled={activeStep === 0 || loading}
-              onClick={() => setActiveStep((prev) => prev - 1)}
-            >
-              Voltar
-            </Button>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
             {activeStep === steps.length - 1 ? (
               <Button variant="contained" onClick={handleSubmit} disabled={loading}>
                 {loading ? <CircularProgress size={20} /> : editingId ? 'Atualizar' : 'Criar'}
@@ -332,7 +318,7 @@ const Unidades: React.FC = () => {
               </Button>
             ) : null}
           </Box>
-        </Paper>
+        </StepWizardCard>
       </Container>
 
       <Snackbar

@@ -1,0 +1,202 @@
+.step-wizard {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  //padding: 24px;
+  //background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  //min-height: 100vh;
+}
+
+.step-wizard-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 720px;
+  padding: 44px 40px 36px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.step-wizard-close {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid #f1c0c0;
+    background: #fff5f5;
+    color: #d32f2f;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-wizard-back {
+  position: absolute;
+  top: 22px;
+  left: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px !important;
+  color: #666;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  z-index: 2;
+
+  &:hover {
+    color: #0067b8;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  span {
+    font-size: 13px !important;
+  }
+
+  svg {
+    font-size: 16px !important;
+  }
+}
+
+.step-wizard-back-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.step-wizard-logo {
+  display: flex;
+  justify-content: center;
+  margin: 32px 0 24px;
+
+  img {
+    width: 180px;
+    height: auto;
+    display: block;
+  }
+}
+
+.step-wizard-title {
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 6px;
+  color: #1b1b1b;
+}
+
+.step-wizard-subtitle {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.step-wizard-content {
+  margin-top: 12px;
+
+  .MuiOutlinedInput-root {
+    border-radius: 12px;
+    background-color: #fff;
+  }
+
+  .MuiOutlinedInput-notchedOutline {
+    border: 2px solid #e0e0e0;
+  }
+
+  .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #0067b8;
+    box-shadow: 0 0 0 3px rgba(0, 103, 184, 0.08);
+  }
+}
+
+.step-wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.step-wizard-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.step-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: #d0d0d0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #6b6f76;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &.active {
+    background: linear-gradient(135deg, #0067b8 0%, #005a9e 100%) !important;
+    transform: scale(1.4) !important;
+    box-shadow:
+      0 0 12px rgba(0, 103, 184, 0.6),
+      0 0 24px rgba(0, 103, 184, 0.3) !important;
+
+    // Animação de pulso suave
+    animation: pulse-glow 2s ease-in-out infinite !important;
+  }
+
+  &.loading {
+    background: linear-gradient(135deg, #0067b8 0%, #005a9e 100%) !important;
+    transform: scale(1.2) !important;
+
+    // Animação de loading giratória
+    &::after {
+      content: "" !important;
+      position: absolute !important;
+      top: -4px !important;
+      left: -4px !important;
+      right: -4px !important;
+      bottom: -4px !important;
+      border: 2px solid transparent !important;
+      border-top-color: #0067b8 !important;
+      border-radius: 50% !important;
+      animation: spin-loading 1s linear infinite !important;
+    }
+  }
+
+  &.completed {
+    background: linear-gradient(135deg, #00c853 0%, #00a843 100%) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 8px rgba(0, 200, 83, 0.4) !important;
+
+    // Checkmark icon
+    &::before {
+      content: "✓" !important;
+      position: absolute !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      color: white !important;
+      font-size: 8px !important;
+      font-weight: bold !important;
+    }
+  }
+}

@@ -14,11 +14,9 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Stepper,
-  Step,
-  StepLabel,
 } from '@mui/material';
 import { blockService, type CondominiumBlock, type CondominiumBlockRequest } from '../../services/blockService';
+import StepWizardCard from '../../shared/components/StepWizardCard';
 
 const initialForm: CondominiumBlockRequest = {
   condominiumId: '',
@@ -123,7 +121,7 @@ const Blocos: React.FC = () => {
   const renderStepContent = () => {
     if (activeStep === 0) {
       return (
-        <Box sx={{ display: 'grid', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
             label="CondominiumId"
             value={formData.condominiumId}
@@ -147,7 +145,7 @@ const Blocos: React.FC = () => {
     }
 
     return (
-      <Box sx={{ display: 'grid', gap: 1 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <Typography variant="subtitle2">CondominiumId: {formData.condominiumId || '-'}</Typography>
         <Typography variant="subtitle2">Codigo: {formData.code || '-'}</Typography>
         <Typography variant="subtitle2">Nome: {formData.name || '-'}</Typography>
@@ -215,28 +213,16 @@ const Blocos: React.FC = () => {
           </Table>
         </Paper>
 
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            {editingId ? 'Editar bloco' : 'Novo bloco'}
-          </Typography>
-          <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
+        <StepWizardCard
+          title="Criar bloco"
+          subtitle={steps[activeStep]}
+          steps={steps}
+          activeStep={activeStep}
+          showBack={activeStep > 0 && activeStep < steps.length - 1}
+          onBack={() => setActiveStep((prev) => prev - 1)}
+        >
           {renderStepContent()}
-
-          <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-            <Button
-              variant="outlined"
-              disabled={activeStep === 0 || loading}
-              onClick={() => setActiveStep((prev) => prev - 1)}
-            >
-              Voltar
-            </Button>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
             {activeStep === steps.length - 1 ? (
               <Button variant="contained" onClick={handleSubmit} disabled={loading}>
                 {loading ? <CircularProgress size={20} /> : editingId ? 'Atualizar' : 'Criar'}
@@ -259,7 +245,7 @@ const Blocos: React.FC = () => {
               </Button>
             ) : null}
           </Box>
-        </Paper>
+        </StepWizardCard>
       </Container>
 
       <Snackbar
