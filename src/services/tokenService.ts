@@ -39,6 +39,22 @@ export class TokenService {
       role: 'Usuário'
     };
   }
+
+  /**
+   * Retorna o userId do token
+   */
+  static getUserId(token: string | null): string | null {
+    if (!token) {
+      return null;
+    }
+
+    const decoded = this.decodeToken(token);
+    if (!decoded || !decoded.UserId) {
+      return null;
+    }
+
+    return decoded.UserId;
+  }
   
   /**
    * Verifica se o token está expirado

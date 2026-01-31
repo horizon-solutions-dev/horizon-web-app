@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../shared/components/PagePlaceholder';
+
 export default function PortariaUsuarios() {
   return (
-    <div className="page-container">
-      <h1>Usuários</h1>
-      <p>Cadastro de usuários (CRUD)</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-        <p>Conteúdo em desenvolvimento...</p>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Portaria - Usuarios"
+      subtitle="Controle de usuarios e acessos."
+      actions={[
+        { label: 'Novo usuario', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Nome', 'Perfil', 'Status'],
+        rows: [
+          ['Joao Silva', 'Porteiro', 'Ativo'],
+          ['Maria Lima', 'Supervisor', 'Ativo'],
+        ],
+      }}
+    />
   );
 }

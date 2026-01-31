@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../../shared/components/PagePlaceholder';
+
 export default function BoletosView() {
   return (
-    <div className="page-container">
-      <h1>Visualizar Boletos</h1>
-      <p>Exibir boletos do condomínio</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-        <p>Conteúdo em desenvolvimento...</p>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Boletos"
+      subtitle="Controle de boletos do condominio."
+      actions={[
+        { label: 'Novo boleto', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Competencia', 'Valor', 'Status'],
+        rows: [
+          ['01/2026', 'R$ 420,00', 'Pendente'],
+          ['12/2025', 'R$ 410,00', 'Pago'],
+        ],
+      }}
+    />
   );
 }

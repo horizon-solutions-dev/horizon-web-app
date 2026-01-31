@@ -118,7 +118,7 @@ const MoradorForm: React.FC<MoradorFormProps> = ({ open, onClose, onSave, morado
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth className="morador-form-dialog">
+    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth className="morador-form-dialog">
       <DialogTitle className="form-title">
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">

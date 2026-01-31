@@ -162,7 +162,7 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
     <Dialog 
       open={open} 
       onClose={onClose} 
-      maxWidth="md" 
+      maxWidth="xl" 
       fullWidth
       className="boleto-form-dialog"
     >

@@ -1,13 +1,21 @@
-import BookingCalendar from "../Calendar/Calendar";
+import { Box, Container, Paper, Typography } from '@mui/material';
+import BookingCalendar from '../Calendar/Calendar';
 
 export default function ReservasCalendario() {
   return (
-    <div className="page-container">
-      <h1>Calendário de Reservas</h1>
-      <p>Componente para marcar data da reserva</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-              <BookingCalendar />
-      </div>
-    </div>
+    <Box sx={{ py: 4 }}>
+      <Container maxWidth="lg">
+        <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
+          <Typography variant="h4" sx={{ mb: 0.5 }}>
+            Reservas - Calendario
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Visao de calendario das reservas.
+          </Typography>
+        </Paper>
+
+        <BookingCalendar />
+      </Container>
+    </Box>
   );
 }

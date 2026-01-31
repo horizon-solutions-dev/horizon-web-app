@@ -10,6 +10,7 @@ import SignUp from "./SignUp";
 import { AuthService } from "../../services/authService";
 import { organizationService, type OrganizationMeResponse } from "../../services/organizationService";
 import { IoIosArrowBack } from "react-icons/io";
+import { useNavigate } from 'react-router-dom';
 
 
 interface LoginFormValues {
@@ -32,7 +33,9 @@ export default function MultiStepLogin() {
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [condominiums, setCondominiums] = useState<OrganizationMeResponse[]>([]);
   const [isLoadingCondominiums, setIsLoadingCondominiums] = useState(false);
-
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const navigate = useNavigate();
   const validationSchema = Yup.object({
     email: Yup.string()
       .email(t("validation.emailInvalid"))
@@ -48,6 +51,7 @@ export default function MultiStepLogin() {
     validationSchema,
     onSubmit: async (values) => {
       setIsSubmitting(true);
+      setIsLoggingIn(true);
       try {
         if (!values.condominium) {
           return;
@@ -57,14 +61,16 @@ export default function MultiStepLogin() {
         localStorage.setItem("condominiumId", values.condominium.organizationId || "");
         localStorage.setItem("condominium", JSON.stringify(values.condominium));
         localStorage.setItem("isAuthenticated", "true");
+        window.dispatchEvent(new Event("storage"));
 
         toast.success(
           t("toast.loginSuccess", { company: values.condominium.name }),
         );
 
-       window.location.href = "/dashboard";
+       navigate('/dashboard');
        localStorage.setItem('organizationId', values.condominium.organizationId || '');
       } catch (error) {
+        setIsLoggingIn(false);
         toast.error(
           error instanceof Error ? error.message : t("toast.loginError"),
         );
@@ -95,6 +101,8 @@ export default function MultiStepLogin() {
 
       setIsSubmitting(true);
       setIsLoadingCondominiums(true);
+      setPasswordError(null);
+      
       AuthService.login({
         login: formik.values.email,
         pass: formik.values.password,
@@ -114,9 +122,9 @@ export default function MultiStepLogin() {
           setStep(3);
         })
         .catch((error) => {
-          toast.error(
-            error instanceof Error ? error.message : t("toast.loginError"),
-          );
+          // Define a mensagem de erro que veio da API
+          const errorMessage = error instanceof Error ? error.message : t("toast.loginError");
+          setPasswordError(errorMessage);
         })
         .finally(() => {
           setIsSubmitting(false);
@@ -134,7 +142,13 @@ export default function MultiStepLogin() {
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
+    if (step > 1) {
+      setStep(step - 1);
+      // Limpa o erro de senha ao voltar
+      if (step === 2) {
+        setPasswordError(null);
+      }
+    }
   };
 
   const handleKeyPress = (
@@ -162,14 +176,14 @@ export default function MultiStepLogin() {
       case 2:
         return t("login.passwordTitle");
       case 3:
-        return t("login.companyTitle");
+        return t("Selecionar organização") || "Selecionar organização";
       default:
         return "";
     }
   };
 
   const renderBackButton = () => {
-    if (step === 1) return null;
+    if (step === 1 || step === 3) return null;
     
     return (
       <button
@@ -182,6 +196,33 @@ export default function MultiStepLogin() {
         <span>Voltar</span>
       </button>
     );
+  };
+
+
+const getOrganizationInitials = (org: OrganizationMeResponse): string => {
+  const name = org.name;
+
+  
+  if (name.length < 2) {
+    return name.charAt(0).toUpperCase();
+  }
+
+  const firstLetter = name.charAt(0).toUpperCase();
+  const secondLetter = name.charAt(1).toLowerCase();
+
+  return firstLetter + secondLetter;
+};
+
+
+  // Função para obter a classe de cor baseada no orgType
+  const getOrganizationColorClass = (org: OrganizationMeResponse): string => {
+    // orgType: 1 = PropertyManagementCompany, 2 = ManagedCondominium
+    if (org.orgType === 1) {
+      return "org-type-company";
+    } else if (org.orgType === 2) {
+      return "org-type-condo";
+    }
+    return "org-type-default";
   };
 
   const renderStepOne = () => (
@@ -254,7 +295,7 @@ export default function MultiStepLogin() {
 
   const renderStepTwo = () => (
     <>
-         <button
+      <button
         onClick={handleBack}
         className="back-indicator"
         disabled={isSubmitting}
@@ -276,11 +317,17 @@ export default function MultiStepLogin() {
           type="password"
           name="password"
           value={formik.values.password}
-          onChange={formik.handleChange}
+          onChange={(e) => {
+            formik.handleChange(e);
+            // Limpa o erro ao começar a digitar
+            if (passwordError) {
+              setPasswordError(null);
+            }
+          }}
           onBlur={formik.handleBlur}
           placeholder={t("login.passwordPlaceholder")}
           className={`input-field ${
-            formik.touched.password && formik.errors.password
+            (formik.touched.password && formik.errors.password) || passwordError
               ? "input-error"
               : ""
           }`}
@@ -289,6 +336,9 @@ export default function MultiStepLogin() {
         />
         {formik.touched.password && formik.errors.password && (
           <div className="error-message">{formik.errors.password}</div>
+        )}
+        {passwordError && (
+          <div className="error-message">{passwordError}</div>
         )}
       </div>
 
@@ -324,18 +374,14 @@ export default function MultiStepLogin() {
 
       <h1 className="title">{getStepTitle()}</h1>
       <div className="subtitle">{formik.values.email}</div>
-   {/*    
-      <div className="company-section-header">
-        <span className="company-count">{COMPANIES.length} {COMPANIES.length === 1 ? 'registro disponível' : 'registros disponíveis'}</span>
-      </div> */}
 
       {isLoadingCondominiums ? (
         <div className="loading-message">
-          {t("login.loadingCondominiums") || "Carregando condominios..."}
+          {t("login.loadingCondominiums") || "Carregando organizações..."}
         </div>
       ) : condominiums.length === 0 ? (
         <div className="error-message text-center">
-          {t("login.noCondominiums") || "Nenhum condominio disponivel."}
+          {t("login.noCondominiums") || "Nenhuma organização disponível."}
         </div>
       ) : (
         <div className="company-list">
@@ -352,7 +398,9 @@ export default function MultiStepLogin() {
               type="button"
               disabled={isSubmitting}
             >
-              <div className="company-icon">C</div>
+              <div className={`company-icon ${getOrganizationColorClass(condominium)}`}>
+                {getOrganizationInitials(condominium)}
+              </div>
               <div className="company-info">
                 <div className="company-name">{condominium.name}</div>
                 <div className="company-role">
@@ -422,14 +470,34 @@ export default function MultiStepLogin() {
                 {[1, 2, 3].map((stepNumber) => (
                   <div
                     key={stepNumber}
-                    className={`step-dot ${stepNumber === step ? "active" : ""} ${
+                    className={`step-dot ${
+                      stepNumber === step ? "active" : ""
+                    } ${
                       stepNumber < step ? "completed" : ""
+                    } ${
+                      stepNumber === 3 && isLoadingCondominiums ? "loading" : ""
                     }`}
                   />
                 ))}
               </div>
             </div>
           </div>
+
+          {/* Loading Overlay */}
+          {isLoggingIn && (
+            <div className="login-loading-overlay">
+              <div className="login-loading-content">
+                <div className="login-loader">
+                  <div className="loader-ring"></div>
+                  <div className="loader-ring"></div>
+                  <div className="loader-ring"></div>
+                </div>
+                <p className="loading-text">
+                  {t("login.accessingOrganization") || "Acessando organização..."}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

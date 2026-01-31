@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import './Condominio.scss';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -17,14 +19,35 @@ import {
   CircularProgress,
   Stepper,
   Step,
-  StepLabel
+  StepLabel,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
-import { Business, CheckCircle } from '@mui/icons-material';
-import { condominiumService, type Condominium, type CondominiumRequest, type CondominiumTypeEnum, type AllocationTypeEnum } from '../../services/condominiumService';
+import {
+  Business,
+  CheckCircle,
+  DeleteOutline,
+  EditOutlined,
+  HomeOutlined,
+  BusinessOutlined,
+  ApartmentOutlined,
+  LocationOnOutlined,
+  Close,
+} from '@mui/icons-material';
+import {
+  condominiumService,
+  type Condominium,
+  type CondominiumRequest,
+  type CondominiumTypeEnum,
+  type AllocationTypeEnum,
+} from '../../services/condominiumService';
+import { condominiumImageService } from '../../services/condominiumImageService';
 import { organizationService } from '../../services/organizationService';
+import CardList from '../../shared/components/CardList';
 import './Condominio.scss';
 
 const CondominioForm: React.FC = () => {
+  const navigate = useNavigate();
   const initialFormData: CondominiumRequest = {
     organizationId: localStorage.getItem('organizationId') || '',
     name: '',
@@ -43,7 +66,7 @@ const CondominioForm: React.FC = () => {
     hasPowerByBlock: false,
     hasGasByBlock: false,
     allocationType: 'FractionalAllocation',
-    allocationValuePerc: 0
+    allocationValuePerc: 0,
   };
 
   const [activeStep, setActiveStep] = useState(0);
@@ -51,39 +74,62 @@ const CondominioForm: React.FC = () => {
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
+  const [condominiumImages, setCondominiumImages] = useState<Record<string, string>>({});
+  const [searchText, setSearchText] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
+  const [listPage, setListPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 4;
   const [condominiumTypes, setCondominiumTypes] = useState<CondominiumTypeEnum[]>([]);
   const [typesLoading, setTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
   const [allocationTypes, setAllocationTypes] = useState<AllocationTypeEnum[]>([]);
   const [allocationLoading, setAllocationLoading] = useState(false);
   const [allocationError, setAllocationError] = useState<string | null>(null);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState<string | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<CondominiumRequest>(initialFormData);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
-    severity: 'success' as 'success' | 'error'
+    severity: 'success' as 'success' | 'error',
   });
 
-  const steps = ['Informações Básicas', 'Endereço', 'Configurações', 'Rateio'];
+  const steps = ['Informacoes Basicas', 'Endereco', 'Configuracoes e Rateio'];
 
-  const loadCondominiums = async () => {
+  const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
     setListError(null);
     try {
       let organizationId = localStorage.getItem('organizationId') || '';
       if (!organizationId) {
-        organizationId = await organizationService.getMyOrganizationId() || '';
+        organizationId = (await organizationService.getMyOrganizationId()) || '';
         localStorage.setItem('organizationId', organizationId);
       }
-      
+
       setFormData((prev) => ({ ...prev, organizationId }));
 
-      const data = await condominiumService.getCondominiums(organizationId);
-      setCondominiums(data ?? []);
+      const response = await condominiumService.getCondominiums(organizationId, pageNumber, pageSize);
+      if (!organizationName) {
+        try {
+          const organizations = await organizationService.getMyOrganization();
+          const orgName = organizations?.[0]?.name || organizations?.[0]?.legalName;
+          if (orgName) setOrganizationName(orgName);
+        } catch {
+          // ignore organization name errors
+        }
+      }
+      const normalized = response?.data ?? [];
+      const computedTotalPages = response?.totalPages ?? Math.max(1, Math.ceil((response?.total ?? normalized.length) / pageSize));
+      setListPage(response?.pageNumber ?? pageNumber);
+      setTotalPages(computedTotalPages);
+      setCondominiums(normalized);
+      await loadCondominiumImages(normalized);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Erro ao carregar condominios.';
@@ -91,6 +137,29 @@ const CondominioForm: React.FC = () => {
     } finally {
       setListLoading(false);
     }
+  };
+
+  const loadCondominiumImages = async (items: Condominium[]) => {
+    const previews: Record<string, string> = {};
+    await Promise.all(
+      items.map(async (condominium) => {
+        try {
+          const list = await condominiumImageService.getCondominiumImages(
+            condominium.condominiumId,
+            'Cover'
+          );
+          const first = list?.[0];
+          if (!first?.condominiumImageId) return;
+          const detail = await condominiumImageService.getCondominiumImageById(first.condominiumImageId);
+          if (detail?.contentFile && detail?.contentType) {
+            previews[condominium.condominiumId] = `data:${detail.contentType};base64,${detail.contentFile}`;
+          }
+        } catch {
+          // ignore individual errors
+        }
+      })
+    );
+    setCondominiumImages(previews);
   };
 
   const loadCondominiumTypes = async () => {
@@ -123,44 +192,36 @@ const CondominioForm: React.FC = () => {
     }
   };
 
-
-
   useEffect(() => {
-    loadCondominiums();
+    loadCondominiums(1);
     loadCondominiumTypes();
     loadAllocationTypes();
   }, []);
 
-
   const handleChange = (field: string, value: unknown) => {
-  setFormData(prev => ({ ...prev, [field]: value }));
-  if (errors[field]) {
-  setErrors(prev => ({ ...prev, [field]: '' }));
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: '' }));
+    }
   };
 
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (step === 0) {
-      // Informações Básicas
-      if (!formData.organizationId.trim()) newErrors.organizationId = 'Organização é obrigatória';
-      if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
-      if (!formData.doc.trim()) newErrors.doc = 'CNPJ é obrigatório';
-      if (!formData.condominiumType) newErrors.condominiumType = 'Tipo é obrigatório';
-      if (formData.unitCount <= 0) newErrors.unitCount = 'Quantidade de unidades deve ser maior que 0';
+      if (!formData.organizationId.trim()) newErrors.organizationId = 'Organizacao e obrigatoria';
+      if (!formData.name.trim()) newErrors.name = 'Nome e obrigatorio';
+      if (!formData.doc.trim()) newErrors.doc = 'CNPJ e obrigatorio';
+      if (!formData.condominiumType) newErrors.condominiumType = 'Tipo e obrigatorio';
+      if (formData.unitCount <= 0) newErrors.unitCount = 'Quantidade deve ser maior que 0';
     } else if (step === 1) {
-      // Endereço
-      if (!formData.address.trim()) newErrors.address = 'Endereço é obrigatório';
-      if (!formData.addressNumber.trim()) newErrors.addressNumber = 'Número é obrigatório';
-      if (!formData.neighborhood.trim()) newErrors.neighborhood = 'Bairro é obrigatório';
-      if (!formData.city.trim()) newErrors.city = 'Cidade é obrigatória';
-      if (!formData.state.trim()) newErrors.state = 'Estado é obrigatório';
-      if (!formData.zipCode.trim()) newErrors.zipCode = 'CEP é obrigatório';
+      if (!formData.address.trim()) newErrors.address = 'Endereco e obrigatorio';
+      if (!formData.addressNumber.trim()) newErrors.addressNumber = 'Numero e obrigatorio';
+      if (!formData.neighborhood.trim()) newErrors.neighborhood = 'Bairro e obrigatorio';
+      if (!formData.city.trim()) newErrors.city = 'Cidade e obrigatoria';
+      if (!formData.state.trim()) newErrors.state = 'Estado e obrigatorio';
+      if (!formData.zipCode.trim()) newErrors.zipCode = 'CEP e obrigatorio';
     } else if (step === 2) {
-      // Configurações - sem validações obrigatórias
-    } else if (step === 3) {
-      // Rateio
       if (formData.allocationValuePerc < 0 || formData.allocationValuePerc > 100) {
         newErrors.allocationValuePerc = 'Percentual deve estar entre 0 e 100';
       }
@@ -172,12 +233,43 @@ const CondominioForm: React.FC = () => {
 
   const handleNext = () => {
     if (validateStep(activeStep)) {
-      setActiveStep(prev => prev + 1);
+      setActiveStep((prev) => prev + 1);
     }
   };
 
   const handleBack = () => {
-    setActiveStep(prev => prev - 1);
+    setActiveStep((prev) => prev - 1);
+  };
+
+  const handleCepLookup = async () => {
+    const cepDigits = formData.zipCode.replace(/\D/g, '');
+    if (cepDigits.length !== 8) {
+      setCepError('CEP deve conter 8 digitos.');
+      return;
+    }
+
+    setCepLoading(true);
+    setCepError(null);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
+      const data = await response.json();
+      if (data?.erro) {
+        setCepError('CEP nao encontrado.');
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        address: data.logradouro || prev.address,
+        neighborhood: data.bairro || prev.neighborhood,
+        city: data.localidade || prev.city,
+        state: data.uf || prev.state,
+      }));
+    } catch {
+      setCepError('Erro ao consultar CEP.');
+    } finally {
+      setCepLoading(false);
+    }
   };
 
   const getAllocationTypeLabel = (value: string | number) => {
@@ -220,7 +312,7 @@ const CondominioForm: React.FC = () => {
       hasPowerByBlock: condominium.hasPowerByBlock,
       hasGasByBlock: condominium.hasGasByBlock,
       allocationType: normalizeAllocationTypeValue(condominium.allocationType),
-      allocationValuePerc: condominium.allocationValuePerc
+      allocationValuePerc: condominium.allocationValuePerc,
     });
     setActiveStep(0);
     setIsCadastroOpen(true);
@@ -232,7 +324,7 @@ const CondominioForm: React.FC = () => {
       setSnackbar({
         open: true,
         message: 'OrganizationId nao encontrado.',
-        severity: 'error'
+        severity: 'error',
       });
       return;
     }
@@ -242,7 +334,7 @@ const CondominioForm: React.FC = () => {
       const payload: CondominiumRequest = {
         ...formData,
         condominiumType: normalizeCondominiumTypeValue(formData.condominiumType),
-        allocationType: normalizeAllocationTypeValue(formData.allocationType)
+        allocationType: normalizeAllocationTypeValue(formData.allocationType),
       };
 
       if (editingId) {
@@ -250,22 +342,42 @@ const CondominioForm: React.FC = () => {
         setSnackbar({
           open: true,
           message: `Condominio atualizado com sucesso! ID: ${response.condominiumId}`,
-          severity: 'success'
+          severity: 'success',
         });
       } else {
         const response = await condominiumService.createCondominium(payload);
         setSnackbar({
           open: true,
           message: `Condominio criado com sucesso! ID: ${response.condominiumId}`,
-          severity: 'success'
+          severity: 'success',
         });
+        if (coverFile) {
+          try {
+            await condominiumImageService.uploadCondominiumImage({
+              imageType: 'Cover',
+              contentFile: coverFile,
+              condominiumId: response.condominiumId,
+            });
+          } catch (error) {
+            const message =
+              error instanceof Error
+                ? error.message
+                : 'Condominio criado, mas houve erro ao enviar a imagem de capa.';
+            setSnackbar({
+              open: true,
+              message,
+              severity: 'error',
+            });
+          }
+        }
       }
 
       await loadCondominiums();
       setFormData({
         ...initialFormData,
-        organizationId: localStorage.getItem('organizationId') || ''
+        organizationId: localStorage.getItem('organizationId') || '',
       });
+      setCoverFile(null);
       setActiveStep(0);
       setEditingId(null);
       setIsCadastroOpen(false);
@@ -273,17 +385,26 @@ const CondominioForm: React.FC = () => {
       setSnackbar({
         open: true,
         message: editingId ? 'Erro ao atualizar condominio!' : 'Erro ao criar condominio!',
-        severity: 'error'
+        severity: 'error',
       });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDelete = (condominium: Condominium) => {
+    const confirmed = window.confirm(`Deseja excluir o condominio ${condominium.name}?`);
+    if (!confirmed) return;
+    setSnackbar({
+      open: true,
+      message: 'Exclusao ainda nao esta disponivel.',
+      severity: 'error',
+    });
+  };
+
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0:
-        // Informacoes Basicas
         return (
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
@@ -356,9 +477,23 @@ const CondominioForm: React.FC = () => {
         );
 
       case 1:
-        // Endereco
         return (
           <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="CEP"
+                value={formData.zipCode}
+                onChange={(e) => handleChange('zipCode', e.target.value)}
+                onBlur={handleCepLookup}
+                error={!!errors.zipCode || !!cepError}
+                helperText={errors.zipCode || cepError || 'Informe o CEP para buscar o endereco'}
+                placeholder="00000-000"
+                InputProps={{
+                  endAdornment: cepLoading ? <CircularProgress size={18} /> : null,
+                }}
+              />
+            </Grid>
             <Grid item xs={12} md={8}>
               <TextField
                 fullWidth
@@ -379,7 +514,7 @@ const CondominioForm: React.FC = () => {
                 helperText={errors.addressNumber}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={8}>
               <TextField
                 fullWidth
                 label="Complemento (Opcional)"
@@ -397,7 +532,7 @@ const CondominioForm: React.FC = () => {
                 helperText={errors.neighborhood}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 label="Cidade"
@@ -407,7 +542,7 @@ const CondominioForm: React.FC = () => {
                 helperText={errors.city}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={2}>
               <TextField
                 fullWidth
                 label="Estado (UF)"
@@ -419,22 +554,10 @@ const CondominioForm: React.FC = () => {
                 inputProps={{ maxLength: 2 }}
               />
             </Grid>
-            <Grid item xs={12} md={9}>
-              <TextField
-                fullWidth
-                label="CEP"
-                value={formData.zipCode}
-                onChange={(e) => handleChange('zipCode', e.target.value)}
-                error={!!errors.zipCode}
-                helperText={errors.zipCode}
-                placeholder="00000-000"
-              />
-            </Grid>
           </Grid>
         );
 
       case 2:
-        // Configuracoes
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -486,13 +609,12 @@ const CondominioForm: React.FC = () => {
                 label="Gas por Bloco"
               />
             </Grid>
-          </Grid>
-        );
 
-      case 3:
-        // Rateio
-        return (
-          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Rateio
+              </Typography>
+            </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -565,6 +687,30 @@ const CondominioForm: React.FC = () => {
                 </CardContent>
               </Card>
             </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Imagem de capa (opcional)
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                <Button variant="outlined" component="label">
+                  Selecionar imagem
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                  />
+                </Button>
+                <Typography variant="body2" color="text.secondary">
+                  {coverFile ? coverFile.name : 'Nenhum arquivo selecionado'}
+                </Typography>
+                {editingId ? (
+                  <Alert severity="info" sx={{ flex: 1 }}>
+                    Troca de capa no editar sera habilitada quando o endpoint estiver disponivel.
+                  </Alert>
+                ) : null}
+              </Box>
+            </Grid>
           </Grid>
         );
 
@@ -574,35 +720,39 @@ const CondominioForm: React.FC = () => {
   };
 
   return (
-    <Box className="condominio-container" sx={{ py: 4 }}>
-      <Container maxWidth="md">
+    <Box className="condominio-container">
+      <Container maxWidth="xl">
         <Paper elevation={3} sx={{ p: 4 }}>
-          <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Business sx={{ fontSize: 40, color: '#1976d2' }} />
-            <Typography variant="h4" fontWeight="bold">
-              {editingId ? 'Editar Condominio' : 'Criar Condominio'}
-            </Typography>
+          <Box sx={{ mb: 4, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Business sx={{ fontSize: 40, color: '#1976d2' }} />
+              <Box>
+                <Typography variant="h4" fontWeight="bold">
+                  {organizationName}
+                </Typography>
+              </Box>
+            </Box>
+            <Tooltip title="Fechar">
+              <IconButton
+                color="error"
+                onClick={() => {
+                  navigate('/dashboard');
+                  setIsCadastroOpen(false);
+                  setEditingId(null);
+                  setActiveStep(0);
+                }}
+                sx={{
+                  borderColor: 'divider',
+                  backgroundColor: '#f5f5f5',
+                }}
+              >
+                <Close />
+              </IconButton>
+            </Tooltip>
           </Box>
 
           {!isCadastroOpen ? (
             <>
-              <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  Condominios da organizacao
-                </Typography>
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    setActiveStep(0);
-                    setEditingId(null);
-                    setFormData({ ...initialFormData, organizationId: localStorage.getItem('organizationId') || '' });
-                    setIsCadastroOpen(true);
-                  }}
-                >
-                  Cadastrar condominio
-                </Button>
-              </Box>
-
               <Paper variant="outlined" sx={{ mb: 4, p: 2 }}>
                 {listLoading ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -616,32 +766,84 @@ const CondominioForm: React.FC = () => {
                     Nenhum condominio encontrado para esta organizacao.
                   </Typography>
                 ) : (
-                  <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <Box component="thead">
-                      <Box component="tr" sx={{ textAlign: 'left' }}>
-                        <Box component="th" sx={{ p: 1 }}>Nome</Box>
-                        <Box component="th" sx={{ p: 1 }}>Cidade</Box>
-                        <Box component="th" sx={{ p: 1 }}>Estado</Box>
-                        <Box component="th" sx={{ p: 1 }}>Tipo</Box>
-                        <Box component="th" sx={{ p: 1 }}>Acoes</Box>
-                      </Box>
-                    </Box>
-                    <Box component="tbody">
-                      {condominiums.map((condominium) => (
-                        <Box component="tr" key={condominium.condominiumId}>
-                          <Box component="td" sx={{ p: 1 }}>{condominium.name}</Box>
-                          <Box component="td" sx={{ p: 1 }}>{condominium.city}</Box>
-                          <Box component="td" sx={{ p: 1 }}>{condominium.state}</Box>
-                          <Box component="td" sx={{ p: 1 }}>{getCondominiumTypeLabel(condominium.condominiumType)}</Box>
-                          <Box component="td" sx={{ p: 1 }}>
-                            <Button size="small" variant="outlined" onClick={() => handleEdit(condominium)}>
+                  <CardList
+                    title="Condominios da organizacao"
+                    showTitle={false}
+                    searchPlaceholder="Buscar condominio..."
+                    onSearchChange={setSearchText}
+                    onAddClick={() => {
+                      setActiveStep(0);
+                      setEditingId(null);
+                      setFormData({
+                        ...initialFormData,
+                        organizationId: localStorage.getItem('organizationId') || '',
+                      });
+                      setIsCadastroOpen(true);
+                    }}
+                    addLabel="Novo"
+                    addButtonPlacement="toolbar"
+                    emptyImageLabel="Sem imagem"
+                    page={listPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => {
+                      setListPage(page);
+                      loadCondominiums(page);
+                    }}
+                    items={condominiums
+                      .filter((condominium) =>
+                        [condominium.name, condominium.city, condominium.state]
+                          .filter(Boolean)
+                          .join(' ')
+                          .toLowerCase()
+                          .includes(searchText.toLowerCase())
+                      )
+                      .map((condominium, index) => ({
+                        id: condominium.condominiumId,
+                        title: condominium.name,
+                        subtitle: (
+                          <>
+                            <LocationOnOutlined sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                            {condominium.city} - {condominium.state}
+                          </>
+                        ),
+                        meta: (
+                          <>
+                            {(condominium.condominiumType === 'Commercial' ||
+                              getCondominiumTypeLabel(condominium.condominiumType) === 'Comercial') ? (
+                              <BusinessOutlined sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                            ) : getCondominiumTypeLabel(condominium.condominiumType) === 'Residencial' ? (
+                              <HomeOutlined sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                            ) : (
+                              <ApartmentOutlined sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                            )}
+                            {getCondominiumTypeLabel(condominium.condominiumType)}
+                          </>
+                        ),
+                        imageUrl: condominiumImages[condominium.condominiumId],
+                        actions: (
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<EditOutlined />}
+                              onClick={() => handleEdit(condominium)}
+                            >
                               Editar
                             </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              startIcon={<DeleteOutline />}
+                              onClick={() => handleDelete(condominium)}
+                            >
+                              Deletar
+                            </Button>
                           </Box>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Box>
+                        ),
+                        accentColor: index % 2 === 0 ? '#eef6ee' : '#fdecef',
+                      }))}
+                  />
                 )}
               </Paper>
             </>
@@ -650,7 +852,6 @@ const CondominioForm: React.FC = () => {
           {isCadastroOpen ? (
             <>
               <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-
                 {steps.map((label) => (
                   <Step key={label}>
                     <StepLabel>{label}</StepLabel>
@@ -670,7 +871,10 @@ const CondominioForm: React.FC = () => {
                       setActiveStep(0);
                       setIsCadastroOpen(false);
                       setEditingId(null);
-                      setFormData({ ...initialFormData, organizationId: localStorage.getItem('organizationId') || '' });
+                      setFormData({
+                        ...initialFormData,
+                        organizationId: localStorage.getItem('organizationId') || '',
+                      });
                     }}
                     variant="outlined"
                   >
@@ -696,13 +900,16 @@ const CondominioForm: React.FC = () => {
                       disabled={loading}
                       startIcon={loading ? <CircularProgress size={20} /> : <CheckCircle />}
                     >
-                      {loading ? (editingId ? 'Atualizando...' : 'Criando...') : (editingId ? 'Atualizar Condominio' : 'Criar Condominio')}
+                      {loading
+                        ? editingId
+                          ? 'Atualizando...'
+                          : 'Criando...'
+                        : editingId
+                          ? 'Atualizar Condominio'
+                          : 'Criar Condominio'}
                     </Button>
                   ) : (
-                    <Button
-                      variant="contained"
-                      onClick={handleNext}
-                    >
+                    <Button variant="contained" onClick={handleNext}>
                       Proximo
                     </Button>
                   )}
@@ -710,8 +917,7 @@ const CondominioForm: React.FC = () => {
               </Box>
             </>
           ) : null}
-
-          </Paper>
+        </Paper>
       </Container>
 
       <Snackbar

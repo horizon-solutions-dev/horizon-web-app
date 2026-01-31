@@ -1,11 +1,21 @@
+import PagePlaceholder from '../../../shared/components/PagePlaceholder';
+
 export default function BalancetesView() {
   return (
-    <div className="page-container">
-      <h1>Visualizar Balancetes</h1>
-      <p>Exibição de dados fornecidos pelo backend</p>
-      <div style={{ marginTop: '20px', padding: '20px', background: 'white', borderRadius: '8px' }}>
-        <p>Conteúdo em desenvolvimento...</p>
-      </div>
-    </div>
+    <PagePlaceholder
+      title="Balancetes"
+      subtitle="Visao geral de balancetes."
+      actions={[
+        { label: 'Novo balancete', variant: 'contained' },
+        { label: 'Filtrar' },
+      ]}
+      table={{
+        columns: ['Periodo', 'Receitas', 'Despesas'],
+        rows: [
+          ['01/2026', 'R$ 120.000', 'R$ 98.000'],
+          ['12/2025', 'R$ 118.000', 'R$ 101.000'],
+        ],
+      }}
+    />
   );
 }

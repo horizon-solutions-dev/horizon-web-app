@@ -1,59 +1,56 @@
-import {
-  MdPeople,
-  MdEventAvailable,
-  MdAttachMoney,
-  MdLocalShipping,
-  MdWarning,
-} from "react-icons/md";
-import "./Dashboard.scss";
+import './Dashboard.scss';
+
+import { AttachMoney, EventAvailable, LocalShipping, People } from '@mui/icons-material';
+import React from 'react';
+import { MdAttachMoney, MdEventAvailable, MdLocalShipping, MdPeople, MdWarning } from 'react-icons/md';
 
 export default function Dashboard() {
   const stats = [
     {
       id: 1,
-      title: "Total de Moradores",
-      value: "245",
-      icon: <MdPeople />,
-      color: "#4facfe",
-      trend: "+12%",
+      title: 'Total de Moradores',
+      value: '245',
+      icon: <People />,
+      color: '#4facfe',
+      trend: '+12%',
     },
     {
       id: 2,
-      title: "Reservas Ativas",
-      value: "18",
-      icon: <MdEventAvailable />,
-      color: "#00f2fe",
-      trend: "+5%",
+      title: 'Reservas Ativas',
+      value: '18',
+      icon: <EventAvailable />,
+      color: '#00bcd4',
+      trend: '+5%',
     },
     {
       id: 3,
-      title: "Boletos Pendentes",
-      value: "32",
-      icon: <MdAttachMoney />,
-      color: "#f093fb",
-      trend: "-8%",
+      title: 'Boletos Pendentes',
+      value: '32',
+      icon: <AttachMoney />,
+      color: '#f093fb',
+      trend: '-8%',
     },
     {
       id: 4,
-      title: "Encomendas",
-      value: "7",
-      icon: <MdLocalShipping />,
-      color: "#f5576c",
-      trend: "+3",
+      title: 'Encomendas',
+      value: '7',
+      icon: <LocalShipping />,
+      color: '#f5576c',
+      trend: '+3',
     },
   ];
 
   const recentActivities = [
-    { id: 1, text: "Nova reserva do salão de festas", time: "Há 2 horas" },
-    { id: 2, text: "Encomenda recebida para Apto 301", time: "Há 3 horas" },
-    { id: 3, text: "Novo morador cadastrado", time: "Há 5 horas" },
-    { id: 4, text: "Boleto pago - Apto 205", time: "Há 1 dia" },
+    { id: 1, text: 'Nova reserva do salao de festas', time: 'Ha 2 horas' },
+    { id: 2, text: 'Encomenda recebida para Apto 301', time: 'Ha 3 horas' },
+    { id: 3, text: 'Novo morador cadastrado', time: 'Ha 5 horas' },
+    { id: 4, text: 'Boleto pago - Apto 205', time: 'Ha 1 dia' },
   ];
 
   const pendingItems = [
-    { id: 1, text: "Aprovar liberação de acesso - Visitante", priority: "high" },
-    { id: 2, text: "Revisar despesas do mês", priority: "medium" },
-    { id: 3, text: "Enviar notificação de assembleia", priority: "low" },
+    { id: 1, text: 'Aprovar liberacao de acesso - Visitante', priority: 'Alta' },
+    { id: 2, text: 'Revisar despesas do mes', priority: 'Media' },
+    { id: 3, text: 'Enviar notificacao de assembleia', priority: 'Baixa' },
   ];
 
   return (

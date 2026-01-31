@@ -38,6 +38,14 @@ export interface AllocationTypeEnum {
   description: string;
 }
 
+export interface CondominiumPagedResponse {
+  data: Condominium[];
+  total: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages?: number;
+}
+
 class CondominiumService {
   private baseUrl = 'https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/condominiums';
 
@@ -45,7 +53,7 @@ class CondominiumService {
     try {
       return await apiClient.post<{ condominiumId: string }>(this.baseUrl, condominium);
     } catch (error) {
-      console.error('Erro ao criar condomínio:', error);
+      console.error('Erro ao criar condomÃ­nio:', error);
       throw error;
     }
   }
@@ -58,9 +66,23 @@ class CondominiumService {
         ...(pageSize !== undefined && { PageSize: pageSize.toString() }),
       });
 
-      return await apiClient.get<Condominium[]>(`${this.baseUrl}?${params}`);
+      const response = await apiClient.get<Condominium[] | CondominiumPagedResponse>(
+        `${this.baseUrl}?${params}`
+      );
+
+      if (Array.isArray(response)) {
+        return {
+          data: response,
+          total: response.length,
+          pageNumber: pageNumber ?? 1,
+          pageSize: pageSize || response.length || 1,
+          totalPages: 1,
+        } satisfies CondominiumPagedResponse;
+      }
+
+      return response;
     } catch (error) {
-      console.error('Erro ao buscar condomínios:', error);
+      console.error('Erro ao buscar condomÃ­nios:', error);
       throw error;
     }
   }
@@ -69,7 +91,7 @@ class CondominiumService {
     try {
       return await apiClient.get<Condominium>(`${this.baseUrl}/${id}`);
     } catch (error) {
-      console.error('Erro ao buscar condomínio:', error);
+      console.error('Erro ao buscar condomÃ­nio:', error);
       throw error;
     }
   }
@@ -78,7 +100,7 @@ class CondominiumService {
     try {
       return await apiClient.put<{ condominiumId: string }>(`${this.baseUrl}/${id}`, condominium);
     } catch (error) {
-      console.error('Erro ao atualizar condomínio:', error);
+      console.error('Erro ao atualizar condomÃ­nio:', error);
       throw error;
     }
   }
@@ -87,7 +109,7 @@ class CondominiumService {
     try {
       return await apiClient.get<CondominiumTypeEnum[]>(`${this.baseUrl}/types`);
     } catch (error) {
-      console.error('Erro ao buscar tipos de condomínio:', error);
+      console.error('Erro ao buscar tipos de condomÃ­nio:', error);
       throw error;
     }
   }
@@ -100,7 +122,6 @@ class CondominiumService {
       throw error;
     }
   }
-
 }
 
 export const condominiumService = new CondominiumService();
