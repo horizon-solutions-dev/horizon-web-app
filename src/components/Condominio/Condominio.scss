@@ -9,82 +9,80 @@
     padding: 0 !important;
 
     & > .MuiPaper-root {
-      border-radius: 24px !important;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
-      padding: 48px !important;
+      border-radius: 20px !important;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08) !important;
+      padding: 24px !important;
       background: white !important;
       border: 1px solid rgba(0, 0, 0, 0.04) !important;
 
       @media (max-width: 960px) {
-        padding: 32px 24px !important;
+        padding: 20px !important;
       }
 
       @media (max-width: 600px) {
-        padding: 24px 16px !important;
+        padding: 16px !important;
       }
     }
   }
 
   // ============================================
-  // HEADER - TÍTULO E BOTÃO FECHAR
+  // HEADER - TÍTULO E BOTÃO FECHAR (COMPACTO)
   // ============================================
   .MuiContainer-root > .MuiPaper-root > .MuiBox-root:first-child {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    margin-bottom: 32px !important;
-    padding-bottom: 24px !important;
+    margin-bottom: 16px !important;
+    padding-bottom: 12px !important;
     border-bottom: 2px solid #f0f0f0 !important;
 
     & > .MuiBox-root:first-child {
       display: flex !important;
       align-items: center !important;
-      gap: 20px !important;
+      gap: 12px !important;
 
       & > .MuiSvgIcon-root {
-        font-size: 48px !important;
+        font-size: 36px !important;
         color: #1976d2 !important;
       }
 
-      & > .MuiBox-root {
-        .MuiTypography-h4 {
-          font-size: 32px !important;
-          font-weight: 700 !important;
-          color: #1a1a2e !important;
-          letter-spacing: -0.5px !important;
-          line-height: 1.2 !important;
-          margin: 0 !important;
+      & > .MuiTypography-h5 {
+        font-size: 26px !important;
+        font-weight: 700 !important;
+        color: #1a1a2e !important;
+        letter-spacing: -0.5px !important;
+        line-height: 1.2 !important;
+        margin: 0 !important;
 
-          @media (max-width: 600px) {
-            font-size: 24px !important;
-          }
+        @media (max-width: 600px) {
+          font-size: 22px !important;
         }
       }
     }
 
     & > .MuiIconButton-root {
-      width: 48px !important;
-      height: 48px !important;
+      width: 40px !important;
+      height: 40px !important;
       background: #f5f7fa !important;
       border: 2px solid #e0e4e8 !important;
-      border-radius: 12px !important;
+      border-radius: 10px !important;
       color: #666 !important;
 
       &:hover {
         background: white !important;
-        border-color: #1976d2 !important;
-        color: #1976d2 !important;
+        border-color: #ef4444 !important;
+        color: #ef4444 !important;
       }
 
       .MuiSvgIcon-root {
-        font-size: 24px !important;
+        font-size: 20px !important;
       }
     }
 
     @media (max-width: 600px) {
       flex-direction: column !important;
       align-items: flex-start !important;
-      gap: 16px !important;
+      gap: 12px !important;
 
       & > .MuiIconButton-root {
         align-self: flex-end !important;
@@ -96,35 +94,36 @@
   // ÁREA DE LISTAGEM - PAPER INTERNO
   // ============================================
   .MuiContainer-root > .MuiPaper-root > .MuiPaper-root {
-    border-radius: 20px !important;
+    border-radius: 16px !important;
     border: 2px solid #f0f2f5 !important;
     box-shadow: none !important;
-    padding: 28px !important;
+    padding: 20px !important;
     background: #fafbfc !important;
 
     @media (max-width: 600px) {
-      padding: 20px !important;
+      padding: 16px !important;
     }
   }
 
   // ============================================
-  // BARRA DE BUSCA E BOTÃO NOVO
+  // BARRA DE BUSCA E BOTÃO NOVO (COMPACTA)
   // ============================================
   .MuiBox-root:has(> .MuiTextField-root[placeholder*="Buscar"]) {
     display: flex !important;
     align-items: center !important;
-    gap: 16px !important;
-    margin-bottom: 24px !important;
+    gap: 12px !important;
+    margin-bottom: 16px !important;
     flex-wrap: wrap !important;
 
     & > .MuiTextField-root {
       flex: 1 !important;
-      min-width: 280px !important;
+      min-width: 260px !important;
 
       .MuiOutlinedInput-root {
         background: white !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         transition: all 0.3s ease !important;
+        height: 40px !important;
 
         .MuiOutlinedInput-notchedOutline {
           border-color: #e0e4e8 !important;
@@ -136,7 +135,7 @@
         }
 
         &.Mui-focused {
-          box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15) !important;
+          box-shadow: 0 3px 10px rgba(25, 118, 210, 0.15) !important;
 
           .MuiOutlinedInput-notchedOutline {
             border-color: #1976d2 !important;
@@ -144,8 +143,8 @@
         }
 
         input {
-          padding: 14px 16px !important;
-          font-size: 15px !important;
+          padding: 10px 14px !important;
+          font-size: 14px !important;
           color: #1a1a2e !important;
 
           &::placeholder {
@@ -157,16 +156,16 @@
     }
 
     & > .MuiButton-root:not(:last-child) {
-      min-width: 120px !important;
-      height: 48px !important;
-      border-radius: 12px !important;
+      min-width: 100px !important;
+      height: 40px !important;
+      border-radius: 10px !important;
       border: 2px solid #e0e4e8 !important;
       background: white !important;
       color: #666 !important;
       font-weight: 600 !important;
-      font-size: 14px !important;
+      font-size: 13px !important;
       text-transform: none !important;
-      padding: 0 20px !important;
+      padding: 0 16px !important;
       transition: all 0.2s ease !important;
 
       &:hover {
@@ -178,32 +177,32 @@
 
     & > .MuiButton-root:last-child,
     & > .MuiFab-root {
-      width: 48px !important;
-      height: 48px !important;
-      min-width: 48px !important;
-      border-radius: 12px !important;
+      width: 40px !important;
+      height: 40px !important;
+      min-width: 40px !important;
+      border-radius: 10px !important;
       background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
       color: white !important;
-      box-shadow: 0 4px 16px rgba(25, 118, 210, 0.3) !important;
+      box-shadow: 0 3px 12px rgba(25, 118, 210, 0.3) !important;
       transition: all 0.2s ease !important;
       padding: 0 !important;
 
       &:hover {
         background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
-        box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4) !important;
+        box-shadow: 0 5px 16px rgba(25, 118, 210, 0.4) !important;
       }
 
       .MuiSvgIcon-root {
-        font-size: 24px !important;
+        font-size: 22px !important;
       }
     }
   }
 
   // ============================================
-  // CARDS DOS CONDOMÍNIOS
+  // CARDS DOS CONDOMÍNIOS (COMPACTOS)
   // ============================================
   .MuiBox-root:has(> .MuiCard-root) {
-    margin-bottom: 14px !important;
+    margin-bottom: 12px !important;
 
     &:last-of-type {
       margin-bottom: 0 !important;
@@ -212,13 +211,13 @@
 
   .MuiCard-root {
     background: white !important;
-    border-radius: 16px !important;
+    border-radius: 14px !important;
     border: 2px solid #f0f2f5 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
     transition: all 0.3s ease !important;
     overflow: visible !important;
     position: relative !important;
-    min-height: 130px !important;
+    min-height: 110px !important;
 
     &::before {
       content: '' !important;
@@ -228,13 +227,13 @@
       bottom: 0 !important;
       width: 0 !important;
       background: linear-gradient(180deg, #1976d2 0%, #1565c0 100%) !important;
-      border-radius: 16px 0 0 16px !important;
+      border-radius: 14px 0 0 14px !important;
       transition: width 0.3s ease !important;
     }
 
     &:hover {
       border-color: rgba(25, 118, 210, 0.3) !important;
-      box-shadow: 0 8px 24px rgba(25, 118, 210, 0.12) !important;
+      box-shadow: 0 6px 20px rgba(25, 118, 210, 0.12) !important;
 
       &::before {
         width: 5px !important;
@@ -247,9 +246,9 @@
     }
 
     .MuiCardContent-root {
-      padding: 16px !important;
+      padding: 14px !important;
       display: flex !important;
-      gap: 16px !important;
+      gap: 14px !important;
       align-items: center !important;
 
       @media (max-width: 768px) {
@@ -259,9 +258,9 @@
 
       & > div:first-child {
         flex-shrink: 0 !important;
-        width: 80px !important;
-        height: 80px !important;
-        border-radius: 12px !important;
+        width: 70px !important;
+        height: 70px !important;
+        border-radius: 10px !important;
         overflow: hidden !important;
         background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%) !important;
         display: flex !important;
@@ -270,7 +269,7 @@
 
         @media (max-width: 768px) {
           width: 100% !important;
-          height: 160px !important;
+          height: 140px !important;
         }
 
         img,
@@ -282,7 +281,7 @@
         }
 
         .MuiTypography-root {
-          font-size: 11px !important;
+          font-size: 10px !important;
           color: #999 !important;
           font-weight: 500 !important;
           text-align: center !important;
@@ -293,11 +292,11 @@
         flex: 1 !important;
         display: flex !important;
         flex-direction: column !important;
-        gap: 6px !important;
+        gap: 4px !important;
         min-width: 0 !important;
 
         .MuiTypography-root:first-child {
-          font-size: 17px !important;
+          font-size: 16px !important;
           font-weight: 700 !important;
           color: #1a1a2e !important;
           line-height: 1.3 !important;
@@ -311,77 +310,78 @@
         }
 
         .MuiTypography-root:nth-child(2) {
-          font-size: 13px !important;
+          font-size: 12px !important;
           color: #666 !important;
           display: flex !important;
           align-items: center !important;
-          gap: 4px !important;
+          gap: 3px !important;
           margin: 0 !important;
 
           .MuiSvgIcon-root {
-            font-size: 15px !important;
+            font-size: 14px !important;
             color: #1976d2 !important;
           }
         }
 
         .MuiTypography-root:nth-child(3) {
-          font-size: 12px !important;
+          font-size: 11px !important;
           color: #1976d2 !important;
           background: rgba(25, 118, 210, 0.08) !important;
-          padding: 5px 10px !important;
+          padding: 4px 8px !important;
           border-radius: 6px !important;
           display: inline-flex !important;
           align-items: center !important;
-          gap: 5px !important;
+          gap: 4px !important;
           width: fit-content !important;
           font-weight: 600 !important;
 
           .MuiSvgIcon-root {
-            font-size: 15px !important;
+            font-size: 14px !important;
           }
         }
       }
 
       & > div:last-child {
         display: flex !important;
-        gap: 10px !important;
+        gap: 8px !important;
         align-items: center !important;
         flex-shrink: 0 !important;
 
         @media (max-width: 768px) {
           width: 100% !important;
-          flex-direction: column !important;
+          flex-direction: row !important;
         }
       }
     }
   }
 
   // ============================================
-  // BOTÕES DE AÇÃO - EDITAR E EXCLUIR
+  // BOTÕES DE AÇÃO - EDITAR E EXCLUIR (MENORES)
   // ============================================
   .action-button-edit,
   .MuiButton-root:has(.MuiSvgIcon-root[data-testid="EditIcon"]) {
-    min-width: 100px !important;
-    height: 38px !important;
-    border-radius: 10px !important;
+    min-width: 80px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
     background: white !important;
     color: #10b981 !important;
     font-weight: 600 !important;
-    font-size: 13px !important;
+    font-size: 12px !important;
     text-transform: none !important;
-    padding: 0 16px !important;
+    padding: 0 12px !important;
     border: 2px solid #10b981 !important;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15) !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15) !important;
     transition: all 0.2s ease !important;
 
     @media (max-width: 768px) {
-      width: 100% !important;
+      flex: 1 !important;
     }
 
     .MuiButton-startIcon,
     .MuiSvgIcon-root {
       color: #10b981 !important;
-      font-size: 18px !important;
+      font-size: 16px !important;
+      margin-right: 4px !important;
       transition: transform 0.3s ease !important;
     }
 
@@ -389,7 +389,7 @@
       background: rgba(16, 185, 129, 0.1) !important;
       border-color: #059669 !important;
       color: #059669 !important;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25) !important;
 
       .MuiSvgIcon-root {
         color: #059669 !important;
@@ -404,27 +404,28 @@
 
   .action-button-delete,
   .MuiButton-root:has(.MuiSvgIcon-root[data-testid="DeleteIcon"]) {
-    min-width: 100px !important;
-    height: 38px !important;
-    border-radius: 10px !important;
+    min-width: 80px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
     background: white !important;
     color: #ef4444 !important;
     font-weight: 600 !important;
-    font-size: 13px !important;
+    font-size: 12px !important;
     text-transform: none !important;
-    padding: 0 16px !important;
+    padding: 0 12px !important;
     border: 2px solid #ef4444 !important;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15) !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15) !important;
     transition: all 0.2s ease !important;
 
     @media (max-width: 768px) {
-      width: 100% !important;
+      flex: 1 !important;
     }
 
     .MuiButton-startIcon,
     .MuiSvgIcon-root {
       color: #ef4444 !important;
-      font-size: 18px !important;
+      font-size: 16px !important;
+      margin-right: 4px !important;
       transition: transform 0.3s ease !important;
     }
 
@@ -432,7 +433,7 @@
       background: rgba(239, 68, 68, 0.1) !important;
       border-color: #dc2626 !important;
       color: #dc2626 !important;
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+      box-shadow: 0 3px 10px rgba(239, 68, 68, 0.25) !important;
 
       .MuiSvgIcon-root {
         color: #dc2626 !important;
@@ -446,31 +447,31 @@
   }
 
   // ============================================
-  // PAGINAÇÃO
+  // PAGINAÇÃO (SEMPRE VISÍVEL E COMPACTA)
   // ============================================
   .MuiPagination-root {
     display: flex !important;
     justify-content: center !important;
-    margin-top: 32px !important;
-    padding-top: 24px !important;
+    margin-top: 16px !important;
+    padding-top: 16px !important;
     border-top: 2px solid #f0f2f5 !important;
 
     .MuiPagination-ul {
-      gap: 8px !important;
+      gap: 6px !important;
 
       .MuiPaginationItem-root {
-        min-width: 40px !important;
-        height: 40px !important;
-        border-radius: 10px !important;
+        min-width: 36px !important;
+        height: 36px !important;
+        border-radius: 8px !important;
         font-weight: 600 !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
         border: 2px solid transparent !important;
         transition: all 0.2s ease !important;
 
         &.Mui-selected {
           background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
           color: white !important;
-          box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3) !important;
+          box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3) !important;
 
           &:hover {
             background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
@@ -500,9 +501,10 @@
   }
 
   .MuiAlert-root {
-    border-radius: 12px !important;
-    font-size: 14px !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
     font-weight: 500 !important;
+    padding: 8px 16px !important;
 
     &.MuiAlert-standardError {
       background: rgba(239, 68, 68, 0.08) !important;
@@ -524,18 +526,18 @@
   }
 
   // ============================================
-  // STEPPER (FORMULÁRIO)
+  // STEPPER (FORMULÁRIO - COMPACTO)
   // ============================================
   .MuiStepper-root {
     background: transparent !important;
-    padding: 24px 0 !important;
-    margin-bottom: 20px !important;
+    padding: 16px 0 !important;
+    margin-bottom: 12px !important;
 
     .MuiStep-root {
       .MuiStepLabel-root {
         .MuiStepLabel-label {
           font-weight: 600 !important;
-          font-size: 14px !important;
+          font-size: 13px !important;
           color: #999 !important;
           transition: all 0.2s ease !important;
 
@@ -550,7 +552,7 @@
         }
 
         .MuiStepIcon-root {
-          font-size: 28px !important;
+          font-size: 26px !important;
           transition: all 0.2s ease !important;
 
           &.Mui-active {
@@ -584,15 +586,15 @@
   }
 
   // ============================================
-  // INPUTS DO FORMULÁRIO
+  // INPUTS DO FORMULÁRIO (COMPACTOS)
   // ============================================
   .condominio-form,
   div:has(.condominio-form) {
     .MuiTextField-root {
-      margin-bottom: 12px !important;
+      margin-bottom: 0 !important;
 
       .MuiOutlinedInput-root {
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         background: white !important;
         transition: all 0.2s ease !important;
 
@@ -606,7 +608,7 @@
         }
 
         &.Mui-focused {
-          box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15) !important;
+          box-shadow: 0 3px 10px rgba(25, 118, 210, 0.15) !important;
 
           .MuiOutlinedInput-notchedOutline {
             border-color: #1976d2 !important;
@@ -619,23 +621,35 @@
 
         input,
         textarea {
-          padding: 16.5px 14px !important;
-          font-size: 15px !important;
+          padding: 12px 14px !important;
+          font-size: 14px !important;
           color: #1a1a2e !important;
-          line-height: 1.4375em !important;
+          line-height: 1.4 !important;
+        }
+
+        &.MuiInputBase-sizeSmall {
+          input {
+            padding: 10px 14px !important;
+          }
         }
       }
 
       .MuiInputLabel-root {
         font-weight: 500 !important;
-        font-size: 16px !important;
+        font-size: 14px !important;
         color: #666 !important;
-        transform: translate(14px, 16px) scale(1) !important;
+
+        &.MuiInputLabel-sizeSmall {
+          transform: translate(14px, 11px) scale(1) !important;
+
+          &.MuiInputLabel-shrink {
+            transform: translate(14px, -6px) scale(0.75) !important;
+          }
+        }
 
         &.MuiInputLabel-shrink {
-          transform: translate(14px, -6px) scale(0.75) !important;
           background: white !important;
-          padding: 0 8px !important;
+          padding: 0 6px !important;
         }
 
         &.Mui-focused {
@@ -649,8 +663,8 @@
       }
 
       .MuiFormHelperText-root {
-        font-size: 12px !important;
-        margin-top: 6px !important;
+        font-size: 11px !important;
+        margin-top: 4px !important;
         margin-left: 4px !important;
 
         &.Mui-error {
@@ -662,12 +676,12 @@
   }
 
   // ============================================
-  // CHECKBOXES
+  // CHECKBOXES (COMPACTOS)
   // ============================================
   .MuiFormControlLabel-root {
     margin: 0 !important;
-    padding: 12px 16px !important;
-    border-radius: 12px !important;
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
     border: 2px solid #f0f2f5 !important;
     background: white !important;
     transition: all 0.2s ease !important;
@@ -678,87 +692,46 @@
     }
 
     .MuiCheckbox-root {
-      padding: 8px !important;
+      padding: 6px !important;
 
       &.Mui-checked {
         color: #1976d2 !important;
       }
+
+      &.MuiCheckbox-sizeSmall {
+        padding: 4px !important;
+      }
     }
 
     .MuiFormControlLabel-label {
-      font-size: 14px !important;
+      font-size: 13px !important;
       font-weight: 500 !important;
       color: #1a1a2e !important;
-      margin-left: 8px !important;
+      margin-left: 6px !important;
     }
   }
 
   // ============================================
-  // RESUMO DAS CONFIGURAÇÕES
+  // BOTÕES DO FORMULÁRIO (COMPACTOS)
   // ============================================
-  .MuiCard-root:has(.MuiCardContent-root .MuiTypography-subtitle2) {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-    border-radius: 12px !important;
-    border: 2px dashed rgba(25, 118, 210, 0.25) !important;
-    box-shadow: none !important;
-    margin-top: 12px !important;
-
-    .MuiCardContent-root {
-      padding: 20px !important;
-
-      .MuiTypography-subtitle2 {
-        font-size: 16px !important;
-        font-weight: 700 !important;
-        color: #1976d2 !important;
-        margin-bottom: 14px !important;
-      }
-
-      .MuiTypography-body2 {
-        padding: 8px 0 !important;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
-        font-size: 14px !important;
-
-        &:last-child {
-          border-bottom: none !important;
-        }
-
-        strong {
-          color: #1a1a2e !important;
-          font-weight: 700 !important;
-          margin-right: 6px !important;
-        }
-      }
-    }
-  }
-
-  // ============================================
-  // BOTÕES DO FORMULÁRIO
-  // ============================================
-  .MuiBox-root:has(> .MuiBox-root > .MuiButton-root),
-  div:has(> div > .MuiButton-root[variant="contained"]) {
+  .MuiBox-root:has(> .MuiButton-root[variant="contained"]),
+  div:has(> .MuiButton-root[variant="contained"]) {
     display: flex !important;
     justify-content: center !important;
-    gap: 16px !important;
-    margin-top: 24px !important;
-    padding-top: 24px !important;
+    gap: 12px !important;
+    margin-top: 0 !important;
+    padding-top: 12px !important;
     border-top: 2px solid #f0f2f5 !important;
     flex-wrap: wrap !important;
 
-    & > .MuiBox-root {
-      display: flex !important;
-      gap: 16px !important;
-      flex-wrap: wrap !important;
-      justify-content: center !important;
-    }
-
     .MuiButton-root {
-      min-width: 140px !important;
-      height: 48px !important;
-      border-radius: 12px !important;
+      min-width: 120px !important;
+      height: 42px !important;
+      border-radius: 10px !important;
       font-weight: 700 !important;
-      font-size: 15px !important;
+      font-size: 14px !important;
       text-transform: none !important;
-      padding: 0 28px !important;
+      padding: 0 24px !important;
       transition: all 0.2s ease !important;
 
       &.MuiButton-outlined {
@@ -772,30 +745,30 @@
           background: #1976d2 !important;
           border-color: #1976d2 !important;
           color: white !important;
-          box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3) !important;
+          box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3) !important;
         }
       }
 
       &.MuiButton-contained {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15) !important;
 
         &.MuiButton-containedSuccess {
           background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-          box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35) !important;
+          box-shadow: 0 3px 12px rgba(16, 185, 129, 0.35) !important;
 
           &:hover {
             background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45) !important;
+            box-shadow: 0 5px 16px rgba(16, 185, 129, 0.45) !important;
           }
         }
 
         &.MuiButton-containedPrimary {
           background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
-          box-shadow: 0 4px 16px rgba(25, 118, 210, 0.35) !important;
+          box-shadow: 0 3px 12px rgba(25, 118, 210, 0.35) !important;
 
           &:hover {
             background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
-            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.45) !important;
+            box-shadow: 0 5px 16px rgba(25, 118, 210, 0.45) !important;
           }
         }
       }
@@ -808,50 +781,65 @@
         opacity: 0.5 !important;
         cursor: not-allowed !important;
       }
+
+      .MuiCircularProgress-root {
+        width: 18px !important;
+        height: 18px !important;
+      }
     }
   }
 
   // ============================================
-  // TÍTULOS DAS SEÇÕES
+  // TÍTULOS DAS SEÇÕES (COMPACTOS)
   // ============================================
-  .MuiTypography-h6 {
-    font-size: 17px !important;
+  .MuiTypography-subtitle2 {
+    font-size: 15px !important;
     font-weight: 700 !important;
     color: #1976d2 !important;
-    margin-bottom: 16px !important;
-    margin-top: 24px !important;
-    padding-bottom: 10px !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    padding-bottom: 8px !important;
     border-bottom: 2px solid rgba(25, 118, 210, 0.15) !important;
-
-    &:first-of-type {
-      margin-top: 0 !important;
-    }
   }
 
   // ============================================
-  // SCROLL DO FORMULÁRIO
+  // FORMULÁRIO - SEM SCROLL
   // ============================================
   .condominio-form {
-    margin-top: 12px !important;
-    max-height: calc(100vh - 360px) !important;
-    overflow-y: auto !important;
-    padding: 16px 12px 0 12px !important;
+    margin-top: 0 !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+    padding: 12px 8px !important;
+  }
 
-    &::-webkit-scrollbar {
-      width: 8px !important;
+  // ============================================
+  // ANIMAÇÃO DO INDICADOR DE PREENCHIMENTO CEP
+  // ============================================
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
     }
-
-    &::-webkit-scrollbar-track {
-      background: #f5f5f5 !important;
-      border-radius: 10px !important;
+    100% {
+      background-position: 200% 0;
     }
+  }
 
-    &::-webkit-scrollbar-thumb {
-      background: #1976d2 !important;
-      border-radius: 10px !important;
+  .MuiTextField-root:has(input[label="Endereço (Logradouro)"]),
+  .MuiTextField-root:has(input[label="Bairro"]),
+  .MuiTextField-root:has(input[label="Cidade"]),
+  .MuiTextField-root:has(input[label="UF"]) {
+    transition: all 0.4s ease !important;
 
-      &:hover {
-        background: #1565c0 !important;
+    &.auto-filled {
+      .MuiOutlinedInput-root {
+        background: linear-gradient(
+          90deg,
+          rgba(16, 185, 129, 0.05) 0%,
+          rgba(16, 185, 129, 0.15) 50%,
+          rgba(16, 185, 129, 0.05) 100%
+        ) !important;
+        background-size: 200% 100% !important;
+        animation: shimmer 1.5s ease-in-out !important;
       }
     }
   }
