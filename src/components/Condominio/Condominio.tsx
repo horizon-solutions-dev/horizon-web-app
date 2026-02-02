@@ -17,6 +17,7 @@ import {
   CircularProgress,
   IconButton,
   Tooltip,
+  Grid,
 } from "@mui/material";
 
 import {
@@ -103,7 +104,7 @@ const CondominioForm: React.FC = () => {
     severity: "success" as "success" | "error",
   });
 
-  const steps = ["Informacoes Basicas", "Endereco", "Configuracoes e Rateio"];
+  const steps = ["Informações Básicas", "Endereço", "Configurações e Rateio"];
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -148,7 +149,7 @@ const CondominioForm: React.FC = () => {
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao carregar condominios.";
+          : "Erro ao carregar condomínios.";
       setListError(message);
     } finally {
       setListLoading(false);
@@ -191,7 +192,7 @@ const CondominioForm: React.FC = () => {
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao carregar tipos de condominio.";
+          : "Erro ao carregar tipos de condomínio.";
       setTypesError(message);
     } finally {
       setTypesLoading(false);
@@ -208,7 +209,7 @@ const CondominioForm: React.FC = () => {
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao carregar tipos de alocacao.";
+          : "Erro ao carregar tipos de alocação.";
       setAllocationError(message);
     } finally {
       setAllocationLoading(false);
@@ -233,23 +234,23 @@ const CondominioForm: React.FC = () => {
 
     if (step === 0) {
       if (!formData.organizationId.trim())
-        newErrors.organizationId = "Organizacao e obrigatoria";
-      if (!formData.name.trim()) newErrors.name = "Nome e obrigatorio";
-      if (!formData.doc.trim()) newErrors.doc = "CNPJ e obrigatorio";
+        newErrors.organizationId = "Organização é obrigatória";
+      if (!formData.name.trim()) newErrors.name = "Nome é obrigatório";
+      if (!formData.doc.trim()) newErrors.doc = "CNPJ é obrigatório";
       if (!formData.condominiumType)
-        newErrors.condominiumType = "Tipo e obrigatorio";
+        newErrors.condominiumType = "Tipo é obrigatório";
       if (formData.unitCount <= 0)
         newErrors.unitCount = "Quantidade deve ser maior que 0";
     } else if (step === 1) {
-      if (!formData.address.trim())
-        newErrors.address = "Endereco e obrigatorio";
+      if (!formData.zipCode.trim()) newErrors.zipCode = "CEP é obrigatório";
       if (!formData.addressNumber.trim())
-        newErrors.addressNumber = "Numero e obrigatorio";
+        newErrors.addressNumber = "Número é obrigatório";
+      if (!formData.address.trim())
+        newErrors.address = "Endereço é obrigatório";
       if (!formData.neighborhood.trim())
-        newErrors.neighborhood = "Bairro e obrigatorio";
-      if (!formData.city.trim()) newErrors.city = "Cidade e obrigatoria";
-      if (!formData.state.trim()) newErrors.state = "Estado e obrigatorio";
-      if (!formData.zipCode.trim()) newErrors.zipCode = "CEP e obrigatorio";
+        newErrors.neighborhood = "Bairro é obrigatório";
+      if (!formData.city.trim()) newErrors.city = "Cidade é obrigatória";
+      if (!formData.state.trim()) newErrors.state = "Estado é obrigatório";
     } else if (step === 2) {
       if (
         formData.allocationValuePerc < 0 ||
@@ -276,7 +277,7 @@ const CondominioForm: React.FC = () => {
   const handleCepLookup = async () => {
     const cepDigits = formData.zipCode.replace(/\D/g, "");
     if (cepDigits.length !== 8) {
-      setCepError("CEP deve conter 8 digitos.");
+      setCepError("CEP deve conter 8 dígitos.");
       return;
     }
 
@@ -288,7 +289,7 @@ const CondominioForm: React.FC = () => {
       );
       const data = await response.json();
       if (data?.erro) {
-        setCepError("CEP nao encontrado.");
+        setCepError("CEP não encontrado.");
         return;
       }
 
@@ -305,13 +306,6 @@ const CondominioForm: React.FC = () => {
       setCepLoading(false);
     }
   };
-
-/*   const getAllocationTypeLabel = (value: string | number) => {
-    const match = allocationTypes.find(
-      (type) => type.id === value || type.value === value,
-    );
-    return match?.description || match?.value || String(value);
-  }; */
 
   const normalizeAllocationTypeValue = (value: string | number) => {
     const match = allocationTypes.find(
@@ -367,7 +361,7 @@ const CondominioForm: React.FC = () => {
     if (!formData.organizationId.trim()) {
       setSnackbar({
         open: true,
-        message: "OrganizationId nao encontrado.",
+        message: "OrganizationId não encontrado.",
         severity: "error",
       });
       return;
@@ -390,14 +384,14 @@ const CondominioForm: React.FC = () => {
         );
         setSnackbar({
           open: true,
-          message: `Condominio atualizado com sucesso! ID: ${response.condominiumId}`,
+          message: `Condomínio atualizado com sucesso! ID: ${response.condominiumId}`,
           severity: "success",
         });
       } else {
         const response = await condominiumService.createCondominium(payload);
         setSnackbar({
           open: true,
-          message: `Condominio criado com sucesso! ID: ${response.condominiumId}`,
+          message: `Condomínio criado com sucesso! ID: ${response.condominiumId}`,
           severity: "success",
         });
         if (coverFile) {
@@ -411,7 +405,7 @@ const CondominioForm: React.FC = () => {
             const message =
               error instanceof Error
                 ? error.message
-                : "Condominio criado, mas houve erro ao enviar a imagem de capa.";
+                : "Condomínio criado, mas houve erro ao enviar a imagem de capa.";
             setSnackbar({
               open: true,
               message,
@@ -435,8 +429,8 @@ const CondominioForm: React.FC = () => {
         error instanceof Error
           ? error.message
           : editingId
-            ? "Erro ao atualizar condominio!"
-            : "Erro ao criar condominio!";
+            ? "Erro ao atualizar condomínio!"
+            : "Erro ao criar condomínio!";
       setSnackbar({
         open: true,
         message,
@@ -449,12 +443,12 @@ const CondominioForm: React.FC = () => {
 
   const handleDelete = (condominium: Condominium) => {
     const confirmed = window.confirm(
-      `Deseja excluir o condominio ${condominium.name}?`,
+      `Deseja excluir o condomínio ${condominium.name}?`,
     );
     if (!confirmed) return;
     setSnackbar({
       open: true,
-      message: "Exclusao ainda nao esta disponivel.",
+      message: "Exclusão ainda não está disponível.",
       severity: "error",
     });
   };
@@ -463,10 +457,10 @@ const CondominioForm: React.FC = () => {
     switch (step) {
       case 0:
         return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
             <TextField
               fullWidth
-              label="Nome do Condominio"
+              label="Nome do Condomínio"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
               error={!!errors.name}
@@ -483,7 +477,7 @@ const CondominioForm: React.FC = () => {
             />
             <TextField
               fullWidth
-              label="Tipo de Condominio"
+              label="Tipo de Condomínio"
               select
               value={formData.condominiumType}
               onChange={(e) =>
@@ -529,7 +523,7 @@ const CondominioForm: React.FC = () => {
 
       case 1:
         return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
             <TextField
               fullWidth
               label="CEP"
@@ -540,7 +534,7 @@ const CondominioForm: React.FC = () => {
               helperText={
                 errors.zipCode ||
                 cepError ||
-                "Informe o CEP para buscar o endereco"
+                "Informe o CEP para buscar o endereço automaticamente"
               }
               placeholder="00000-000"
               InputProps={{
@@ -549,28 +543,37 @@ const CondominioForm: React.FC = () => {
                 ) : null,
               }}
             />
-            <TextField
-              fullWidth
-              label="Endereco (Logradouro)"
-              value={formData.address}
-              onChange={(e) => handleChange("address", e.target.value)}
-              error={!!errors.address}
-              helperText={errors.address}
-            />
-            <TextField
-              fullWidth
-              label="Numero"
-              value={formData.addressNumber}
-              onChange={(e) => handleChange("addressNumber", e.target.value)}
-              error={!!errors.addressNumber}
-              helperText={errors.addressNumber}
-            />
+            
+            <Grid container spacing={1.5}>
+              <Grid item xs={12} sm={9}>
+                <TextField
+                  fullWidth
+                  label="Endereço (Logradouro)"
+                  value={formData.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
+                  error={!!errors.address}
+                  helperText={errors.address}
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  fullWidth
+                  label="Número"
+                  value={formData.addressNumber}
+                  onChange={(e) => handleChange("addressNumber", e.target.value)}
+                  error={!!errors.addressNumber}
+                  helperText={errors.addressNumber}
+                />
+              </Grid>
+            </Grid>
+
             <TextField
               fullWidth
               label="Complemento (Opcional)"
               value={formData.complement}
               onChange={(e) => handleChange("complement", e.target.value)}
             />
+            
             <TextField
               fullWidth
               label="Bairro"
@@ -579,79 +582,96 @@ const CondominioForm: React.FC = () => {
               error={!!errors.neighborhood}
               helperText={errors.neighborhood}
             />
-            <TextField
-              fullWidth
-              label="Cidade"
-              value={formData.city}
-              onChange={(e) => handleChange("city", e.target.value)}
-              error={!!errors.city}
-              helperText={errors.city}
-            />
-            <TextField
-              fullWidth
-              label="Estado (UF)"
-              value={formData.state}
-              onChange={(e) =>
-                handleChange("state", e.target.value.toUpperCase())
-              }
-              error={!!errors.state}
-              helperText={errors.state}
-              placeholder="SP"
-              inputProps={{ maxLength: 2 }}
-            />
+            
+            <Grid container spacing={1.5}>
+              <Grid item xs={12} sm={9}>
+                <TextField
+                  fullWidth
+                  label="Cidade"
+                  value={formData.city}
+                  onChange={(e) => handleChange("city", e.target.value)}
+                  error={!!errors.city}
+                  helperText={errors.city}
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  fullWidth
+                  label="Estado (UF)"
+                  value={formData.state}
+                  onChange={(e) =>
+                    handleChange("state", e.target.value.toUpperCase())
+                  }
+                  error={!!errors.state}
+                  helperText={errors.state}
+                  placeholder="SP"
+                  inputProps={{ maxLength: 2 }}
+                />
+              </Grid>
+            </Grid>
           </Box>
         );
 
       case 2:
         return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography variant="h6" gutterBottom>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            <Typography variant="h6">
               Infraestrutura
             </Typography>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.hasBlocks}
-                  onChange={(e) => handleChange("hasBlocks", e.target.checked)}
-                />
-              }
-              label="Possui Blocos"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.hasWaterIndividual}
-                  onChange={(e) =>
-                    handleChange("hasWaterIndividual", e.target.checked)
+            <Grid container spacing={1.5}>
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.hasBlocks}
+                      onChange={(e) => handleChange("hasBlocks", e.target.checked)}
+                    />
                   }
+                  label="Possui Blocos"
                 />
-              }
-              label="Medicao Individual de Agua"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.hasPowerByBlock}
-                  onChange={(e) =>
-                    handleChange("hasPowerByBlock", e.target.checked)
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.hasWaterIndividual}
+                      onChange={(e) =>
+                        handleChange("hasWaterIndividual", e.target.checked)
+                      }
+                    />
                   }
+                  label="Medição Individual de Água"
                 />
-              }
-              label="Energia por Bloco"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.hasGasByBlock}
-                  onChange={(e) =>
-                    handleChange("hasGasByBlock", e.target.checked)
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.hasPowerByBlock}
+                      onChange={(e) =>
+                        handleChange("hasPowerByBlock", e.target.checked)
+                      }
+                    />
                   }
+                  label="Energia por Bloco"
                 />
-              }
-              label="Gas por Bloco"
-            />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.hasGasByBlock}
+                      onChange={(e) =>
+                        handleChange("hasGasByBlock", e.target.checked)
+                      }
+                    />
+                  }
+                  label="Gás por Bloco"
+                />
+              </Grid>
+            </Grid>
 
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6">
               Rateio
             </Typography>
             <TextField
@@ -681,7 +701,7 @@ const CondominioForm: React.FC = () => {
               ) : (
                 <>
                   <MenuItem value="FractionalAllocation">
-                    Rateio Fracionario
+                    Rateio Fracionário
                   </MenuItem>
                   <MenuItem value="FixedAllocation">Rateio Fixo</MenuItem>
                   <MenuItem value="ProportionalAllocation">
@@ -702,35 +722,8 @@ const CondominioForm: React.FC = () => {
               helperText={errors.allocationValuePerc}
               inputProps={{ min: 0, max: 100, step: 0.01 }}
             />
-            <Card sx={{ backgroundColor: "#f5f5f5" }}>
-             {/*  <CardContent>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Resumo das Configuracoes:
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2">
-                    <strong>Nome:</strong> {formData.name}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Tipo:</strong>{" "}
-                    {getCondominiumTypeLabel(formData.condominiumType)}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Unidades:</strong> {formData.unitCount}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Localizacao:</strong> {formData.address},{" "}
-                    {formData.addressNumber}, {formData.city} - {formData.state}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Rateio:</strong>{" "}
-                    {getAllocationTypeLabel(formData.allocationType)} (
-                    {formData.allocationValuePerc}%)
-                  </Typography>
-                </Box>
-              </CardContent> */}
-            </Card>
-            <Typography variant="h6" gutterBottom>
+
+            <Typography variant="h6">
               Imagem de capa (opcional)
             </Typography>
             <Box
@@ -755,8 +748,8 @@ const CondominioForm: React.FC = () => {
               </Typography>
               {editingId ? (
                 <Alert severity="info" sx={{ flex: 1 }}>
-                  Troca de capa no editar sera habilitada quando o endpoint
-                  estiver disponivel.
+                  Troca de capa no editar será habilitada quando o endpoint
+                  estiver disponível.
                 </Alert>
               ) : null}
             </Box>
@@ -773,7 +766,7 @@ const CondominioForm: React.FC = () => {
       <Container maxWidth="xl">
         {isCadastroOpen ? (
           <StepWizardCard
-            title="Criar condominio"
+            title={editingId ? "Editar condomínio" : "Criar condomínio"}
             subtitle={steps[activeStep]}
             steps={steps}
             onClose={()=>{
@@ -789,7 +782,7 @@ const CondominioForm: React.FC = () => {
               {renderStepContent(activeStep)}
             </div>
             <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 3 }}
+              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
             >
               {activeStep === steps.length - 1 ? (
                  <Box
@@ -797,7 +790,7 @@ const CondominioForm: React.FC = () => {
                     display: "flex",
                     justifyContent: "center",
                     gap: 2,
-                    mt: 3,
+                    mt: 2,
                   }}
                 >
                 <Button
@@ -814,8 +807,8 @@ const CondominioForm: React.FC = () => {
                       ? "Atualizando..."
                       : "Criando..."
                     : editingId
-                      ? "Atualizar Condominio"
-                      : "Criar Condominio"}
+                      ? "Atualizar Condomínio"
+                      : "Criar Condomínio"}
                 </Button>
                 </Box>
 
@@ -825,15 +818,12 @@ const CondominioForm: React.FC = () => {
                     display: "flex",
                     justifyContent: "center",
                     gap: 2,
-                    mt: 3,
+                    mt: 2,
                   }}
                 >
                   <Button variant="contained" onClick={handleNext}>
-                    Proximo
+                    Próximo
                   </Button>
-               {/*    <Button variant="contained" onClick={handleNext}>
-                    Proximo
-                  </Button> */}
                 </Box>
               )}
             </Box>
@@ -885,13 +875,13 @@ const CondominioForm: React.FC = () => {
                 <Alert severity="error">{listError}</Alert>
               ) : condominiums.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  Nenhum condominio encontrado para esta organizacao.
+                  Nenhum condomínio encontrado para esta organização.
                 </Typography>
               ) : (
                 <CardList
-                  title="Condominios da organizacao"
+                  title="Condomínios da organização"
                   showTitle={false}
-                  searchPlaceholder="Buscar condominio..."
+                  searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}
                   onAddClick={() => {
                     setActiveStep(0);
