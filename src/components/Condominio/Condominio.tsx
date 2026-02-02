@@ -18,6 +18,8 @@ import {
   IconButton,
   Tooltip,
   Grid,
+  Fade,
+  Zoom,
 } from "@mui/material";
 
 import {
@@ -30,6 +32,7 @@ import {
   ApartmentOutlined,
   LocationOnOutlined,
   Close,
+  AutoAwesome,
 } from "@mui/icons-material";
 import {
   condominiumService,
@@ -92,6 +95,7 @@ const CondominioForm: React.FC = () => {
   const [allocationError, setAllocationError] = useState<string | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
+  const [cepAutoFilled, setCepAutoFilled] = useState(false);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<CondominiumRequest>(initialFormData);
@@ -283,6 +287,8 @@ const CondominioForm: React.FC = () => {
 
     setCepLoading(true);
     setCepError(null);
+    setCepAutoFilled(false);
+    
     try {
       const response = await fetch(
         `https://viacep.com.br/ws/${cepDigits}/json/`,
@@ -293,6 +299,12 @@ const CondominioForm: React.FC = () => {
         return;
       }
 
+      // Animação de preenchimento automático
+      setCepAutoFilled(true);
+      
+      // Pequeno delay para efeito visual
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       setFormData((prev) => ({
         ...prev,
         address: data.logradouro || prev.address,
@@ -300,6 +312,9 @@ const CondominioForm: React.FC = () => {
         city: data.localidade || prev.city,
         state: data.uf || prev.state,
       }));
+
+      // Remove o indicador após 2 segundos
+      setTimeout(() => setCepAutoFilled(false), 2000);
     } catch {
       setCepError("Erro ao consultar CEP.");
     } finally {
@@ -453,11 +468,23 @@ const CondominioForm: React.FC = () => {
     });
   };
 
+  const handleCloseWizard = () => {
+    setIsCadastroOpen(false);
+    setEditingId(null);
+    setActiveStep(0);
+    setFormData({
+      ...initialFormData,
+      organizationId: localStorage.getItem("organizationId") || "",
+    });
+    setCoverFile(null);
+    setErrors({});
+  };
+
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0:
         return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
             <TextField
               fullWidth
               label="Nome do Condomínio"
@@ -465,6 +492,7 @@ const CondominioForm: React.FC = () => {
               onChange={(e) => handleChange("name", e.target.value)}
               error={!!errors.name}
               helperText={errors.name}
+              size="small"
             />
             <TextField
               fullWidth
@@ -474,6 +502,7 @@ const CondominioForm: React.FC = () => {
               error={!!errors.doc}
               helperText={errors.doc}
               placeholder="00.000.000/0000-00"
+              size="small"
             />
             <TextField
               fullWidth
@@ -488,6 +517,7 @@ const CondominioForm: React.FC = () => {
               }
               error={!!errors.condominiumType}
               helperText={typesError || errors.condominiumType}
+              size="small"
             >
               {typesLoading ? (
                 <MenuItem value={formData.condominiumType} disabled>
@@ -517,43 +547,76 @@ const CondominioForm: React.FC = () => {
               }
               error={!!errors.unitCount}
               helperText={errors.unitCount}
+              size="small"
             />
           </Box>
         );
 
       case 1:
         return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-            <TextField
-              fullWidth
-              label="CEP"
-              value={formData.zipCode}
-              onChange={(e) => handleChange("zipCode", e.target.value)}
-              onBlur={handleCepLookup}
-              error={!!errors.zipCode || !!cepError}
-              helperText={
-                errors.zipCode ||
-                cepError ||
-                "Informe o CEP para buscar o endereço automaticamente"
-              }
-              placeholder="00000-000"
-              InputProps={{
-                endAdornment: cepLoading ? (
-                  <CircularProgress size={18} />
-                ) : null,
-              }}
-            />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
+            <Box sx={{ position: "relative" }}>
+              <TextField
+                fullWidth
+                label="CEP"
+                value={formData.zipCode}
+                onChange={(e) => handleChange("zipCode", e.target.value)}
+                onBlur={handleCepLookup}
+                error={!!errors.zipCode || !!cepError}
+                helperText={
+                  errors.zipCode ||
+                  cepError ||
+                  "Informe o CEP para buscar automaticamente"
+                }
+                placeholder="00000-000"
+                size="small"
+                InputProps={{
+                  endAdornment: cepLoading ? (
+                    <CircularProgress size={18} />
+                  ) : null,
+                }}
+              />
+              {cepAutoFilled && (
+                <Zoom in={cepAutoFilled}>
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      right: 8,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                      color: "white",
+                      padding: "4px 12px",
+                      borderRadius: "20px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
+                      zIndex: 10,
+                    }}
+                  >
+                    <AutoAwesome sx={{ fontSize: 14 }} />
+                    Preenchido!
+                  </Box>
+                </Zoom>
+              )}
+            </Box>
             
-            <Grid container spacing={1.5}>
+            <Grid container spacing={1.2}>
               <Grid item xs={12} sm={9}>
-                <TextField
-                  fullWidth
-                  label="Endereço (Logradouro)"
-                  value={formData.address}
-                  onChange={(e) => handleChange("address", e.target.value)}
-                  error={!!errors.address}
-                  helperText={errors.address}
-                />
+                <Fade in={!!formData.address || cepAutoFilled} timeout={600}>
+                  <TextField
+                    fullWidth
+                    label="Endereço (Logradouro)"
+                    value={formData.address}
+                    onChange={(e) => handleChange("address", e.target.value)}
+                    error={!!errors.address}
+                    helperText={errors.address}
+                    size="small"
+                  />
+                </Fade>
               </Grid>
               <Grid item xs={12} sm={3}>
                 <TextField
@@ -563,6 +626,7 @@ const CondominioForm: React.FC = () => {
                   onChange={(e) => handleChange("addressNumber", e.target.value)}
                   error={!!errors.addressNumber}
                   helperText={errors.addressNumber}
+                  size="small"
                 />
               </Grid>
             </Grid>
@@ -572,41 +636,51 @@ const CondominioForm: React.FC = () => {
               label="Complemento (Opcional)"
               value={formData.complement}
               onChange={(e) => handleChange("complement", e.target.value)}
+              size="small"
             />
             
-            <TextField
-              fullWidth
-              label="Bairro"
-              value={formData.neighborhood}
-              onChange={(e) => handleChange("neighborhood", e.target.value)}
-              error={!!errors.neighborhood}
-              helperText={errors.neighborhood}
-            />
+            <Fade in={!!formData.neighborhood || cepAutoFilled} timeout={800}>
+              <TextField
+                fullWidth
+                label="Bairro"
+                value={formData.neighborhood}
+                onChange={(e) => handleChange("neighborhood", e.target.value)}
+                error={!!errors.neighborhood}
+                helperText={errors.neighborhood}
+                size="small"
+              />
+            </Fade>
             
-            <Grid container spacing={1.5}>
+            <Grid container spacing={1.2}>
               <Grid item xs={12} sm={9}>
-                <TextField
-                  fullWidth
-                  label="Cidade"
-                  value={formData.city}
-                  onChange={(e) => handleChange("city", e.target.value)}
-                  error={!!errors.city}
-                  helperText={errors.city}
-                />
+                <Fade in={!!formData.city || cepAutoFilled} timeout={1000}>
+                  <TextField
+                    fullWidth
+                    label="Cidade"
+                    value={formData.city}
+                    onChange={(e) => handleChange("city", e.target.value)}
+                    error={!!errors.city}
+                    helperText={errors.city}
+                    size="small"
+                  />
+                </Fade>
               </Grid>
               <Grid item xs={12} sm={3}>
-                <TextField
-                  fullWidth
-                  label="Estado (UF)"
-                  value={formData.state}
-                  onChange={(e) =>
-                    handleChange("state", e.target.value.toUpperCase())
-                  }
-                  error={!!errors.state}
-                  helperText={errors.state}
-                  placeholder="SP"
-                  inputProps={{ maxLength: 2 }}
-                />
+                <Fade in={!!formData.state || cepAutoFilled} timeout={1200}>
+                  <TextField
+                    fullWidth
+                    label="UF"
+                    value={formData.state}
+                    onChange={(e) =>
+                      handleChange("state", e.target.value.toUpperCase())
+                    }
+                    error={!!errors.state}
+                    helperText={errors.state}
+                    placeholder="SP"
+                    inputProps={{ maxLength: 2 }}
+                    size="small"
+                  />
+                </Fade>
               </Grid>
             </Grid>
           </Box>
@@ -615,19 +689,20 @@ const CondominioForm: React.FC = () => {
       case 2:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-            <Typography variant="h6">
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mb: 0.5 }}>
               Infraestrutura
             </Typography>
-            <Grid container spacing={1.5}>
+            <Grid container spacing={1}>
               <Grid item xs={12} sm={6}>
                 <FormControlLabel
                   control={
                     <Checkbox
                       checked={formData.hasBlocks}
                       onChange={(e) => handleChange("hasBlocks", e.target.checked)}
+                      size="small"
                     />
                   }
-                  label="Possui Blocos"
+                  label={<Typography variant="body2">Possui Blocos</Typography>}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -638,9 +713,10 @@ const CondominioForm: React.FC = () => {
                       onChange={(e) =>
                         handleChange("hasWaterIndividual", e.target.checked)
                       }
+                      size="small"
                     />
                   }
-                  label="Medição Individual de Água"
+                  label={<Typography variant="body2">Medição Individual de Água</Typography>}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -651,9 +727,10 @@ const CondominioForm: React.FC = () => {
                       onChange={(e) =>
                         handleChange("hasPowerByBlock", e.target.checked)
                       }
+                      size="small"
                     />
                   }
-                  label="Energia por Bloco"
+                  label={<Typography variant="body2">Energia por Bloco</Typography>}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -664,14 +741,15 @@ const CondominioForm: React.FC = () => {
                       onChange={(e) =>
                         handleChange("hasGasByBlock", e.target.checked)
                       }
+                      size="small"
                     />
                   }
-                  label="Gás por Bloco"
+                  label={<Typography variant="body2">Gás por Bloco</Typography>}
                 />
               </Grid>
             </Grid>
 
-            <Typography variant="h6">
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mt: 1, mb: 0.5 }}>
               Rateio
             </Typography>
             <TextField
@@ -687,6 +765,7 @@ const CondominioForm: React.FC = () => {
               }
               error={!!errors.allocationType}
               helperText={allocationError || errors.allocationType}
+              size="small"
             >
               {allocationLoading ? (
                 <MenuItem value={formData.allocationType} disabled>
@@ -721,20 +800,21 @@ const CondominioForm: React.FC = () => {
               error={!!errors.allocationValuePerc}
               helperText={errors.allocationValuePerc}
               inputProps={{ min: 0, max: 100, step: 0.01 }}
+              size="small"
             />
 
-            <Typography variant="h6">
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mt: 1, mb: 0.5 }}>
               Imagem de capa (opcional)
             </Typography>
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 2,
+                gap: 1.5,
                 flexWrap: "wrap",
               }}
             >
-              <Button variant="outlined" component="label">
+              <Button variant="outlined" component="label" size="small">
                 Selecionar imagem
                 <input
                   type="file"
@@ -743,13 +823,14 @@ const CondominioForm: React.FC = () => {
                   onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
                 />
               </Button>
-              <Typography variant="body2" color="text.secondary">
-                {coverFile ? coverFile.name : "Nenhum arquivo selecionado"}
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "13px" }}>
+                {coverFile ? coverFile.name : "Nenhum arquivo"}
               </Typography>
               {editingId ? (
-                <Alert severity="info" sx={{ flex: 1 }}>
-                  Troca de capa no editar será habilitada quando o endpoint
-                  estiver disponível.
+                <Alert severity="info" sx={{ flex: 1, py: 0.5 }}>
+                  <Typography variant="caption">
+                    Troca de capa no editar será habilitada quando o endpoint estiver disponível.
+                  </Typography>
                 </Alert>
               ) : null}
             </Box>
@@ -769,11 +850,7 @@ const CondominioForm: React.FC = () => {
             title={editingId ? "Editar condomínio" : "Criar condomínio"}
             subtitle={steps[activeStep]}
             steps={steps}
-            onClose={()=>{
-              setIsCadastroOpen(false);
-              setEditingId(null);
-              setActiveStep(0);
-            }}
+            onClose={handleCloseWizard}
             activeStep={activeStep}
             showBack={activeStep > 0 && activeStep < steps.length}
             onBack={handleBack}
@@ -782,69 +859,53 @@ const CondominioForm: React.FC = () => {
               {renderStepContent(activeStep)}
             </div>
             <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+              sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2, pt: 1.5, borderTop: "2px solid #f0f2f5" }}
             >
               {activeStep === steps.length - 1 ? (
-                 <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: 2,
-                    mt: 2,
-                  }}
-                >
                 <Button
                   variant="contained"
                   color="primary"
                   onClick={handleSubmit}
                   disabled={loading}
                   startIcon={
-                    loading ? <CircularProgress size={20} /> : <CheckCircle />
+                    loading ? <CircularProgress size={18} /> : <CheckCircle />
                   }
+                  sx={{ minWidth: 140, height: 42 }}
                 >
                   {loading
                     ? editingId
                       ? "Atualizando..."
                       : "Criando..."
-                    : editingId
-                      ? "Atualizar Condomínio"
-                      : "Criar Condomínio"}
+                    : "Concluir"}
                 </Button>
-                </Box>
-
               ) : (
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: 2,
-                    mt: 2,
-                  }}
+                <Button 
+                  variant="contained" 
+                  onClick={handleNext}
+                  sx={{ minWidth: 140, height: 42 }}
                 >
-                  <Button variant="contained" onClick={handleNext}>
-                    Próximo
-                  </Button>
-                </Box>
+                  Próximo
+                </Button>
               )}
             </Box>
           </StepWizardCard>
         ) : (
-          <Paper elevation={3} sx={{ p: 4 }}>
+          <Paper elevation={3} sx={{ p: 3 }}>
             <Box
               sx={{
-                mb: 4,
+                mb: 2,
+                pb: 1.5,
                 display: "flex",
-                alignItems: "flex-start",
+                alignItems: "center",
                 justifyContent: "space-between",
+                borderBottom: "2px solid #f0f0f0",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Business sx={{ fontSize: 40, color: "#1976d2" }} />
-                <Box>
-                  <Typography variant="h4" fontWeight="bold">
-                    {organizationName}
-                  </Typography>
-                </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
+                  {organizationName}
+                </Typography>
               </Box>
               <Tooltip title="Fechar">
                 <IconButton
@@ -856,6 +917,8 @@ const CondominioForm: React.FC = () => {
                     setActiveStep(0);
                   }}
                   sx={{
+                    width: 40,
+                    height: 40,
                     borderColor: "divider",
                     backgroundColor: "#f5f5f5",
                   }}
@@ -865,7 +928,7 @@ const CondominioForm: React.FC = () => {
               </Tooltip>
             </Box>
 
-            <Paper variant="outlined" sx={{ mb: 4, p: 2 }}>
+            <Paper variant="outlined" sx={{ p: 2 }}>
               {listLoading ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <CircularProgress size={20} />
@@ -917,7 +980,7 @@ const CondominioForm: React.FC = () => {
                         <>
                           <LocationOnOutlined
                             sx={{
-                              fontSize: 16,
+                              fontSize: 14,
                               mr: 0.5,
                               verticalAlign: "middle",
                             }}
@@ -933,7 +996,7 @@ const CondominioForm: React.FC = () => {
                           ) === "Comercial" ? (
                             <BusinessOutlined
                               sx={{
-                                fontSize: 16,
+                                fontSize: 14,
                                 mr: 0.5,
                                 verticalAlign: "middle",
                               }}
@@ -943,7 +1006,7 @@ const CondominioForm: React.FC = () => {
                             ) === "Residencial" ? (
                             <HomeOutlined
                               sx={{
-                                fontSize: 16,
+                                fontSize: 14,
                                 mr: 0.5,
                                 verticalAlign: "middle",
                               }}
@@ -951,7 +1014,7 @@ const CondominioForm: React.FC = () => {
                           ) : (
                             <ApartmentOutlined
                               sx={{
-                                fontSize: 16,
+                                fontSize: 14,
                                 mr: 0.5,
                                 verticalAlign: "middle",
                               }}
@@ -963,14 +1026,20 @@ const CondominioForm: React.FC = () => {
                       imageUrl: condominiumImages[condominium.condominiumId],
                       actions: (
                         <Box
-                          sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}
+                          sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}
                         >
                           <Button
                             size="small"
                             variant="outlined"
                             className="action-button-edit"
-                            startIcon={<EditOutlined />}
+                            startIcon={<EditOutlined sx={{ fontSize: "16px !important" }} />}
                             onClick={() => handleEdit(condominium)}
+                            sx={{ 
+                              minWidth: "80px !important",
+                              height: "32px !important",
+                              fontSize: "12px !important",
+                              padding: "0 12px !important"
+                            }}
                           >
                             Editar
                           </Button>
@@ -978,10 +1047,16 @@ const CondominioForm: React.FC = () => {
                             size="small"
                             variant="outlined"
                             className="action-button-delete"
-                            startIcon={<DeleteOutline />}
+                            startIcon={<DeleteOutline sx={{ fontSize: "16px !important" }} />}
                             onClick={() => handleDelete(condominium)}
+                            sx={{ 
+                              minWidth: "80px !important",
+                              height: "32px !important",
+                              fontSize: "12px !important",
+                              padding: "0 12px !important"
+                            }}
                           >
-                            Deletar
+                            Excluir
                           </Button>
                         </Box>
                       ),
