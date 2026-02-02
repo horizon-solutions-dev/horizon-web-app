@@ -8,7 +8,6 @@ import {
   Typography,
   Button,
   TextField,
-  Card,
   Snackbar,
   Alert,
   MenuItem,
@@ -966,7 +965,7 @@ const CondominioForm: React.FC = () => {
                     loadCondominiums(page);
                   }}
                   items={condominiums
-                    .filter((condominium) =>
+                    .filter((condominium,) =>
                       [condominium.name, condominium.city, condominium.state]
                         .filter(Boolean)
                         .join(" ")
@@ -988,6 +987,7 @@ const CondominioForm: React.FC = () => {
                           {condominium.city} - {condominium.state}
                         </>
                       ),
+                      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                       meta: (
                         <>
                           {condominium.condominiumType === "Commercial" ||
@@ -1060,7 +1060,6 @@ const CondominioForm: React.FC = () => {
                           </Button>
                         </Box>
                       ),
-                      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                     }))}
                 />
               )}

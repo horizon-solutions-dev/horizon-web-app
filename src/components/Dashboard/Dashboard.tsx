@@ -1,7 +1,6 @@
 import './Dashboard.scss';
 
 import { AttachMoney, EventAvailable, LocalShipping, People } from '@mui/icons-material';
-import React from 'react';
 import { MdAttachMoney, MdEventAvailable, MdLocalShipping, MdPeople, MdWarning } from 'react-icons/md';
 
 export default function Dashboard() {
