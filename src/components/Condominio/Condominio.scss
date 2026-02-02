@@ -60,18 +60,20 @@
       }
     }
 
+    // BOTÃO FECHAR - VERMELHO IGUAL AOS OUTROS
     & > .MuiIconButton-root {
       width: 40px !important;
       height: 40px !important;
-      background: #f5f7fa !important;
-      border: 2px solid #e0e4e8 !important;
+      background: white !important;
+      border: 2px solid #ef4444 !important;
       border-radius: 10px !important;
-      color: #666 !important;
+      color: #ef4444 !important;
+      transition: all 0.2s ease !important;
 
       &:hover {
-        background: white !important;
-        border-color: #ef4444 !important;
-        color: #ef4444 !important;
+        background: rgba(239, 68, 68, 0.1) !important;
+        border-color: #dc2626 !important;
+        color: #dc2626 !important;
       }
 
       .MuiSvgIcon-root {
@@ -676,11 +678,29 @@
   }
 
   // ============================================
-  // CHECKBOXES (COMPACTOS)
+  // CARD DE INFORMAÇÕES DO CEP (LOCKED)
+  // ============================================
+  .cep-info-card {
+    animation: slideInFromTop 0.5s ease-out !important;
+  }
+
+  @keyframes slideInFromTop {
+    0% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // ============================================
+  // CHECKBOXES (SUPER COMPACTOS - SEM ROLAGEM)
   // ============================================
   .MuiFormControlLabel-root {
     margin: 0 !important;
-    padding: 10px 14px !important;
+    padding: 8px 12px !important;
     border-radius: 10px !important;
     border: 2px solid #f0f2f5 !important;
     background: white !important;
@@ -692,14 +712,14 @@
     }
 
     .MuiCheckbox-root {
-      padding: 6px !important;
+      padding: 4px !important;
 
       &.Mui-checked {
         color: #1976d2 !important;
       }
 
       &.MuiCheckbox-sizeSmall {
-        padding: 4px !important;
+        padding: 3px !important;
       }
     }
 
@@ -725,13 +745,13 @@
     flex-wrap: wrap !important;
 
     .MuiButton-root {
-      min-width: 120px !important;
-      height: 42px !important;
+      min-width: 100px !important;
+      height: 36px !important;
       border-radius: 10px !important;
       font-weight: 700 !important;
-      font-size: 14px !important;
+      font-size: 13px !important;
       text-transform: none !important;
-      padding: 0 24px !important;
+      padding: 0 20px !important;
       transition: all 0.2s ease !important;
 
       &.MuiButton-outlined {
@@ -790,57 +810,52 @@
   }
 
   // ============================================
-  // TÍTULOS DAS SEÇÕES (COMPACTOS)
+  // TÍTULOS DAS SEÇÕES (SUPER COMPACTOS)
   // ============================================
   .MuiTypography-subtitle2 {
-    font-size: 15px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     color: #1976d2 !important;
     margin-bottom: 0 !important;
     margin-top: 0 !important;
-    padding-bottom: 8px !important;
+    padding-bottom: 6px !important;
     border-bottom: 2px solid rgba(25, 118, 210, 0.15) !important;
   }
 
   // ============================================
-  // FORMULÁRIO - SEM SCROLL
+  // FORMULÁRIO - SEM SCROLL (OTIMIZADO)
   // ============================================
   .condominio-form {
     margin-top: 0 !important;
     overflow-y: visible !important;
+    overflow-x: visible !important;
     max-height: none !important;
-    padding: 12px 8px !important;
+    padding: 8px 6px !important;
   }
 
   // ============================================
-  // ANIMAÇÃO DO INDICADOR DE PREENCHIMENTO CEP
+  // REMOVER SCROLL DE TODOS OS ELEMENTOS
   // ============================================
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
+  * {
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+    max-height: none !important;
+    
+    &::-webkit-scrollbar {
+      display: none !important;
     }
-    100% {
-      background-position: 200% 0;
-    }
+    
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
   }
 
-  .MuiTextField-root:has(input[label="Endereço (Logradouro)"]),
-  .MuiTextField-root:has(input[label="Bairro"]),
-  .MuiTextField-root:has(input[label="Cidade"]),
-  .MuiTextField-root:has(input[label="UF"]) {
-    transition: all 0.4s ease !important;
-
-    &.auto-filled {
-      .MuiOutlinedInput-root {
-        background: linear-gradient(
-          90deg,
-          rgba(16, 185, 129, 0.05) 0%,
-          rgba(16, 185, 129, 0.15) 50%,
-          rgba(16, 185, 129, 0.05) 100%
-        ) !important;
-        background-size: 200% 100% !important;
-        animation: shimmer 1.5s ease-in-out !important;
-      }
-    }
+  // Garantir que containers principais não tenham scroll
+  .MuiContainer-root,
+  .MuiPaper-root,
+  .MuiBox-root,
+  .MuiCard-root,
+  .MuiCardContent-root {
+    overflow: visible !important;
+    max-height: none !important;
   }
 }

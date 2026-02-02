@@ -20,6 +20,7 @@ import {
   Grid,
   Fade,
   Zoom,
+  Chip,
 } from "@mui/material";
 
 import {
@@ -33,6 +34,10 @@ import {
   LocationOnOutlined,
   Close,
   AutoAwesome,
+  CheckCircleOutline,
+  LocationCity,
+  Signpost,
+  Public,
 } from "@mui/icons-material";
 import {
   condominiumService,
@@ -95,7 +100,12 @@ const CondominioForm: React.FC = () => {
   const [allocationError, setAllocationError] = useState<string | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
-  const [cepAutoFilled, setCepAutoFilled] = useState(false);
+  const [cepData, setCepData] = useState<{
+    address: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+  } | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<CondominiumRequest>(initialFormData);
@@ -231,6 +241,15 @@ const CondominioForm: React.FC = () => {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
+    
+    // Limpa dados do CEP se o CEP for alterado/apagado
+    if (field === "zipCode") {
+      const cepValue = String(value).replace(/\D/g, "");
+      if (cepValue.length !== 8) {
+        setCepData(null);
+        setCepError(null);
+      }
+    }
   };
 
   const validateStep = (step: number): boolean => {
@@ -280,14 +299,22 @@ const CondominioForm: React.FC = () => {
 
   const handleCepLookup = async () => {
     const cepDigits = formData.zipCode.replace(/\D/g, "");
+    
+    // Se CEP incompleto ao perder foco
+    if (cepDigits.length > 0 && cepDigits.length < 8) {
+      setCepError("CEP incompleto. Digite 8 dígitos.");
+      setCepData(null);
+      return;
+    }
+    
     if (cepDigits.length !== 8) {
-      setCepError("CEP deve conter 8 dígitos.");
+      setCepError(null);
+      setCepData(null);
       return;
     }
 
     setCepLoading(true);
     setCepError(null);
-    setCepAutoFilled(false);
     
     try {
       const response = await fetch(
@@ -296,27 +323,32 @@ const CondominioForm: React.FC = () => {
       const data = await response.json();
       if (data?.erro) {
         setCepError("CEP não encontrado.");
+        setCepData(null);
         return;
       }
 
-      // Animação de preenchimento automático
-      setCepAutoFilled(true);
-      
       // Pequeno delay para efeito visual
       await new Promise(resolve => setTimeout(resolve, 300));
 
+      const cepInfo = {
+        address: data.logradouro || "",
+        neighborhood: data.bairro || "",
+        city: data.localidade || "",
+        state: data.uf || "",
+      };
+
+      setCepData(cepInfo);
+      
       setFormData((prev) => ({
         ...prev,
-        address: data.logradouro || prev.address,
-        neighborhood: data.bairro || prev.neighborhood,
-        city: data.localidade || prev.city,
-        state: data.uf || prev.state,
+        address: cepInfo.address || prev.address,
+        neighborhood: cepInfo.neighborhood || prev.neighborhood,
+        city: cepInfo.city || prev.city,
+        state: cepInfo.state || prev.state,
       }));
-
-      // Remove o indicador após 2 segundos
-      setTimeout(() => setCepAutoFilled(false), 2000);
     } catch {
       setCepError("Erro ao consultar CEP.");
+      setCepData(null);
     } finally {
       setCepLoading(false);
     }
@@ -439,6 +471,7 @@ const CondominioForm: React.FC = () => {
       setActiveStep(0);
       setEditingId(null);
       setIsCadastroOpen(false);
+      setCepData(null);
     } catch (error) {
       const message =
         error instanceof Error
@@ -478,6 +511,8 @@ const CondominioForm: React.FC = () => {
     });
     setCoverFile(null);
     setErrors({});
+    setCepData(null);
+    setCepError(null);
   };
 
   const renderStepContent = (step: number) => {
@@ -555,81 +590,151 @@ const CondominioForm: React.FC = () => {
       case 1:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
-            <Box sx={{ position: "relative" }}>
-              <TextField
-                fullWidth
-                label="CEP"
-                value={formData.zipCode}
-                onChange={(e) => handleChange("zipCode", e.target.value)}
-                onBlur={handleCepLookup}
-                error={!!errors.zipCode || !!cepError}
-                helperText={
-                  errors.zipCode ||
-                  cepError ||
-                  "Informe o CEP para buscar automaticamente"
-                }
-                placeholder="00000-000"
-                size="small"
-                InputProps={{
-                  endAdornment: cepLoading ? (
-                    <CircularProgress size={18} />
-                  ) : null,
+            <TextField
+              fullWidth
+              label="CEP"
+              value={formData.zipCode}
+              onChange={(e) => handleChange("zipCode", e.target.value)}
+              onBlur={handleCepLookup}
+              error={!!errors.zipCode || !!cepError}
+              helperText={
+                errors.zipCode ||
+                cepError ||
+                "Informe o CEP para buscar automaticamente"
+              }
+              placeholder="00000-000"
+              size="small"
+              InputProps={{
+                endAdornment: cepLoading ? (
+                  <CircularProgress size={18} />
+                ) : null,
+              }}
+            />
+
+            {/* Informações do CEP - Locked e Bonitas */}
+            <Fade in={!!cepData} timeout={500}>
+              <Box
+                className="cep-info-card"
+                sx={{
+                  background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                  border: "2px solid #0ea5e9",
+                  borderRadius: "12px",
+                  padding: "16px",
+                  display: cepData ? "flex" : "none",
+                  flexDirection: "column",
+                  gap: 1.5,
+                  position: "relative",
+                  overflow: "hidden",
+                  boxShadow: "0 4px 12px rgba(14, 165, 233, 0.15)",
                 }}
-              />
-              {cepAutoFilled && (
-                <Zoom in={cepAutoFilled}>
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      right: 8,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                      color: "white",
-                      padding: "4px 12px",
-                      borderRadius: "20px",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
-                      zIndex: 10,
-                    }}
-                  >
-                    <AutoAwesome sx={{ fontSize: 14 }} />
-                    Preenchido!
-                  </Box>
-                </Zoom>
-              )}
-            </Box>
-            
-            <Grid container spacing={1.2}>
-              <Grid item xs={12} sm={9}>
-                <Fade in={!!formData.address || cepAutoFilled} timeout={600}>
-                  <TextField
-                    fullWidth
-                    label="Endereço (Logradouro)"
-                    value={formData.address}
-                    onChange={(e) => handleChange("address", e.target.value)}
-                    error={!!errors.address}
-                    helperText={errors.address}
-                    size="small"
-                  />
-                </Fade>
-              </Grid>
-              <Grid item xs={12} sm={3}>
-                <TextField
-                  fullWidth
-                  label="Número"
-                  value={formData.addressNumber}
-                  onChange={(e) => handleChange("addressNumber", e.target.value)}
-                  error={!!errors.addressNumber}
-                  helperText={errors.addressNumber}
-                  size="small"
+              >
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    width: "120px",
+                    height: "120px",
+                    background: "radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)",
+                  }}
                 />
-              </Grid>
-            </Grid>
+                
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                  <CheckCircleOutline sx={{ color: "#0ea5e9", fontSize: 20 }} />
+                  <Typography variant="subtitle2" sx={{ color: "#0369a1", fontWeight: 700, fontSize: "14px" }}>
+                    Endereço encontrado
+                  </Typography>
+                </Box>
+
+                <Grid container spacing={1.5}>
+                  <Grid item xs={12}>
+                    <Chip
+                      icon={<Signpost sx={{ fontSize: 16 }} />}
+                      label={cepData?.address || "Não informado"}
+                      sx={{
+                        width: "100%",
+                        justifyContent: "flex-start",
+                        height: "auto",
+                        minHeight: "36px",
+                        padding: "8px 12px",
+                        background: "white",
+                        border: "1.5px solid #bae6fd",
+                        "& .MuiChip-label": {
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          color: "#0c4a6e",
+                          whiteSpace: "normal",
+                          textAlign: "left",
+                        },
+                        "& .MuiChip-icon": {
+                          color: "#0ea5e9",
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Chip
+                      icon={<LocationOnOutlined sx={{ fontSize: 16 }} />}
+                      label={cepData?.neighborhood || "Não informado"}
+                      sx={{
+                        width: "100%",
+                        justifyContent: "flex-start",
+                        height: "auto",
+                        minHeight: "36px",
+                        padding: "8px 12px",
+                        background: "white",
+                        border: "1.5px solid #bae6fd",
+                        "& .MuiChip-label": {
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          color: "#0c4a6e",
+                          whiteSpace: "normal",
+                          textAlign: "left",
+                        },
+                        "& .MuiChip-icon": {
+                          color: "#0ea5e9",
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Chip
+                      icon={<LocationCity sx={{ fontSize: 16 }} />}
+                      label={`${cepData?.city || ""} - ${cepData?.state || ""}`}
+                      sx={{
+                        width: "100%",
+                        justifyContent: "flex-start",
+                        height: "auto",
+                        minHeight: "36px",
+                        padding: "8px 12px",
+                        background: "white",
+                        border: "1.5px solid #bae6fd",
+                        "& .MuiChip-label": {
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          color: "#0c4a6e",
+                          whiteSpace: "normal",
+                          textAlign: "left",
+                        },
+                        "& .MuiChip-icon": {
+                          color: "#0ea5e9",
+                        },
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            </Fade>
+            
+            <TextField
+              fullWidth
+              label="Número"
+              value={formData.addressNumber}
+              onChange={(e) => handleChange("addressNumber", e.target.value)}
+              error={!!errors.addressNumber}
+              helperText={errors.addressNumber}
+              size="small"
+            />
 
             <TextField
               fullWidth
@@ -638,61 +743,16 @@ const CondominioForm: React.FC = () => {
               onChange={(e) => handleChange("complement", e.target.value)}
               size="small"
             />
-            
-            <Fade in={!!formData.neighborhood || cepAutoFilled} timeout={800}>
-              <TextField
-                fullWidth
-                label="Bairro"
-                value={formData.neighborhood}
-                onChange={(e) => handleChange("neighborhood", e.target.value)}
-                error={!!errors.neighborhood}
-                helperText={errors.neighborhood}
-                size="small"
-              />
-            </Fade>
-            
-            <Grid container spacing={1.2}>
-              <Grid item xs={12} sm={9}>
-                <Fade in={!!formData.city || cepAutoFilled} timeout={1000}>
-                  <TextField
-                    fullWidth
-                    label="Cidade"
-                    value={formData.city}
-                    onChange={(e) => handleChange("city", e.target.value)}
-                    error={!!errors.city}
-                    helperText={errors.city}
-                    size="small"
-                  />
-                </Fade>
-              </Grid>
-              <Grid item xs={12} sm={3}>
-                <Fade in={!!formData.state || cepAutoFilled} timeout={1200}>
-                  <TextField
-                    fullWidth
-                    label="UF"
-                    value={formData.state}
-                    onChange={(e) =>
-                      handleChange("state", e.target.value.toUpperCase())
-                    }
-                    error={!!errors.state}
-                    helperText={errors.state}
-                    placeholder="SP"
-                    inputProps={{ maxLength: 2 }}
-                    size="small"
-                  />
-                </Fade>
-              </Grid>
-            </Grid>
           </Box>
         );
 
       case 2:
         return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mb: 0.5 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mb: 0 }}>
               Infraestrutura
             </Typography>
-            <Grid container spacing={1}>
+            <Grid container spacing={0.8}>
               <Grid item xs={12} sm={6}>
                 <FormControlLabel
                   control={
@@ -702,7 +762,7 @@ const CondominioForm: React.FC = () => {
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2">Possui Blocos</Typography>}
+                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Possui Blocos</Typography>}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -716,7 +776,7 @@ const CondominioForm: React.FC = () => {
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2">Medição Individual de Água</Typography>}
+                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Medição Individual de Água</Typography>}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -730,7 +790,7 @@ const CondominioForm: React.FC = () => {
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2">Energia por Bloco</Typography>}
+                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Energia por Bloco</Typography>}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -744,12 +804,12 @@ const CondominioForm: React.FC = () => {
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2">Gás por Bloco</Typography>}
+                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Gás por Bloco</Typography>}
                 />
               </Grid>
             </Grid>
 
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mt: 1, mb: 0.5 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mt: 0.5, mb: 0 }}>
               Rateio
             </Typography>
             <TextField
@@ -803,7 +863,7 @@ const CondominioForm: React.FC = () => {
               size="small"
             />
 
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mt: 1, mb: 0.5 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mt: 0.5, mb: 0 }}>
               Imagem de capa (opcional)
             </Typography>
             <Box
@@ -823,17 +883,15 @@ const CondominioForm: React.FC = () => {
                   onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
                 />
               </Button>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "13px" }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
                 {coverFile ? coverFile.name : "Nenhum arquivo"}
               </Typography>
-              {editingId ? (
-                <Alert severity="info" sx={{ flex: 1, py: 0.5 }}>
-                  <Typography variant="caption">
-                    Troca de capa no editar será habilitada quando o endpoint estiver disponível.
-                  </Typography>
-                </Alert>
-              ) : null}
             </Box>
+            {editingId && (
+              <Alert severity="info" sx={{ py: 0.5, fontSize: "12px" }}>
+                Troca de capa no editar será habilitada em breve.
+              </Alert>
+            )}
           </Box>
         );
 
@@ -859,7 +917,7 @@ const CondominioForm: React.FC = () => {
               {renderStepContent(activeStep)}
             </div>
             <Box
-              sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 2, pt: 1.5, borderTop: "2px solid #f0f2f5" }}
+              sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 1.5, pt: 1.5, borderTop: "2px solid #f0f2f5" }}
             >
               {activeStep === steps.length - 1 ? (
                 <Button
@@ -870,7 +928,12 @@ const CondominioForm: React.FC = () => {
                   startIcon={
                     loading ? <CircularProgress size={18} /> : <CheckCircle />
                   }
-                  sx={{ minWidth: 140, height: 42 }}
+                  sx={{ 
+                    minWidth: 100, 
+                    height: 36,
+                    textTransform: 'none',
+                    fontSize: '13px',
+                  }}
                 >
                   {loading
                     ? editingId
@@ -882,7 +945,12 @@ const CondominioForm: React.FC = () => {
                 <Button 
                   variant="contained" 
                   onClick={handleNext}
-                  sx={{ minWidth: 140, height: 42 }}
+                  sx={{ 
+                    minWidth: 100, 
+                    height: 36,
+                    textTransform: 'none',
+                    fontSize: '13px',
+                  }}
                 >
                   Próximo
                 </Button>
@@ -909,7 +977,6 @@ const CondominioForm: React.FC = () => {
               </Box>
               <Tooltip title="Fechar">
                 <IconButton
-                  color="error"
                   onClick={() => {
                     navigate("/dashboard");
                     setIsCadastroOpen(false);
@@ -919,11 +986,19 @@ const CondominioForm: React.FC = () => {
                   sx={{
                     width: 40,
                     height: 40,
-                    borderColor: "divider",
-                    backgroundColor: "#f5f5f5",
+                    background: "white",
+                    border: "2px solid #ef4444",
+                    borderRadius: "10px",
+                    color: "#ef4444",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      background: "rgba(239, 68, 68, 0.1)",
+                      borderColor: "#dc2626",
+                      color: "#dc2626",
+                    },
                   }}
                 >
-                  <Close />
+                  <Close sx={{ fontSize: 20 }} />
                 </IconButton>
               </Tooltip>
             </Box>
