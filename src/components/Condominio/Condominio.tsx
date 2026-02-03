@@ -236,19 +236,46 @@ const CondominioForm: React.FC = () => {
     loadAllocationTypes();
   }, []);
 
-  const handleChange = (field: string, value: unknown) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
+  // Função para formatar CNPJ
+  const formatCNPJ = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 14) {
+      return numbers
+        .replace(/(\d{2})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1/$2")
+        .replace(/(\d{4})(\d)/, "$1-$2");
     }
+    return value;
+  };
+
+  // Função para formatar CEP
+  const formatCEP = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 8) {
+      return numbers.replace(/(\d{5})(\d)/, "$1-$2");
+    }
+    return value;
+  };
+
+  const handleChange = (field: string, value: unknown) => {
+    let processedValue = value;
     
-    // Limpa dados do CEP se o CEP for alterado/apagado
-    if (field === "zipCode") {
-      const cepValue = String(value).replace(/\D/g, "");
-      if (cepValue.length !== 8) {
+    // Aplicar máscaras
+    if (field === "doc") {
+      processedValue = formatCNPJ(String(value));
+    } else if (field === "zipCode") {
+      processedValue = formatCEP(String(value));
+      const cepDigits = String(value).replace(/\D/g, "");
+      if (cepDigits.length !== 8) {
         setCepData(null);
         setCepError(null);
       }
+    }
+    
+    setFormData((prev) => ({ ...prev, [field]: processedValue }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -522,22 +549,25 @@ const CondominioForm: React.FC = () => {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
             <TextField
               fullWidth
-              label="Nome do Condomínio"
+              label={formData.name ? "" : "Nome do Condomínio"}
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
               error={!!errors.name}
               helperText={errors.name}
               size="small"
+              InputLabelProps={{ shrink: false }}
             />
             <TextField
               fullWidth
-              label="CNPJ"
+              label={formData.doc ? "" : "CNPJ"}
               value={formData.doc}
               onChange={(e) => handleChange("doc", e.target.value)}
               error={!!errors.doc}
               helperText={errors.doc}
               placeholder="00.000.000/0000-00"
               size="small"
+              InputLabelProps={{ shrink: false }}
+              inputProps={{ maxLength: 18 }}
             />
             <TextField
               fullWidth
@@ -574,15 +604,16 @@ const CondominioForm: React.FC = () => {
             </TextField>
             <TextField
               fullWidth
-              label="Quantidade de Unidades"
+              label={formData.unitCount > 0 ? "" : "Quantidade de Unidades"}
               type="number"
-              value={formData.unitCount}
+              value={formData.unitCount || ""}
               onChange={(e) =>
-                handleChange("unitCount", parseInt(e.target.value))
+                handleChange("unitCount", parseInt(e.target.value) || 0)
               }
               error={!!errors.unitCount}
               helperText={errors.unitCount}
               size="small"
+              InputLabelProps={{ shrink: false }}
             />
           </Box>
         );
@@ -592,7 +623,7 @@ const CondominioForm: React.FC = () => {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
             <TextField
               fullWidth
-              label="CEP"
+              label={formData.zipCode ? "" : "CEP"}
               value={formData.zipCode}
               onChange={(e) => handleChange("zipCode", e.target.value)}
               onBlur={handleCepLookup}
@@ -604,6 +635,8 @@ const CondominioForm: React.FC = () => {
               }
               placeholder="00000-000"
               size="small"
+              InputLabelProps={{ shrink: false }}
+              inputProps={{ maxLength: 9 }}
               InputProps={{
                 endAdornment: cepLoading ? (
                   <CircularProgress size={18} />
@@ -726,23 +759,33 @@ const CondominioForm: React.FC = () => {
               </Box>
             </Fade>
             
-            <TextField
-              fullWidth
-              label="Número"
-              value={formData.addressNumber}
-              onChange={(e) => handleChange("addressNumber", e.target.value)}
-              error={!!errors.addressNumber}
-              helperText={errors.addressNumber}
-              size="small"
-            />
-
-            <TextField
-              fullWidth
-              label="Complemento (Opcional)"
-              value={formData.complement}
-              onChange={(e) => handleChange("complement", e.target.value)}
-              size="small"
-            />
+            {/* Número e Complemento só aparecem após CEP encontrado */}
+            {cepData && (
+              <Grid container spacing={1.2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={formData.addressNumber ? "" : "Número"}
+                    value={formData.addressNumber}
+                    onChange={(e) => handleChange("addressNumber", e.target.value)}
+                    error={!!errors.addressNumber}
+                    helperText={errors.addressNumber}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={formData.complement ? "" : "Complemento (Opcional)"}
+                    value={formData.complement}
+                    onChange={(e) => handleChange("complement", e.target.value)}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                  />
+                </Grid>
+              </Grid>
+            )}
           </Box>
         );
 
@@ -812,59 +855,66 @@ const CondominioForm: React.FC = () => {
             <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mt: 0.5, mb: 0 }}>
               Rateio
             </Typography>
-            <TextField
-              fullWidth
-              label="Tipo de Rateio"
-              select
-              value={formData.allocationType}
-              onChange={(e) =>
-                handleChange(
-                  "allocationType",
-                  normalizeAllocationTypeValue(e.target.value as string),
-                )
-              }
-              error={!!errors.allocationType}
-              helperText={allocationError || errors.allocationType}
-              size="small"
-            >
-              {allocationLoading ? (
-                <MenuItem value={formData.allocationType} disabled>
-                  Carregando...
-                </MenuItem>
-              ) : allocationTypes.length > 0 ? (
-                allocationTypes.map((type) => (
-                  <MenuItem key={type.id} value={type.id}>
-                    {type.description || type.value}
-                  </MenuItem>
-                ))
-              ) : (
-                <>
-                  <MenuItem value="FractionalAllocation">
-                    Rateio Fracionário
-                  </MenuItem>
-                  <MenuItem value="FixedAllocation">Rateio Fixo</MenuItem>
-                  <MenuItem value="ProportionalAllocation">
-                    Rateio Proporcional
-                  </MenuItem>
-                </>
-              )}
-            </TextField>
-            <TextField
-              fullWidth
-              label="Percentual de Rateio (%)"
-              type="number"
-              value={formData.allocationValuePerc}
-              onChange={(e) =>
-                handleChange("allocationValuePerc", parseFloat(e.target.value))
-              }
-              error={!!errors.allocationValuePerc}
-              helperText={errors.allocationValuePerc}
-              inputProps={{ min: 0, max: 100, step: 0.01 }}
-              size="small"
-            />
+            <Grid container spacing={1.2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Tipo de Rateio"
+                  select
+                  value={formData.allocationType}
+                  onChange={(e) =>
+                    handleChange(
+                      "allocationType",
+                      normalizeAllocationTypeValue(e.target.value as string),
+                    )
+                  }
+                  error={!!errors.allocationType}
+                  helperText={allocationError || errors.allocationType}
+                  size="small"
+                >
+                  {allocationLoading ? (
+                    <MenuItem value={formData.allocationType} disabled>
+                      Carregando...
+                    </MenuItem>
+                  ) : allocationTypes.length > 0 ? (
+                    allocationTypes.map((type) => (
+                      <MenuItem key={type.id} value={type.id}>
+                        {type.description || type.value}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <>
+                      <MenuItem value="FractionalAllocation">
+                        Rateio Fracionário
+                      </MenuItem>
+                      <MenuItem value="FixedAllocation">Rateio Fixo</MenuItem>
+                      <MenuItem value="ProportionalAllocation">
+                        Rateio Proporcional
+                      </MenuItem>
+                    </>
+                  )}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={formData.allocationValuePerc > 0 ? "" : "Percentual de Rateio (%)"}
+                  type="number"
+                  value={formData.allocationValuePerc || ""}
+                  onChange={(e) =>
+                    handleChange("allocationValuePerc", parseFloat(e.target.value) || 0)
+                  }
+                  error={!!errors.allocationValuePerc}
+                  helperText={errors.allocationValuePerc}
+                  inputProps={{ min: 0, max: 100, step: 0.01 }}
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
+                />
+              </Grid>
+            </Grid>
 
             <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mt: 0.5, mb: 0 }}>
-              Imagem de capa (opcional)
+              Logotipo do Condomínio (opcional)
             </Typography>
             <Box
               sx={{
@@ -889,7 +939,7 @@ const CondominioForm: React.FC = () => {
             </Box>
             {editingId && (
               <Alert severity="info" sx={{ py: 0.5, fontSize: "12px" }}>
-                Troca de capa no editar será habilitada em breve.
+                Troca de logotipo no editar será habilitada em breve.
               </Alert>
             )}
           </Box>
@@ -925,9 +975,6 @@ const CondominioForm: React.FC = () => {
                   color="primary"
                   onClick={handleSubmit}
                   disabled={loading}
-                  startIcon={
-                    loading ? <CircularProgress size={18} /> : <CheckCircle />
-                  }
                   sx={{ 
                     minWidth: 100, 
                     height: 36,

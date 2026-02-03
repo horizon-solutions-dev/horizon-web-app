@@ -74,10 +74,16 @@
         background: rgba(239, 68, 68, 0.1) !important;
         border-color: #dc2626 !important;
         color: #dc2626 !important;
+        
+        .MuiSvgIcon-root {
+          font-weight: bold !important;
+          stroke-width: 0.5px !important;
+        }
       }
 
       .MuiSvgIcon-root {
         font-size: 20px !important;
+        transition: all 0.2s ease !important;
       }
     }
 
@@ -813,7 +819,7 @@
   // TÍTULOS DAS SEÇÕES (SUPER COMPACTOS)
   // ============================================
   .MuiTypography-subtitle2 {
-    font-size: 14px !important;
+    font-size: 13px !important;
     font-weight: 700 !important;
     color: #1976d2 !important;
     margin-bottom: 0 !important;
