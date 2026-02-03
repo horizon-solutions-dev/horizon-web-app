@@ -19,6 +19,7 @@ export interface CondominiumRequest {
   hasGasByBlock: boolean;
   allocationType: 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string | number;
   allocationValuePerc: number;
+  commit: boolean;
 }
 
 export interface Condominium extends CondominiumRequest {

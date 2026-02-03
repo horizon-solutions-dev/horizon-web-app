@@ -8,7 +8,6 @@ import {
   Typography,
   Button,
   TextField,
-  Card,
   Snackbar,
   Alert,
   MenuItem,
@@ -19,13 +18,11 @@ import {
   Tooltip,
   Grid,
   Fade,
-  Zoom,
   Chip,
 } from "@mui/material";
 
 import {
   Business,
-  CheckCircle,
   DeleteOutline,
   EditOutlined,
   HomeOutlined,
@@ -33,11 +30,9 @@ import {
   ApartmentOutlined,
   LocationOnOutlined,
   Close,
-  AutoAwesome,
   CheckCircleOutline,
   LocationCity,
   Signpost,
-  Public,
 } from "@mui/icons-material";
 import {
   condominiumService,
@@ -73,6 +68,7 @@ const CondominioForm: React.FC = () => {
     hasGasByBlock: false,
     allocationType: "FractionalAllocation",
     allocationValuePerc: 0,
+    commit: true
   };
 
   const [activeStep, setActiveStep] = useState(0);
@@ -425,6 +421,7 @@ const CondominioForm: React.FC = () => {
       hasGasByBlock: condominium.hasGasByBlock,
       allocationType: normalizeAllocationTypeValue(condominium.allocationType),
       allocationValuePerc: condominium.allocationValuePerc,
+      commit: true,
     });
     setActiveStep(0);
     setIsCadastroOpen(true);
