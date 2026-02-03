@@ -2,7 +2,7 @@
   width: 100% !important;
 
   // ============================================
-  // PAPER PRINCIPAL - CONTAINER
+  // CONTAINER PRINCIPAL
   // ============================================
   & > .MuiContainer-root {
     max-width: 1400px !important;
@@ -26,7 +26,7 @@
   }
 
   // ============================================
-  // HEADER - TÍTULO E BOTÃO FECHAR (COMPACTO)
+  // HEADER
   // ============================================
   .MuiContainer-root > .MuiPaper-root > .MuiBox-root:first-child {
     display: flex !important;
@@ -41,12 +41,12 @@
       align-items: center !important;
       gap: 12px !important;
 
-      & > .MuiSvgIcon-root {
+      .MuiSvgIcon-root {
         font-size: 36px !important;
         color: #1976d2 !important;
       }
 
-      & > .MuiTypography-h5 {
+      .MuiTypography-h5 {
         font-size: 26px !important;
         font-weight: 700 !important;
         color: #1a1a2e !important;
@@ -60,48 +60,43 @@
       }
     }
 
-    // BOTÃO FECHAR - VERMELHO IGUAL AOS OUTROS
-    & > .MuiIconButton-root,
-    & > .MuiTooltip-root .MuiIconButton-root {
-      width: 40px !important;
-      height: 40px !important;
-      background: white !important;
-      border: 2px solid #ef4444 !important;
-      border-radius: 10px !important;
-      color: #ef4444 !important;
-      transition: all 0.2s ease !important;
-
-      &:hover {
-        background: rgba(239, 68, 68, 0.1) !important;
-        border-color: #dc2626 !important;
-        color: #dc2626 !important;
-        
-        .MuiSvgIcon-root {
-          font-weight: bold !important;
-          stroke-width: 0.5px !important;
-        }
-      }
-
-      .MuiSvgIcon-root {
-        font-size: 20px !important;
-        transition: all 0.2s ease !important;
-      }
-    }
-
     @media (max-width: 600px) {
       flex-direction: column !important;
       align-items: flex-start !important;
       gap: 12px !important;
-
-      & > .MuiIconButton-root,
-      & > .MuiTooltip-root .MuiIconButton-root {
-        align-self: flex-end !important;
-      }
     }
   }
 
   // ============================================
-  // ÁREA DE LISTAGEM - PAPER INTERNO
+  // BOTÃO FECHAR - CINZA COM HOVER VERMELHO
+  // APLICA EM TODOS OS CONTEXTOS (LISTAGEM E WIZARD)
+  // ============================================
+  .close-button,
+  .MuiIconButton-root[aria-label="Fechar"],
+  .MuiIconButton-root:has(.MuiSvgIcon-root[data-testid="CloseIcon"]),
+  .MuiBox-root:first-child > .MuiIconButton-root:last-child {
+    width: 40px !important;
+    height: 40px !important;
+    background: white !important;
+    border: 2px solid #e0e4e8 !important;
+    border-radius: 10px !important;
+    color: #666 !important;
+    transition: all 0.2s ease !important;
+
+    &:hover {
+      background: white !important;
+      border-color: #ef4444 !important;
+      color: #ef4444 !important;
+    }
+
+    .MuiSvgIcon-root {
+      font-size: 20px !important;
+      color: inherit !important;
+    }
+  }
+
+  // ============================================
+  // LISTAGEM
   // ============================================
   .MuiContainer-root > .MuiPaper-root > .MuiPaper-root {
     border-radius: 16px !important;
@@ -116,7 +111,7 @@
   }
 
   // ============================================
-  // BARRA DE BUSCA E BOTÃO NOVO (COMPACTA)
+  // BUSCA E NOVO
   // ============================================
   .MuiBox-root:has(> .MuiTextField-root[placeholder*="Buscar"]) {
     display: flex !important;
@@ -125,14 +120,13 @@
     margin-bottom: 16px !important;
     flex-wrap: wrap !important;
 
-    & > .MuiTextField-root {
+    .MuiTextField-root {
       flex: 1 !important;
       min-width: 260px !important;
 
       .MuiOutlinedInput-root {
         background: white !important;
         border-radius: 10px !important;
-        transition: all 0.3s ease !important;
         height: 40px !important;
 
         .MuiOutlinedInput-notchedOutline {
@@ -159,34 +153,13 @@
 
           &::placeholder {
             color: #999 !important;
-            opacity: 1 !important;
           }
         }
       }
     }
 
-    & > .MuiButton-root:not(:last-child) {
-      min-width: 100px !important;
-      height: 40px !important;
-      border-radius: 10px !important;
-      border: 2px solid #e0e4e8 !important;
-      background: white !important;
-      color: #666 !important;
-      font-weight: 600 !important;
-      font-size: 13px !important;
-      text-transform: none !important;
-      padding: 0 16px !important;
-      transition: all 0.2s ease !important;
-
-      &:hover {
-        background: #f5f7fa !important;
-        border-color: #1976d2 !important;
-        color: #1976d2 !important;
-      }
-    }
-
-    & > .MuiButton-root:last-child,
-    & > .MuiFab-root {
+    .MuiButton-root:last-child,
+    .MuiFab-root {
       width: 40px !important;
       height: 40px !important;
       min-width: 40px !important;
@@ -194,7 +167,6 @@
       background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
       color: white !important;
       box-shadow: 0 3px 12px rgba(25, 118, 210, 0.3) !important;
-      transition: all 0.2s ease !important;
       padding: 0 !important;
 
       &:hover {
@@ -209,7 +181,7 @@
   }
 
   // ============================================
-  // CARDS DOS CONDOMÍNIOS (COMPACTOS)
+  // CARDS
   // ============================================
   .MuiBox-root:has(> .MuiCard-root) {
     margin-bottom: 12px !important;
@@ -225,7 +197,6 @@
     border: 2px solid #f0f2f5 !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
     transition: all 0.3s ease !important;
-    overflow: visible !important;
     position: relative !important;
     min-height: 110px !important;
 
@@ -249,7 +220,6 @@
         width: 5px !important;
       }
 
-      .MuiCardMedia-root,
       img {
         transform: scale(1.05) !important;
       }
@@ -282,8 +252,7 @@
           height: 140px !important;
         }
 
-        img,
-        .MuiCardMedia-root {
+        img {
           width: 100% !important;
           height: 100% !important;
           object-fit: cover !important;
@@ -294,7 +263,6 @@
           font-size: 10px !important;
           color: #999 !important;
           font-weight: 500 !important;
-          text-align: center !important;
         }
       }
 
@@ -303,20 +271,11 @@
         display: flex !important;
         flex-direction: column !important;
         gap: 4px !important;
-        min-width: 0 !important;
 
         .MuiTypography-root:first-child {
           font-size: 16px !important;
           font-weight: 700 !important;
           color: #1a1a2e !important;
-          line-height: 1.3 !important;
-          margin: 0 !important;
-          letter-spacing: -0.3px !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-          display: -webkit-box !important;
-          -webkit-line-clamp: 2 !important;
-          -webkit-box-orient: vertical !important;
         }
 
         .MuiTypography-root:nth-child(2) {
@@ -325,7 +284,6 @@
           display: flex !important;
           align-items: center !important;
           gap: 3px !important;
-          margin: 0 !important;
 
           .MuiSvgIcon-root {
             font-size: 14px !important;
@@ -354,22 +312,19 @@
       & > div:last-child {
         display: flex !important;
         gap: 8px !important;
-        align-items: center !important;
         flex-shrink: 0 !important;
 
         @media (max-width: 768px) {
           width: 100% !important;
-          flex-direction: row !important;
         }
       }
     }
   }
 
   // ============================================
-  // BOTÕES DE AÇÃO - EDITAR E EXCLUIR (MENORES)
+  // BOTÕES EDITAR E EXCLUIR - ORIGINAL
   // ============================================
-  .action-button-edit,
-  .MuiButton-root:has(.MuiSvgIcon-root[data-testid="EditIcon"]) {
+  .action-button-edit {
     min-width: 80px !important;
     height: 32px !important;
     border-radius: 8px !important;
@@ -387,12 +342,9 @@
       flex: 1 !important;
     }
 
-    .MuiButton-startIcon,
     .MuiSvgIcon-root {
       color: #10b981 !important;
       font-size: 16px !important;
-      margin-right: 4px !important;
-      transition: transform 0.3s ease !important;
     }
 
     &:hover {
@@ -403,17 +355,11 @@
 
       .MuiSvgIcon-root {
         color: #059669 !important;
-        transform: rotate(15deg) !important;
       }
-    }
-
-    &:active {
-      transform: scale(0.98) !important;
     }
   }
 
-  .action-button-delete,
-  .MuiButton-root:has(.MuiSvgIcon-root[data-testid="DeleteIcon"]) {
+  .action-button-delete {
     min-width: 80px !important;
     height: 32px !important;
     border-radius: 8px !important;
@@ -431,12 +377,9 @@
       flex: 1 !important;
     }
 
-    .MuiButton-startIcon,
     .MuiSvgIcon-root {
       color: #ef4444 !important;
       font-size: 16px !important;
-      margin-right: 4px !important;
-      transition: transform 0.3s ease !important;
     }
 
     &:hover {
@@ -447,17 +390,12 @@
 
       .MuiSvgIcon-root {
         color: #dc2626 !important;
-        transform: rotate(15deg) !important;
       }
-    }
-
-    &:active {
-      transform: scale(0.98) !important;
     }
   }
 
   // ============================================
-  // PAGINAÇÃO (SEMPRE VISÍVEL E COMPACTA)
+  // PAGINAÇÃO
   // ============================================
   .MuiPagination-root {
     display: flex !important;
@@ -466,45 +404,35 @@
     padding-top: 16px !important;
     border-top: 2px solid #f0f2f5 !important;
 
-    .MuiPagination-ul {
-      gap: 6px !important;
+    .MuiPaginationItem-root {
+      min-width: 36px !important;
+      height: 36px !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      font-size: 13px !important;
 
-      .MuiPaginationItem-root {
-        min-width: 36px !important;
-        height: 36px !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        font-size: 13px !important;
-        border: 2px solid transparent !important;
-        transition: all 0.2s ease !important;
+      &.Mui-selected {
+        background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+        color: white !important;
+        box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3) !important;
+      }
 
-        &.Mui-selected {
-          background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
-          color: white !important;
-          box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3) !important;
+      &:not(.Mui-selected) {
+        color: #666 !important;
+        background: white !important;
+        border: 2px solid #e0e4e8 !important;
 
-          &:hover {
-            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
-          }
-        }
-
-        &:not(.Mui-selected) {
-          color: #666 !important;
-          background: white !important;
-          border-color: #e0e4e8 !important;
-
-          &:hover {
-            background: rgba(25, 118, 210, 0.05) !important;
-            border-color: #1976d2 !important;
-            color: #1976d2 !important;
-          }
+        &:hover {
+          background: rgba(25, 118, 210, 0.05) !important;
+          border-color: #1976d2 !important;
+          color: #1976d2 !important;
         }
       }
     }
   }
 
   // ============================================
-  // ESTADOS: LOADING, ERRO, VAZIO
+  // ALERTS
   // ============================================
   .MuiCircularProgress-root {
     color: #1976d2 !important;
@@ -533,204 +461,151 @@
       color: #1976d2 !important;
       border: 2px solid rgba(25, 118, 210, 0.2) !important;
     }
+
+    &.MuiAlert-standardWarning {
+      background: rgba(255, 152, 0, 0.08) !important;
+      color: #e65100 !important;
+      border: 2px solid rgba(255, 152, 0, 0.2) !important;
+    }
   }
 
   // ============================================
-  // STEPPER (FORMULÁRIO - COMPACTO)
+  // STEPPER - LABELS EM NEGRITO
   // ============================================
   .MuiStepper-root {
     background: transparent !important;
     padding: 16px 0 !important;
     margin-bottom: 12px !important;
 
-    .MuiStep-root {
-      .MuiStepLabel-root {
-        .MuiStepLabel-label {
-          font-weight: 600 !important;
-          font-size: 13px !important;
-          color: #999 !important;
-          transition: all 0.2s ease !important;
+    .MuiStepLabel-label {
+      font-weight: 700 !important;
+      font-size: 13px !important;
+      color: #999 !important;
 
-          &.Mui-active {
-            color: #1976d2 !important;
-            font-weight: 700 !important;
-          }
+      &.Mui-active {
+        color: #1976d2 !important;
+        font-weight: 700 !important;
+      }
 
-          &.Mui-completed {
-            color: #10b981 !important;
-          }
-        }
-
-        .MuiStepIcon-root {
-          font-size: 26px !important;
-          transition: all 0.2s ease !important;
-
-          &.Mui-active {
-            color: #1976d2 !important;
-          }
-
-          &.Mui-completed {
-            color: #10b981 !important;
-          }
-
-          &:not(.Mui-active):not(.Mui-completed) {
-            color: #e0e4e8 !important;
-          }
-        }
+      &.Mui-completed {
+        color: #10b981 !important;
+        font-weight: 700 !important;
       }
     }
 
-    .MuiStepConnector-root {
-      .MuiStepConnector-line {
+    .MuiStepIcon-root {
+      font-size: 26px !important;
+
+      &.Mui-active {
+        color: #1976d2 !important;
+      }
+
+      &.Mui-completed {
+        color: #10b981 !important;
+      }
+
+      &:not(.Mui-active):not(.Mui-completed) {
+        color: #e0e4e8 !important;
+      }
+    }
+
+    .MuiStepConnector-line {
+      border-color: #e0e4e8 !important;
+      border-width: 2px !important;
+    }
+
+    .MuiStepConnector-root.Mui-active .MuiStepConnector-line,
+    .MuiStepConnector-root.Mui-completed .MuiStepConnector-line {
+      border-color: #1976d2 !important;
+    }
+  }
+
+  // ============================================
+  // INPUTS
+  // ============================================
+  .condominio-form .MuiTextField-root {
+    margin-bottom: 0 !important;
+
+    .MuiOutlinedInput-root {
+      border-radius: 10px !important;
+      background: white !important;
+
+      .MuiOutlinedInput-notchedOutline {
         border-color: #e0e4e8 !important;
         border-width: 2px !important;
       }
 
-      &.Mui-active,
-      &.Mui-completed {
-        .MuiStepConnector-line {
-          border-color: #1976d2 !important;
-        }
+      &:hover .MuiOutlinedInput-notchedOutline {
+        border-color: #1976d2 !important;
       }
-    }
-  }
 
-  // ============================================
-  // INPUTS DO FORMULÁRIO (COMPACTOS)
-  // ============================================
-  .condominio-form,
-  div:has(.condominio-form) {
-    .MuiTextField-root {
-      margin-bottom: 0 !important;
-
-      .MuiOutlinedInput-root {
-        border-radius: 10px !important;
-        background: white !important;
-        transition: all 0.2s ease !important;
+      &.Mui-focused {
+        box-shadow: 0 3px 10px rgba(25, 118, 210, 0.15) !important;
 
         .MuiOutlinedInput-notchedOutline {
-          border-color: #e0e4e8 !important;
-          border-width: 2px !important;
-        }
-
-        &:hover .MuiOutlinedInput-notchedOutline {
           border-color: #1976d2 !important;
         }
-
-        &.Mui-focused {
-          box-shadow: 0 3px 10px rgba(25, 118, 210, 0.15) !important;
-
-          .MuiOutlinedInput-notchedOutline {
-            border-color: #1976d2 !important;
-          }
-        }
-
-        &.Mui-error .MuiOutlinedInput-notchedOutline {
-          border-color: #ef4444 !important;
-        }
-
-        input,
-        textarea {
-          padding: 12px 14px !important;
-          font-size: 14px !important;
-          color: #1a1a2e !important;
-          line-height: 1.4 !important;
-        }
-
-        &.MuiInputBase-sizeSmall {
-          input,
-          textarea {
-            padding: 10px 14px !important;
-          }
-        }
-      }
-      .MuiOutlinedInput-root {
-        .MuiInputAdornment-root {
-          &.MuiInputAdornment-positionStart {
-            margin-right: 8px !important;
-            padding-left: 14px !important;
-            
-            .MuiSvgIcon-root {
-              font-size: 18px !important;
-              color: #1976d2 !important;
-            }
-          }
-        }
-
-        &.MuiInputBase-adornedStart {
-          input {
-            padding-left: 0 !important;
-          }
-          
-          &.MuiInputBase-sizeSmall {
-            input {
-              padding-left: 0 !important;
-            }
-          }
-        }
       }
 
-      .MuiInputLabel-root {
-        font-weight: 500 !important;
+      &.Mui-error .MuiOutlinedInput-notchedOutline {
+        border-color: #ef4444 !important;
+      }
+
+      input,
+      textarea {
+        padding: 12px 14px !important;
         font-size: 14px !important;
-        color: #666 !important;
+        color: #1a1a2e !important;
+      }
 
-        &.MuiInputLabel-sizeSmall {
-          transform: translate(14px, 11px) scale(1) !important;
+      &.MuiInputBase-sizeSmall input,
+      &.MuiInputBase-sizeSmall textarea {
+        padding: 10px 14px !important;
+      }
+    }
 
-          &.MuiInputLabel-shrink {
-            transform: translate(14px, -6px) scale(0.75) !important;
-          }
-        }
+    .MuiInputLabel-root {
+      font-weight: 500 !important;
+      font-size: 14px !important;
+      color: #666 !important;
+
+      &.MuiInputLabel-sizeSmall {
+        transform: translate(14px, 11px) scale(1) !important;
 
         &.MuiInputLabel-shrink {
-          background: white !important;
-          padding: 0 6px !important;
-        }
-
-        &.Mui-focused {
-          font-weight: 600 !important;
-          color: #1976d2 !important;
-        }
-
-        &.Mui-error {
-          color: #ef4444 !important;
+          transform: translate(14px, -6px) scale(0.75) !important;
         }
       }
 
-      .MuiFormHelperText-root {
-        font-size: 11px !important;
-        margin-top: 4px !important;
-        margin-left: 4px !important;
+      &.MuiInputLabel-shrink {
+        background: white !important;
+        padding: 0 6px !important;
+      }
 
-        &.Mui-error {
-          color: #ef4444 !important;
-          font-weight: 500 !important;
-        }
+      &.Mui-focused {
+        font-weight: 600 !important;
+        color: #1976d2 !important;
+      }
+
+      &.Mui-error {
+        color: #ef4444 !important;
+      }
+    }
+
+    .MuiFormHelperText-root {
+      font-size: 11px !important;
+      margin-top: 4px !important;
+      margin-left: 4px !important;
+
+      &.Mui-error {
+        color: #ef4444 !important;
+        font-weight: 500 !important;
       }
     }
   }
 
   // ============================================
-  // CARD DE INFORMAÇÕES DO CEP (LOCKED)
-  // ============================================
-  .cep-info-card {
-    animation: slideInFromTop 0.5s ease-out !important;
-  }
-
-  @keyframes slideInFromTop {
-    0% {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  // ============================================
-  // CHECKBOXES 
+  // CHECKBOXES
   // ============================================
   .MuiFormControlLabel-root {
     margin: 0 !important;
@@ -738,7 +613,6 @@
     border-radius: 10px !important;
     border: 2px solid #f0f2f5 !important;
     background: white !important;
-    transition: all 0.2s ease !important;
 
     &:hover {
       background: rgba(25, 118, 210, 0.04) !important;
@@ -751,10 +625,6 @@
       &.Mui-checked {
         color: #1976d2 !important;
       }
-
-      &.MuiCheckbox-sizeSmall {
-        padding: 3px !important;
-      }
     }
 
     .MuiFormControlLabel-label {
@@ -765,118 +635,73 @@
     }
   }
 
-  // ============================================
-  // BOTÕES DO FORMULÁRIO 
-  // ============================================
-  .MuiBox-root:has(> .MuiButton-root[variant="contained"]),
-  div:has(> .MuiButton-root[variant="contained"]) {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 12px !important;
-    margin-top: 0 !important;
-    padding-top: 12px !important;
-    border-top: 2px solid #f0f2f5 !important;
-    flex-wrap: wrap !important;
 
-    .MuiButton-root {
-      min-width: 100px !important;
-      height: 36px !important;
-      border-radius: 10px !important;
-      font-weight: 700 !important;
-      font-size: 13px !important;
-      text-transform: none !important;
-      padding: 0 20px !important;
-      transition: all 0.2s ease !important;
+  .MuiButton-contained,
+  .MuiButton-containedPrimary,
+  button.MuiButton-contained,
+  button.MuiButton-containedPrimary,
+  .MuiButton-root.MuiButton-contained,
+  .MuiButton-root.MuiButton-containedPrimary,
+  .condominio-container .MuiButton-contained,
+  .condominio-container .MuiButton-containedPrimary {
+    background: #0067b8 !important;
+    color: white !important;
+    border: none !important;
+    padding: 14px 40px !important;          /* ← IGUAL AO LOGIN */
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    min-width: 140px !important;            /* ← IGUAL AO LOGIN */
+    border-radius: 12px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(0, 103, 184, 0.2) !important;
+    text-transform: none !important;
+    height: auto !important;                /* Remove qualquer height fixo */
+    line-height: normal !important;
 
-      &.MuiButton-outlined {
+    &:hover {
+      background: #005a9e !important;
+      box-shadow: 0 4px 12px rgba(0, 103, 184, 0.3) !important;
+    }
 
+    &:active {
+      transform: scale(0.98) !important;
+    }
 
-        &:hover {
-          background: #1976d2 !important;
-          border-color: #1976d2 !important;
-          color: white !important;
-          box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3) !important;
-        }
-      }
-
-      &.MuiButton-contained {
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15) !important;
-
-        &.MuiButton-containedSuccess {
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-          box-shadow: 0 3px 12px rgba(16, 185, 129, 0.35) !important;
-
-          &:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-            box-shadow: 0 5px 16px rgba(16, 185, 129, 0.45) !important;
-          }
-        }
-
-        &.MuiButton-containedPrimary {
-          background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
-          box-shadow: 0 3px 12px rgba(25, 118, 210, 0.35) !important;
-
-          &:hover {
-            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
-            box-shadow: 0 5px 16px rgba(25, 118, 210, 0.45) !important;
-          }
-        }
-      }
-
-      &:active {
-        transform: scale(0.98) !important;
-      }
-
-      &:disabled {
-        opacity: 0.5 !important;
-        cursor: not-allowed !important;
-      }
-
-      .MuiCircularProgress-root {
-        width: 18px !important;
-        height: 18px !important;
-      }
+    &:disabled {
+      background: #c0c0c0 !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+      opacity: 0.6 !important;
     }
   }
 
+  // ============================================
+  // SUBTÍTULOS - NEGRITO
+  // ============================================
   .MuiTypography-subtitle2 {
-    font-size: 12px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     color: #1976d2 !important;
     margin-bottom: 0 !important;
     margin-top: 0 !important;
     padding-bottom: 6px !important;
     border-bottom: 2px solid rgba(25, 118, 210, 0.15) !important;
-    letter-spacing: 0.3px !important;
-    text-transform: uppercase !important;
   }
 
+  // ============================================
+  // SEM SCROLL
+  // ============================================
   .condominio-form {
     margin-top: 0 !important;
-    overflow-y: visible !important;
-    overflow-x: visible !important;
-    max-height: none !important;
     padding: 8px 6px !important;
   }
+
   * {
-    overflow-y: visible !important;
-    overflow-x: visible !important;
-    max-height: none !important;
-    
     &::-webkit-scrollbar {
       display: none !important;
     }
     
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
-  }
-
-  .MuiContainer-root,
-  .MuiPaper-root,
-  .MuiBox-root,
-  .MuiCard-root,
-  .MuiCardContent-root {
-    overflow: visible !important;
-    max-height: none !important;
   }
 }

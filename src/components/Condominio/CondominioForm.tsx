@@ -9,16 +9,8 @@ import {
   Checkbox,
   CircularProgress,
   Grid,
-  Fade,
-  Chip,
   Alert,
 } from "@mui/material";
-import {
-  CheckCircleOutline,
-  LocationCity,
-  Signpost,
-  LocationOnOutlined,
-} from "@mui/icons-material";
 import {
   condominiumService,
   type Condominium,
@@ -94,6 +86,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     city: string;
     state: string;
   } | null>(null);
+  const [cepSearched, setCepSearched] = useState(false); // Novo state para controlar se já pesquisou
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<CondominiumRequest>(initialFormData);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -141,6 +134,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     setErrors({});
     setCepData(null);
     setCepError(null);
+    setCepSearched(false); // Reset ao abrir
     setCoverFile(null);
     ensureOrganizationId();
 
@@ -171,6 +165,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         allocationValuePerc: editingCondominium.allocationValuePerc,
         commit: true,
       });
+      setCepSearched(true); // Quando editando, considera que já pesquisou
     } else {
       setEditingId(null);
       setFormData({
@@ -216,6 +211,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       if (cepDigits.length !== 8) {
         setCepData(null);
         setCepError(null);
+        setCepSearched(false); // Reset quando muda CEP
       }
     }
 
@@ -360,17 +356,20 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     if (cepDigits.length > 0 && cepDigits.length < 8) {
       setCepError("CEP incompleto. Digite 8 dígitos.");
       setCepData(null);
+      setCepSearched(true);
       return;
     }
 
     if (cepDigits.length !== 8) {
       setCepError(null);
       setCepData(null);
+      setCepSearched(false);
       return;
     }
 
     setCepLoading(true);
     setCepError(null);
+    setCepSearched(true); // Marca que pesquisou
 
     try {
       const response = await fetch(
@@ -483,6 +482,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       setActiveStep(0);
       setEditingId(null);
       setCepData(null);
+      setCepSearched(false);
       onClose();
     } catch (error) {
       const message =
@@ -508,6 +508,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     setErrors({});
     setCepData(null);
     setCepError(null);
+    setCepSearched(false);
     onClose();
   };
 
@@ -597,125 +598,154 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               onChange={(e) => handleChange("zipCode", e.target.value)}
               onBlur={handleCepLookup}
               error={!!errors.zipCode || !!cepError}
-              helperText={errors.zipCode || cepError}
+              helperText={
+                errors.zipCode ||
+                cepError ||
+                "Informe o CEP para buscar automaticamente"
+              }
               placeholder="00000-000"
               size="small"
               InputLabelProps={{ shrink: false }}
               inputProps={{ maxLength: 9 }}
+              InputProps={{
+                endAdornment: cepLoading ? (
+                  <CircularProgress size={18} />
+                ) : null,
+              }}
             />
 
-            {cepLoading && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <CircularProgress size={16} />
-                <Typography variant="caption" sx={{ color: "#0ea5e9" }}>
-                  Buscando endereço...
-                </Typography>
-              </Box>
-            )}
+            {/* QUADRO SEMPRE VISÍVEL - LOCKED POR PADRÃO */}
+            <Box sx={{ mt: 0.5 }}>
+              {/* Alert de status */}
+              {cepSearched && cepData && (
+                <Alert 
+                  severity="success" 
+                  sx={{ 
+                    mb: 1.5,
+                    fontSize: "12px",
+                    py: 0.5,
+                    "& .MuiAlert-message": {
+                      fontWeight: 600
+                    }
+                  }}
+                >
+                  Endereço encontrado! Complete apenas Número e Complemento
+                </Alert>
+              )}
+              
+              {cepSearched && !cepData && cepError && (
+                <Alert 
+                  severity="warning" 
+                  sx={{ 
+                    mb: 1.5,
+                    fontSize: "12px",
+                    py: 0.5,
+                    "& .MuiAlert-message": {
+                      fontWeight: 600
+                    }
+                  }}
+                >
+                  CEP não encontrado. Preencha manualmente os campos abaixo
+                </Alert>
+              )}
 
-            {cepData && (
-              <Fade in={!!cepData} timeout={500}>
-                <Box sx={{ mt: 0.5 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      mb: 1.2,
-                      p: 1,
-                      background: "linear-gradient(90deg, #e0f2fe 0%, #f0f9ff 100%)",
-                      borderRadius: 1.5,
-                      border: "1px solid #bae6fd",
-                    }}
-                  >
-                    <CheckCircleOutline sx={{ color: "#0ea5e9", fontSize: 20 }} />
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: "#0c4a6e" }}>
-                      Endereço encontrado
-                    </Typography>
-                  </Box>
-                  <Grid container spacing={1.2}>
-                    <Grid item xs={12} sm={6}>
-                      <Chip
-                        icon={<Signpost sx={{ fontSize: 16 }} />}
-                        label={cepData?.address || "Não informado"}
-                        sx={{
-                          width: "100%",
-                          justifyContent: "flex-start",
-                          height: "auto",
-                          minHeight: "36px",
-                          padding: "8px 12px",
-                          background: "white",
-                          border: "1.5px solid #bae6fd",
-                          "& .MuiChip-label": {
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            color: "#0c4a6e",
-                            whiteSpace: "normal",
-                            textAlign: "left",
-                          },
-                          "& .MuiChip-icon": {
-                            color: "#0ea5e9",
-                          },
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Chip
-                        icon={<LocationOnOutlined sx={{ fontSize: 16 }} />}
-                        label={cepData?.neighborhood || "Não informado"}
-                        sx={{
-                          width: "100%",
-                          justifyContent: "flex-start",
-                          height: "auto",
-                          minHeight: "36px",
-                          padding: "8px 12px",
-                          background: "white",
-                          border: "1.5px solid #bae6fd",
-                          "& .MuiChip-label": {
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            color: "#0c4a6e",
-                            whiteSpace: "normal",
-                            textAlign: "left",
-                          },
-                          "& .MuiChip-icon": {
-                            color: "#0ea5e9",
-                          },
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Chip
-                        icon={<LocationCity sx={{ fontSize: 16 }} />}
-                        label={`${cepData?.city || ""} - ${cepData?.state || ""}`}
-                        sx={{
-                          width: "100%",
-                          justifyContent: "flex-start",
-                          height: "auto",
-                          minHeight: "36px",
-                          padding: "8px 12px",
-                          background: "white",
-                          border: "1.5px solid #bae6fd",
-                          "& .MuiChip-label": {
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            color: "#0c4a6e",
-                            whiteSpace: "normal",
-                            textAlign: "left",
-                          },
-                          "& .MuiChip-icon": {
-                            color: "#0ea5e9",
-                          },
-                        }}
-                      />
-                    </Grid>
-                  </Grid>
-                </Box>
-              </Fade>
-            )}
-
-            {cepData && (
+              {!cepSearched && (
+                <Alert 
+                  severity="info" 
+                  sx={{ 
+                    mb: 1.5,
+                    fontSize: "12px",
+                    py: 0.5,
+                    "& .MuiAlert-message": {
+                      fontWeight: 600
+                    }
+                  }}
+                >
+                  Informe o CEP acima para pesquisar o endereço
+                </Alert>
+              )}
+              
+              {/* Campos do endereço */}
               <Grid container spacing={1.2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label={formData.address ? "" : "Logradouro"}
+                    value={formData.address}
+                    onChange={(e) => handleChange("address", e.target.value)}
+                    error={!!errors.address}
+                    helperText={errors.address}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                    disabled={!cepSearched || (cepSearched && cepData !== null)} 
+                    InputProps={{
+                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={formData.neighborhood ? "" : "Bairro"}
+                    value={formData.neighborhood}
+                    onChange={(e) => handleChange("neighborhood", e.target.value)}
+                    error={!!errors.neighborhood}
+                    helperText={errors.neighborhood}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                    disabled={!cepSearched || (cepSearched && cepData !== null)}
+                    InputProps={{
+                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={formData.city ? "" : "Cidade"}
+                    value={formData.city}
+                    onChange={(e) => handleChange("city", e.target.value)}
+                    error={!!errors.city}
+                    helperText={errors.city}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                    disabled={!cepSearched || (cepSearched && cepData !== null)}
+                    InputProps={{
+                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={formData.state ? "" : "Estado (UF)"}
+                    value={formData.state}
+                    onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
+                    error={!!errors.state}
+                    helperText={errors.state}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                    inputProps={{ maxLength: 2 }}
+                    disabled={!cepSearched || (cepSearched && cepData !== null)}
+                    InputProps={{
+                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
+                  />
+                </Grid>
+                
+                {/* Número e Complemento - sempre liberados após pesquisar */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
@@ -726,27 +756,49 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     helperText={errors.addressNumber}
                     size="small"
                     InputLabelProps={{ shrink: false }}
+                    disabled={!cepSearched}
+                    InputProps={{
+                      sx: !cepSearched ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    label={formData.complement ? "" : "Complemento (Opcional)"}
+                    label={formData.complement ? "" : "Complemento (opcional)"}
                     value={formData.complement}
                     onChange={(e) => handleChange("complement", e.target.value)}
                     size="small"
                     InputLabelProps={{ shrink: false }}
+                    disabled={!cepSearched}
+                    InputProps={{
+                      sx: !cepSearched ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
                   />
                 </Grid>
               </Grid>
-            )}
+            </Box>
           </Box>
         );
 
       case 2:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mb: 0 }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                fontWeight: 700, 
+                color: "#1976d2", 
+                mb: 0.5,
+                fontSize: "14px"
+              }}
+            >
               Infraestrutura
             </Typography>
             <Grid container spacing={0.8}>
@@ -759,7 +811,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Possui Blocos</Typography>}
+                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Possui blocos</Typography>}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -773,7 +825,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Medição Individual de Água</Typography>}
+                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Medição individual de água</Typography>}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -787,7 +839,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Energia por Bloco</Typography>}
+                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Energia por bloco</Typography>}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -801,19 +853,28 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Gás por Bloco</Typography>}
+                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Gás por bloco</Typography>}
                 />
               </Grid>
             </Grid>
 
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mt: 0.5, mb: 0 }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                fontWeight: 700, 
+                color: "#1976d2", 
+                mt: 1,
+                mb: 0.5,
+                fontSize: "14px"
+              }}
+            >
               Rateio
             </Typography>
             <Grid container spacing={1.2}>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Tipo de Rateio"
+                  label="Tipo de rateio"
                   select
                   value={formData.allocationType}
                   onChange={(e) =>
@@ -839,11 +900,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   ) : (
                     <>
                       <MenuItem value="FractionalAllocation">
-                        Rateio Fracionário
+                        Rateio fracionário
                       </MenuItem>
-                      <MenuItem value="FixedAllocation">Rateio Fixo</MenuItem>
+                      <MenuItem value="FixedAllocation">Rateio fixo</MenuItem>
                       <MenuItem value="ProportionalAllocation">
-                        Rateio Proporcional
+                        Rateio proporcional
                       </MenuItem>
                     </>
                   )}
@@ -852,7 +913,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label={formData.allocationValuePerc > 0 ? "" : "Percentual de Rateio (%)"}
+                  label={formData.allocationValuePerc > 0 ? "" : "Percentual de rateio (%)"}
                   type="number"
                   value={formData.allocationValuePerc || ""}
                   onChange={(e) =>
@@ -867,8 +928,17 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               </Grid>
             </Grid>
 
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#1976d2", mt: 0.5, mb: 0 }}>
-              Logotipo do Condomínio (opcional)
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                fontWeight: 700, 
+                color: "#1976d2", 
+                mt: 1,
+                mb: 0.5,
+                fontSize: "14px"
+              }}
+            >
+              Logotipo do condomínio (opcional)
             </Typography>
             <Box
               sx={{
@@ -878,7 +948,17 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 flexWrap: "wrap",
               }}
             >
-              <Button variant="outlined" component="label" size="small">
+              <Button 
+                variant="outlined" 
+                component="label" 
+                size="small"
+                sx={{
+                  minWidth: 130,
+                  height: 36,
+                  textTransform: 'none',
+                  fontSize: '13px',
+                }}
+              >
                 Selecionar imagem
                 <input
                   type="file"
@@ -935,7 +1015,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             disabled={loading}
             sx={{
               minWidth: 100,
-              height: 36,
+              height: 38,
               textTransform: "none",
               fontSize: "13px",
             }}
@@ -952,7 +1032,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             onClick={handleNext}
             sx={{
               minWidth: 100,
-              height: 36,
+              height: 38,
               textTransform: "none",
               fontSize: "13px",
             }}

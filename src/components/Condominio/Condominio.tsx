@@ -241,20 +241,7 @@ const CondominioPage: React.FC = () => {
                     setIsCadastroOpen(false);
                     setEditingCondominium(null);
                   }}
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    background: "white",
-                    border: "2px solid #ef4444",
-                    borderRadius: "10px",
-                    color: "#ef4444",
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      background: "rgba(239, 68, 68, 0.1)",
-                      borderColor: "#dc2626",
-                      color: "#dc2626",
-                    },
-                  }}
+                  className="close-button"
                 >
                   <Close sx={{ fontSize: 20 }} />
                 </IconButton>
@@ -356,14 +343,8 @@ const CondominioPage: React.FC = () => {
                             size="small"
                             variant="outlined"
                             className="action-button-edit"
-                            startIcon={<EditOutlined sx={{ fontSize: "16px !important" }} />}
+                            startIcon={<EditOutlined />}
                             onClick={() => handleEdit(condominium)}
-                            sx={{
-                              minWidth: "80px !important",
-                              height: "32px !important",
-                              fontSize: "12px !important",
-                              padding: "0 12px !important",
-                            }}
                           >
                             Editar
                           </Button>
@@ -371,14 +352,8 @@ const CondominioPage: React.FC = () => {
                             size="small"
                             variant="outlined"
                             className="action-button-delete"
-                            startIcon={<DeleteOutline sx={{ fontSize: "16px !important" }} />}
+                            startIcon={<DeleteOutline />}
                             onClick={() => handleDelete(condominium)}
-                            sx={{
-                              minWidth: "80px !important",
-                              height: "32px !important",
-                              fontSize: "12px !important",
-                              padding: "0 12px !important",
-                            }}
                           >
                             Excluir
                           </Button>
@@ -410,4 +385,3 @@ const CondominioPage: React.FC = () => {
 };
 
 export default CondominioPage;
-
