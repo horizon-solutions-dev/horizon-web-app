@@ -641,148 +641,167 @@ const CondominioForm: React.FC = () => {
               }}
             />
 
-            {/* Informações do CEP - Locked e Bonitas */}
-            <Fade in={!!cepData} timeout={500}>
+            {/* Quadro de Informações do CEP - Sempre Visível */}
+            <Box
+              className="cep-info-card"
+              sx={{
+                background: cepData 
+                  ? "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)"
+                  : "linear-gradient(135deg, #fafbfc 0%, #f0f2f5 100%)",
+                border: cepData ? "2px solid #0ea5e9" : "2px solid #e0e4e8",
+                borderRadius: "12px",
+                padding: "16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.5,
+                position: "relative",
+                overflow: "hidden",
+                boxShadow: cepData 
+                  ? "0 4px 12px rgba(14, 165, 233, 0.15)"
+                  : "0 2px 6px rgba(0, 0, 0, 0.04)",
+                transition: "all 0.3s ease",
+              }}
+            >
               <Box
-                className="cep-info-card"
                 sx={{
-                  background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-                  border: "2px solid #0ea5e9",
-                  borderRadius: "12px",
-                  padding: "16px",
-                  display: cepData ? "flex" : "none",
-                  flexDirection: "column",
-                  gap: 1.5,
-                  position: "relative",
-                  overflow: "hidden",
-                  boxShadow: "0 4px 12px rgba(14, 165, 233, 0.15)",
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  width: "120px",
+                  height: "120px",
+                  background: cepData
+                    ? "radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)"
+                    : "radial-gradient(circle, rgba(189, 189, 189, 0.05) 0%, transparent 70%)",
                 }}
-              >
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    width: "120px",
-                    height: "120px",
-                    background: "radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)",
-                  }}
-                />
-                
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-                  <CheckCircleOutline sx={{ color: "#0ea5e9", fontSize: 20 }} />
-                  <Typography variant="subtitle2" sx={{ color: "#0369a1", fontWeight: 700, fontSize: "14px" }}>
-                    Endereço encontrado
-                  </Typography>
-                </Box>
-
-                <Grid container spacing={1.5}>
-                  <Grid item xs={12}>
-                    <Chip
-                      icon={<Signpost sx={{ fontSize: 16 }} />}
-                      label={cepData?.address || "Não informado"}
-                      sx={{
-                        width: "100%",
-                        justifyContent: "flex-start",
-                        height: "auto",
-                        minHeight: "36px",
-                        padding: "8px 12px",
-                        background: "white",
-                        border: "1.5px solid #bae6fd",
-                        "& .MuiChip-label": {
-                          fontSize: "13px",
-                          fontWeight: 600,
-                          color: "#0c4a6e",
-                          whiteSpace: "normal",
-                          textAlign: "left",
-                        },
-                        "& .MuiChip-icon": {
-                          color: "#0ea5e9",
-                        },
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Chip
-                      icon={<LocationOnOutlined sx={{ fontSize: 16 }} />}
-                      label={cepData?.neighborhood || "Não informado"}
-                      sx={{
-                        width: "100%",
-                        justifyContent: "flex-start",
-                        height: "auto",
-                        minHeight: "36px",
-                        padding: "8px 12px",
-                        background: "white",
-                        border: "1.5px solid #bae6fd",
-                        "& .MuiChip-label": {
-                          fontSize: "13px",
-                          fontWeight: 600,
-                          color: "#0c4a6e",
-                          whiteSpace: "normal",
-                          textAlign: "left",
-                        },
-                        "& .MuiChip-icon": {
-                          color: "#0ea5e9",
-                        },
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Chip
-                      icon={<LocationCity sx={{ fontSize: 16 }} />}
-                      label={`${cepData?.city || ""} - ${cepData?.state || ""}`}
-                      sx={{
-                        width: "100%",
-                        justifyContent: "flex-start",
-                        height: "auto",
-                        minHeight: "36px",
-                        padding: "8px 12px",
-                        background: "white",
-                        border: "1.5px solid #bae6fd",
-                        "& .MuiChip-label": {
-                          fontSize: "13px",
-                          fontWeight: 600,
-                          color: "#0c4a6e",
-                          whiteSpace: "normal",
-                          textAlign: "left",
-                        },
-                        "& .MuiChip-icon": {
-                          color: "#0ea5e9",
-                        },
-                      }}
-                    />
-                  </Grid>
-                </Grid>
+              />
+              
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                {cepData ? (
+                  <>
+                    <CheckCircleOutline sx={{ color: "#0ea5e9", fontSize: 20 }} />
+                    <Typography variant="subtitle2" sx={{ color: "#0369a1", fontWeight: 700, fontSize: "14px" }}>
+                      Endereço encontrado
+                    </Typography>
+                  </>
+                ) : (
+                  <>
+                    <LocationOnOutlined sx={{ color: "#999", fontSize: 20 }} />
+                    <Typography variant="subtitle2" sx={{ color: "#666", fontWeight: 700, fontSize: "14px" }}>
+                      Informações do endereço
+                    </Typography>
+                  </>
+                )}
               </Box>
-            </Fade>
-            
-            {/* Número e Complemento só aparecem após CEP encontrado */}
-            {cepData && (
-              <Grid container spacing={1.2}>
-                <Grid item xs={12} sm={6}>
+
+              <Grid container spacing={1.5}>
+                <Grid item xs={12}>
                   <TextField
                     fullWidth
-                    label={formData.addressNumber ? "" : "Número"}
-                    value={formData.addressNumber}
-                    onChange={(e) => handleChange("addressNumber", e.target.value)}
-                    error={!!errors.addressNumber}
-                    helperText={errors.addressNumber}
+                    label={formData.address ? "" : ""}
+                    value={formData.address}
+                    onChange={(e) => handleChange("address", e.target.value)}
+                    error={!!errors.address}
+                    helperText={errors.address}
                     size="small"
+                    disabled={!!cepData}
                     InputLabelProps={{ shrink: false }}
+                    InputProps={{
+                      startAdornment: <Signpost sx={{ fontSize: 16, mr: 1, color: cepData ? "#0ea5e9" : "#999" }} />,
+                    }}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    label={formData.complement ? "" : "Complemento (Opcional)"}
-                    value={formData.complement}
-                    onChange={(e) => handleChange("complement", e.target.value)}
+                    label={formData.neighborhood ? "" : ""}
+                    value={formData.neighborhood}
+                    onChange={(e) => handleChange("neighborhood", e.target.value)}
+                    error={!!errors.neighborhood}
+                    helperText={errors.neighborhood}
                     size="small"
+                    disabled={!!cepData}
                     InputLabelProps={{ shrink: false }}
+                    InputProps={{
+                      startAdornment: <LocationOnOutlined sx={{ fontSize: 16, mr: 1, color: cepData ? "#0ea5e9" : "#999" }} />,
+                    }}
                   />
                 </Grid>
+                <Grid item xs={12} sm={6}>
+                  {cepData ? (
+                    <TextField
+                      fullWidth
+                      label={formData.city && formData.state ? "" : "Cidade - UF"}
+                      value={formData.city && formData.state ? `${formData.city} - ${formData.state}` : ""}
+                      size="small"
+                      disabled
+                      InputLabelProps={{ shrink: false }}
+                      InputProps={{
+                        startAdornment: <LocationCity sx={{ fontSize: 16, mr: 1, color: "#0ea5e9" }} />,
+                      }}
+                    />
+                  ) : (
+                    <TextField
+                      fullWidth
+                      label={formData.city ? "" : "Cidade"}
+                      value={formData.city}
+                      onChange={(e) => handleChange("city", e.target.value)}
+                      error={!!errors.city}
+                      helperText={errors.city}
+                      size="small"
+                      InputLabelProps={{ shrink: false }}
+                    />
+                  )}
+                </Grid>
+                
+                {/* Campo Estado separado quando CEP não encontrado */}
+                {!cepData && (
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label={formData.state ? "" : "Estado (UF)"}
+                      value={formData.state}
+                      onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
+                      error={!!errors.state}
+                      helperText={errors.state}
+                      size="small"
+                      InputLabelProps={{ shrink: false }}
+                      inputProps={{ maxLength: 2 }}
+                    />
+                  </Grid>
+                )}
               </Grid>
-            )}
+            </Box>
+            
+            {/* Número e Complemento - Sempre visíveis */}
+            <Grid container spacing={1.2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={formData.addressNumber ? "" : "Número"}
+                  value={formData.addressNumber}
+                  onChange={(e) => handleChange("addressNumber", e.target.value)}
+                  error={!!errors.addressNumber}
+                  helperText={
+                    errors.addressNumber || 
+                    (!cepData ? "Informe o CEP primeiro" : "")
+                  }
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
+                  disabled={!cepData}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={formData.complement ? "" : "Complemento (Opcional)"}
+                  value={formData.complement}
+                  onChange={(e) => handleChange("complement", e.target.value)}
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
+                  disabled={!cepData}
+                />
+              </Grid>
+            </Grid>
           </Box>
         );
 
@@ -921,7 +940,17 @@ const CondominioForm: React.FC = () => {
                 flexWrap: "wrap",
               }}
             >
-              <Button variant="outlined" component="label" size="small">
+              <Button 
+                variant="outlined" 
+                component="label" 
+                size="small"
+                sx={{
+                  minWidth: 130,
+                  height: 36,
+                  textTransform: 'none',
+                  fontSize: '13px',
+                }}
+              >
                 Selecionar imagem
                 <input
                   type="file"

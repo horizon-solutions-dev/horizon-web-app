@@ -61,7 +61,8 @@
     }
 
     // BOTÃO FECHAR - VERMELHO IGUAL AOS OUTROS
-    & > .MuiIconButton-root {
+    & > .MuiIconButton-root,
+    & > .MuiTooltip-root .MuiIconButton-root {
       width: 40px !important;
       height: 40px !important;
       background: white !important;
@@ -92,7 +93,8 @@
       align-items: flex-start !important;
       gap: 12px !important;
 
-      & > .MuiIconButton-root {
+      & > .MuiIconButton-root,
+      & > .MuiTooltip-root .MuiIconButton-root {
         align-self: flex-end !important;
       }
     }
@@ -636,8 +638,34 @@
         }
 
         &.MuiInputBase-sizeSmall {
-          input {
+          input,
+          textarea {
             padding: 10px 14px !important;
+          }
+        }
+      }
+      .MuiOutlinedInput-root {
+        .MuiInputAdornment-root {
+          &.MuiInputAdornment-positionStart {
+            margin-right: 8px !important;
+            padding-left: 14px !important;
+            
+            .MuiSvgIcon-root {
+              font-size: 18px !important;
+              color: #1976d2 !important;
+            }
+          }
+        }
+
+        &.MuiInputBase-adornedStart {
+          input {
+            padding-left: 0 !important;
+          }
+          
+          &.MuiInputBase-sizeSmall {
+            input {
+              padding-left: 0 !important;
+            }
           }
         }
       }
@@ -702,7 +730,7 @@
   }
 
   // ============================================
-  // CHECKBOXES (SUPER COMPACTOS - SEM ROLAGEM)
+  // CHECKBOXES 
   // ============================================
   .MuiFormControlLabel-root {
     margin: 0 !important;
@@ -738,7 +766,7 @@
   }
 
   // ============================================
-  // BOTÕES DO FORMULÁRIO (COMPACTOS)
+  // BOTÕES DO FORMULÁRIO 
   // ============================================
   .MuiBox-root:has(> .MuiButton-root[variant="contained"]),
   div:has(> .MuiButton-root[variant="contained"]) {
@@ -815,22 +843,18 @@
     }
   }
 
-  // ============================================
-  // TÍTULOS DAS SEÇÕES (SUPER COMPACTOS)
-  // ============================================
   .MuiTypography-subtitle2 {
-    font-size: 13px !important;
+    font-size: 12px !important;
     font-weight: 700 !important;
     color: #1976d2 !important;
     margin-bottom: 0 !important;
     margin-top: 0 !important;
     padding-bottom: 6px !important;
     border-bottom: 2px solid rgba(25, 118, 210, 0.15) !important;
+    letter-spacing: 0.3px !important;
+    text-transform: uppercase !important;
   }
 
-  // ============================================
-  // FORMULÁRIO - SEM SCROLL (OTIMIZADO)
-  // ============================================
   .condominio-form {
     margin-top: 0 !important;
     overflow-y: visible !important;
@@ -838,10 +862,6 @@
     max-height: none !important;
     padding: 8px 6px !important;
   }
-
-  // ============================================
-  // REMOVER SCROLL DE TODOS OS ELEMENTOS
-  // ============================================
   * {
     overflow-y: visible !important;
     overflow-x: visible !important;
@@ -855,7 +875,6 @@
     scrollbar-width: none !important;
   }
 
-  // Garantir que containers principais não tenham scroll
   .MuiContainer-root,
   .MuiPaper-root,
   .MuiBox-root,
