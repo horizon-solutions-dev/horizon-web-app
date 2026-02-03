@@ -86,6 +86,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     city: string;
     state: string;
   } | null>(null);
+  const [cepSearched, setCepSearched] = useState(false); // Novo state para controlar se já pesquisou
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<CondominiumRequest>(initialFormData);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -133,6 +134,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     setErrors({});
     setCepData(null);
     setCepError(null);
+    setCepSearched(false); // Reset ao abrir
     setCoverFile(null);
     ensureOrganizationId();
 
@@ -163,6 +165,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         allocationValuePerc: editingCondominium.allocationValuePerc,
         commit: true,
       });
+      setCepSearched(true); // Quando editando, considera que já pesquisou
     } else {
       setEditingId(null);
       setFormData({
@@ -208,6 +211,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       if (cepDigits.length !== 8) {
         setCepData(null);
         setCepError(null);
+        setCepSearched(false); // Reset quando muda CEP
       }
     }
 
@@ -352,17 +356,20 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     if (cepDigits.length > 0 && cepDigits.length < 8) {
       setCepError("CEP incompleto. Digite 8 dígitos.");
       setCepData(null);
+      setCepSearched(true);
       return;
     }
 
     if (cepDigits.length !== 8) {
       setCepError(null);
       setCepData(null);
+      setCepSearched(false);
       return;
     }
 
     setCepLoading(true);
     setCepError(null);
+    setCepSearched(true); // Marca que pesquisou
 
     try {
       const response = await fetch(
@@ -475,6 +482,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       setActiveStep(0);
       setEditingId(null);
       setCepData(null);
+      setCepSearched(false);
       onClose();
     } catch (error) {
       const message =
@@ -500,6 +508,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     setErrors({});
     setCepData(null);
     setCepError(null);
+    setCepSearched(false);
     onClose();
   };
 
@@ -605,9 +614,10 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               }}
             />
 
-            {/* Se CEP OK: mostra dados desabilitados e libera Número e Complemento */}
-            {cepData && (
-              <Box sx={{ mt: 0.5 }}>
+            {/* QUADRO SEMPRE VISÍVEL - LOCKED POR PADRÃO */}
+            <Box sx={{ mt: 0.5 }}>
+              {/* Alert de status */}
+              {cepSearched && cepData && (
                 <Alert 
                   severity="success" 
                   sx={{ 
@@ -619,87 +629,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     }
                   }}
                 >
-                  Endereço encontrado automaticamente
+                  Endereço encontrado! Complete apenas Número e Complemento
                 </Alert>
-                
-                <Grid container spacing={1.2}>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Logradouro"
-                      value={formData.address}
-                      size="small"
-                      disabled
-                      InputProps={{
-                        sx: {
-                          background: "#f5f7fa !important",
-                          color: "#666 !important"
-                        }
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Bairro"
-                      value={formData.neighborhood}
-                      size="small"
-                      disabled
-                      InputProps={{
-                        sx: {
-                          background: "#f5f7fa !important",
-                          color: "#666 !important"
-                        }
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Cidade - UF"
-                      value={`${formData.city} - ${formData.state}`}
-                      size="small"
-                      disabled
-                      InputProps={{
-                        sx: {
-                          background: "#f5f7fa !important",
-                          color: "#666 !important"
-                        }
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-
-                <Grid container spacing={1.2} sx={{ mt: 0.5 }}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label={formData.addressNumber ? "" : "Número"}
-                      value={formData.addressNumber}
-                      onChange={(e) => handleChange("addressNumber", e.target.value)}
-                      error={!!errors.addressNumber}
-                      helperText={errors.addressNumber}
-                      size="small"
-                      InputLabelProps={{ shrink: false }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label={formData.complement ? "" : "Complemento (opcional)"}
-                      value={formData.complement}
-                      onChange={(e) => handleChange("complement", e.target.value)}
-                      size="small"
-                      InputLabelProps={{ shrink: false }}
-                    />
-                  </Grid>
-                </Grid>
-              </Box>
-            )}
-
-            {/* Se CEP NÃO OK: libera todos os campos */}
-            {!cepData && !cepLoading && formData.zipCode.replace(/\D/g, "").length === 8 && (
-              <Box sx={{ mt: 0.5 }}>
+              )}
+              
+              {cepSearched && !cepData && cepError && (
                 <Alert 
                   severity="warning" 
                   sx={{ 
@@ -711,84 +645,145 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     }
                   }}
                 >
-                  CEP não encontrado. Preencha manualmente os campos
+                  CEP não encontrado. Preencha manualmente os campos abaixo
                 </Alert>
-                
-                <Grid container spacing={1.2}>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label={formData.address ? "" : "Logradouro"}
-                      value={formData.address}
-                      onChange={(e) => handleChange("address", e.target.value)}
-                      error={!!errors.address}
-                      helperText={errors.address}
-                      size="small"
-                      InputLabelProps={{ shrink: false }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label={formData.neighborhood ? "" : "Bairro"}
-                      value={formData.neighborhood}
-                      onChange={(e) => handleChange("neighborhood", e.target.value)}
-                      error={!!errors.neighborhood}
-                      helperText={errors.neighborhood}
-                      size="small"
-                      InputLabelProps={{ shrink: false }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label={formData.city ? "" : "Cidade"}
-                      value={formData.city}
-                      onChange={(e) => handleChange("city", e.target.value)}
-                      error={!!errors.city}
-                      helperText={errors.city}
-                      size="small"
-                      InputLabelProps={{ shrink: false }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label={formData.state ? "" : "Estado (UF)"}
-                      value={formData.state}
-                      onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
-                      error={!!errors.state}
-                      helperText={errors.state}
-                      size="small"
-                      InputLabelProps={{ shrink: false }}
-                      inputProps={{ maxLength: 2 }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label={formData.addressNumber ? "" : "Número"}
-                      value={formData.addressNumber}
-                      onChange={(e) => handleChange("addressNumber", e.target.value)}
-                      error={!!errors.addressNumber}
-                      helperText={errors.addressNumber}
-                      size="small"
-                      InputLabelProps={{ shrink: false }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label={formData.complement ? "" : "Complemento (opcional)"}
-                      value={formData.complement}
-                      onChange={(e) => handleChange("complement", e.target.value)}
-                      size="small"
-                      InputLabelProps={{ shrink: false }}
-                    />
-                  </Grid>
+              )}
+
+              {!cepSearched && (
+                <Alert 
+                  severity="info" 
+                  sx={{ 
+                    mb: 1.5,
+                    fontSize: "12px",
+                    py: 0.5,
+                    "& .MuiAlert-message": {
+                      fontWeight: 600
+                    }
+                  }}
+                >
+                  Informe o CEP acima para pesquisar o endereço
+                </Alert>
+              )}
+              
+              {/* Campos do endereço */}
+              <Grid container spacing={1.2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label={formData.address ? "" : "Logradouro"}
+                    value={formData.address}
+                    onChange={(e) => handleChange("address", e.target.value)}
+                    error={!!errors.address}
+                    helperText={errors.address}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                    disabled={!cepSearched || (cepSearched && cepData !== null)} 
+                    InputProps={{
+                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
+                  />
                 </Grid>
-              </Box>
-            )}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={formData.neighborhood ? "" : "Bairro"}
+                    value={formData.neighborhood}
+                    onChange={(e) => handleChange("neighborhood", e.target.value)}
+                    error={!!errors.neighborhood}
+                    helperText={errors.neighborhood}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                    disabled={!cepSearched || (cepSearched && cepData !== null)}
+                    InputProps={{
+                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={formData.city ? "" : "Cidade"}
+                    value={formData.city}
+                    onChange={(e) => handleChange("city", e.target.value)}
+                    error={!!errors.city}
+                    helperText={errors.city}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                    disabled={!cepSearched || (cepSearched && cepData !== null)}
+                    InputProps={{
+                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={formData.state ? "" : "Estado (UF)"}
+                    value={formData.state}
+                    onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
+                    error={!!errors.state}
+                    helperText={errors.state}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                    inputProps={{ maxLength: 2 }}
+                    disabled={!cepSearched || (cepSearched && cepData !== null)}
+                    InputProps={{
+                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
+                  />
+                </Grid>
+                
+                {/* Número e Complemento - sempre liberados após pesquisar */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={formData.addressNumber ? "" : "Número"}
+                    value={formData.addressNumber}
+                    onChange={(e) => handleChange("addressNumber", e.target.value)}
+                    error={!!errors.addressNumber}
+                    helperText={errors.addressNumber}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                    disabled={!cepSearched}
+                    InputProps={{
+                      sx: !cepSearched ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label={formData.complement ? "" : "Complemento (opcional)"}
+                    value={formData.complement}
+                    onChange={(e) => handleChange("complement", e.target.value)}
+                    size="small"
+                    InputLabelProps={{ shrink: false }}
+                    disabled={!cepSearched}
+                    InputProps={{
+                      sx: !cepSearched ? {
+                        background: "#f5f7fa !important",
+                        color: "#666 !important"
+                      } : {}
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
           </Box>
         );
 
