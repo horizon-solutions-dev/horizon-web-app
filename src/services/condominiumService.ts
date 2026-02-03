@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient } from './apiClient';
 
 export interface CondominiumRequest {
@@ -54,6 +55,27 @@ class CondominiumService {
     const data = await apiClient.post<{ condominiumId: string }>(this.baseUrl, condominium);
     console.log('Condominium created with ID:', data);
     return data;
+  }
+
+  async validateCondominium(condominium: CondominiumRequest) {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(this.baseUrl, condominium, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
+      throw error;
+    }
   }
 
   async getCondominiums(organizationId: string, pageNumber?: number, pageSize?: number) {
