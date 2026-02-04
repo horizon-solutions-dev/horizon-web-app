@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -14,6 +14,8 @@ import {
   type CondominiumUnitResidentRequest,
 } from "../../services/unitResidentService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
+import { AuthService } from "../../services/authService";
+import { TokenService } from "../../services/tokenService";
 
 interface ResidenteFormProps {
   open: boolean;
@@ -27,6 +29,7 @@ interface ResidenteFormProps {
   setLoading: (loading: boolean) => void;
   unitIdPreset?: string;
 }
+
 
 const ResidenteForm: React.FC<ResidenteFormProps> = ({
   open,
@@ -52,15 +55,21 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const [formData, setFormData] = useState<CondominiumUnitResidentRequest>(
     initialForm,
   );
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeStep, setActiveStep] = useState(0);
+  const [validatingStep, setValidatingStep] = useState(false);
   const steps = ["Dados do residente", "Periodo", "Permissoes"];
 
+const tokenUserId = useMemo(() => {
+    const token = AuthService.getToken();
+    return TokenService.getUserId(token) || '';
+  }, []);    
   useEffect(() => {
     if (!open) return;
     setActiveStep(0);
     setFormData({
       condominiumUnitId: unitIdPreset || "",
-      userId: "",
+      userId: tokenUserId,
       unitType: "Owner",
       startDate: "",
       endDate: "",
@@ -69,6 +78,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       canMakeReservations: false,
       hasGatehouseAccess: false,
     });
+    setErrors({});
   }, [open, unitIdPreset]);
 
   if (!open) return null;
@@ -78,24 +88,81 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     value: string | boolean,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const validateStep = (step: number) => {
+    const nextErrors: Record<string, string> = {};
+
+    if (step === 0) {
+      if (!formData.condominiumUnitId) {
+        nextErrors.condominiumUnitId = "CondominiumUnitId é obrigatório.";
+      }
+      if (!formData.userId) {
+        nextErrors.userId = "UserId é obrigatório.";
+      }
+      if (!formData.unitType) {
+        nextErrors.unitType = "Tipo da unidade é obrigatório.";
+      }
+    }
+
+    if (step === 1) {
+      if (formData.startDate && formData.endDate) {
+        const start = new Date(formData.startDate).getTime();
+        const end = new Date(formData.endDate).getTime();
+        if (!Number.isNaN(start) && !Number.isNaN(end) && end < start) {
+          nextErrors.endDate = "Fim deve ser maior que o início.";
+        }
+      }
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (!validateStep(activeStep)) return;
+    setValidatingStep(true);
+    unitResidentService
+      .createResident({
+        ...formData,
+        startDate: new Date().toISOString().substring(0, 10),
+        endDate: new Date().toISOString().substring(0, 10),
+        commit: false,
+      })
+      .then(() => {
+        setActiveStep((prev) => prev + 1);
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : "Erro ao validar residente.";
+        onNotify(message, "error");
+      })
+      .finally(() => {
+        setValidatingStep(false);
+      });
   };
 
   const handleSubmit = async () => {
-    if (!formData.condominiumUnitId || !formData.userId) {
-      onNotify("Preencha CondominiumUnitId e UserId.", "error");
+    if (!validateStep(0) || !validateStep(1)) {
+      onNotify("Revise os campos obrigatórios.", "error");
       return;
     }
 
     setLoading(true);
     try {
-      await unitResidentService.createResident(formData);
+      await unitResidentService.createResident({
+        ...formData,
+        commit: true,
+      });
       onNotify("Residente criado com sucesso.", "success");
       await onSaved();
       setFormData({
         condominiumUnitId: unitIdPreset || "",
         userId: "",
         unitType: "Owner",
-        startDate: "",
+        startDate: new Date().toISOString().slice(0, 16),
         endDate: "",
         billingContact: false,
         canVote: false,
@@ -125,22 +192,12 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       {activeStep === 0 ? (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <TextField
-            label="CondominiumUnitId"
-            value={formData.condominiumUnitId}
-            onChange={(e) => handleChange("condominiumUnitId", e.target.value)}
-            fullWidth
-          />
-          <TextField
-            label="UserId"
-            value={formData.userId}
-            onChange={(e) => handleChange("userId", e.target.value)}
-            fullWidth
-          />
-          <TextField
             label="Tipo da Unidade"
             select
             value={formData.unitType || ""}
             onChange={(e) => handleChange("unitType", e.target.value)}
+            error={Boolean(errors.unitType)}
+            helperText={errors.unitType}
             fullWidth
           >
             <MenuItem value="Owner">Proprietario</MenuItem>
@@ -165,6 +222,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             InputLabelProps={{ shrink: true }}
             value={formData.endDate || ""}
             onChange={(e) => handleChange("endDate", e.target.value)}
+            error={Boolean(errors.endDate)}
+            helperText={errors.endDate}
             fullWidth
           />
         </Box>
@@ -228,8 +287,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             {loading ? <CircularProgress size={20} /> : "Criar residente"}
           </Button>
         ) : (
-          <Button variant="contained" onClick={() => setActiveStep((prev) => prev + 1)}>
-            Proximo
+          <Button variant="contained" onClick={handleNext} disabled={validatingStep}>
+            {validatingStep ? <CircularProgress size={20} /> : "Proximo"}
           </Button>
         )}
       </Box>
