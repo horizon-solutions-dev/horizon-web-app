@@ -635,7 +635,11 @@
     }
   }
 
-
+  // ============================================
+  // BOTÕES DO FORMULÁRIO - PADRÃO LOGIN
+  // TAMANHO IGUAL AO BOTÃO DE LOGIN
+  // ============================================
+  // Seletores múltiplos para garantir que pega os botões
   .MuiButton-contained,
   .MuiButton-containedPrimary,
   button.MuiButton-contained,
