@@ -11,6 +11,7 @@ export interface CondominiumUnitResidentRequest {
   canVote?: boolean;
   canMakeReservations?: boolean;
   hasGatehouseAccess?: boolean;
+  commit?: boolean;
 }
 
 export interface CondominiumUnitResident extends CondominiumUnitResidentRequest {
