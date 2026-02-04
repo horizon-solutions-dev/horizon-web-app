@@ -86,7 +86,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     city: string;
     state: string;
   } | null>(null);
-  const [cepSearched, setCepSearched] = useState(false); // Novo state para controlar se já pesquisou
+  const [cepSearched, setCepSearched] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<CondominiumRequest>(initialFormData);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -134,7 +134,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     setErrors({});
     setCepData(null);
     setCepError(null);
-    setCepSearched(false); // Reset ao abrir
+    setCepSearched(false);
     setCoverFile(null);
     ensureOrganizationId();
 
@@ -165,7 +165,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         allocationValuePerc: editingCondominium.allocationValuePerc,
         commit: true,
       });
-      setCepSearched(true); // Quando editando, considera que já pesquisou
+      setCepSearched(true);
     } else {
       setEditingId(null);
       setFormData({
@@ -177,7 +177,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
   if (!open) return null;
 
-  // Função para formatar CNPJ
   const formatCNPJ = (value: string) => {
     const numbers = value.replace(/\D/g, "");
     if (numbers.length <= 14) {
@@ -190,7 +189,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     return value;
   };
 
-  // Função para formatar CEP
   const formatCEP = (value: string) => {
     const numbers = value.replace(/\D/g, "");
     if (numbers.length <= 8) {
@@ -202,7 +200,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const handleChange = (field: string, value: unknown) => {
     let processedValue = value;
 
-    // Aplicar máscaras
     if (field === "doc") {
       processedValue = formatCNPJ(String(value));
     } else if (field === "zipCode") {
@@ -211,7 +208,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       if (cepDigits.length !== 8) {
         setCepData(null);
         setCepError(null);
-        setCepSearched(false); // Reset quando muda CEP
+        setCepSearched(false);
       }
     }
 
@@ -317,20 +314,17 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 ];
 
         const nextErrors: Record<string, string> = {};
-        const stepMessages: string[] = [];
 
         validations.forEach((validation) => {
           const key = validation.field?.replace(/\s+/g, "").toLowerCase();
           const field = key ? fieldMap[key] : undefined;
           if (field && stepFields.includes(field)) {
             nextErrors[field] = validation.message;
-            stepMessages.push(validation.message);
           }
         });
 
         if (Object.keys(nextErrors).length > 0) {
           setErrors(nextErrors);
-          onNotify(stepMessages.join("\n") || "Verifique os dados do passo.", "error");
           return;
         }
 
@@ -341,7 +335,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           error instanceof Error
             ? error.message
             : "Erro ao validar dados do condominio.";
-        onNotify(message, "error");
+        console.error(message);
       });
   };
 
@@ -352,7 +346,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const handleCepLookup = async () => {
     const cepDigits = formData.zipCode.replace(/\D/g, "");
 
-    // Se CEP incompleto ao perder foco
     if (cepDigits.length > 0 && cepDigits.length < 8) {
       setCepError("CEP incompleto. Digite 8 dígitos.");
       setCepData(null);
@@ -369,7 +362,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
     setCepLoading(true);
     setCepError(null);
-    setCepSearched(true); // Marca que pesquisou
+    setCepSearched(true);
 
     try {
       const response = await fetch(
@@ -382,7 +375,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         return;
       }
 
-      // Pequeno delay para efeito visual
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       const cepInfo = {
@@ -614,9 +606,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               }}
             />
 
-            {/* QUADRO SEMPRE VISÍVEL - LOCKED POR PADRÃO */}
             <Box sx={{ mt: 0.5 }}>
-              {/* Alert de status */}
               {cepSearched && cepData && (
                 <Alert 
                   severity="success" 
@@ -629,7 +619,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     }
                   }}
                 >
-                  Endereço encontrado! Complete apenas Número e Complemento
+                  Endereço encontrado! Complete Número e Complemento
                 </Alert>
               )}
               
@@ -645,7 +635,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     }
                   }}
                 >
-                  CEP não encontrado. Preencha manualmente os campos abaixo
+                  CEP não encontrado. Preencha os campos manualmente
                 </Alert>
               )}
 
@@ -665,7 +655,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 </Alert>
               )}
               
-              {/* Campos do endereço */}
               <Grid container spacing={1.2}>
                 <Grid item xs={12}>
                   <TextField
@@ -724,10 +713,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                
+                <Grid item xs={12} sm={4}>
                   <TextField
                     fullWidth
-                    label={formData.state ? "" : "Estado (UF)"}
+                    label={formData.state ? "" : "UF"}
                     value={formData.state}
                     onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
                     error={!!errors.state}
@@ -744,9 +734,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     }}
                   />
                 </Grid>
-                
-                {/* Número e Complemento - sempre liberados após pesquisar */}
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={4}>
                   <TextField
                     fullWidth
                     label={formData.addressNumber ? "" : "Número"}
@@ -765,10 +753,10 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={4}>
                   <TextField
                     fullWidth
-                    label={formData.complement ? "" : "Complemento (opcional)"}
+                    label={formData.complement ? "" : "Complemento"}
                     value={formData.complement}
                     onChange={(e) => handleChange("complement", e.target.value)}
                     size="small"
@@ -1013,12 +1001,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             color="primary"
             onClick={handleSubmit}
             disabled={loading}
-            sx={{
-              minWidth: 100,
-              height: 38,
-              textTransform: "none",
-              fontSize: "13px",
-            }}
           >
             {loading
               ? editingId
@@ -1030,12 +1012,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           <Button
             variant="contained"
             onClick={handleNext}
-            sx={{
-              minWidth: 100,
-              height: 38,
-              textTransform: "none",
-              fontSize: "13px",
-            }}
           >
             Próximo
           </Button>
