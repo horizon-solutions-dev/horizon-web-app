@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+import "./Bloco.scss";
 import {
   Box,
   Typography,
   Button,
   TextField,
   CircularProgress,
+  Alert,
 } from "@mui/material";
 import { type CondominiumBlock, type CondominiumBlockRequest, blockService } from "../../services/blockService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
@@ -42,11 +44,13 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
   const [formData, setFormData] = useState<CondominiumBlockRequest>(initialForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
-  const steps = ["Dados do bloco", "Revisao"];
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const steps = ["Dados do Bloco"];
 
   useEffect(() => {
     if (!open) return;
     setActiveStep(0);
+    setErrors({});
     if (editingBlock) {
       setEditingId(editingBlock.condominiumBlockId);
       setFormData({
@@ -68,11 +72,37 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
 
   const handleChange = (field: keyof CondominiumBlockRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.condominiumId?.trim()) {
+      newErrors.condominiumId = "CondominiumId é obrigatório.";
+    }
+
+    if (!formData.code?.trim()) {
+      newErrors.code = "Código é obrigatório.";
+    }
+
+    if (!formData.name?.trim()) {
+      newErrors.name = "Nome é obrigatório.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
-    if (!formData.condominiumId || !formData.code || !formData.name) {
-      onNotify("Preencha CondominiumId, Codigo e Nome.", "error");
+    if (!validateForm()) {
+      onNotify("Por favor, corrija os erros antes de continuar.", "error");
       return;
     }
 
@@ -94,6 +124,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
       });
       setEditingId(null);
       setActiveStep(0);
+      setErrors({});
       onClose();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao salvar bloco.";
@@ -106,61 +137,68 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
   const renderStepContent = () => {
     if (activeStep === 0) {
       return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box className="bloco-form" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <TextField
-            label="CondominiumId"
-            value={formData.condominiumId}
-            onChange={(e) => handleChange("condominiumId", e.target.value)}
-            fullWidth
-          />
-          <TextField
-            label="Codigo"
+            label="Código"
             value={formData.code}
             onChange={(e) => handleChange("code", e.target.value)}
+            error={!!errors.code}
+            helperText={errors.code}
             fullWidth
+            required
           />
           <TextField
             label="Nome"
             value={formData.name}
             onChange={(e) => handleChange("name", e.target.value)}
+            error={!!errors.name}
+            helperText={errors.name}
             fullWidth
+            required
           />
         </Box>
       );
     }
 
-    return (
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        <Typography variant="subtitle2">CondominiumId: {formData.condominiumId || "-"}</Typography>
-        <Typography variant="subtitle2">Codigo: {formData.code || "-"}</Typography>
-        <Typography variant="subtitle2">Nome: {formData.name || "-"}</Typography>
-      </Box>
-    );
+    return null;
   };
 
   return (
-    <StepWizardCard
-      title={editingId ? "Editar bloco" : "Criar bloco"}
-      subtitle={steps[activeStep]}
-      steps={steps}
-      activeStep={activeStep}
-      showBack={activeStep > 0 && activeStep < steps.length}
-      onBack={() => setActiveStep((prev) => prev - 1)}
-      onClose={onClose}
-    >
-      {renderStepContent()}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 3 }}>
-        {activeStep === steps.length - 1 ? (
-          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-            {loading ? <CircularProgress size={20} /> : editingId ? "Atualizar" : "Criar"}
-          </Button>
-        ) : (
-          <Button variant="contained" onClick={() => setActiveStep((prev) => prev + 1)}>
-            Proximo
-          </Button>
+    <Box className="bloco-container">
+      <StepWizardCard
+        title={editingId ? "Editar Bloco" : "Criar Bloco"}
+        subtitle={steps[activeStep]}
+        steps={steps}
+        activeStep={activeStep}
+        showBack={false}
+        onClose={onClose}
+      >
+        {renderStepContent()}
+        
+        {Object.keys(errors).length > 0 && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            Por favor, corrija os erros acima antes de continuar.
+          </Alert>
         )}
-      </Box>
-    </StepWizardCard>
+
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 3 }}>
+          <Button 
+            variant="outlined" 
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handleSubmit} 
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={20} /> : "Concluir"}
+          </Button>
+        </Box>
+      </StepWizardCard>
+    </Box>
   );
 };
 

@@ -1,0 +1,699 @@
+.bloco-container {
+  width: 100% !important;
+
+  // ============================================
+  // CONTAINER PRINCIPAL
+  // ============================================
+  & > .MuiContainer-root {
+    max-width: 1400px !important;
+    padding: 0 !important;
+
+    & > .MuiPaper-root {
+      border-radius: 20px !important;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08) !important;
+      padding: 24px !important;
+      background: white !important;
+      border: 1px solid rgba(0, 0, 0, 0.04) !important;
+
+      @media (max-width: 960px) {
+        padding: 20px !important;
+      }
+
+      @media (max-width: 600px) {
+        padding: 16px !important;
+      }
+    }
+  }
+
+  // ============================================
+  // HEADER
+  // ============================================
+  .MuiContainer-root > .MuiPaper-root > .MuiBox-root:first-child {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 16px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 2px solid #f0f0f0 !important;
+
+    & > .MuiBox-root:first-child {
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+
+      .MuiSvgIcon-root {
+        font-size: 36px !important;
+        color: #1976d2 !important;
+      }
+
+      .MuiTypography-h5 {
+        font-size: 26px !important;
+        font-weight: 700 !important;
+        color: #1a1a2e !important;
+        letter-spacing: -0.5px !important;
+        line-height: 1.2 !important;
+        margin: 0 !important;
+
+        @media (max-width: 600px) {
+          font-size: 22px !important;
+        }
+      }
+    }
+
+    @media (max-width: 600px) {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 12px !important;
+    }
+  }
+
+  // ============================================
+  // BOTÃO FECHAR - CINZA COM HOVER VERMELHO
+  // ============================================
+  .close-button,
+  .MuiIconButton-root[aria-label="Fechar"],
+  .MuiIconButton-root:has(.MuiSvgIcon-root[data-testid="CloseIcon"]),
+  .MuiBox-root:first-child > .MuiIconButton-root:last-child {
+    width: 40px !important;
+    height: 40px !important;
+    background: white !important;
+    border: 2px solid #e0e4e8 !important;
+    border-radius: 10px !important;
+    color: #666 !important;
+    transition: all 0.2s ease !important;
+
+    &:hover {
+      background: white !important;
+      border-color: #ef4444 !important;
+      color: #ef4444 !important;
+    }
+
+    .MuiSvgIcon-root {
+      font-size: 20px !important;
+      color: inherit !important;
+    }
+  }
+
+  // ============================================
+  // LISTAGEM
+  // ============================================
+  .MuiContainer-root > .MuiPaper-root > .MuiPaper-root {
+    border-radius: 16px !important;
+    border: 2px solid #f0f2f5 !important;
+    box-shadow: none !important;
+    padding: 20px !important;
+    background: #fafbfc !important;
+
+    @media (max-width: 600px) {
+      padding: 16px !important;
+    }
+  }
+
+  // ============================================
+  // BUSCA E NOVO
+  // ============================================
+  .MuiBox-root:has(> .MuiTextField-root[placeholder*="Buscar"]) {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin-bottom: 16px !important;
+    flex-wrap: wrap !important;
+
+    .MuiTextField-root {
+      flex: 1 !important;
+      min-width: 260px !important;
+
+      .MuiOutlinedInput-root {
+        background: white !important;
+        border-radius: 10px !important;
+        height: 40px !important;
+
+        .MuiOutlinedInput-notchedOutline {
+          border-color: #e0e4e8 !important;
+          border-width: 2px !important;
+        }
+
+        &:hover .MuiOutlinedInput-notchedOutline {
+          border-color: #1976d2 !important;
+        }
+
+        &.Mui-focused {
+          box-shadow: 0 3px 10px rgba(25, 118, 210, 0.15) !important;
+
+          .MuiOutlinedInput-notchedOutline {
+            border-color: #1976d2 !important;
+          }
+        }
+
+        input {
+          padding: 10px 14px !important;
+          font-size: 14px !important;
+          color: #1a1a2e !important;
+
+          &::placeholder {
+            color: #999 !important;
+          }
+        }
+      }
+    }
+
+    .MuiButton-root:last-child,
+    .MuiFab-root {
+      width: 40px !important;
+      height: 40px !important;
+      min-width: 40px !important;
+      border-radius: 10px !important;
+      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+      color: white !important;
+      box-shadow: 0 3px 12px rgba(25, 118, 210, 0.3) !important;
+      padding: 0 !important;
+
+      &:hover {
+        background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
+        box-shadow: 0 5px 16px rgba(25, 118, 210, 0.4) !important;
+      }
+
+      .MuiSvgIcon-root {
+        font-size: 22px !important;
+      }
+    }
+  }
+
+  // ============================================
+  // CARDS
+  // ============================================
+  .MuiBox-root:has(> .MuiCard-root) {
+    margin-bottom: 12px !important;
+
+    &:last-of-type {
+      margin-bottom: 0 !important;
+    }
+  }
+
+  .MuiCard-root {
+    background: white !important;
+    border-radius: 14px !important;
+    border: 2px solid #f0f2f5 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    min-height: 110px !important;
+
+    &::before {
+      content: '' !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      width: 0 !important;
+      background: linear-gradient(180deg, #1976d2 0%, #1565c0 100%) !important;
+      border-radius: 14px 0 0 14px !important;
+      transition: width 0.3s ease !important;
+    }
+
+    &:hover {
+      border-color: rgba(25, 118, 210, 0.3) !important;
+      box-shadow: 0 6px 20px rgba(25, 118, 210, 0.12) !important;
+
+      &::before {
+        width: 5px !important;
+      }
+    }
+
+    .MuiCardContent-root {
+      padding: 14px !important;
+      display: flex !important;
+      gap: 14px !important;
+      align-items: center !important;
+
+      @media (max-width: 768px) {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+      }
+
+      & > div:first-child {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+
+        .MuiTypography-root:first-child {
+          font-size: 16px !important;
+          font-weight: 700 !important;
+          color: #1a1a2e !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 8px !important;
+
+          .MuiSvgIcon-root {
+            font-size: 20px !important;
+            color: #1976d2 !important;
+          }
+        }
+
+        .MuiTypography-root:nth-child(2) {
+          font-size: 12px !important;
+          color: #666 !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 3px !important;
+
+          .MuiSvgIcon-root {
+            font-size: 14px !important;
+            color: #1976d2 !important;
+          }
+        }
+      }
+
+      & > div:last-child {
+        display: flex !important;
+        gap: 8px !important;
+        flex-shrink: 0 !important;
+
+        @media (max-width: 768px) {
+          width: 100% !important;
+        }
+      }
+    }
+  }
+
+  // ============================================
+  // BOTÕES EDITAR E EXCLUIR
+  // ============================================
+  .action-button-edit {
+    min-width: 80px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    background: white !important;
+    color: #10b981 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    text-transform: none !important;
+    padding: 0 12px !important;
+    border: 2px solid #10b981 !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15) !important;
+    transition: all 0.2s ease !important;
+
+    @media (max-width: 768px) {
+      flex: 1 !important;
+    }
+
+    .MuiSvgIcon-root {
+      color: #10b981 !important;
+      font-size: 16px !important;
+    }
+
+    &:hover {
+      background: rgba(16, 185, 129, 0.1) !important;
+      border-color: #059669 !important;
+      color: #059669 !important;
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25) !important;
+
+      .MuiSvgIcon-root {
+        color: #059669 !important;
+      }
+    }
+  }
+
+  .action-button-delete {
+    min-width: 80px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    background: white !important;
+    color: #ef4444 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    text-transform: none !important;
+    padding: 0 12px !important;
+    border: 2px solid #ef4444 !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15) !important;
+    transition: all 0.2s ease !important;
+
+    @media (max-width: 768px) {
+      flex: 1 !important;
+    }
+
+    .MuiSvgIcon-root {
+      color: #ef4444 !important;
+      font-size: 16px !important;
+    }
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1) !important;
+      border-color: #dc2626 !important;
+      color: #dc2626 !important;
+      box-shadow: 0 3px 10px rgba(239, 68, 68, 0.25) !important;
+
+      .MuiSvgIcon-root {
+        color: #dc2626 !important;
+      }
+    }
+  }
+
+  // ============================================
+  // BOTÃO GERENCIAR BLOCOS - ÍCONE
+  // ============================================
+  .action-button-manage {
+    min-width: 40px !important;
+    width: 40px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    background: white !important;
+    color: #1976d2 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    text-transform: none !important;
+    padding: 0 !important;
+    border: 2px solid #1976d2 !important;
+    box-shadow: 0 2px 6px rgba(25, 118, 210, 0.15) !important;
+    transition: all 0.2s ease !important;
+
+    .MuiSvgIcon-root {
+      color: #1976d2 !important;
+      font-size: 18px !important;
+    }
+
+    &:hover {
+      background: rgba(25, 118, 210, 0.1) !important;
+      border-color: #1565c0 !important;
+      color: #1565c0 !important;
+      box-shadow: 0 3px 10px rgba(25, 118, 210, 0.25) !important;
+
+      .MuiSvgIcon-root {
+        color: #1565c0 !important;
+      }
+    }
+  }
+
+  // ============================================
+  // PAGINAÇÃO
+  // ============================================
+  .MuiPagination-root {
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: 16px !important;
+    padding-top: 16px !important;
+    border-top: 2px solid #f0f2f5 !important;
+
+    .MuiPaginationItem-root {
+      min-width: 36px !important;
+      height: 36px !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      font-size: 13px !important;
+
+      &.Mui-selected {
+        background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+        color: white !important;
+        box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3) !important;
+      }
+
+      &:not(.Mui-selected) {
+        color: #666 !important;
+        background: white !important;
+        border: 2px solid #e0e4e8 !important;
+
+        &:hover {
+          background: rgba(25, 118, 210, 0.05) !important;
+          border-color: #1976d2 !important;
+          color: #1976d2 !important;
+        }
+      }
+    }
+  }
+
+  // ============================================
+  // ALERTS
+  // ============================================
+  .MuiCircularProgress-root {
+    color: #1976d2 !important;
+  }
+
+  .MuiAlert-root {
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 8px 16px !important;
+
+    &.MuiAlert-standardError {
+      background: rgba(239, 68, 68, 0.08) !important;
+      color: #dc2626 !important;
+      border: 2px solid rgba(239, 68, 68, 0.2) !important;
+    }
+
+    &.MuiAlert-standardSuccess {
+      background: rgba(16, 185, 129, 0.08) !important;
+      color: #059669 !important;
+      border: 2px solid rgba(16, 185, 129, 0.2) !important;
+    }
+
+    &.MuiAlert-standardInfo {
+      background: rgba(25, 118, 210, 0.08) !important;
+      color: #1976d2 !important;
+      border: 2px solid rgba(25, 118, 210, 0.2) !important;
+    }
+
+    &.MuiAlert-standardWarning {
+      background: rgba(255, 152, 0, 0.08) !important;
+      color: #e65100 !important;
+      border: 2px solid rgba(255, 152, 0, 0.2) !important;
+    }
+  }
+
+  // ============================================
+  // STEPPER - LABELS EM NEGRITO
+  // ============================================
+  .MuiStepper-root {
+    background: transparent !important;
+    padding: 16px 0 !important;
+    margin-bottom: 12px !important;
+
+    .MuiStepLabel-label {
+      font-weight: 700 !important;
+      font-size: 13px !important;
+      color: #999 !important;
+
+      &.Mui-active {
+        color: #1976d2 !important;
+        font-weight: 700 !important;
+      }
+
+      &.Mui-completed {
+        color: #10b981 !important;
+        font-weight: 700 !important;
+      }
+    }
+
+    .MuiStepIcon-root {
+      font-size: 26px !important;
+
+      &.Mui-active {
+        color: #1976d2 !important;
+      }
+
+      &.Mui-completed {
+        color: #10b981 !important;
+      }
+
+      &:not(.Mui-active):not(.Mui-completed) {
+        color: #e0e4e8 !important;
+      }
+    }
+
+    .MuiStepConnector-line {
+      border-color: #e0e4e8 !important;
+      border-width: 2px !important;
+    }
+
+    .MuiStepConnector-root.Mui-active .MuiStepConnector-line,
+    .MuiStepConnector-root.Mui-completed .MuiStepConnector-line {
+      border-color: #1976d2 !important;
+    }
+  }
+
+  // ============================================
+  // INPUTS
+  // ============================================
+  .bloco-form .MuiTextField-root {
+    margin-bottom: 0 !important;
+
+    .MuiOutlinedInput-root {
+      border-radius: 10px !important;
+      background: white !important;
+
+      .MuiOutlinedInput-notchedOutline {
+        border-color: #e0e4e8 !important;
+        border-width: 2px !important;
+      }
+
+      &:hover .MuiOutlinedInput-notchedOutline {
+        border-color: #1976d2 !important;
+      }
+
+      &.Mui-focused {
+        box-shadow: 0 3px 10px rgba(25, 118, 210, 0.15) !important;
+
+        .MuiOutlinedInput-notchedOutline {
+          border-color: #1976d2 !important;
+        }
+      }
+
+      &.Mui-error .MuiOutlinedInput-notchedOutline {
+        border-color: #ef4444 !important;
+      }
+
+      input,
+      textarea {
+        padding: 12px 14px !important;
+        font-size: 14px !important;
+        color: #1a1a2e !important;
+      }
+
+      &.MuiInputBase-sizeSmall input,
+      &.MuiInputBase-sizeSmall textarea {
+        padding: 10px 14px !important;
+      }
+    }
+
+    .MuiInputLabel-root {
+      font-weight: 500 !important;
+      font-size: 14px !important;
+      color: #666 !important;
+
+      &.MuiInputLabel-sizeSmall {
+        transform: translate(14px, 11px) scale(1) !important;
+
+        &.MuiInputLabel-shrink {
+          transform: translate(14px, -6px) scale(0.75) !important;
+        }
+      }
+
+      &.MuiInputLabel-shrink {
+        background: white !important;
+        padding: 0 6px !important;
+      }
+
+      &.Mui-focused {
+        font-weight: 600 !important;
+        color: #1976d2 !important;
+      }
+
+      &.Mui-error {
+        color: #ef4444 !important;
+      }
+    }
+
+    .MuiFormHelperText-root {
+      font-size: 11px !important;
+      margin-top: 4px !important;
+      margin-left: 4px !important;
+
+      &.Mui-error {
+        color: #ef4444 !important;
+        font-weight: 500 !important;
+      }
+    }
+  }
+
+  // ============================================
+  // BOTÕES DO FORMULÁRIO - PADRÃO LOGIN
+  // ============================================
+  .MuiButton-contained,
+  .MuiButton-containedPrimary,
+  button.MuiButton-contained,
+  button.MuiButton-containedPrimary,
+  .MuiButton-root.MuiButton-contained,
+  .MuiButton-root.MuiButton-containedPrimary,
+  .bloco-container .MuiButton-contained,
+  .bloco-container .MuiButton-containedPrimary {
+    background: #0067b8 !important;
+    color: white !important;
+    border: none !important;
+    padding: 14px 40px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    min-width: 140px !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(0, 103, 184, 0.2) !important;
+    text-transform: none !important;
+    height: auto !important;
+    line-height: normal !important;
+
+    &:hover {
+      background: #005a9e !important;
+      box-shadow: 0 4px 12px rgba(0, 103, 184, 0.3) !important;
+    }
+
+    &:active {
+      transform: scale(0.98) !important;
+    }
+
+    &:disabled {
+      background: #c0c0c0 !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+      opacity: 0.6 !important;
+    }
+  }
+
+  // ============================================
+  // BOTÃO VOLTAR - PADRÃO
+  // ============================================
+  .MuiButton-outlined,
+  button.MuiButton-outlined,
+  .MuiButton-root.MuiButton-outlined {
+    background: white !important;
+    color: #666 !important;
+    border: 2px solid #e0e4e8 !important;
+    padding: 14px 40px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    min-width: 140px !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease !important;
+    text-transform: none !important;
+    height: auto !important;
+    line-height: normal !important;
+
+    &:hover {
+      background: rgba(25, 118, 210, 0.05) !important;
+      border-color: #1976d2 !important;
+      color: #1976d2 !important;
+    }
+
+    &:active {
+      transform: scale(0.98) !important;
+    }
+  }
+
+  // ============================================
+  // SUBTÍTULOS - NEGRITO
+  // ============================================
+  .MuiTypography-subtitle2 {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #1976d2 !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    padding-bottom: 6px !important;
+    border-bottom: 2px solid rgba(25, 118, 210, 0.15) !important;
+  }
+
+  // ============================================
+  // SEM SCROLL
+  // ============================================
+  .bloco-form {
+    margin-top: 0 !important;
+    padding: 8px 6px !important;
+  }
+
+  * {
+    &::-webkit-scrollbar {
+      display: none !important;
+    }
+    
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+}
