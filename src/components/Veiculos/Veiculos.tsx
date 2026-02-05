@@ -40,7 +40,8 @@ const Veiculos: React.FC = () => {
   const [veiculos, setVeiculos] = useState<Veiculo[]>(initialVeiculos);
   const [searchTerm, setSearchTerm] = useState('');
   const [openForm, setOpenForm] = useState(false);
-  const [selectedVeiculo, setSelectedVeiculo] = useState<Veiculo | null>(null);
+  //TODO - Implementar editar veiculo
+  //const [selectedVeiculo, setSelectedVeiculo] = useState<Veiculo | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuVeiculo, setMenuVeiculo] = useState<Veiculo | null>(null);
   const [page, setPage] = useState(0);
@@ -52,17 +53,19 @@ const Veiculos: React.FC = () => {
   });
 
   const handleOpenForm = (veiculo?: Veiculo) => {
-    setSelectedVeiculo(veiculo || null);
+    return veiculo;
+    //TODO - Implementar editar veiculo
+/*     setSelectedVeiculo(veiculo || null);
     setOpenForm(true);
-    handleCloseMenu();
+    handleCloseMenu(); */
   };
 
   const handleCloseForm = () => {
     setOpenForm(false);
-    setSelectedVeiculo(null);
+   // setSelectedVeiculo(null);
   };
-
-  const handleSaveVeiculo = (veiculoData: Omit<Veiculo, 'id'>) => {
+//TODO - Implementar salvar veiculo
+/*   const handleSaveVeiculo = (veiculoData: Omit<Veiculo, 'id'>) => {
     try {
       if (selectedVeiculo) {
         setVeiculos(veiculos.map(v => 
@@ -90,7 +93,7 @@ const Veiculos: React.FC = () => {
         severity: 'error'
       });
     }
-  };
+  }; */
 
   const handleDeleteVeiculo = (veiculo: Veiculo) => {
     if (window.confirm(`Deseja realmente excluir o veículo ${veiculo.modelo} - ${veiculo.placa}?`)) {
@@ -342,8 +345,8 @@ const Veiculos: React.FC = () => {
       <VeiculoForm
         open={openForm}
         onClose={handleCloseForm}
-        onSave={handleSaveVeiculo}
-        veiculo={selectedVeiculo}
+        onSave={()=>{}}
+        veiculo={null}
       />
 
       <Snackbar

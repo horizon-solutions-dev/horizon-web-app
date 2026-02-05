@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient } from './apiClient';
 
 export interface CondominiumRequest {
@@ -19,6 +20,7 @@ export interface CondominiumRequest {
   hasGasByBlock: boolean;
   allocationType: 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string | number;
   allocationValuePerc: number;
+  commit: boolean;
 }
 
 export interface Condominium extends CondominiumRequest {
@@ -50,10 +52,28 @@ class CondominiumService {
   private baseUrl = 'https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/condominiums';
 
   async createCondominium(condominium: CondominiumRequest) {
+    const data = await apiClient.post<{ condominiumId: string }>(this.baseUrl, condominium);
+    console.log('Condominium created with ID:', data);
+    return data;
+  }
+
+  async validateCondominium(condominium: CondominiumRequest) {
+    const token = localStorage.getItem('token');
     try {
-      return await apiClient.post<{ condominiumId: string }>(this.baseUrl, condominium);
+      await axios.post(this.baseUrl, condominium, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
     } catch (error) {
-      console.error('Erro ao criar condomÃ­nio:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
       throw error;
     }
   }
@@ -82,7 +102,7 @@ class CondominiumService {
 
       return response;
     } catch (error) {
-      console.error('Erro ao buscar condomÃ­nios:', error);
+      console.error('Erro ao buscar Condominios:', error);
       throw error;
     }
   }
@@ -91,7 +111,7 @@ class CondominiumService {
     try {
       return await apiClient.get<Condominium>(`${this.baseUrl}/${id}`);
     } catch (error) {
-      console.error('Erro ao buscar condomÃ­nio:', error);
+      console.error('Erro ao buscar Condominio:', error);
       throw error;
     }
   }
@@ -100,7 +120,7 @@ class CondominiumService {
     try {
       return await apiClient.put<{ condominiumId: string }>(`${this.baseUrl}/${id}`, condominium);
     } catch (error) {
-      console.error('Erro ao atualizar condomÃ­nio:', error);
+      console.error('Erro ao atualizar Condominio:', error);
       throw error;
     }
   }
@@ -109,7 +129,7 @@ class CondominiumService {
     try {
       return await apiClient.get<CondominiumTypeEnum[]>(`${this.baseUrl}/types`);
     } catch (error) {
-      console.error('Erro ao buscar tipos de condomÃ­nio:', error);
+      console.error('Erro ao buscar tipos de Condominio:', error);
       throw error;
     }
   }

@@ -30,11 +30,17 @@ class BlockService {
         ...(pageNumber !== undefined && { PageNumber: pageNumber.toString() }),
         ...(pageSize !== undefined && { PageSize: pageSize.toString() }),
       });
-
-      return await apiClient.get<CondominiumBlock[]>(`${this.baseUrl}?${params}`);
+      const result = await apiClient.get<CondominiumBlock[]>(`${this.baseUrl}?${params}`);
+      return {
+        data: result,
+        success: true,
+      }
     } catch (error) {
       console.error('Erro ao buscar blocos:', error);
-      throw error;
+      return{
+        data: [] as CondominiumBlock[],
+        success: false,
+      }
     }
   }
 

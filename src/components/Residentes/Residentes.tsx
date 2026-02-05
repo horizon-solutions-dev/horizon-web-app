@@ -1,304 +1,516 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
   Paper,
   Typography,
-  TextField,
   Button,
+  TextField,
   Snackbar,
   Alert,
   CircularProgress,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
   MenuItem,
-  FormControlLabel,
-  Checkbox,
-  Stepper,
-  Step,
-  StepLabel,
-} from '@mui/material';
+  IconButton,
+} from "@mui/material";
+import { PeopleOutlined, ArrowBack } from "@mui/icons-material";
 import {
   unitResidentService,
   type CondominiumUnitResident,
-  type CondominiumUnitResidentRequest,
-} from '../../services/unitResidentService';
+} from "../../services/unitResidentService";
+import {
+  unitService,
+  type CondominiumUnit,
+} from "../../services/unitService";
+import { blockService, type CondominiumBlock } from "../../services/blockService";
+import { condominiumService, type Condominium } from "../../services/condominiumService";
+import { organizationService } from "../../services/organizationService";
+import CardList from "../../shared/components/CardList";
+import ResidenteForm from "./ResidenteForm";
 
-const initialForm: CondominiumUnitResidentRequest = {
-  condominiumUnitId: '',
-  userId: '',
-  unitType: 'Owner',
-  startDate: '',
-  endDate: '',
-  billingContact: false,
-  canVote: false,
-  canMakeReservations: false,
-  hasGatehouseAccess: false,
-};
+const pageSize = 4;
 
 const Residentes: React.FC = () => {
-  const [formData, setFormData] = useState<CondominiumUnitResidentRequest>(initialForm);
-  const [unitIdQuery, setUnitIdQuery] = useState('');
+  const [activeView, setActiveView] = useState<"condominios" | "unidades" | "residentes">(
+    "condominios",
+  );
+  const [condominiums, setCondominiums] = useState<Condominium[]>([]);
+  const [organizationName, setOrganizationName] = useState("");
+  const [condoLoading, setCondoLoading] = useState(false);
+  const [condoError, setCondoError] = useState<string | null>(null);
+  const [condoSearchText, setCondoSearchText] = useState("");
+  const [condoPage, setCondoPage] = useState(1);
+  const [condoTotalPages, setCondoTotalPages] = useState(1);
+
+  const [selectedCondominium, setSelectedCondominium] = useState<Condominium | null>(
+    null,
+  );
+  const [units, setUnits] = useState<CondominiumUnit[]>([]);
+  const [blocks, setBlocks] = useState<{ data: CondominiumBlock[]; success: boolean }>(
+    { data: [], success: false },
+  );
+  const [selectedBlockId, setSelectedBlockId] = useState("");
+  const [unitSearchText, setUnitSearchText] = useState("");
+  const [unitsLoading, setUnitsLoading] = useState(false);
+  const [unitsError, setUnitsError] = useState<string | null>(null);
+  const [unitsPage, setUnitsPage] = useState(1);
+  const [unitsTotalPages, setUnitsTotalPages] = useState(1);
+
+  const [selectedUnit, setSelectedUnit] = useState<CondominiumUnit | null>(null);
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
+  const [residentsLoading, setResidentsLoading] = useState(false);
+  const [residentsError, setResidentsError] = useState<string | null>(null);
+  const [residentSearchText, setResidentSearchText] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [listLoading, setListLoading] = useState(false);
-  const [listError, setListError] = useState<string | null>(null);
-  const [activeStep, setActiveStep] = useState(0);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error',
+    message: "",
+    severity: "success" as "success" | "error" | "info" | "warning",
   });
-  const steps = ['Dados do residente', 'Periodo', 'Permissoes'];
 
-  const handleChange = (field: keyof CondominiumUnitResidentRequest, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleNotify = (
+    message: string,
+    severity: "success" | "error" | "info" | "warning" = "success",
+  ) => {
+    setSnackbar({ open: true, message, severity });
   };
 
-  const loadResidents = async () => {
-    if (!unitIdQuery.trim()) {
-      setListError('Informe o CondominiumUnitId para carregar os residentes.');
-      return;
-    }
-
-    setListLoading(true);
-    setListError(null);
+  const loadCondominiums = async (pageNumber = 1) => {
+    setCondoLoading(true);
+    setCondoError(null);
     try {
-      const data = await unitResidentService.getResidents(unitIdQuery.trim());
-      setResidents(data ?? []);
+      let organizationId = localStorage.getItem("organizationId") || "";
+      if (!organizationId) {
+        organizationId = (await organizationService.getMyOrganizationId()) || "";
+        localStorage.setItem("organizationId", organizationId);
+      }
+
+      const response = await condominiumService.getCondominiums(
+        organizationId,
+        pageNumber,
+        pageSize,
+      );
+      if (!organizationName) {
+        try {
+          const organizations = await organizationService.getMyOrganization();
+          const orgName = organizations?.[0]?.name || organizations?.[0]?.legalName;
+          if (orgName) setOrganizationName(orgName);
+        } catch {
+          // ignore organization name errors
+        }
+      }
+      const normalized = response?.data ?? [];
+      const computedTotalPages =
+        response?.totalPages ??
+        Math.max(1, Math.ceil((response?.total ?? normalized.length) / pageSize));
+      setCondoPage(response?.pageNumber ?? pageNumber);
+      setCondoTotalPages(computedTotalPages);
+      setCondominiums(normalized);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao carregar residentes.';
-      setListError(message);
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar condominios.";
+      setCondoError(message);
     } finally {
-      setListLoading(false);
+      setCondoLoading(false);
     }
   };
 
-  const handleSubmit = async () => {
-    if (!formData.condominiumUnitId || !formData.userId) {
-      setSnackbar({
-        open: true,
-        message: 'Preencha CondominiumUnitId e UserId.',
-        severity: 'error',
-      });
-      return;
-    }
-
-    setLoading(true);
+  const loadBlocks = async (condominiumId: string) => {
     try {
-      await unitResidentService.createResident(formData);
-      setSnackbar({
-        open: true,
-        message: 'Residente criado com sucesso.',
-        severity: 'success',
-      });
-      setFormData(initialForm);
-      setActiveStep(0);
-      if (unitIdQuery.trim()) {
-        await loadResidents();
+      const data = await blockService.getBlocks(condominiumId);
+      if (data.success) {
+        setBlocks(data);
+      } else {
+        setBlocks({ data: [], success: false });
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao criar residente.';
-      setSnackbar({
-        open: true,
-        message,
-        severity: 'error',
-      });
-    } finally {
-      setLoading(false);
+      console.error("Erro ao carregar blocos:", error);
+      setBlocks({ data: [], success: false });
     }
   };
+
+  const loadUnits = async (
+    blockIdOverride?: string,
+    pageNumber = 1,
+    condominiumIdOverride?: string,
+  ) => {
+    const condominiumId = condominiumIdOverride ?? selectedCondominium?.condominiumId;
+    if (!condominiumId) {
+      setUnitsError("Selecione um condominio para carregar as unidades.");
+      return;
+    }
+
+    const blockId = blockIdOverride !== undefined ? blockIdOverride : selectedBlockId;
+    setUnitsLoading(true);
+    setUnitsError(null);
+    try {
+      const data = blockId
+        ? await unitService.getUnitsByBlock(blockId, pageNumber, pageSize)
+        : await unitService.getUnitsByCondominium(condominiumId, pageNumber, pageSize);
+      const normalized = data?.data ?? [];
+      const computedTotalPages =
+        data?.totalPages ?? Math.max(1, Math.ceil((data?.total ?? normalized.length) / pageSize));
+      setUnitsPage(data?.pageNumber ?? pageNumber);
+      setUnitsTotalPages(computedTotalPages);
+      setUnits(normalized);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar unidades.";
+      setUnitsError(message);
+    } finally {
+      setUnitsLoading(false);
+    }
+  };
+
+  const loadResidents = async (pageNumber = 1, unitIdOverride?: string) => {
+    const unitId = unitIdOverride ?? selectedUnit?.condominiumUnitId;
+    if (!unitId) {
+      setResidentsError("Selecione uma unidade para carregar os residentes.");
+      return;
+    }
+
+    setResidentsLoading(true);
+    setResidentsError(null);
+    try {
+      const data = await unitResidentService.getResidents(
+        unitId,
+        pageNumber,
+        pageSize,
+      );
+      setResidents(data ?? []);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar residentes.";
+      setResidentsError(message);
+    } finally {
+      setResidentsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCondominiums(1);
+  }, []);
+
+  const handleSelectCondominium = async (condominium: Condominium) => {
+    setSelectedCondominium(condominium);
+    setSelectedBlockId("");
+    setSelectedUnit(null);
+    setResidents([]);
+    setResidentSearchText("");
+    setUnits([]);
+    setUnitSearchText("");
+    setUnitsPage(1);
+    setUnitsTotalPages(1);
+    setUnitsError(null);
+    setResidentsError(null);
+    setActiveView("unidades");
+    await loadBlocks(condominium.condominiumId);
+    await loadUnits("", 1, condominium.condominiumId);
+  };
+
+  const handleSelectUnit = async (unit: CondominiumUnit) => {
+    setSelectedUnit(unit);
+    setResidentSearchText("");
+    setResidents([]);
+    setResidentsError(null);
+    setActiveView("residentes");
+    await loadResidents(1, unit.condominiumUnitId);
+  };
+
+  const handleOpenCreate = () => {
+    setIsFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+  };
+
+  const handleSaved = async () => {
+    await loadResidents(1);
+  };
+
+  const getUnitTypeLabel = (value?: string) => {
+    if (!value) return "-";
+    if (value === "1" || value === "Owner") return "Proprietario";
+    if (value === "2" || value === "Tenant") return "Inquilino";
+    return value;
+  };
+
+  const getResidentPermissions = (resident: CondominiumUnitResident) => {
+    const labels = [
+      resident.billingContact ? "Cobranca" : null,
+      resident.canVote ? "Voto" : null,
+      resident.canMakeReservations ? "Reservas" : null,
+      resident.hasGatehouseAccess ? "Portaria" : null,
+    ].filter(Boolean);
+    return labels.length > 0 ? `Permissoes: ${labels.join(" • ")}` : "Sem permissoes";
+  };
+
+  const selectedBlockName =
+    blocks.data.find((block) => block.condominiumBlockId === selectedUnit?.condominiumBlockId)
+      ?.name || "";
 
   return (
     <Box className="page-container" sx={{ py: 4 }}>
       <Container maxWidth="lg">
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h4" sx={{ mb: 2 }}>
-            Residentes
-          </Typography>
+        {activeView === "condominios" ? (
+          <Paper elevation={3} sx={{ p: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+              <PeopleOutlined sx={{ fontSize: 32, color: "#1976d2" }} />
+              <Typography variant="h4">{organizationName || "Residentes"}</Typography>
+            </Box>
 
-          <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-            <TextField
-              label="CondominiumUnitId (consulta)"
-              value={unitIdQuery}
-              onChange={(e) => setUnitIdQuery(e.target.value)}
-              fullWidth
-            />
-            <Button variant="outlined" onClick={loadResidents} disabled={listLoading}>
-              {listLoading ? <CircularProgress size={20} /> : 'Carregar residentes'}
-            </Button>
-          </Box>
-
-          {listError ? (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {listError}
-            </Alert>
-          ) : null}
-
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Id</TableCell>
-                <TableCell>UserId</TableCell>
-                <TableCell>Tipo</TableCell>
-                <TableCell>Inicio</TableCell>
-                <TableCell>Fim</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {residents.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5}>Nenhum residente carregado.</TableCell>
-                </TableRow>
-              ) : (
-                residents.map((resident) => (
-                  <TableRow key={resident.condominiumUnitResidentId}>
-                    <TableCell>{resident.condominiumUnitResidentId}</TableCell>
-                    <TableCell>{resident.userId}</TableCell>
-                    <TableCell>{resident.unitType}</TableCell>
-                    <TableCell>{resident.startDate || '-'}</TableCell>
-                    <TableCell>{resident.endDate || '-'}</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </Paper>
-
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Novo residente
-          </Typography>
-          <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
-          {activeStep === 0 ? (
-            <Box sx={{ display: 'grid', gap: 2 }}>
-              <TextField
-                label="CondominiumUnitId"
-                value={formData.condominiumUnitId}
-                onChange={(e) => handleChange('condominiumUnitId', e.target.value)}
-                fullWidth
+            {condoLoading ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <CircularProgress size={20} />
+                <Typography variant="body2">Carregando...</Typography>
+              </Box>
+            ) : condoError ? (
+              <Alert severity="error">{condoError}</Alert>
+            ) : (
+              <CardList
+                title="Condominios da organizacao"
+                showTitle={false}
+                searchPlaceholder="Buscar condominio..."
+                onSearchChange={setCondoSearchText}
+                onAddClick={undefined}
+                addButtonPlacement="toolbar"
+                emptyImageLabel="Sem imagem"
+                page={condoPage}
+                totalPages={condoTotalPages}
+                onPageChange={(page) => {
+                  setCondoPage(page);
+                  loadCondominiums(page);
+                }}
+                items={condominiums
+                  .filter((condominium) =>
+                    [condominium.name, condominium.city, condominium.state]
+                      .filter(Boolean)
+                      .join(" ")
+                      .toLowerCase()
+                      .includes(condoSearchText.toLowerCase()),
+                  )
+                  .map((condominium, index) => ({
+                    id: condominium.condominiumId,
+                    title: condominium.name,
+                    subtitle: (
+                      <Typography variant="body2" color="text.secondary">
+                        {condominium.city} - {condominium.state}
+                      </Typography>
+                    ),
+                    accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                    actions: (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleSelectCondominium(condominium)}
+                      >
+                        Ver unidades
+                      </Button>
+                    ),
+                  }))}
               />
+            )}
+          </Paper>
+        ) : activeView === "unidades" ? (
+          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+              <IconButton
+                onClick={() => {
+                  setActiveView("condominios");
+                  setSelectedCondominium(null);
+                  setUnits([]);
+                  setBlocks({ data: [], success: false });
+                  setSelectedBlockId("");
+                  setSelectedUnit(null);
+                  setResidents([]);
+                  setUnitsError(null);
+                  setResidentsError(null);
+                }}
+              >
+                <ArrowBack />
+              </IconButton>
+              <Box>
+                <Typography variant="h5">Unidades</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {selectedCondominium?.name || "Condominio selecionado"}
+                </Typography>
+              </Box>
+            </Box>
+
+            {unitsLoading ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <CircularProgress size={20} />
+                <Typography variant="body2">Carregando...</Typography>
+              </Box>
+            ) : unitsError ? (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {unitsError}
+              </Alert>
+            ) : null}
+
+            <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
               <TextField
-                label="UserId"
-                value={formData.userId}
-                onChange={(e) => handleChange('userId', e.target.value)}
-                fullWidth
-              />
-              <TextField
-                label="Tipo da Unidade"
+                label="Filtrar por bloco"
                 select
-                value={formData.unitType || ''}
-                onChange={(e) => handleChange('unitType', e.target.value)}
+                value={selectedBlockId}
+                onChange={async (e) => {
+                  const value = e.target.value;
+                  setSelectedBlockId(value);
+                  setUnitSearchText("");
+                  setUnitsPage(1);
+                  await loadUnits(value, 1);
+                }}
                 fullWidth
               >
-                <MenuItem value="Owner">Proprietario</MenuItem>
-                <MenuItem value="Tenant">Inquilino</MenuItem>
+                <MenuItem value="">Todos os blocos</MenuItem>
+                {blocks.data.map((block) => (
+                  <MenuItem key={block.condominiumBlockId} value={block.condominiumBlockId}>
+                    {block.name || block.code || block.condominiumBlockId}
+                  </MenuItem>
+                ))}
               </TextField>
             </Box>
-          ) : null}
 
-          {activeStep === 1 ? (
-            <Box sx={{ display: 'grid', gap: 2 }}>
-              <TextField
-                label="Inicio"
-                type="datetime-local"
-                InputLabelProps={{ shrink: true }}
-                value={formData.startDate || ''}
-                onChange={(e) => handleChange('startDate', e.target.value)}
-                fullWidth
+            <CardList
+              title="Unidades do condominio"
+              showTitle={false}
+              showFilters={false}
+              searchPlaceholder="Buscar unidade..."
+              onSearchChange={setUnitSearchText}
+              onAddClick={undefined}
+              addButtonPlacement="toolbar"
+              emptyImageLabel="Sem imagem"
+              page={unitsPage}
+              totalPages={unitsTotalPages}
+              onPageChange={(page) => {
+                setUnitsPage(page);
+                loadUnits(selectedBlockId || undefined, page);
+              }}
+              items={units
+                .filter((unit) =>
+                  [unit.unitCode, unit.unitType, unit.condominiumBlockId]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase()
+                    .includes(unitSearchText.toLowerCase()),
+                )
+                .map((unit, index) => ({
+                  id: unit.condominiumUnitId,
+                  title: unit.unitCode || "Sem codigo",
+                  subtitle: (
+                    <Typography variant="body2" color="text.secondary">
+                      Tipo: {getUnitTypeLabel(unit.unitType?.toString())}
+                    </Typography>
+                  ),
+                  meta: (
+                    <Typography variant="caption" color="text.secondary">
+                      Bloco:{" "}
+                      {blocks.data.find((b) => b.condominiumBlockId === unit.condominiumBlockId)
+                        ?.name ||
+                        unit.condominiumBlockId ||
+                        "Bloco desconhecido"}
+                    </Typography>
+                  ),
+                  actions: (
+                    <Button size="small" variant="outlined" onClick={() => handleSelectUnit(unit)}>
+                      Ver residentes
+                    </Button>
+                  ),
+                  accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                }))}
+            />
+          </Paper>
+        ) : (
+          <>
+            {isFormOpen ? (
+              <ResidenteForm
+                open={isFormOpen}
+                onClose={handleCloseForm}
+                onSaved={handleSaved}
+                onNotify={handleNotify}
+                loading={loading}
+                setLoading={setLoading}
+                unitIdPreset={selectedUnit?.condominiumUnitId}
               />
-              <TextField
-                label="Fim"
-                type="datetime-local"
-                InputLabelProps={{ shrink: true }}
-                value={formData.endDate || ''}
-                onChange={(e) => handleChange('endDate', e.target.value)}
-                fullWidth
-              />
-            </Box>
-          ) : null}
+            ) : null}
+            {!isFormOpen ? (
+              <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                  <IconButton
+                    onClick={() => {
+                      setActiveView("unidades");
+                      setSelectedUnit(null);
+                      setResidents([]);
+                      setResidentSearchText("");
+                      setResidentsError(null);
+                    }}
+                  >
+                    <ArrowBack />
+                  </IconButton>
+                  <Box>
+                    <Typography variant="h5">Residentes</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedCondominium?.name || "Condominio"} •{" "}
+                      {selectedUnit?.unitCode || selectedUnit?.condominiumUnitId || "Unidade"}
+                      {selectedBlockName ? ` • Bloco ${selectedBlockName}` : ""}
+                    </Typography>
+                  </Box>
+                </Box>
 
-          {activeStep === 2 ? (
-            <Box sx={{ display: 'grid', gap: 2 }}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={Boolean(formData.billingContact)}
-                      onChange={(e) => handleChange('billingContact', e.target.checked)}
-                    />
-                  }
-                  label="Contato de cobranca"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={Boolean(formData.canVote)}
-                      onChange={(e) => handleChange('canVote', e.target.checked)}
-                    />
-                  }
-                  label="Pode votar"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={Boolean(formData.canMakeReservations)}
-                      onChange={(e) => handleChange('canMakeReservations', e.target.checked)}
-                    />
-                  }
-                  label="Pode reservar"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={Boolean(formData.hasGatehouseAccess)}
-                      onChange={(e) => handleChange('hasGatehouseAccess', e.target.checked)}
-                    />
-                  }
-                  label="Acesso portaria"
-                />
-              </Box>
-              <Box sx={{ display: 'grid', gap: 1 }}>
-                <Typography variant="subtitle2">
-                  Unidade: {formData.condominiumUnitId || '-'}
-                </Typography>
-                <Typography variant="subtitle2">Usuario: {formData.userId || '-'}</Typography>
-                <Typography variant="subtitle2">Tipo: {formData.unitType || '-'}</Typography>
-                <Typography variant="subtitle2">Inicio: {formData.startDate || '-'}</Typography>
-                <Typography variant="subtitle2">Fim: {formData.endDate || '-'}</Typography>
-              </Box>
-            </Box>
-          ) : null}
+                {residentsError ? (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {residentsError}
+                  </Alert>
+                ) : null}
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-            <Button
-              variant="outlined"
-              disabled={activeStep === 0 || loading}
-              onClick={() => setActiveStep((prev) => prev - 1)}
-            >
-              Voltar
-            </Button>
-            {activeStep === steps.length - 1 ? (
-              <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-                {loading ? <CircularProgress size={20} /> : 'Criar residente'}
-              </Button>
-            ) : (
-              <Button variant="contained" onClick={() => setActiveStep((prev) => prev + 1)}>
-                Proximo
-              </Button>
-            )}
-          </Box>
-        </Paper>
+                {residentsLoading ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <CircularProgress size={20} />
+                    <Typography variant="body2">Carregando...</Typography>
+                  </Box>
+                ) : (
+                  <CardList
+                    title="Residentes"
+                    showTitle={false}
+                    searchPlaceholder="Buscar residente..."
+                    onSearchChange={setResidentSearchText}
+                    onAddClick={handleOpenCreate}
+                    addLabel="Novo"
+                    addButtonPlacement="toolbar"
+                    emptyImageLabel="Sem imagem"
+                    showFilters={false}
+                    showPagination={false}
+                    items={residents
+                      .filter((resident) =>
+                        [resident.userId, resident.condominiumUnitId]
+                          .filter(Boolean)
+                          .join(" ")
+                          .toLowerCase()
+                          .includes(residentSearchText.toLowerCase()),
+                      )
+                      .map((resident, index) => ({
+                        id: resident.condominiumUnitResidentId,
+                        title: resident.userId || "Usuario",
+                        subtitle: `Unidade: ${selectedUnit?.unitCode || resident.condominiumUnitId}`,
+                        meta: (
+                          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Periodo: {resident.startDate || "-"} → {resident.endDate || "-"}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {getResidentPermissions(resident)}
+                            </Typography>
+                          </Box>
+                        ),
+                        accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                      }))}
+                  />
+                )}
+              </Paper>
+            ) : null}
+          </>
+        )}
       </Container>
 
       <Snackbar
@@ -318,3 +530,4 @@ const Residentes: React.FC = () => {
 };
 
 export default Residentes;
+

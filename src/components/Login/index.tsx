@@ -10,6 +10,7 @@ import SignUp from "./SignUp";
 import { AuthService } from "../../services/authService";
 import { organizationService, type OrganizationMeResponse } from "../../services/organizationService";
 import { IoIosArrowBack } from "react-icons/io";
+import { MdCheckCircle } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 
 
@@ -477,7 +478,9 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
                     } ${
                       stepNumber === 3 && isLoadingCondominiums ? "loading" : ""
                     }`}
-                  />
+                  >
+                    {stepNumber < step ? <MdCheckCircle /> : null}
+                  </div>
                 ))}
               </div>
             </div>
