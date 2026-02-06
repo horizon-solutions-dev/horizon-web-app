@@ -21,6 +21,7 @@ import {
   ViewModule,
   Apartment,
   SettingsOutlined,
+  ChevronRight,
 } from "@mui/icons-material";
 import {
   blockService,
@@ -266,15 +267,15 @@ const Blocos: React.FC = () => {
                         </>
                       ),
                       actions: (
-                        <Tooltip title="Gerenciar Blocos">
-                          <IconButton
-                            size="small"
-                            className="action-button-manage"
-                            onClick={() => handleSelectCondominium(condominium)}
-                          >
-                            <SettingsOutlined />
-                          </IconButton>
-                        </Tooltip>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          className="action-button-manage"
+                          startIcon={<SettingsOutlined />}
+                          onClick={() => handleSelectCondominium(condominium)}
+                        >
+                          Gerenciar Blocos
+                        </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                     }))}
@@ -313,9 +314,16 @@ const Blocos: React.FC = () => {
                       <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
                         Blocos
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        {selectedCondominium?.name || "Condomínio selecionado"}
-                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, mt: 0.5 }}>
+                        <ChevronRight sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
+                          {selectedCondominium?.name || "Condomínio selecionado"}
+                        </Typography>
+                        <ChevronRight sx={{ fontSize: 16, color: "#1976d2", mx: 0.2 }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
+                          Blocos
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>

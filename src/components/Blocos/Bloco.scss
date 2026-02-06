@@ -72,6 +72,7 @@
   // ============================================
   .close-button,
   .MuiIconButton-root[aria-label="Fechar"],
+  .MuiIconButton-root[aria-label="Voltar"],
   .MuiIconButton-root:has(.MuiSvgIcon-root[data-testid="CloseIcon"]),
   .MuiBox-root:first-child > .MuiIconButton-root:last-child {
     width: 40px !important;
@@ -351,11 +352,10 @@
   }
 
   // ============================================
-  // BOTÃO GERENCIAR BLOCOS - ÍCONE
+  // BOTÃO GERENCIAR BLOCOS - COM TEXTO
   // ============================================
   .action-button-manage {
-    min-width: 40px !important;
-    width: 40px !important;
+    min-width: 140px !important;
     height: 32px !important;
     border-radius: 8px !important;
     background: white !important;
@@ -363,14 +363,18 @@
     font-weight: 600 !important;
     font-size: 12px !important;
     text-transform: none !important;
-    padding: 0 !important;
+    padding: 0 12px !important;
     border: 2px solid #1976d2 !important;
     box-shadow: 0 2px 6px rgba(25, 118, 210, 0.15) !important;
     transition: all 0.2s ease !important;
 
+    @media (max-width: 768px) {
+      flex: 1 !important;
+    }
+
     .MuiSvgIcon-root {
       color: #1976d2 !important;
-      font-size: 18px !important;
+      font-size: 16px !important;
     }
 
     &:hover {
@@ -461,7 +465,7 @@
   }
 
   // ============================================
-  // STEPPER - LABELS EM NEGRITO
+  // STEPPER - LABELS SEM NEGRITO
   // ============================================
   .MuiStepper-root {
     background: transparent !important;
@@ -469,18 +473,18 @@
     margin-bottom: 12px !important;
 
     .MuiStepLabel-label {
-      font-weight: 700 !important;
+      font-weight: 400 !important;
       font-size: 13px !important;
       color: #999 !important;
 
       &.Mui-active {
         color: #1976d2 !important;
-        font-weight: 700 !important;
+        font-weight: 400 !important;
       }
 
       &.Mui-completed {
         color: #10b981 !important;
-        font-weight: 700 !important;
+        font-weight: 400 !important;
       }
     }
 
@@ -512,7 +516,7 @@
   }
 
   // ============================================
-  // INPUTS
+  // INPUTS - COM PLACEHOLDER INTERNO
   // ============================================
   .bloco-form .MuiTextField-root {
     margin-bottom: 0 !important;
@@ -547,6 +551,11 @@
         padding: 12px 14px !important;
         font-size: 14px !important;
         color: #1a1a2e !important;
+
+        &::placeholder {
+          color: #999 !important;
+          opacity: 1 !important;
+        }
       }
 
       &.MuiInputBase-sizeSmall input,
@@ -555,32 +564,9 @@
       }
     }
 
+    // Remover o label flutuante
     .MuiInputLabel-root {
-      font-weight: 500 !important;
-      font-size: 14px !important;
-      color: #666 !important;
-
-      &.MuiInputLabel-sizeSmall {
-        transform: translate(14px, 11px) scale(1) !important;
-
-        &.MuiInputLabel-shrink {
-          transform: translate(14px, -6px) scale(0.75) !important;
-        }
-      }
-
-      &.MuiInputLabel-shrink {
-        background: white !important;
-        padding: 0 6px !important;
-      }
-
-      &.Mui-focused {
-        font-weight: 600 !important;
-        color: #1976d2 !important;
-      }
-
-      &.Mui-error {
-        color: #ef4444 !important;
-      }
+      display: none !important;
     }
 
     .MuiFormHelperText-root {
@@ -638,33 +624,13 @@
   }
 
   // ============================================
-  // BOTÃO VOLTAR - PADRÃO
+  // SUBTÍTULO DO FORMULÁRIO - SEM NEGRITO (MAIS ESPECÍFICO)
   // ============================================
-  .MuiButton-outlined,
-  button.MuiButton-outlined,
-  .MuiButton-root.MuiButton-outlined {
-    background: white !important;
-    color: #666 !important;
-    border: 2px solid #e0e4e8 !important;
-    padding: 14px 40px !important;
+  .bloco-container .bloco-form-subtitle {
     font-size: 14px !important;
-    font-weight: 500 !important;
-    min-width: 140px !important;
-    border-radius: 12px !important;
-    transition: all 0.2s ease !important;
-    text-transform: none !important;
-    height: auto !important;
-    line-height: normal !important;
-
-    &:hover {
-      background: rgba(25, 118, 210, 0.05) !important;
-      border-color: #1976d2 !important;
-      color: #1976d2 !important;
-    }
-
-    &:active {
-      transform: scale(0.98) !important;
-    }
+    font-weight: 400 !important;
+    color: #000000 !important;
+    text-align: center !important;
   }
 
   // ============================================

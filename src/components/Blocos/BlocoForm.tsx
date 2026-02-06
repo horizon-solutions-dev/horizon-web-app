@@ -139,22 +139,26 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
       return (
         <Box className="bloco-form" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <TextField
-            label="Código"
+            placeholder="Código"
             value={formData.code}
             onChange={(e) => handleChange("code", e.target.value)}
             error={!!errors.code}
             helperText={errors.code}
             fullWidth
             required
+            variant="outlined"
+            InputLabelProps={{ shrink: false }}
           />
           <TextField
-            label="Nome"
+            placeholder="Nome"
             value={formData.name}
             onChange={(e) => handleChange("name", e.target.value)}
             error={!!errors.name}
             helperText={errors.name}
             fullWidth
             required
+            variant="outlined"
+            InputLabelProps={{ shrink: false }}
           />
         </Box>
       );
@@ -168,6 +172,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
       <StepWizardCard
         title={editingId ? "Editar Bloco" : "Criar Bloco"}
         subtitle={steps[activeStep]}
+        subtitleClassName="bloco-form-subtitle"
         steps={steps}
         activeStep={activeStep}
         showBack={false}
@@ -182,13 +187,6 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
         )}
 
         <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 3 }}>
-          <Button 
-            variant="outlined" 
-            onClick={onClose}
-            disabled={loading}
-          >
-            Cancelar
-          </Button>
           <Button 
             variant="contained" 
             onClick={handleSubmit} 
