@@ -319,10 +319,6 @@ const Blocos: React.FC = () => {
                         <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
                           {selectedCondominium?.name || "Condomínio selecionado"}
                         </Typography>
-                        <ChevronRight sx={{ fontSize: 16, color: "#1976d2", mx: 0.2 }} />
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
-                          Blocos
-                        </Typography>
                       </Box>
                     </Box>
                   </Box>
