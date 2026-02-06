@@ -94,9 +94,13 @@
   color: #1b1b1b;
 }
 
+// ============================================
+// SUBTÍTULO EM NEGRITO - CORREÇÃO PRINCIPAL
+// ============================================
 .step-wizard-subtitle {
   font-size: 14px;
-  color: #666;
+  font-weight: 700 !important;
+  color: #000000 !important;
   text-align: center;
 }
 
