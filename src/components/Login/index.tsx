@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import "./login.scss";
@@ -27,6 +27,16 @@ const STEP_CONFIG = {
 } as const;
 
 export default function MultiStepLogin() {
+  useEffect(()=> {
+    // Limpa dados de login anteriores ao montar o componente
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("condominiumId");
+    localStorage.removeItem("condominium");
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("organizationId");
+  },[])
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

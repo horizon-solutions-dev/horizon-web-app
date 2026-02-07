@@ -1,0 +1,34 @@
+  .action-button-manage {
+    min-width: 140px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    background: white !important;
+    color: #1976d2 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    text-transform: none !important;
+    padding: 0 12px !important;
+    border: 2px solid #1976d2 !important;
+    box-shadow: 0 2px 6px rgba(25, 118, 210, 0.15) !important;
+    transition: all 0.2s ease !important;
+
+    @media (max-width: 768px) {
+      flex: 1 !important;
+    }
+
+    .MuiSvgIcon-root {
+      color: #1976d2 !important;
+      font-size: 16px !important;
+    }
+
+    &:hover {
+      background: rgba(25, 118, 210, 0.1) !important;
+      border-color: #1565c0 !important;
+      color: #1565c0 !important;
+      box-shadow: 0 3px 10px rgba(25, 118, 210, 0.25) !important;
+
+      .MuiSvgIcon-root {
+        color: #1565c0 !important;
+      }
+    }
+  }

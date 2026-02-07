@@ -441,6 +441,80 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         commit: true,
       };
 
+      const validationPayload: CondominiumRequest = {
+        ...payload,
+        commit: false,
+      };
+
+      const { valid, validations } = await condominiumService.validateCondominium(
+        validationPayload,
+      );
+
+      if (!valid && validations.length > 0) {
+        const fieldMap: Record<string, keyof CondominiumRequest> = {
+          organizationid: "organizationId",
+          name: "name",
+          doc: "doc",
+          address: "address",
+          addressnumber: "addressNumber",
+          complement: "complement",
+          neighborhood: "neighborhood",
+          city: "city",
+          state: "state",
+          zipcode: "zipCode",
+          condominiumtype: "condominiumType",
+          unitcount: "unitCount",
+          hasblocks: "hasBlocks",
+          haswaterindividual: "hasWaterIndividual",
+          haspowerbyblock: "hasPowerByBlock",
+          hasgasbyblock: "hasGasByBlock",
+          allocationtype: "allocationType",
+          allocationvalueperc: "allocationValuePerc",
+          commit: "commit",
+        };
+
+        const stepFields: Array<Array<keyof CondominiumRequest>> = [
+          ["organizationId", "name", "doc", "condominiumType", "unitCount"],
+          [
+            "zipCode",
+            "address",
+            "addressNumber",
+            "neighborhood",
+            "city",
+            "state",
+            "complement",
+          ],
+          [
+            "hasBlocks",
+            "hasWaterIndividual",
+            "hasPowerByBlock",
+            "hasGasByBlock",
+            "allocationType",
+            "allocationValuePerc",
+          ],
+        ];
+
+        const nextErrors: Record<string, string> = {};
+        let targetStep = 0;
+
+        validations.forEach((validation) => {
+          const key = validation.field?.replace(/\s+/g, "").toLowerCase();
+          const field = key ? fieldMap[key] : undefined;
+          if (!field) return;
+          nextErrors[field] = validation.message;
+          const stepIndex = stepFields.findIndex((fields) => fields.includes(field));
+          if (stepIndex >= 0) {
+            targetStep = Math.max(targetStep, stepIndex);
+          }
+        });
+
+        if (Object.keys(nextErrors).length > 0) {
+          setErrors(nextErrors);
+          setActiveStep(targetStep);
+          return;
+        }
+      }
+
       if (editingId) {
         const response = await condominiumService.updateCondominium(
           editingId,

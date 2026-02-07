@@ -12,7 +12,7 @@ import {
   MenuItem,
   IconButton,
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, SettingsOutlined } from '@mui/icons-material';
 import {
   unitService,
   type CondominiumUnit,
@@ -24,7 +24,7 @@ import { condominiumService, type Condominium } from '../../services/condominium
 import { organizationService } from '../../services/organizationService';
 import CardList from '../../shared/components/CardList';
 import StepWizardCard from '../../shared/components/StepWizardCard';
-
+import './Unidades.scss'
 const initialForm: CondominiumUnitRequest = {
   condominiumId: '',
   condominiumBlockId: '',
@@ -385,12 +385,13 @@ const Unidades: React.FC = () => {
                     ),
                     accentColor: index % 2 === 0 ? '#eef6ee' : '#fdecef',
                     actions: (
-                      <Button
+                       <Button
                         size="small"
                         variant="outlined"
-                        onClick={() => handleSelectCondominium(condominium)}
-                      >
-                        Gerenciar unidades
+                        className="action-button-manage"
+                        startIcon={<SettingsOutlined />}
+                        onClick={() => handleSelectCondominium(condominium)}>
+                        Gerenciar Unidade
                       </Button>
                     ),
                   }))}
