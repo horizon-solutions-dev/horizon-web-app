@@ -51,7 +51,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     canMakeReservations: false,
     hasGatehouseAccess: false,
   };
-
   const [formData, setFormData] = useState<CondominiumUnitResidentRequest>(
     initialForm,
   );
@@ -59,11 +58,18 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const [activeStep, setActiveStep] = useState(0);
   const [validatingStep, setValidatingStep] = useState(false);
   const steps = ["Dados do residente", "Periodo", "Permissoes"];
+<<<<<<< HEAD
 
 const tokenUserId = useMemo(() => {
     const token = AuthService.getToken();
     return TokenService.getUserId(token) || '';
   }, []);    
+=======
+  const tokenUserId = useMemo(() => {
+    const token = AuthService.getToken();
+    return TokenService.getUserId(token) || "";
+  }, []);
+>>>>>>> 1eea27b9c3e9d0285af0b2f3a7a6638006273f39
   useEffect(() => {
     if (!open) return;
     setActiveStep(0);
@@ -78,8 +84,12 @@ const tokenUserId = useMemo(() => {
       canMakeReservations: false,
       hasGatehouseAccess: false,
     });
+<<<<<<< HEAD
     setErrors({});
   }, [open, unitIdPreset]);
+=======
+  }, [open, unitIdPreset, tokenUserId]);
+>>>>>>> 1eea27b9c3e9d0285af0b2f3a7a6638006273f39
 
   if (!open) return null;
 
@@ -160,7 +170,7 @@ const tokenUserId = useMemo(() => {
       await onSaved();
       setFormData({
         condominiumUnitId: unitIdPreset || "",
-        userId: "",
+        userId: tokenUserId,
         unitType: "Owner",
         startDate: new Date().toISOString().slice(0, 16),
         endDate: "",
