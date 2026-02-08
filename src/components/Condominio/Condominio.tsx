@@ -368,10 +368,13 @@ const CondominioPage: React.FC = () => {
 
       <DeleteConfirmModal
         open={openDelete}
-        onConfirm={handleDelete}
+        onConfirm={() => {
+          if (editingCondominium) {
+            handleDelete(editingCondominium);
+          }
+        }}
         onCancel={() => setOpenDelete(false)}
         onClose={() => setOpenDelete(false)}
-        imageSrc="/src/assets/ilustracao-delete.png"
       />
 
       <Snackbar

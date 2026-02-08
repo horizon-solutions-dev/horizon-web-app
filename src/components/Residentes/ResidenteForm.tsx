@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -14,6 +14,8 @@ import {
   type CondominiumUnitResidentRequest,
 } from "../../services/unitResidentService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
+import { AuthService } from "../../services/authService";
+import { TokenService } from "../../services/tokenService";
 
 interface ResidenteFormProps {
   open: boolean;
@@ -48,19 +50,21 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     canMakeReservations: false,
     hasGatehouseAccess: false,
   };
-
   const [formData, setFormData] = useState<CondominiumUnitResidentRequest>(
     initialForm,
   );
   const [activeStep, setActiveStep] = useState(0);
   const steps = ["Dados do residente", "Periodo", "Permissoes"];
-
+  const tokenUserId = useMemo(() => {
+    const token = AuthService.getToken();
+    return TokenService.getUserId(token) || "";
+  }, []);
   useEffect(() => {
     if (!open) return;
     setActiveStep(0);
     setFormData({
       condominiumUnitId: unitIdPreset || "",
-      userId: "",
+      userId: tokenUserId,
       unitType: "Owner",
       startDate: "",
       endDate: "",
@@ -69,7 +73,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       canMakeReservations: false,
       hasGatehouseAccess: false,
     });
-  }, [open, unitIdPreset]);
+  }, [open, unitIdPreset, tokenUserId]);
 
   if (!open) return null;
 
@@ -93,7 +97,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       await onSaved();
       setFormData({
         condominiumUnitId: unitIdPreset || "",
-        userId: "",
+        userId: tokenUserId,
         unitType: "Owner",
         startDate: "",
         endDate: "",
@@ -124,18 +128,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     >
       {activeStep === 0 ? (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <TextField
-            label="CondominiumUnitId"
-            value={formData.condominiumUnitId}
-            onChange={(e) => handleChange("condominiumUnitId", e.target.value)}
-            fullWidth
-          />
-          <TextField
-            label="UserId"
-            value={formData.userId}
-            onChange={(e) => handleChange("userId", e.target.value)}
-            fullWidth
-          />
           <TextField
             label="Tipo da Unidade"
             select

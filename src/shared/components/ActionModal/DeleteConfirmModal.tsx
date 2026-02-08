@@ -5,7 +5,6 @@ interface DeleteConfirmModalProps {
   open: boolean;
   title?: string;
   message?: string;
-  imageSrc?: string;
   imageAlt?: string;
   imageSlot?: React.ReactNode;
   confirmLabel?: string;
@@ -19,7 +18,6 @@ export default function DeleteConfirmModal({
   open,
   title = "Deseja excluir este item?",
   message = "",
-  imageSrc,
   imageAlt,
   imageSlot,
   confirmLabel = "Excluir",

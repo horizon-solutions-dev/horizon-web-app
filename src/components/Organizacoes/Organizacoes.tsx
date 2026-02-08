@@ -79,6 +79,7 @@ const initialCondoForm: CondominiumRequest = {
   hasGasByBlock: false,
   allocationType: "FractionalAllocation",
   allocationValuePerc: 0,
+  commit: true,
 };
 
 const steps = ["Organizacao", "Usuario", "Condominio", "Imagens"];
@@ -91,7 +92,6 @@ const Organizacoes: React.FC = () => {
   const [organizationForm, setOrganizationForm] = useState<OrganizationRequest>(
     initialOrganizationForm,
   );
-  const [existingOrganizationId, setExistingOrganizationId] = useState("");
   const [organizationTypes, setOrganizationTypes] = useState<
     OrganizationTypeEnum[]
   >([]);
@@ -109,7 +109,6 @@ const Organizacoes: React.FC = () => {
 
   const [condoForm, setCondoForm] =
     useState<CondominiumRequest>(initialCondoForm);
-  const [existingCondominiumId, setExistingCondominiumId] = useState("");
   const [condominiumTypes, setCondominiumTypes] = useState<
     CondominiumTypeEnum[]
   >([]);
@@ -536,8 +535,6 @@ const Organizacoes: React.FC = () => {
     setSequence(initialSequence);
     setOrganizationForm(initialOrganizationForm);
     setCondoForm(initialCondoForm);
-    setExistingOrganizationId("");
-    setExistingCondominiumId("");
     setProfileId("");
     setOwner(false);
     setImageFile(null);
@@ -1411,7 +1408,7 @@ const Organizacoes: React.FC = () => {
           severity={snackbar.severity}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         >
-          {snackbar.message}
+          {snackbar?.message}
         </Alert>
       </Snackbar>
     </Box>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -9,24 +9,70 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  MenuItem,
+  IconButton,
 } from "@mui/material";
-import { PeopleOutlined } from "@mui/icons-material";
+import { ArrowBack, PeopleOutlined } from "@mui/icons-material";
 import {
   unitResidentService,
   type CondominiumUnitResident,
 } from "../../services/unitResidentService";
+import {
+  unitService,
+  type CondominiumUnit,
+} from "../../services/unitService";
+import {
+  blockService,
+  type CondominiumBlock,
+} from "../../services/blockService";
+import {
+  condominiumService,
+  type Condominium,
+} from "../../services/condominiumService";
+import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import ResidenteForm from "./ResidenteForm";
 
-const pageSize = 6;
+const condoPageSize = 4;
+const unitPageSize = 6;
+const residentPageSize = 6;
 
 const Residentes: React.FC = () => {
-  const [unitIdQuery, setUnitIdQuery] = useState("");
+  const [activeView, setActiveView] =
+    useState<"condominios" | "unidades" | "residentes">("condominios");
+
+  const [condominiums, setCondominiums] = useState<Condominium[]>([]);
+  const [organizationName, setOrganizationName] = useState("");
+  const [condoLoading, setCondoLoading] = useState(false);
+  const [condoError, setCondoError] = useState<string | null>(null);
+  const [condoSearchText, setCondoSearchText] = useState("");
+  const [condoPage, setCondoPage] = useState(1);
+  const [condoTotalPages, setCondoTotalPages] = useState(1);
+  const [selectedCondominium, setSelectedCondominium] =
+    useState<Condominium | null>(null);
+
+  const [units, setUnits] = useState<CondominiumUnit[]>([]);
+  const [blocks, setBlocks] = useState<{
+    data: CondominiumBlock[];
+    success: boolean;
+  }>({ data: [], success: false });
+  const [selectedBlockId, setSelectedBlockId] = useState("");
+  const [selectedBlockName, setSelectedBlockName] = useState("");
+  const [unitsLoading, setUnitsLoading] = useState(false);
+  const [unitsError, setUnitsError] = useState<string | null>(null);
+  const [unitSearchText, setUnitSearchText] = useState("");
+  const [unitsPage, setUnitsPage] = useState(1);
+  const [unitsTotalPages, setUnitsTotalPages] = useState(1);
+  const [selectedUnit, setSelectedUnit] =
+    useState<CondominiumUnit | null>(null);
+
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
-  const [listLoading, setListLoading] = useState(false);
-  const [listError, setListError] = useState<string | null>(null);
-  const [listPage, setListPage] = useState(1);
-  const [searchText, setSearchText] = useState("");
+  const [residentsLoading, setResidentsLoading] = useState(false);
+  const [residentsError, setResidentsError] = useState<string | null>(null);
+  const [residentSearchText, setResidentSearchText] = useState("");
+  const [residentsPage, setResidentsPage] = useState(1);
+  const [residentsTotalPages, setResidentsTotalPages] = useState(1);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -42,32 +88,144 @@ const Residentes: React.FC = () => {
     setSnackbar({ open: true, message, severity });
   };
 
-  const loadResidents = async (pageNumber = 1) => {
-    if (!unitIdQuery.trim()) {
-      setListError("Informe o CondominiumUnitId para carregar os residentes.");
-      return;
-    }
-
-    setListLoading(true);
-    setListError(null);
+  const loadCondominiums = async (pageNumber = 1) => {
+    setCondoLoading(true);
+    setCondoError(null);
     try {
-      const data = await unitResidentService.getResidents(
-        unitIdQuery.trim(),
+      let organizationId = localStorage.getItem("organizationId") || "";
+      if (!organizationId) {
+        organizationId = (await organizationService.getMyOrganizationId()) || "";
+        localStorage.setItem("organizationId", organizationId);
+      }
+
+      const response = await condominiumService.getCondominiums(
+        organizationId,
         pageNumber,
-        pageSize,
+        condoPageSize,
       );
-      setResidents(data ?? []);
-      setListPage(pageNumber);
+      if (!organizationName) {
+        try {
+          const organizations = await organizationService.getMyOrganization();
+          const orgName = organizations?.[0]?.name || organizations?.[0]?.legalName;
+          if (orgName) setOrganizationName(orgName);
+        } catch {
+          // ignore
+        }
+      }
+      const normalized = response?.data ?? [];
+      const computedTotalPages =
+        response?.totalPages ??
+        Math.max(1, Math.ceil((response?.total ?? normalized.length) / condoPageSize));
+      setCondoPage(response?.pageNumber ?? pageNumber);
+      setCondoTotalPages(computedTotalPages);
+      setCondominiums(normalized);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro ao carregar residentes.";
-      setListError(message);
+        error instanceof Error ? error.message : "Erro ao carregar condominios.";
+      setCondoError(message);
     } finally {
-      setListLoading(false);
+      setCondoLoading(false);
     }
   };
 
+  const loadBlocks = async (condominiumId: string) => {
+    try {
+      const data = await blockService.getBlocks(condominiumId);
+      if (data.success) {
+        setBlocks(data);
+      } else {
+        setBlocks({ data: [], success: false });
+      }
+    } catch {
+      setBlocks({ data: [], success: false });
+    }
+  };
+
+  const loadUnits = async (condominiumId: string, blockId?: string, pageNumber = 1) => {
+    setUnitsLoading(true);
+    setUnitsError(null);
+    try {
+      const data = blockId
+        ? await unitService.getUnitsByBlock(blockId, pageNumber, unitPageSize)
+        : await unitService.getUnitsByCondominium(condominiumId, pageNumber, unitPageSize);
+      const normalized = data?.data ?? [];
+      const computedTotalPages =
+        data?.totalPages ?? Math.max(1, Math.ceil((data?.total ?? normalized.length) / unitPageSize));
+      setUnitsPage(data?.pageNumber ?? pageNumber);
+      setUnitsTotalPages(computedTotalPages);
+      setUnits(normalized);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar unidades.";
+      setUnitsError(message);
+    } finally {
+      setUnitsLoading(false);
+    }
+  };
+
+  const loadResidents = async (unitId: string, pageNumber = 1) => {
+    if (!unitId) {
+      setResidentsError("Selecione uma unidade.");
+      return;
+    }
+    setResidentsLoading(true);
+    setResidentsError(null);
+    try {
+      const data = await unitResidentService.getResidents(
+        unitId,
+        pageNumber,
+        residentPageSize,
+      );
+      const normalized = data ?? [];
+      const totalPages = Math.max(1, Math.ceil(normalized.length / residentPageSize));
+      setResidentsPage(pageNumber);
+      setResidentsTotalPages(totalPages);
+      setResidents(normalized);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar residentes.";
+      setResidentsError(message);
+    } finally {
+      setResidentsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCondominiums(1);
+  }, []);
+
+  const handleSelectCondominium = async (condominium: Condominium) => {
+    setSelectedCondominium(condominium);
+    setSelectedBlockId("");
+    setSelectedBlockName("");
+    setUnits([]);
+    setUnitsError(null);
+    setUnitSearchText("");
+    setUnitsPage(1);
+    setSelectedUnit(null);
+    setResidents([]);
+    setResidentsError(null);
+    setResidentSearchText("");
+    setActiveView("unidades");
+    await loadBlocks(condominium.condominiumId);
+    await loadUnits(condominium.condominiumId, undefined, 1);
+  };
+
+  const handleSelectUnit = async (unit: CondominiumUnit) => {
+    setSelectedUnit(unit);
+    setResidents([]);
+    setResidentsError(null);
+    setResidentSearchText("");
+    setResidentsPage(1);
+    setActiveView("residentes");
+    await loadResidents(unit.condominiumUnitId, 1);
+  };
+
   const handleOpenCreate = () => {
+    if (!selectedUnit) {
+      setResidentsError("Selecione uma unidade para cadastrar residentes.");
+      return;
+    }
     setIsFormOpen(true);
   };
 
@@ -76,7 +234,16 @@ const Residentes: React.FC = () => {
   };
 
   const handleSaved = async () => {
-    await loadResidents(listPage);
+    if (selectedUnit) {
+      await loadResidents(selectedUnit.condominiumUnitId, residentsPage);
+    }
+  };
+
+  const getUnitTypeLabel = (value?: string) => {
+    if (!value) return "-";
+    if (value === "1" || value.toLowerCase() === "owner") return "Proprietario";
+    if (value === "2" || value.toLowerCase() === "tenant") return "Inquilino";
+    return value;
   };
 
   return (
@@ -152,6 +319,7 @@ const Residentes: React.FC = () => {
                   setUnits([]);
                   setBlocks({ data: [], success: false });
                   setSelectedBlockId("");
+                  setSelectedBlockName("");
                   setSelectedUnit(null);
                   setResidents([]);
                   setUnitsError(null);
@@ -187,9 +355,15 @@ const Residentes: React.FC = () => {
                 onChange={async (e) => {
                   const value = e.target.value;
                   setSelectedBlockId(value);
+                  const blockName =
+                    blocks.data.find((block) => block.condominiumBlockId === value)?.name ||
+                    "";
+                  setSelectedBlockName(blockName);
                   setUnitSearchText("");
                   setUnitsPage(1);
-                  await loadUnits(value, 1);
+                  if (selectedCondominium) {
+                    await loadUnits(selectedCondominium.condominiumId, value || undefined, 1);
+                  }
                 }}
                 fullWidth
               >
@@ -215,7 +389,9 @@ const Residentes: React.FC = () => {
               totalPages={unitsTotalPages}
               onPageChange={(page) => {
                 setUnitsPage(page);
-                loadUnits(selectedBlockId || undefined, page);
+                if (selectedCondominium) {
+                  loadUnits(selectedCondominium.condominiumId, selectedBlockId || undefined, page);
+                }
               }}
               items={units
                 .filter((unit) =>
@@ -264,6 +440,7 @@ const Residentes: React.FC = () => {
                 unitIdPreset={selectedUnit?.condominiumUnitId}
               />
             ) : null}
+
             {!isFormOpen ? (
               <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
@@ -281,54 +458,65 @@ const Residentes: React.FC = () => {
                   <Box>
                     <Typography variant="h5">Residentes</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {selectedCondominium?.name || "Condominio"} •{" "}
-                      {selectedUnit?.unitCode || selectedUnit?.condominiumUnitId || "Unidade"}
-                      {selectedBlockName ? ` • Bloco ${selectedBlockName}` : ""}
+                      {selectedCondominium?.name || "Condominio"} â€¢{" "}
+                      {selectedUnit?.unitCode ||
+                        selectedUnit?.condominiumUnitId ||
+                        "Unidade"}
+                      {selectedBlockName ? ` â€¢ Bloco ${selectedBlockName}` : ""}
                     </Typography>
                   </Box>
                 </Box>
 
-            {listError ? (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {listError}
-              </Alert>
-            ) : null}
+                {residentsError ? (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {residentsError}
+                  </Alert>
+                ) : null}
 
-            {listLoading ? (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <CircularProgress size={20} />
-                <Typography variant="body2">Carregando...</Typography>
-              </Box>
-            ) : (
-              <CardList
-                title="Residentes"
-                showTitle={false}
-                searchPlaceholder="Buscar residente..."
-                onSearchChange={setSearchText}
-                onAddClick={handleOpenCreate}
-                addLabel="Novo"
-                addButtonPlacement="toolbar"
-                emptyImageLabel="Sem imagem"
-                showFilters={false}
-                showPagination={false}
-                items={residents
-                  .filter((resident) =>
-                    [resident.userId, resident.condominiumUnitId]
-                      .filter(Boolean)
-                      .join(" ")
-                      .toLowerCase()
-                      .includes(searchText.toLowerCase()),
-                  )
-                  .map((resident, index) => ({
-                    id: resident.condominiumUnitResidentId,
-                    title: resident.userId,
-                    subtitle: `Unidade: ${resident.condominiumUnitId}`,
-                    meta: `Periodo: ${resident.startDate || "-"} -> ${resident.endDate || "-"}`,
-                    accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                  }))}
-              />
-            )}
-          </Paper>
+                {residentsLoading ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <CircularProgress size={20} />
+                    <Typography variant="body2">Carregando...</Typography>
+                  </Box>
+                ) : (
+                  <CardList
+                    title="Residentes"
+                    showTitle={false}
+                    searchPlaceholder="Buscar residente..."
+                    onSearchChange={setResidentSearchText}
+                    onAddClick={handleOpenCreate}
+                    addLabel="Novo"
+                    addButtonPlacement="toolbar"
+                    emptyImageLabel="Sem imagem"
+                    showFilters={false}
+                    page={residentsPage}
+                    totalPages={residentsTotalPages}
+                    onPageChange={(page) => {
+                      setResidentsPage(page);
+                      if (selectedUnit) {
+                        loadResidents(selectedUnit.condominiumUnitId, page);
+                      }
+                    }}
+                    items={residents
+                      .filter((resident) =>
+                        [resident.userId, resident.condominiumUnitId]
+                          .filter(Boolean)
+                          .join(" ")
+                          .toLowerCase()
+                          .includes(residentSearchText.toLowerCase()),
+                      )
+                      .map((resident, index) => ({
+                        id: resident.condominiumUnitResidentId,
+                        title: resident.userId,
+                        subtitle: `Unidade: ${resident.condominiumUnitId}`,
+                        meta: `Periodo: ${resident.startDate || "-"} -> ${resident.endDate || "-"}`,
+                        accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                      }))}
+                  />
+                )}
+              </Paper>
+            ) : null}
+          </>
         )}
       </Container>
 
@@ -349,4 +537,3 @@ const Residentes: React.FC = () => {
 };
 
 export default Residentes;
-
