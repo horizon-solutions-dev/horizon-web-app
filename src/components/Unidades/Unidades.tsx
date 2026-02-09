@@ -1,95 +1,94 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
+import "./Unidades.scss";
 import {
   Box,
   Container,
   Paper,
   Typography,
-  TextField,
   Button,
   Snackbar,
   Alert,
   CircularProgress,
-  MenuItem,
   IconButton,
-} from '@mui/material';
-import { ArrowBack, SettingsOutlined } from '@mui/icons-material';
+  Tooltip,
+} from "@mui/material";
+import {
+  Business,
+  DeleteOutline,
+  EditOutlined,
+  Close,
+  MeetingRoom,
+  Apartment,
+  SettingsOutlined,
+  ChevronRight,
+} from "@mui/icons-material";
 import {
   unitService,
   type CondominiumUnit,
-  type CondominiumUnitRequest,
   type UnitTypeEnum,
-} from '../../services/unitService';
-import { blockService, type CondominiumBlock } from '../../services/blockService';
-import { condominiumService, type Condominium } from '../../services/condominiumService';
-import { organizationService } from '../../services/organizationService';
-import CardList from '../../shared/components/CardList';
-import StepWizardCard from '../../shared/components/StepWizardCard';
-import './Unidades.scss'
-const initialForm: CondominiumUnitRequest = {
-  condominiumId: '',
-  condominiumBlockId: '',
-  unitCode: '',
-  unitType: 'Owner',
-};
+} from "../../services/unitService";
+import { blockService, type CondominiumBlock } from "../../services/blockService";
+import { condominiumService, type Condominium } from "../../services/condominiumService";
+import { organizationService } from "../../services/organizationService";
+import CardList from "../../shared/components/CardList";
+import UnidadeForm from "./UnidadeForm";
 
 const Unidades: React.FC = () => {
-  const [activeView, setActiveView] = useState<'condominios' | 'unidades'>('condominios');
+  const [activeView, setActiveView] = useState<"condominios" | "unidades">("condominios");
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
-  const [organizationName, setOrganizationName] = useState('');
+  const [organizationName, setOrganizationName] = useState("");
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [listPage, setListPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 4;
 
-  const [formData, setFormData] = useState<CondominiumUnitRequest>(initialForm);
-  const [condominiumIdQuery, setCondominiumIdQuery] = useState('');
+  const [condominiumIdQuery, setCondominiumIdQuery] = useState("");
   const [selectedCondominium, setSelectedCondominium] = useState<Condominium | null>(null);
   const [units, setUnits] = useState<CondominiumUnit[]>([]);
-  const [blocks, setBlocks] = useState<{
-    data: CondominiumBlock[];
-    success: boolean;
-  }>({ data: [], success: false });
-  const [selectedBlockId, setSelectedBlockId] = useState('');
+  const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [unitTypes, setUnitTypes] = useState<UnitTypeEnum[]>([]);
   const [loading, setLoading] = useState(false);
   const [typesLoading, setTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [activeStep, setActiveStep] = useState(0);
+  const [editingUnit, setEditingUnit] = useState<CondominiumUnit | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
-  const [unitSearchText, setUnitSearchText] = useState('');
+  const [unitSearchText, setUnitSearchText] = useState("");
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error',
+    message: "",
+    severity: "success" as "success" | "error" | "info" | "warning",
   });
-  const steps = ['Dados da unidade'];
 
-  const handleChange = (field: keyof CondominiumUnitRequest, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleNotify = (
+    message: string,
+    severity: "success" | "error" | "info" | "warning" = "success",
+  ) => {
+    setSnackbar({ open: true, message, severity });
   };
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
     setListError(null);
     try {
-      let organizationId = localStorage.getItem('organizationId') || '';
+      let organizationId = localStorage.getItem("organizationId") || "";
       if (!organizationId) {
-        organizationId = (await organizationService.getMyOrganizationId()) || '';
-        localStorage.setItem('organizationId', organizationId);
+        organizationId =
+          (await organizationService.getMyOrganizationId()) || "";
+        localStorage.setItem("organizationId", organizationId);
       }
 
       const response = await condominiumService.getCondominiums(
         organizationId,
         pageNumber,
-        pageSize
+        pageSize,
       );
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
-          const orgName = organizations?.[0]?.name || organizations?.[0]?.legalName;
+          const orgName =
+            organizations?.[0]?.name || organizations?.[0]?.legalName;
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore organization name errors
@@ -98,41 +97,48 @@ const Unidades: React.FC = () => {
       const normalized = response?.data ?? [];
       const computedTotalPages =
         response?.totalPages ??
-        Math.max(1, Math.ceil((response?.total ?? normalized.length) / pageSize));
+        Math.max(
+          1,
+          Math.ceil((response?.total ?? normalized.length) / pageSize),
+        );
       setListPage(response?.pageNumber ?? pageNumber);
       setTotalPages(computedTotalPages);
       setCondominiums(normalized);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao carregar condominios.';
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar condomínios.";
       setListError(message);
     } finally {
       setListLoading(false);
     }
   };
 
-  const loadUnits = async (blockIdOverride?: string, pageNumber = 1) => {
-    console.log('Loading units for condominiumId:', condominiumIdQuery, );
+  const loadUnits = async (pageNumber = 1) => {
     if (!condominiumIdQuery.trim()) {
-      setListError('Informe o CondominiumId para carregar as unidades.');
+      setListError("Informe o CondominiumId para carregar as unidades.");
       return;
     }
 
-    const blockId = blockIdOverride !== undefined ? blockIdOverride : selectedBlockId;
     setListLoading(true);
     setListError(null);
     try {
-      const data = blockId
-        ? await unitService.getUnitsByBlock(blockId, pageNumber, pageSize)
-        : await unitService.getUnitsByCondominium(condominiumIdQuery.trim(), pageNumber, pageSize);
-    console.log('Loaded units data:', data);
+      const data = await unitService.getUnitsByCondominium(
+        condominiumIdQuery.trim(),
+        pageNumber,
+        pageSize,
+      );
       const normalized = data?.data ?? [];
       const computedTotalPages =
-        data?.totalPages ?? Math.max(1, Math.ceil((data?.total ?? normalized.length) / pageSize));
+        data?.totalPages ??
+        Math.max(1, Math.ceil((data?.total ?? normalized.length) / pageSize));
       setListPage(data?.pageNumber ?? pageNumber);
       setTotalPages(computedTotalPages);
       setUnits(normalized);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao carregar unidades.';
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar unidades.";
       setListError(message);
     } finally {
       setListLoading(false);
@@ -142,14 +148,10 @@ const Unidades: React.FC = () => {
   const loadBlocks = async (condominiumId: string) => {
     try {
       const data = await blockService.getBlocks(condominiumId);
-      console.log('Loaded blocks:', data);
-      if(data.success)
-      setBlocks(data);
-      else
-      setBlocks({ data: [], success: false });
+      setBlocks(data?.data ?? []);
     } catch (error) {
-      console.error('Erro ao carregar blocos:', error);
-      setBlocks({ data: [], success: false });
+      console.error("Erro ao carregar blocos:", error);
+      setBlocks([]);
     }
   };
 
@@ -160,7 +162,10 @@ const Unidades: React.FC = () => {
       const data = await unitService.getUnitTypes();
       setUnitTypes(data ?? []);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao carregar tipos de unidade.';
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar tipos de unidade.";
       setTypesError(message);
     } finally {
       setTypesLoading(false);
@@ -170,413 +175,317 @@ const Unidades: React.FC = () => {
   useEffect(() => {
     loadCondominiums(1);
     loadUnitTypes();
-  }, [ ]);
+  }, []);
 
   const handleSelectCondominium = async (condominium: Condominium) => {
-    console.log('Selected condominium:', condominium);
     setSelectedCondominium(condominium);
     setCondominiumIdQuery(condominium.condominiumId);
     setUnits([]);
-    setBlocks({ data: [], success: false });
-    setSelectedBlockId('');
-    setEditingId(null);
-    setActiveStep(0);
+    setBlocks([]);
+    setEditingUnit(null);
     setIsCadastroOpen(false);
-    setUnitSearchText('');
-    setListPage(1);
-    setFormData((prev) => ({ ...prev, condominiumId: condominium.condominiumId }));
-    setActiveView('unidades');
-   
+    setUnitSearchText("");
+    setActiveView("unidades");
+
+    // Carregar blocos e unidades automaticamente
+    setListLoading(true);
+    setListError(null);
+    try {
+      await loadBlocks(condominium.condominiumId);
+      const data = await unitService.getUnitsByCondominium(
+        condominium.condominiumId,
+        1,
+        pageSize,
+      );
+      const normalized = data?.data ?? [];
+      const computedTotalPages =
+        data?.totalPages ??
+        Math.max(1, Math.ceil((data?.total ?? normalized.length) / pageSize));
+      setListPage(1);
+      setTotalPages(computedTotalPages);
+      setUnits(normalized);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar unidades.";
+      setListError(message);
+    } finally {
+      setListLoading(false);
+    }
   };
 
-   useEffect(() => {
-    console.log('condominiumIdQuery changed:', condominiumIdQuery);
-    if (condominiumIdQuery.trim()) {
-     loadBlocks(condominiumIdQuery.trim());
-     loadUnits('', 1);
-    }
-  },[setCondominiumIdQuery, condominiumIdQuery])
-
   const handleEdit = (unit: CondominiumUnit) => {
-    console.log('Unidade todo' ,unit);
-    setEditingId(unit.condominiumUnitId);
-    setFormData({
-      condominiumId: unit.condominiumId,
-      condominiumBlockId: unit.condominiumBlockId,
-      unitCode: unit.unitCode,
-      unitType: unit.unitType === '1' ? 'Owner' : 'Tenant',
-    });
-    console.log('id unidadee', formData);
-    setActiveStep(0);
+    setEditingUnit(unit);
     setIsCadastroOpen(true);
   };
 
-  const handleSubmit = async () => {
-    if (!formData.condominiumId || !formData.condominiumBlockId || !formData.unitCode) {
-      setSnackbar({
-        open: true,
-        message: 'Preencha CondominiumId, CondominiumBlockId e Codigo da unidade.',
-        severity: 'error',
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (editingId) {
-        await unitService.updateUnit(editingId, formData);
-        setSnackbar({
-          open: true,
-          message: 'Unidade atualizada com sucesso.',
-          severity: 'success',
-        });
-      } else {
-        await unitService.createUnit(formData);
-        setSnackbar({
-          open: true,
-          message: 'Unidade criada com sucesso.',
-          severity: 'success',
-        });
-      }
-
-      setFormData(initialForm);
-      setEditingId(null);
-      setIsCadastroOpen(false);
-      if (condominiumIdQuery.trim()) {
-        await loadUnits(undefined, listPage);
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao salvar unidade.';
-      setSnackbar({
-        open: true,
-        message,
-        severity: 'error',
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleDelete = (unit: CondominiumUnit) => {
+    const confirmed = window.confirm(
+      `Deseja excluir a unidade ${unit.unitCode}?`,
+    );
+    if (!confirmed) return;
+    handleNotify("Exclusão ainda não está disponível.", "error");
   };
 
-  const renderUnitTypeOptions = () => {
-    if (typesLoading) {
-      return (
-        <MenuItem value={formData.unitType} disabled>
-          Carregando...
-        </MenuItem>
-      );
-    }
-
-    if (unitTypes.length > 0) {
-      return unitTypes.map((type) => (
-        <MenuItem key={type.id} value={type.value}>
-          {type.description || type.value}
-        </MenuItem>
-      ));
-    }
-
-    return (
-      <>
-        <MenuItem value="Owner">Proprietario</MenuItem>
-        <MenuItem value="Tenant">Inquilino</MenuItem>
-      </>
-    );
+  const handleOpenCreate = () => {
+    setEditingUnit(null);
+    setIsCadastroOpen(true);
   };
 
-  const renderStepContent = () => {
-    if (activeStep === 0) {
-      return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="Bloco do condominio"
-            select
-            value={formData.condominiumBlockId}
-            onChange={(e) => handleChange('condominiumBlockId', e.target.value)}
-            fullWidth
-          >
-            {blocks.data.length === 0 ? (
-              <MenuItem value="" disabled>
-                {listLoading ? 'Carregando...' : 'Nenhum bloco encontrado'}
-              </MenuItem>
-            ) : (
-              blocks.data.map((block) => (
-                <MenuItem key={block.condominiumBlockId} value={block.condominiumBlockId}>
-                  {block.name || block.code || block.condominiumBlockId}
-                </MenuItem>
-              ))
-            )}
-          </TextField>
-          <TextField
-            label="Codigo da Unidade"
-            value={formData.unitCode}
-            onChange={(e) => handleChange('unitCode', e.target.value)}
-            fullWidth
-          />
-          <TextField
-            label="Tipo da Unidade"
-            select
-            value={formData.unitType || ''}
-            onChange={(e) => handleChange('unitType', e.target.value)}
-            fullWidth
-          >
-            {renderUnitTypeOptions()}
-          </TextField>
-        </Box>
-      );
-    }
+  const handleCloseForm = () => {
+    setIsCadastroOpen(false);
+    setEditingUnit(null);
+  };
 
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Typography variant="subtitle2">CondominiumId: {formData.condominiumId || '-'}</Typography>
-        <Typography variant="subtitle2">
-          CondominiumBlockId: {formData.condominiumBlockId || '-'}
-        </Typography>
-        <Typography variant="subtitle2">Codigo: {formData.unitCode || '-'}</Typography>
-        <Typography variant="subtitle2">Tipo: {formData.unitType || '-'}</Typography>
-      </Box>
-    );
+  const handleSaved = async () => {
+    await loadUnits(listPage);
   };
 
   return (
-    <Box className="page-container" sx={{ py: 4 }}>
-      <Container maxWidth="lg">
-        {activeView === 'condominios' ? (
+    <Box className="unidade-container">
+      <Container maxWidth="xl">
+        {activeView === "condominios" ? (
           <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h4" sx={{ mb: 2 }}>
-              {organizationName || 'Condominios'}
-            </Typography>
-
-            {listLoading ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CircularProgress size={20} />
-                <Typography variant="body2">Carregando...</Typography>
+            <Box
+              sx={{
+                mb: 2,
+                pb: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "2px solid #f0f0f0",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
+                  {organizationName}
+                </Typography>
               </Box>
-            ) : listError ? (
-              <Alert severity="error">{listError}</Alert>
-            ) : (
-              <CardList
-                title="Condominios da organizacao"
-                showTitle={false}
-                searchPlaceholder="Buscar condominio..."
-                onSearchChange={setSearchText}
-                onAddClick={undefined}
-                addButtonPlacement="toolbar"
-                emptyImageLabel="Sem imagem"
-                page={listPage}
-                totalPages={totalPages}
-                onPageChange={(page) => {
-                  setListPage(page);
-                  loadCondominiums(page);
-                }}
-                items={condominiums
-                  .filter((condominium) =>
-                    [condominium.name, condominium.city, condominium.state]
-                      .filter(Boolean)
-                      .join(' ')
-                      .toLowerCase()
-                      .includes(searchText.toLowerCase())
-                  )
-                  .map((condominium, index) => ({
-                    id: condominium.condominiumId,
-                    title: condominium.name,
-                    subtitle: (
-                      <Typography variant="body2" color="text.secondary">
-                        {condominium.city} - {condominium.state}
-                      </Typography>
-                    ),
-                    accentColor: index % 2 === 0 ? '#eef6ee' : '#fdecef',
-                    actions: (
-                       <Button
-                        size="small"
-                        variant="outlined"
-                        className="action-button-manage"
-                        startIcon={<SettingsOutlined />}
-                        onClick={() => handleSelectCondominium(condominium)}>
-                        Gerenciar Unidade
-                      </Button>
-                    ),
-                  }))}
-              />
-            )}
-          </Paper>
-        ) : (
-          <>
-            {isCadastroOpen ? null : (
-              <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                  <IconButton
-                    onClick={() => {
-                      setActiveView('condominios');
-                      setSelectedCondominium(null);
-                      setUnits([]);
-                      setBlocks({ data: [], success: false });
-                      setEditingId(null);
-                      setActiveStep(0);
-                      setIsCadastroOpen(false);
-                      setFormData(initialForm);
-                      setUnitSearchText('');
-                      setListError(null);
-                    }}
-                  >
-                    <ArrowBack />
-                  </IconButton>
-                  <Box>
-                    <Typography variant="h5">Unidades</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedCondominium?.name || 'Condominio selecionado'}
-                    </Typography>
-                  </Box>
+              <Tooltip title="Fechar">
+                <IconButton
+                  onClick={() => window.history.back()}
+                  className="close-button"
+                  aria-label="Fechar"
+                >
+                  <Close sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              {listLoading ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <CircularProgress size={20} />
+                  <Typography variant="body2">Carregando...</Typography>
                 </Box>
-
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-                  <Button
-                    variant="contained"
-                    onClick={() => {
-                      setEditingId(null);
-                      setActiveStep(0);
-                      setFormData((prev) => ({
-                        ...prev,
-                        condominiumId: selectedCondominium?.condominiumId || condominiumIdQuery,
-                        condominiumBlockId: selectedBlockId || '',
-                        unitCode: '',
-                        unitType: prev.unitType || 'Owner',
-                      }));
-                      setIsCadastroOpen(true);
-                    }}
-                  >
-                    Nova unidade
-                  </Button>
-                </Box>
-
-                {listLoading ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <CircularProgress size={20} />
-                    <Typography variant="body2">Carregando...</Typography>
-                  </Box>
-                ) : listError ? (
-                  <Alert severity="error" sx={{ mb: 2 }}>
-                    {listError}
-                  </Alert>
-                ) : null}
-
-                <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-                  <TextField
-                    label="Filtrar por bloco"
-                    select
-                    value={selectedBlockId}
-                    onChange={async (e) => {
-                      const value = e.target.value;
-                      setSelectedBlockId(value);
-                      setUnitSearchText('');
-                      setListPage(1);
-                      await loadUnits(value, 1);
-                    }}
-                    fullWidth
-                  >
-                    <MenuItem value="">Todos os blocos</MenuItem>
-                    {blocks.data.map((block) => (
-                      <MenuItem key={block.condominiumBlockId} value={block.condominiumBlockId}>
-                        {block.name || block.code || block.condominiumBlockId}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Box>
-
+              ) : listError ? (
+                <Alert severity="error">{listError}</Alert>
+              ) : condominiums.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Nenhum condomínio encontrado para esta organização.
+                </Typography>
+              ) : (
                 <CardList
-                  title="Unidades do condominio"
+                  title="Condomínios da organização"
                   showTitle={false}
-                  showFilters={false}
-                  searchPlaceholder="Buscar unidade..."
-                  onSearchChange={setUnitSearchText}
+                  searchPlaceholder="Buscar condomínio..."
+                  onSearchChange={setSearchText}
                   onAddClick={undefined}
                   addButtonPlacement="toolbar"
                   emptyImageLabel="Sem imagem"
+                  showFilters={false}
                   page={listPage}
                   totalPages={totalPages}
                   onPageChange={(page) => {
                     setListPage(page);
-                    loadUnits(selectedBlockId || undefined, page);
+                    loadCondominiums(page);
                   }}
-                  items={units
-                    .filter((unit) =>
-                      [unit.unitCode, unit.unitType, unit.condominiumBlockId]
+                  items={condominiums
+                    .filter((condominium) =>
+                      [condominium.name, condominium.city, condominium.state]
                         .filter(Boolean)
-                        .join(' ')
+                        .join(" ")
                         .toLowerCase()
-                        .includes(unitSearchText.toLowerCase())
+                        .includes(searchText.toLowerCase()),
                     )
-                    .map((unit, index) => ({
-                      id: unit.condominiumUnitId,
-                      title: unit.unitCode || 'Sem codigo',
+                    .map((condominium, index) => ({
+                      id: condominium.condominiumId,
+                      title: condominium.name,
                       subtitle: (
-                        <Typography variant="body2" color="text.secondary">
-                          Tipo: {unit.unitType?.toString() === '1' ? 'Proprietario' : 'Inquilino'}
-                        </Typography>
-                      ),
-                      meta: (
-                        <Typography variant="caption" color="text.secondary">
-                          Bloco: {blocks.data.find((b) => b.condominiumBlockId === unit.condominiumBlockId)?.name ||
-                            unit.condominiumBlockId ||
-                            'Bloco desconhecido'}
-                        </Typography>
+                        <>
+                          <Apartment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
+                          {condominium.city} - {condominium.state}
+                        </>
                       ),
                       actions: (
-                        <Button size="small" variant="outlined" onClick={() => handleEdit(unit)}>
-                          Editar
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          className="action-button-manage"
+                          startIcon={<SettingsOutlined />}
+                          onClick={() => handleSelectCondominium(condominium)}
+                        >
+                          Gerenciar Unidades
                         </Button>
                       ),
-                      accentColor: index % 2 === 0 ? '#eef6ee' : '#fdecef',
+                      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                     }))}
                 />
+              )}
+            </Paper>
+          </Paper>
+        ) : (
+          <>
+            {isCadastroOpen ? (
+              <UnidadeForm
+                open={isCadastroOpen}
+                editingUnit={editingUnit}
+                onClose={handleCloseForm}
+                onSaved={handleSaved}
+                onNotify={handleNotify}
+                unitTypes={unitTypes}
+                typesLoading={typesLoading}
+                typesError={typesError}
+                loading={loading}
+                setLoading={setLoading}
+                condominiumIdPreset={selectedCondominium?.condominiumId}
+              />
+            ) : (
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Box
+                  sx={{
+                    mb: 2,
+                    pb: 1.5,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    borderBottom: "2px solid #f0f0f0",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
+                    <Box>
+                      <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
+                        Unidades
+                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, mt: 0.5 }}>
+                        <ChevronRight sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
+                          {selectedCondominium?.name || "Condomínio selecionado"}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Tooltip title="Voltar">
+                      <IconButton
+                        onClick={() => {
+                          setActiveView("condominios");
+                          setSelectedCondominium(null);
+                          setUnits([]);
+                          setBlocks([]);
+                          setEditingUnit(null);
+                          setIsCadastroOpen(false);
+                          setUnitSearchText("");
+                          setListError(null);
+                        }}
+                        className="close-button"
+                        aria-label="Voltar"
+                      >
+                        <Close sx={{ fontSize: 20 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  {listLoading ? (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <CircularProgress size={20} />
+                      <Typography variant="body2">Carregando...</Typography>
+                    </Box>
+                  ) : listError ? (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                      {listError}
+                    </Alert>
+                  ) : null}
+
+                  <CardList
+                    title="Unidades do condomínio"
+                    showTitle={false}
+                    showFilters={true}
+                    searchPlaceholder="Buscar unidade..."
+                    onSearchChange={setUnitSearchText}
+                    onAddClick={handleOpenCreate}
+                    addLabel="Novo"
+                    addButtonPlacement="toolbar"
+                    emptyImageLabel="Sem imagem"
+                    page={listPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => {
+                      setListPage(page);
+                      loadUnits(page);
+                    }}
+                    items={units
+                      .filter((unit) =>
+                        [unit.unitCode, unit.unitType]
+                          .filter(Boolean)
+                          .join(" ")
+                          .toLowerCase()
+                          .includes(unitSearchText.toLowerCase()),
+                      )
+                      .map((unit, index) => ({
+                        id: unit.condominiumUnitId,
+                        title: unit.unitCode || "Sem código",
+                        subtitle: (
+                          <>
+                            <MeetingRoom sx={{ fontSize: 14, mr: 0.5, verticalAlign: "middle" }} />
+                            Tipo: {unit.unitType?.toString() === "1" ? "Proprietário" : "Inquilino"}
+                          </>
+                        ),
+                        meta: (
+                          <>
+                            Bloco:{" "}
+                            {blocks.find((b) => b.condominiumBlockId === unit.condominiumBlockId)
+                              ?.name ||
+                              unit.condominiumBlockId ||
+                              "Desconhecido"}
+                          </>
+                        ),
+                        actions: (
+                          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              className="action-button-edit"
+                              startIcon={<EditOutlined />}
+                              onClick={() => handleEdit(unit)}
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              className="action-button-delete"
+                              startIcon={<DeleteOutline />}
+                              onClick={() => handleDelete(unit)}
+                            >
+                              Excluir
+                            </Button>
+                          </Box>
+                        ),
+                        accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                      }))}
+                  />
+                </Paper>
               </Paper>
             )}
-
-            {isCadastroOpen ? (
-              <StepWizardCard
-                title={editingId ? 'Editar unidade' : 'Criar unidade'}
-                subtitle={steps[activeStep]}
-                steps={steps}
-                activeStep={activeStep}
-                showBack={activeStep > 0 && activeStep < steps.length - 1}
-                onBack={() => setActiveStep((prev) => prev - 1)}
-                onClose={() => {
-                  setIsCadastroOpen(false);
-                  setEditingId(null);
-                  setActiveStep(0);
-                  setFormData(initialForm);
-                }}
-              >
-                {typesError ? (
-                  <Alert severity="error" sx={{ mb: 2 }}>
-                    {typesError}
-                  </Alert>
-                ) : null}
-                {renderStepContent()}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
-                  {activeStep === steps.length - 1 ? (
-                    <Box sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: 2,
-                  }}>
-
-                    <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-                      {loading ? <CircularProgress size={20} /> : editingId ? 'Atualizar' : 'Criar'}
-                    </Button>
-                    </Box>
-                  ) : (
-                    <Button variant="contained" onClick={() => setActiveStep((prev) => prev + 1)}>
-                      Proximo
-                    </Button>
-                  )}
-                 
-                </Box>
-              </StepWizardCard>
-            ) : null}
           </>
         )}
       </Container>
 
       <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={snackbar.open}
         autoHideDuration={4000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}

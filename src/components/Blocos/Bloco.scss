@@ -172,7 +172,7 @@
     .MuiButton-root,
     .MuiFab-root,
     button {
-      &:not(.close-button):not([aria-label="Fechar"]):not([aria-label="Voltar"]) {
+      &:not(.close-button):not([aria-label="Fechar"]):not([aria-label="Voltar"]):not(.MuiButton-contained):not(.MuiButton-containedPrimary) {
         width: 40px !important;
         height: 40px !important;
         min-width: 40px !important;
@@ -601,22 +601,23 @@
   }
 
   // ============================================
-  // BOTÕES DO FORMULÁRIO - ARREDONDADOS AZUL GRADIENTE
+  // BOTÕES DO FORMULÁRIO - PADRONIZADO COM LOGIN
   // ============================================
   .bloco-container .MuiButton-contained,
-  .bloco-container .MuiButton-containedPrimary {
+  .bloco-container .MuiButton-containedPrimary,
+  .bloco-container .btn-primary {
     background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
     color: white !important;
     border: none !important;
-    padding: 10px 32px !important;
-    font-size: 14px !important;
+    padding: 12px 24px !important;
+    font-size: 16px !important;
     font-weight: 600 !important;
-    min-width: 120px !important;
-    border-radius: 24px !important;
+    min-width: 140px !important;
+    border-radius: 8px !important;
     transition: all 0.2s ease !important;
     box-shadow: 0 4px 12px rgba(25, 118, 210, 0.25) !important;
     text-transform: none !important;
-    height: 40px !important;
+    height: 48px !important;
     line-height: normal !important;
 
     &:hover {
@@ -636,6 +637,24 @@
       box-shadow: none !important;
       opacity: 0.6 !important;
     }
+
+    // Loader dentro do botão
+    .MuiCircularProgress-root {
+      width: 20px !important;
+      height: 20px !important;
+      color: white !important;
+    }
+  }
+
+  // Garantir que botões dentro de formulários sigam o padrão
+  .bloco-form .MuiButton-contained,
+  .bloco-form .MuiButton-containedPrimary {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+    padding: 12px 24px !important;
+    font-size: 16px !important;
+    min-width: 140px !important;
+    height: 48px !important;
+    border-radius: 8px !important;
   }
 
   // ============================================
