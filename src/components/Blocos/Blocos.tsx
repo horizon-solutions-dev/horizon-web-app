@@ -358,7 +358,7 @@ const Blocos: React.FC = () => {
                   <CardList
                     title="Blocos do condomínio"
                     showTitle={false}
-                    showFilters={false}
+                    showFilters={true}
                     searchPlaceholder="Buscar bloco..."
                     onSearchChange={setBlockSearchText}
                     onAddClick={handleOpenCreate}
