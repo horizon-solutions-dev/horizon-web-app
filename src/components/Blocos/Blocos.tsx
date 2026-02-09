@@ -1,21 +1,31 @@
 import React, { useEffect, useState } from "react";
+import "./Bloco.scss";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
   Paper,
   Typography,
-  TextField,
   Button,
   Snackbar,
   Alert,
   CircularProgress,
   IconButton,
+  Tooltip,
 } from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
+import {
+  Business,
+  DeleteOutline,
+  EditOutlined,
+  Close,
+  ViewModule,
+  Apartment,
+  SettingsOutlined,
+  ChevronRight,
+} from "@mui/icons-material";
 import {
   blockService,
   type CondominiumBlock,
-  type CondominiumBlockRequest,
 } from "../../services/blockService";
 import {
   condominiumService,
@@ -23,18 +33,11 @@ import {
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
-import StepWizardCard from "../../shared/components/StepWizardCard";
-
-const initialForm: CondominiumBlockRequest = {
-  condominiumId: "",
-  code: "",
-  name: "",
-};
+import BlocoForm from "./BlocoForm";
 
 const Blocos: React.FC = () => {
-  const [activeView, setActiveView] = useState<"condominios" | "blocos">(
-    "condominios",
-  );
+  const navigate = useNavigate();
+  const [activeView, setActiveView] = useState<"condominios" | "blocos">("condominios");
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [organizationName, setOrganizationName] = useState("");
   const [listLoading, setListLoading] = useState(false);
@@ -44,23 +47,25 @@ const Blocos: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 4;
 
-  const [formData, setFormData] =
-    useState<CondominiumBlockRequest>(initialForm);
   const [condominiumIdQuery, setCondominiumIdQuery] = useState("");
-  const [selectedCondominium, setSelectedCondominium] =
-    useState<Condominium | null>(null);
+  const [selectedCondominium, setSelectedCondominium] = useState<Condominium | null>(null);
   const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [activeStep, setActiveStep] = useState(0);
+  const [editingBlock, setEditingBlock] = useState<CondominiumBlock | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [blockSearchText, setBlockSearchText] = useState("");
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
-    severity: "success" as "success" | "error",
+    severity: "success" as "success" | "error" | "info" | "warning",
   });
-  const steps = ["Dados do bloco"];
+
+  const handleNotify = (
+    message: string,
+    severity: "success" | "error" | "info" | "warning" = "success",
+  ) => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -102,7 +107,7 @@ const Blocos: React.FC = () => {
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao carregar condominios.";
+          : "Erro ao carregar condomínios.";
       setListError(message);
     } finally {
       setListLoading(false);
@@ -112,19 +117,6 @@ const Blocos: React.FC = () => {
   useEffect(() => {
     loadCondominiums(1);
   }, []);
-
-  const handleChange = (
-    field: keyof CondominiumBlockRequest,
-    value: string,
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  useEffect(() => {
-    if (condominiumIdQuery.trim()) {
-      loadBlocks();
-    }
-  }, [condominiumIdQuery]);
 
   const loadBlocks = async () => {
     if (!condominiumIdQuery.trim()) {
@@ -150,348 +142,281 @@ const Blocos: React.FC = () => {
     setSelectedCondominium(condominium);
     setCondominiumIdQuery(condominium.condominiumId);
     setBlocks([]);
-    setEditingId(null);
-    setActiveStep(0);
+    setEditingBlock(null);
     setIsCadastroOpen(false);
     setBlockSearchText("");
-    setFormData((prev) => ({
-      ...prev,
-      condominiumId: condominium.condominiumId,
-    }));
     setActiveView("blocos");
-    //await loadBlocks();
+    
+    // Carregar blocos automaticamente
+    setListLoading(true);
+    setListError(null);
+    try {
+      const data = await blockService.getBlocks(condominium.condominiumId);
+      setBlocks(data?.data ?? []);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar blocos.";
+      setListError(message);
+    } finally {
+      setListLoading(false);
+    }
   };
 
   const handleEdit = (block: CondominiumBlock) => {
-    setEditingId(block.condominiumBlockId);
-    setFormData({
-      condominiumId: block.condominiumId,
-      code: block.code,
-      name: block.name,
-    });
-    setActiveStep(0);
+    setEditingBlock(block);
     setIsCadastroOpen(true);
   };
 
-  const handleSubmit = async () => {
-    if (!formData.condominiumId || !formData.code || !formData.name) {
-      setSnackbar({
-        open: true,
-        message: "Preencha CondominiumId, Codigo e Nome.",
-        severity: "error",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (editingId) {
-        await blockService.updateBlock(editingId, formData);
-        setSnackbar({
-          open: true,
-          message: "Bloco atualizado com sucesso.",
-          severity: "success",
-        });
-      } else {
-        await blockService.createBlock(formData);
-        setSnackbar({
-          open: true,
-          message: "Bloco criado com sucesso.",
-          severity: "success",
-        });
-      }
-
-      setFormData(initialForm);
-      setEditingId(null);
-      setIsCadastroOpen(false);
-      if (condominiumIdQuery.trim()) {
-        await loadBlocks();
-      }
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro ao salvar bloco.";
-      setSnackbar({
-        open: true,
-        message,
-        severity: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleDelete = (block: CondominiumBlock) => {
+    const confirmed = window.confirm(
+      `Deseja excluir o bloco ${block.name}?`,
+    );
+    if (!confirmed) return;
+    handleNotify("Exclusão ainda não está disponível.", "error");
   };
 
-  const renderStepContent = () => {
-    if (activeStep === 0) {
-      return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <TextField
-            label="Codigo"
-            value={formData.code}
-            onChange={(e) => handleChange("code", e.target.value)}
-            fullWidth
-          />
-          <TextField
-            label="Nome"
-            value={formData.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            fullWidth
-          />
-        </Box>
-      );
-    }
+  const handleOpenCreate = () => {
+    setEditingBlock(null);
+    setIsCadastroOpen(true);
+  };
 
-    return (
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        <Typography variant="subtitle2">
-          Codigo: {formData.code || "-"}
-        </Typography>
-        <Typography variant="subtitle2">
-          Nome: {formData.name || "-"}
-        </Typography>
-      </Box>
-    );
+  const handleCloseForm = () => {
+    setIsCadastroOpen(false);
+    setEditingBlock(null);
+  };
+
+  const handleSaved = async () => {
+    await loadBlocks();
   };
 
   return (
-    <Box className="page-container" sx={{ py: 4 }}>
-      <Container maxWidth="lg">
+    <Box className="bloco-container">
+      <Container maxWidth="xl">
         {activeView === "condominios" ? (
           <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h4" sx={{ mb: 2 }}>
-              {organizationName || "Condominios"}
-            </Typography>
-
-            {listLoading ? (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <CircularProgress size={20} />
-                <Typography variant="body2">Carregando...</Typography>
+            <Box
+              sx={{
+                mb: 2,
+                pb: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "2px solid #f0f0f0",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
+                  {organizationName}
+                </Typography>
               </Box>
-            ) : listError ? (
-              <Alert severity="error">{listError}</Alert>
-            ) : (
-              <CardList
-                title="Condominios da organizacao"
-                showTitle={false}
-                searchPlaceholder="Buscar condominio..."
-                onSearchChange={setSearchText}
-                onAddClick={undefined}
-                addButtonPlacement="toolbar"
-                emptyImageLabel="Sem imagem"
-                page={listPage}
-                totalPages={totalPages}
-                onPageChange={(page) => {
-                  setListPage(page);
-                  loadCondominiums(page);
-                }}
-                items={condominiums
-                  .filter((condominium) =>
-                    [condominium.name, condominium.city, condominium.state]
-                      .filter(Boolean)
-                      .join(" ")
-                      .toLowerCase()
-                      .includes(searchText.toLowerCase()),
-                  )
-                  .map((condominium, index) => ({
-                    id: condominium.condominiumId,
-                    title: condominium.name,
-                    subtitle: (
-                      <Typography variant="body2" color="text.secondary">
-                        {condominium.city} - {condominium.state}
-                      </Typography>
-                    ),
-                    actions: (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleSelectCondominium(condominium)}
-                      >
-                        Gerenciar blocos
-                      </Button>
-                    ),
-                    accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                  }))}
-              />
-            )}
-          </Paper>
-        ) : (
-          <>
-            {isCadastroOpen ? null : (
-              <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-                <Box
-                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}
+              <Tooltip title="Fechar">
+                <IconButton
+                  onClick={() => navigate("/dashboard")}
+                  className="close-button"
+                  aria-label="Fechar"
                 >
-                  <IconButton
-                    onClick={() => {
-                      setActiveView("condominios");
-                      setSelectedCondominium(null);
-                      setBlocks([]);
-                      setEditingId(null);
-                      setActiveStep(0);
-                      setIsCadastroOpen(false);
-                      setFormData(initialForm);
-                      setBlockSearchText("");
-                      setListError(null);
-                    }}
-                  >
-                    <ArrowBack />
-                  </IconButton>
-                  <Box>
-                    <Typography variant="h5">Blocos</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedCondominium?.name || "Condominio selecionado"}
-                    </Typography>
-                  </Box>
+                  <Close sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              {listLoading ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <CircularProgress size={20} />
+                  <Typography variant="body2">Carregando...</Typography>
                 </Box>
-
-                <Box
-                  sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}
-                >
-                  <Button
-                    variant="contained"
-                    onClick={() => {
-                      setEditingId(null);
-                      setActiveStep(0);
-                      setFormData((prev) => ({
-                        ...prev,
-                        condominiumId:
-                          selectedCondominium?.condominiumId ||
-                          condominiumIdQuery,
-                        code: "",
-                        name: "",
-                      }));
-                      setIsCadastroOpen(true);
-                    }}
-                  >
-                    Novo bloco
-                  </Button>
-                </Box>
-
-                {listLoading ? (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <CircularProgress size={20} />
-                    <Typography variant="body2">Carregando...</Typography>
-                  </Box>
-                ) : listError ? (
-                  <Alert severity="error" sx={{ mb: 2 }}>
-                    {listError}
-                  </Alert>
-                ) : null}
-
+              ) : listError ? (
+                <Alert severity="error">{listError}</Alert>
+              ) : condominiums.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Nenhum condomínio encontrado para esta organização.
+                </Typography>
+              ) : (
                 <CardList
-                  title="Blocos do condominio"
+                  title="Condomínios da organização"
                   showTitle={false}
-                  showFilters={false}
-                  searchPlaceholder="Buscar bloco..."
-                  onSearchChange={setBlockSearchText}
+                  searchPlaceholder="Buscar condomínio..."
+                  onSearchChange={setSearchText}
                   onAddClick={undefined}
                   addButtonPlacement="toolbar"
                   emptyImageLabel="Sem imagem"
-                  showPagination={true}
-                  items={blocks
-                    .filter((block) =>
-                      [block.name, block.code]
+                  showFilters={false}
+                  page={listPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => {
+                    setListPage(page);
+                    loadCondominiums(page);
+                  }}
+                  items={condominiums
+                    .filter((condominium) =>
+                      [condominium.name, condominium.city, condominium.state]
                         .filter(Boolean)
                         .join(" ")
                         .toLowerCase()
-                        .includes(blockSearchText.toLowerCase()),
+                        .includes(searchText.toLowerCase()),
                     )
-                    .map((block, index) => ({
-                      id: block.condominiumBlockId,
-                      title: block.name || "Sem nome",
+                    .map((condominium, index) => ({
+                      id: condominium.condominiumId,
+                      title: condominium.name,
                       subtitle: (
-                        <Typography variant="body2" color="text.secondary">
-                          Codigo: {block.code || "-"}
-                        </Typography>
-                      ),
-                      meta: (
-                        <Typography variant="caption" color="text.secondary">
-                          Id: {block.condominiumBlockId}
-                        </Typography>
+                        <>
+                          <Apartment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
+                          {condominium.city} - {condominium.state}
+                        </>
                       ),
                       actions: (
                         <Button
                           size="small"
                           variant="outlined"
-                          onClick={() => handleEdit(block)}
+                          className="action-button-manage"
+                          startIcon={<SettingsOutlined />}
+                          onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Editar
+                          Gerenciar Blocos
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                     }))}
                 />
-              </Paper>
-            )}
-
+              )}
+            </Paper>
+          </Paper>
+        ) : (
+          <>
             {isCadastroOpen ? (
-              <StepWizardCard
-                title={editingId ? "Editar bloco" : "Criar bloco"}
-                subtitle={steps[activeStep]}
-                steps={steps}
-                activeStep={activeStep}
-                showBack={activeStep > 0 && activeStep < steps.length - 1}
-                onBack={() => setActiveStep((prev) => prev - 1)}
-                onClose={() => {
-                  setIsCadastroOpen(false);
-                  setEditingId(null);
-                  setActiveStep(0);
-                  setFormData(initialForm);
-                }}
-              >
-                {renderStepContent()}
+              <BlocoForm
+                open={isCadastroOpen}
+                editingBlock={editingBlock}
+                onClose={handleCloseForm}
+                onSaved={handleSaved}
+                onNotify={handleNotify}
+                loading={loading}
+                setLoading={setLoading}
+                condominiumIdPreset={selectedCondominium?.condominiumId}
+              />
+            ) : (
+              <Paper elevation={3} sx={{ p: 3 }}>
                 <Box
                   sx={{
+                    mb: 2,
+                    pb: 1.5,
                     display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    mt: 3,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    borderBottom: "2px solid #f0f0f0",
                   }}
                 >
-                  {activeStep === steps.length - 1 ? (
-                    <Box sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: 2,
-                  }}>
-                    <Button
-                      variant="contained"
-                      onClick={handleSubmit}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <CircularProgress size={20} />
-                      ) : editingId ? (
-                        "Atualizar"
-                      ) : (
-                        "Criar"
-                      )}
-                    </Button>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
+                    <Box>
+                      <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
+                        Blocos
+                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, mt: 0.5 }}>
+                        <ChevronRight sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }} />
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
+                          {selectedCondominium?.name || "Condomínio selecionado"}
+                        </Typography>
+                      </Box>
                     </Box>
-                  ) : (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <Button
-                        variant="contained"
-                        onClick={() => setActiveStep((prev) => prev + 1)}
+                  </Box>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Tooltip title="Voltar">
+                      <IconButton
+                        onClick={() => {
+                          setActiveView("condominios");
+                          setSelectedCondominium(null);
+                          setBlocks([]);
+                          setEditingBlock(null);
+                          setIsCadastroOpen(false);
+                          setBlockSearchText("");
+                          setListError(null);
+                        }}
+                        className="close-button"
+                        aria-label="Voltar"
                       >
-                        Proximo
-                      </Button>
-                    </Box>
-                  )}
-                 
+                        <Close sx={{ fontSize: 20 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </Box>
-              </StepWizardCard>
-            ) : null}
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  {listLoading ? (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <CircularProgress size={20} />
+                      <Typography variant="body2">Carregando...</Typography>
+                    </Box>
+                  ) : listError ? (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                      {listError}
+                    </Alert>
+                  ) : null}
+
+                  <CardList
+                    title="Blocos do condomínio"
+                    showTitle={false}
+                    showFilters={false}
+                    searchPlaceholder="Buscar bloco..."
+                    onSearchChange={setBlockSearchText}
+                    onAddClick={handleOpenCreate}
+                    addLabel="Novo"
+                    addButtonPlacement="toolbar"
+                    emptyImageLabel="Sem imagem"
+                    showPagination={false}
+                    items={blocks
+                      .filter((block) =>
+                        [block.name, block.code]
+                          .filter(Boolean)
+                          .join(" ")
+                          .toLowerCase()
+                          .includes(blockSearchText.toLowerCase()),
+                      )
+                      .map((block, index) => ({
+                        id: block.condominiumBlockId,
+                        title: block.name || "Sem nome",
+                        subtitle: (
+                          <>
+                            <ViewModule sx={{ fontSize: 14, mr: 0.5, verticalAlign: "middle" }} />
+                            Código: {block.code || "-"}
+                          </>
+                        ),
+                        actions: (
+                          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              className="action-button-edit"
+                              startIcon={<EditOutlined />}
+                              onClick={() => handleEdit(block)}
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              className="action-button-delete"
+                              startIcon={<DeleteOutline />}
+                              onClick={() => handleDelete(block)}
+                            >
+                              Excluir
+                            </Button>
+                          </Box>
+                        ),
+                        accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                      }))}
+                  />
+                </Paper>
+              </Paper>
+            )}
           </>
         )}
       </Container>
 
       <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={snackbar.open}
         autoHideDuration={4000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}

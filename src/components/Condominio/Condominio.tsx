@@ -93,8 +93,8 @@ const CondominioPage: React.FC = () => {
           const orgName =
             organizations?.[0]?.name || organizations?.[0]?.legalName;
           if (orgName) setOrganizationName(orgName);
-        } catch {
-          // ignore organization name errors
+        } catch (error) {
+          // Silencioso - não é crítico
         }
       }
       const normalized = response?.data ?? [];
@@ -137,8 +137,9 @@ const CondominioPage: React.FC = () => {
             previews[condominium.condominiumId] =
               `data:${detail.contentType};base64,${detail.contentFile}`;
           }
-        } catch {
-          // ignore individual errors
+        } catch (error) {
+          // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
+          // Não loga nada no console para não poluir
         }
       }),
     );
@@ -241,6 +242,7 @@ const CondominioPage: React.FC = () => {
                     setEditingCondominium(null);
                   }}
                   className="close-button"
+                  aria-label="Fechar"
                 >
                   <Close sx={{ fontSize: 20 }} />
                 </IconButton>
@@ -269,7 +271,7 @@ const CondominioPage: React.FC = () => {
                   addLabel="Novo"
                   addButtonPlacement="toolbar"
                   emptyImageLabel="Sem imagem"
-                  showFilters={false}
+                  showFilters={true}
                   page={listPage}
                   totalPages={totalPages}
                   onPageChange={(page) => {

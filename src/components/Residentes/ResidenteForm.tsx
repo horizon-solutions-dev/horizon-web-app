@@ -30,6 +30,7 @@ interface ResidenteFormProps {
   unitIdPreset?: string;
 }
 
+
 const ResidenteForm: React.FC<ResidenteFormProps> = ({
   open,
   onClose,
@@ -53,12 +54,22 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const [formData, setFormData] = useState<CondominiumUnitResidentRequest>(
     initialForm,
   );
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeStep, setActiveStep] = useState(0);
+  const [validatingStep, setValidatingStep] = useState(false);
   const steps = ["Dados do residente", "Periodo", "Permissoes"];
+<<<<<<< HEAD
+
+const tokenUserId = useMemo(() => {
+    const token = AuthService.getToken();
+    return TokenService.getUserId(token) || '';
+  }, []);    
+=======
   const tokenUserId = useMemo(() => {
     const token = AuthService.getToken();
     return TokenService.getUserId(token) || "";
   }, []);
+>>>>>>> 1eea27b9c3e9d0285af0b2f3a7a6638006273f39
   useEffect(() => {
     if (!open) return;
     setActiveStep(0);
@@ -73,7 +84,12 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       canMakeReservations: false,
       hasGatehouseAccess: false,
     });
+<<<<<<< HEAD
+    setErrors({});
+  }, [open, unitIdPreset]);
+=======
   }, [open, unitIdPreset, tokenUserId]);
+>>>>>>> 1eea27b9c3e9d0285af0b2f3a7a6638006273f39
 
   if (!open) return null;
 
@@ -82,24 +98,81 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     value: string | boolean,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const validateStep = (step: number) => {
+    const nextErrors: Record<string, string> = {};
+
+    if (step === 0) {
+      if (!formData.condominiumUnitId) {
+        nextErrors.condominiumUnitId = "CondominiumUnitId é obrigatório.";
+      }
+      if (!formData.userId) {
+        nextErrors.userId = "UserId é obrigatório.";
+      }
+      if (!formData.unitType) {
+        nextErrors.unitType = "Tipo da unidade é obrigatório.";
+      }
+    }
+
+    if (step === 1) {
+      if (formData.startDate && formData.endDate) {
+        const start = new Date(formData.startDate).getTime();
+        const end = new Date(formData.endDate).getTime();
+        if (!Number.isNaN(start) && !Number.isNaN(end) && end < start) {
+          nextErrors.endDate = "Fim deve ser maior que o início.";
+        }
+      }
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (!validateStep(activeStep)) return;
+    setValidatingStep(true);
+    unitResidentService
+      .createResident({
+        ...formData,
+        startDate: new Date().toISOString().substring(0, 10),
+        endDate: new Date().toISOString().substring(0, 10),
+        commit: false,
+      })
+      .then(() => {
+        setActiveStep((prev) => prev + 1);
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : "Erro ao validar residente.";
+        onNotify(message, "error");
+      })
+      .finally(() => {
+        setValidatingStep(false);
+      });
   };
 
   const handleSubmit = async () => {
-    if (!formData.condominiumUnitId || !formData.userId) {
-      onNotify("Preencha CondominiumUnitId e UserId.", "error");
+    if (!validateStep(0) || !validateStep(1)) {
+      onNotify("Revise os campos obrigatórios.", "error");
       return;
     }
 
     setLoading(true);
     try {
-      await unitResidentService.createResident(formData);
+      await unitResidentService.createResident({
+        ...formData,
+        commit: true,
+      });
       onNotify("Residente criado com sucesso.", "success");
       await onSaved();
       setFormData({
         condominiumUnitId: unitIdPreset || "",
         userId: tokenUserId,
         unitType: "Owner",
-        startDate: "",
+        startDate: new Date().toISOString().slice(0, 16),
         endDate: "",
         billingContact: false,
         canVote: false,
@@ -133,6 +206,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             select
             value={formData.unitType || ""}
             onChange={(e) => handleChange("unitType", e.target.value)}
+            error={Boolean(errors.unitType)}
+            helperText={errors.unitType}
             fullWidth
           >
             <MenuItem value="Owner">Proprietario</MenuItem>
@@ -157,6 +232,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             InputLabelProps={{ shrink: true }}
             value={formData.endDate || ""}
             onChange={(e) => handleChange("endDate", e.target.value)}
+            error={Boolean(errors.endDate)}
+            helperText={errors.endDate}
             fullWidth
           />
         </Box>
@@ -220,8 +297,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             {loading ? <CircularProgress size={20} /> : "Criar residente"}
           </Button>
         ) : (
-          <Button variant="contained" onClick={() => setActiveStep((prev) => prev + 1)}>
-            Proximo
+          <Button variant="contained" onClick={handleNext} disabled={validatingStep}>
+            {validatingStep ? <CircularProgress size={20} /> : "Proximo"}
           </Button>
         )}
       </Box>

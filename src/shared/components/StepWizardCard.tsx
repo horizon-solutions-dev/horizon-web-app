@@ -7,6 +7,7 @@ import '../../index.scss'
 interface StepWizardCardProps {
   title: string;
   subtitle?: string;
+  subtitleClassName?: string;
   steps: string[];
   activeStep: number;
   children: React.ReactNode;
@@ -21,6 +22,7 @@ interface StepWizardCardProps {
 export default function StepWizardCard({
   title,
   subtitle,
+  subtitleClassName,
   steps,
   activeStep,
   children,
@@ -46,10 +48,6 @@ export default function StepWizardCard({
               <IconButton
                 color="error"
                 onClick={() => {
-                  //navigate("/dashboard");
-                  //setIsCadastroOpen(false);
-                  //setEditingId(null);
-                  //setActiveStep(0);
                   onClose?.();
                 }}
               >
@@ -67,7 +65,7 @@ export default function StepWizardCard({
 
         <h1 className="step-wizard-title">{title}</h1>
         {subtitle ? (
-          <div className="step-wizard-subtitle">{subtitle}</div>
+          <div className={subtitleClassName || "step-wizard-subtitle"}>{subtitle}</div>
         ) : null}
 
         <div className="step-wizard-content">{children}</div>

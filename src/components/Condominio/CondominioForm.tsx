@@ -9,6 +9,7 @@ import {
   Checkbox,
   CircularProgress,
   Grid,
+  Snackbar,
   Alert,
 } from "@mui/material";
 import {
@@ -73,26 +74,38 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   };
 
   const [activeStep, setActiveStep] = useState(0);
-  const [allocationTypes, setAllocationTypes] = useState<AllocationTypeEnum[]>(
-    [],
-  );
+  const [allocationTypes, setAllocationTypes] = useState<AllocationTypeEnum[]>([]);
   const [allocationLoading, setAllocationLoading] = useState(false);
   const [allocationError, setAllocationError] = useState<string | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
-  const [cepData, setCepData] = useState<{
-    address: string;
-    neighborhood: string;
-    city: string;
-    state: string;
-  } | null>(null);
-  const [cepSearched, setCepSearched] = useState(false); // Novo state para controlar se já pesquisou
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<CondominiumRequest>(initialFormData);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [successSnackbar, setSuccessSnackbar] = useState({
+    open: false,
+    message: "",
+  });
 
   const steps = ["Informações Básicas", "Endereço", "Configurações e Rateio"];
+
+  const formatCNPJ = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length === 0) return "";
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 5) return numbers.replace(/(\d{2})(\d+)/, "$1.$2");
+    if (numbers.length <= 8) return numbers.replace(/(\d{2})(\d{3})(\d+)/, "$1.$2.$3");
+    if (numbers.length <= 12) return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, "$1.$2.$3/$4");
+    return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/, "$1.$2.$3/$4-$5");
+  };
+
+  const formatCEP = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length === 0) return "";
+    if (numbers.length <= 5) return numbers;
+    return numbers.replace(/(\d{5})(\d+)/, "$1-$2");
+  };
 
   const loadAllocationTypes = async () => {
     setAllocationLoading(true);
@@ -106,6 +119,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           ? error.message
           : "Erro ao carregar tipos de alocação.";
       setAllocationError(message);
+      onNotify(message, "error");
     } finally {
       setAllocationLoading(false);
     }
@@ -132,9 +146,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     if (!open) return;
     setActiveStep(0);
     setErrors({});
-    setCepData(null);
     setCepError(null);
-    setCepSearched(false); // Reset ao abrir
     setCoverFile(null);
     ensureOrganizationId();
 
@@ -143,14 +155,14 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       setFormData({
         organizationId: editingCondominium.organizationId,
         name: editingCondominium.name,
-        doc: editingCondominium.doc,
+        doc: formatCNPJ(editingCondominium.doc || ""),
         address: editingCondominium.address,
         addressNumber: editingCondominium.addressNumber,
         complement: editingCondominium.complement,
         neighborhood: editingCondominium.neighborhood,
         city: editingCondominium.city,
         state: editingCondominium.state,
-        zipCode: editingCondominium.zipCode,
+        zipCode: formatCEP(editingCondominium.zipCode || ""),
         condominiumType: normalizeCondominiumTypeValue(
           editingCondominium.condominiumType,
         ),
@@ -165,7 +177,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         allocationValuePerc: editingCondominium.allocationValuePerc,
         commit: true,
       });
-      setCepSearched(true); // Quando editando, considera que já pesquisou
     } else {
       setEditingId(null);
       setFormData({
@@ -177,172 +188,118 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
   if (!open) return null;
 
-  // Função para formatar CNPJ
-  const formatCNPJ = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    if (numbers.length <= 14) {
-      return numbers
-        .replace(/(\d{2})(\d)/, "$1.$2")
-        .replace(/(\d{3})(\d)/, "$1.$2")
-        .replace(/(\d{3})(\d)/, "$1/$2")
-        .replace(/(\d{4})(\d)/, "$1-$2");
-    }
-    return value;
-  };
-
-  // Função para formatar CEP
-  const formatCEP = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    if (numbers.length <= 8) {
-      return numbers.replace(/(\d{5})(\d)/, "$1-$2");
-    }
-    return value;
-  };
-
   const handleChange = (field: string, value: unknown) => {
     let processedValue = value;
 
-    // Aplicar máscaras
     if (field === "doc") {
       processedValue = formatCNPJ(String(value));
     } else if (field === "zipCode") {
       processedValue = formatCEP(String(value));
       const cepDigits = String(value).replace(/\D/g, "");
       if (cepDigits.length !== 8) {
-        setCepData(null);
         setCepError(null);
-        setCepSearched(false); // Reset quando muda CEP
       }
     }
 
     setFormData((prev) => ({ ...prev, [field]: processedValue }));
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
   };
 
-  const validateStep = (step: number): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (step === 0) {
-      if (!formData.organizationId.trim())
-        newErrors.organizationId = "Organização é obrigatória";
-      if (!formData.name.trim()) newErrors.name = "Nome é obrigatório";
-      if (!formData.doc.trim()) newErrors.doc = "CNPJ é obrigatório";
-      if (!formData.condominiumType)
-        newErrors.condominiumType = "Tipo é obrigatório";
-      if (formData.unitCount <= 0)
-        newErrors.unitCount = "Quantidade deve ser maior que 0";
-    } else if (step === 1) {
-      if (!formData.zipCode.trim()) newErrors.zipCode = "CEP é obrigatório";
-      if (!formData.addressNumber.trim())
-        newErrors.addressNumber = "Número é obrigatório";
-      if (!formData.address.trim())
-        newErrors.address = "Endereço é obrigatório";
-      if (!formData.neighborhood.trim())
-        newErrors.neighborhood = "Bairro é obrigatório";
-      if (!formData.city.trim()) newErrors.city = "Cidade é obrigatória";
-      if (!formData.state.trim()) newErrors.state = "Estado é obrigatório";
-    } else if (step === 2) {
-      if (
-        formData.allocationValuePerc < 0 ||
-        formData.allocationValuePerc > 100
-      ) {
-        newErrors.allocationValuePerc = "Percentual deve estar entre 0 e 100";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleNext = () => {
-    if (!validateStep(activeStep)) return;
+  const handleNext = async () => {
+    // Remove formatação do CNPJ e CEP antes de validar
+    const cleanDoc = formData.doc.replace(/\D/g, "");
+    const cleanZipCode = formData.zipCode.replace(/\D/g, "");
+    
     const payload: CondominiumRequest = {
       ...formData,
+      doc: cleanDoc,
+      zipCode: cleanZipCode,
       condominiumType: normalizeCondominiumTypeValue(formData.condominiumType),
       allocationType: normalizeAllocationTypeValue(formData.allocationType),
       commit: false,
     };
 
-    condominiumService
-      .validateCondominium(payload)
-      .then(({ valid, validations }) => {
-        if (valid || validations.length === 0) {
-          setActiveStep((prev) => prev + 1);
-          return;
-        }
-
-        const fieldMap: Record<string, keyof CondominiumRequest> = {
-          organizationid: "organizationId",
-          name: "name",
-          doc: "doc",
-          address: "address",
-          addressnumber: "addressNumber",
-          complement: "complement",
-          neighborhood: "neighborhood",
-          city: "city",
-          state: "state",
-          zipcode: "zipCode",
-          condominiumtype: "condominiumType",
-          unitcount: "unitCount",
-          hasblocks: "hasBlocks",
-          haswaterindividual: "hasWaterIndividual",
-          haspowerbyblock: "hasPowerByBlock",
-          hasgasbyblock: "hasGasByBlock",
-          allocationtype: "allocationType",
-          allocationvalueperc: "allocationValuePerc",
-          commit: "commit",
-        };
-
-        const stepFields: Array<keyof CondominiumRequest> =
-          activeStep === 0
-            ? ["organizationId", "name", "doc", "condominiumType", "unitCount"]
-            : activeStep === 1
-              ? [
-                  "zipCode",
-                  "addressNumber",
-                  "address",
-                  "neighborhood",
-                  "city",
-                  "state",
-                ]
-              : [
-                  "hasBlocks",
-                  "hasWaterIndividual",
-                  "hasPowerByBlock",
-                  "hasGasByBlock",
-                  "allocationType",
-                  "allocationValuePerc",
-                ];
-
-        const nextErrors: Record<string, string> = {};
-        const stepMessages: string[] = [];
-
-        validations.forEach((validation) => {
-          const key = validation.field?.replace(/\s+/g, "").toLowerCase();
-          const field = key ? fieldMap[key] : undefined;
-          if (field && stepFields.includes(field)) {
-            nextErrors[field] = validation.message;
-            stepMessages.push(validation.message);
-          }
-        });
-
-        if (Object.keys(nextErrors).length > 0) {
-          setErrors(nextErrors);
-          onNotify(stepMessages.join("\n") || "Verifique os dados do passo.", "error");
-          return;
-        }
-
+    try {
+      const { valid, validations } = await condominiumService.validateCondominium(payload);
+      
+      if (valid || validations.length === 0) {
         setActiveStep((prev) => prev + 1);
-      })
-      .catch((error) => {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Erro ao validar dados do condominio.";
-        onNotify(message, "error");
+        return;
+      }
+
+      const fieldMap: Record<string, keyof CondominiumRequest> = {
+        organizationid: "organizationId",
+        name: "name",
+        doc: "doc",
+        address: "address",
+        addressnumber: "addressNumber",
+        complement: "complement",
+        neighborhood: "neighborhood",
+        city: "city",
+        state: "state",
+        zipcode: "zipCode",
+        condominiumtype: "condominiumType",
+        unitcount: "unitCount",
+        hasblocks: "hasBlocks",
+        haswaterindividual: "hasWaterIndividual",
+        haspowerbyblock: "hasPowerByBlock",
+        hasgasbyblock: "hasGasByBlock",
+        allocationtype: "allocationType",
+        allocationvalueperc: "allocationValuePerc",
+        commit: "commit",
+      };
+
+      const stepFields: Array<keyof CondominiumRequest> =
+        activeStep === 0
+          ? ["organizationId", "name", "doc", "condominiumType", "unitCount"]
+          : activeStep === 1
+            ? [
+                "zipCode",
+                "address",
+                "addressNumber",
+                "neighborhood",
+                "city",
+                "state",
+                "complement",
+              ]
+            : [
+                "hasBlocks",
+                "hasWaterIndividual",
+                "hasPowerByBlock",
+                "hasGasByBlock",
+                "allocationType",
+                "allocationValuePerc",
+              ];
+
+      const nextErrors: Record<string, string> = {};
+
+      validations.forEach((validation) => {
+        const key = validation.field?.replace(/\s+/g, "").toLowerCase();
+        const field = key ? fieldMap[key] : undefined;
+        if (field && stepFields.includes(field)) {
+          nextErrors[field] = validation.message;
+        }
       });
+
+      if (Object.keys(nextErrors).length > 0) {
+        setErrors(nextErrors);
+        return;
+      }
+
+      setActiveStep((prev) => prev + 1);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao validar dados do condomínio.";
+      onNotify(message, "error");
+    }
   };
 
   const handleBack = () => {
@@ -352,24 +309,18 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const handleCepLookup = async () => {
     const cepDigits = formData.zipCode.replace(/\D/g, "");
 
-    // Se CEP incompleto ao perder foco
     if (cepDigits.length > 0 && cepDigits.length < 8) {
       setCepError("CEP incompleto. Digite 8 dígitos.");
-      setCepData(null);
-      setCepSearched(true);
       return;
     }
 
     if (cepDigits.length !== 8) {
       setCepError(null);
-      setCepData(null);
-      setCepSearched(false);
       return;
     }
 
     setCepLoading(true);
     setCepError(null);
-    setCepSearched(true); // Marca que pesquisou
 
     try {
       const response = await fetch(
@@ -378,32 +329,22 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       const data = await response.json();
       if (data?.erro) {
         setCepError("CEP não encontrado.");
-        setCepData(null);
         return;
       }
 
-      // Pequeno delay para efeito visual
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const cepInfo = {
-        address: data.logradouro || "",
-        neighborhood: data.bairro || "",
-        city: data.localidade || "",
-        state: data.uf || "",
-      };
-
-      setCepData(cepInfo);
-
       setFormData((prev) => ({
         ...prev,
-        address: cepInfo.address || prev.address,
-        neighborhood: cepInfo.neighborhood || prev.neighborhood,
-        city: cepInfo.city || prev.city,
-        state: cepInfo.state || prev.state,
+        address: data.logradouro || prev.address,
+        neighborhood: data.bairro || prev.neighborhood,
+        city: data.localidade || prev.city,
+        state: data.uf || prev.state,
       }));
-    } catch {
-      setCepError("Erro ao consultar CEP.");
-      setCepData(null);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao consultar CEP.";
+      setCepError(message);
     } finally {
       setCepLoading(false);
     }
@@ -424,7 +365,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(activeStep)) return;
     if (!formData.organizationId.trim()) {
       onNotify("OrganizationId não encontrado.", "error");
       return;
@@ -432,8 +372,15 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
     try {
       setLoading(true);
+      
+      // Remove formatação do CNPJ e CEP antes de enviar
+      const cleanDoc = formData.doc.replace(/\D/g, "");
+      const cleanZipCode = formData.zipCode.replace(/\D/g, "");
+      
       const payload: CondominiumRequest = {
         ...formData,
+        doc: cleanDoc,
+        zipCode: cleanZipCode,
         condominiumType: normalizeCondominiumTypeValue(
           formData.condominiumType,
         ),
@@ -516,21 +463,19 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       }
 
       if (editingId) {
-        const response = await condominiumService.updateCondominium(
-          editingId,
-          payload,
-        );
-        onNotify(
-          `Condomínio atualizado com sucesso! ID: ${response.condominiumId}`,
-          "success",
-        );
+        await condominiumService.updateCondominium(editingId, payload);
+        setSuccessSnackbar({
+          open: true,
+          message: `Condomínio "${formData.name}" atualizado com sucesso!`,
+        });
       } else {
         const response = await condominiumService.createCondominium(payload);
-        onNotify(
-          `Condomínio criado com sucesso! ID: ${response.condominiumId}`,
-          "success",
-        );
-        if (coverFile) {
+        setSuccessSnackbar({
+          open: true,
+          message: `Condomínio "${formData.name}" criado com sucesso!`,
+        });
+        
+        if (coverFile && response?.condominiumId) {
           try {
             await condominiumImageService.uploadCondominiumImage({
               imageType: "Cover",
@@ -541,8 +486,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             const message =
               error instanceof Error
                 ? error.message
-                : "Condomínio criado, mas houve erro ao enviar a imagem de capa.";
-            onNotify(message, "error");
+                : "Erro ao enviar imagem de capa.";
+            onNotify(message, "warning");
           }
         }
       }
@@ -555,8 +500,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       setCoverFile(null);
       setActiveStep(0);
       setEditingId(null);
-      setCepData(null);
-      setCepSearched(false);
       onClose();
     } catch (error) {
       const message =
@@ -580,9 +523,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     });
     setCoverFile(null);
     setErrors({});
-    setCepData(null);
     setCepError(null);
-    setCepSearched(false);
     onClose();
   };
 
@@ -591,6 +532,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       case 0:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
+            <Typography variant="subtitle2" className="step-subtitle">
+              Informações Básicas
+            </Typography>
             <TextField
               fullWidth
               label={formData.name ? "" : "Nome do Condomínio"}
@@ -665,6 +609,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       case 1:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
+            <Typography variant="subtitle2" className="step-subtitle">
+              Endereço
+            </Typography>
             <TextField
               fullWidth
               label={formData.zipCode ? "" : "CEP"}
@@ -672,11 +619,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               onChange={(e) => handleChange("zipCode", e.target.value)}
               onBlur={handleCepLookup}
               error={!!errors.zipCode || !!cepError}
-              helperText={
-                errors.zipCode ||
-                cepError ||
-                "Informe o CEP para buscar automaticamente"
-              }
+              helperText={errors.zipCode || cepError}
               placeholder="00000-000"
               size="small"
               InputLabelProps={{ shrink: false }}
@@ -687,193 +630,89 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 ) : null,
               }}
             />
-
-            {/* QUADRO SEMPRE VISÍVEL - LOCKED POR PADRÃO */}
-            <Box sx={{ mt: 0.5 }}>
-              {/* Alert de status */}
-              {cepSearched && cepData && (
-                <Alert 
-                  severity="success" 
-                  sx={{ 
-                    mb: 1.5,
-                    fontSize: "12px",
-                    py: 0.5,
-                    "& .MuiAlert-message": {
-                      fontWeight: 600
-                    }
-                  }}
-                >
-                  Endereço encontrado! Complete apenas Número e Complemento
-                </Alert>
-              )}
-              
-              {cepSearched && !cepData && cepError && (
-                <Alert 
-                  severity="warning" 
-                  sx={{ 
-                    mb: 1.5,
-                    fontSize: "12px",
-                    py: 0.5,
-                    "& .MuiAlert-message": {
-                      fontWeight: 600
-                    }
-                  }}
-                >
-                  CEP não encontrado. Preencha manualmente os campos abaixo
-                </Alert>
-              )}
-
-              {!cepSearched && (
-                <Alert 
-                  severity="info" 
-                  sx={{ 
-                    mb: 1.5,
-                    fontSize: "12px",
-                    py: 0.5,
-                    "& .MuiAlert-message": {
-                      fontWeight: 600
-                    }
-                  }}
-                >
-                  Informe o CEP acima para pesquisar o endereço
-                </Alert>
-              )}
-              
-              {/* Campos do endereço */}
-              <Grid container spacing={1.2}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label={formData.address ? "" : "Logradouro"}
-                    value={formData.address}
-                    onChange={(e) => handleChange("address", e.target.value)}
-                    error={!!errors.address}
-                    helperText={errors.address}
-                    size="small"
-                    InputLabelProps={{ shrink: false }}
-                    disabled={!cepSearched || (cepSearched && cepData !== null)} 
-                    InputProps={{
-                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
-                        background: "#f5f7fa !important",
-                        color: "#666 !important"
-                      } : {}
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label={formData.neighborhood ? "" : "Bairro"}
-                    value={formData.neighborhood}
-                    onChange={(e) => handleChange("neighborhood", e.target.value)}
-                    error={!!errors.neighborhood}
-                    helperText={errors.neighborhood}
-                    size="small"
-                    InputLabelProps={{ shrink: false }}
-                    disabled={!cepSearched || (cepSearched && cepData !== null)}
-                    InputProps={{
-                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
-                        background: "#f5f7fa !important",
-                        color: "#666 !important"
-                      } : {}
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label={formData.city ? "" : "Cidade"}
-                    value={formData.city}
-                    onChange={(e) => handleChange("city", e.target.value)}
-                    error={!!errors.city}
-                    helperText={errors.city}
-                    size="small"
-                    InputLabelProps={{ shrink: false }}
-                    disabled={!cepSearched || (cepSearched && cepData !== null)}
-                    InputProps={{
-                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
-                        background: "#f5f7fa !important",
-                        color: "#666 !important"
-                      } : {}
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label={formData.state ? "" : "Estado (UF)"}
-                    value={formData.state}
-                    onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
-                    error={!!errors.state}
-                    helperText={errors.state}
-                    size="small"
-                    InputLabelProps={{ shrink: false }}
-                    inputProps={{ maxLength: 2 }}
-                    disabled={!cepSearched || (cepSearched && cepData !== null)}
-                    InputProps={{
-                      sx: (!cepSearched || (cepSearched && cepData !== null)) ? {
-                        background: "#f5f7fa !important",
-                        color: "#666 !important"
-                      } : {}
-                    }}
-                  />
-                </Grid>
-                
-                {/* Número e Complemento - sempre liberados após pesquisar */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label={formData.addressNumber ? "" : "Número"}
-                    value={formData.addressNumber}
-                    onChange={(e) => handleChange("addressNumber", e.target.value)}
-                    error={!!errors.addressNumber}
-                    helperText={errors.addressNumber}
-                    size="small"
-                    InputLabelProps={{ shrink: false }}
-                    disabled={!cepSearched}
-                    InputProps={{
-                      sx: !cepSearched ? {
-                        background: "#f5f7fa !important",
-                        color: "#666 !important"
-                      } : {}
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label={formData.complement ? "" : "Complemento (opcional)"}
-                    value={formData.complement}
-                    onChange={(e) => handleChange("complement", e.target.value)}
-                    size="small"
-                    InputLabelProps={{ shrink: false }}
-                    disabled={!cepSearched}
-                    InputProps={{
-                      sx: !cepSearched ? {
-                        background: "#f5f7fa !important",
-                        color: "#666 !important"
-                      } : {}
-                    }}
-                  />
-                </Grid>
+            <Grid container spacing={1.2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label={formData.address ? "" : "Logradouro"}
+                  value={formData.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
+                  error={!!errors.address}
+                  helperText={errors.address}
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
+                />
               </Grid>
-            </Box>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label={formData.addressNumber ? "" : "Número"}
+                  value={formData.addressNumber}
+                  onChange={(e) => handleChange("addressNumber", e.target.value)}
+                  error={!!errors.addressNumber}
+                  helperText={errors.addressNumber}
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label={formData.complement ? "" : "Complemento"}
+                  value={formData.complement}
+                  onChange={(e) => handleChange("complement", e.target.value)}
+                  error={!!errors.complement}
+                  helperText={errors.complement}
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label={formData.neighborhood ? "" : "Bairro"}
+                  value={formData.neighborhood}
+                  onChange={(e) => handleChange("neighborhood", e.target.value)}
+                  error={!!errors.neighborhood}
+                  helperText={errors.neighborhood}
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={8}>
+                <TextField
+                  fullWidth
+                  label={formData.city ? "" : "Cidade"}
+                  value={formData.city}
+                  onChange={(e) => handleChange("city", e.target.value)}
+                  error={!!errors.city}
+                  helperText={errors.city}
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label={formData.state ? "" : "UF"}
+                  value={formData.state}
+                  onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
+                  error={!!errors.state}
+                  helperText={errors.state}
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
+                  inputProps={{ maxLength: 2 }}
+                />
+              </Grid>
+            </Grid>
           </Box>
         );
 
       case 2:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
-            <Typography 
-              variant="subtitle2" 
-              sx={{ 
-                fontWeight: 700, 
-                color: "#1976d2", 
-                mb: 0.5,
-                fontSize: "14px"
-              }}
-            >
-              Infraestrutura
+            <Typography variant="subtitle2" className="step-subtitle">
+              Configurações e Rateio
             </Typography>
             <Grid container spacing={0.8}>
               <Grid item xs={12} sm={6}>
@@ -932,19 +771,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               </Grid>
             </Grid>
 
-            <Typography 
-              variant="subtitle2" 
-              sx={{ 
-                fontWeight: 700, 
-                color: "#1976d2", 
-                mt: 1,
-                mb: 0.5,
-                fontSize: "14px"
-              }}
-            >
-              Rateio
-            </Typography>
-            <Grid container spacing={1.2}>
+            <Grid container spacing={1.2} sx={{ mt: 0.5 }}>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
@@ -958,7 +785,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     )
                   }
                   error={!!errors.allocationType}
-                  helperText={allocationError || errors.allocationType}
+                  helperText={errors.allocationType || allocationError}
                   size="small"
                 >
                   {allocationLoading ? (
@@ -1002,26 +829,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               </Grid>
             </Grid>
 
-            <Typography 
-              variant="subtitle2" 
-              sx={{ 
-                fontWeight: 700, 
-                color: "#1976d2", 
-                mt: 1,
-                mb: 0.5,
-                fontSize: "14px"
-              }}
-            >
-              Logotipo do condomínio (opcional)
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                flexWrap: "wrap",
-              }}
-            >
+            <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
               <Button 
                 variant="outlined" 
                 component="label" 
@@ -1042,14 +850,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 />
               </Button>
               <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
-                {coverFile ? coverFile.name : "Nenhum arquivo"}
+                {coverFile ? coverFile.name : "Nenhuma imagem selecionada"}
               </Typography>
             </Box>
-            {editingId && (
-              <Alert severity="info" sx={{ py: 0.5, fontSize: "12px" }}>
-                Troca de logotipo no editar será habilitada em breve.
-              </Alert>
-            )}
           </Box>
         );
 
@@ -1059,63 +862,83 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   };
 
   return (
-    <StepWizardCard
-      title={editingId ? "Editar condomínio" : "Criar condomínio"}
-      subtitle={steps[activeStep]}
-      steps={steps}
-      onClose={handleCloseWizard}
-      activeStep={activeStep}
-      showBack={activeStep > 0 && activeStep < steps.length}
-      onBack={handleBack}
-    >
-      <div className="condominio-form">
-        {renderStepContent(activeStep)}
-      </div>
-      <Box
+    <>
+      <StepWizardCard
+        title={editingId ? "Editar condomínio" : "Criar condomínio"}
+        subtitle={steps[activeStep]}
+        steps={steps}
+        onClose={handleCloseWizard}
+        activeStep={activeStep}
+        showBack={activeStep > 0 && activeStep < steps.length}
+        onBack={handleBack}
+      >
+        <div className="condominio-form">
+          {renderStepContent(activeStep)}
+        </div>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 2,
+            mt: 1.5,
+            pt: 1.5,
+            borderTop: "2px solid #f0f2f5",
+          }}
+        >
+          {activeStep === steps.length - 1 ? (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={20} /> : "Concluir"}
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              onClick={handleNext}
+            >
+              Próximo
+            </Button>
+          )}
+        </Box>
+      </StepWizardCard>
+
+      {/* Snackbar de Sucesso - Interno ao Form */}
+      <Snackbar
+        open={successSnackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSuccessSnackbar({ open: false, message: "" })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
         sx={{
-          display: "flex",
-          justifyContent: "center",
-          gap: 2,
-          mt: 1.5,
-          pt: 1.5,
-          borderTop: "2px solid #f0f2f5",
+          top: "32px !important",
+          "& .MuiAlert-root": {
+            minWidth: "400px",
+            borderRadius: "16px",
+            boxShadow: "0 12px 40px rgba(0, 0, 0, 0.2)",
+          }
         }}
       >
-        {activeStep === steps.length - 1 ? (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={loading}
-            sx={{
-              minWidth: 100,
-              height: 38,
-              textTransform: "none",
-              fontSize: "13px",
-            }}
-          >
-            {loading
-              ? editingId
-                ? "Atualizando..."
-                : "Criando..."
-              : "Concluir"}
-          </Button>
-        ) : (
-          <Button
-            variant="contained"
-            onClick={handleNext}
-            sx={{
-              minWidth: 100,
-              height: 38,
-              textTransform: "none",
-              fontSize: "13px",
-            }}
-          >
-            Próximo
-          </Button>
-        )}
-      </Box>
-    </StepWizardCard>
+        <Alert
+          onClose={() => setSuccessSnackbar({ open: false, message: "" })}
+          severity="success"
+          variant="filled"
+          sx={{
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            color: "white",
+            fontSize: "15px",
+            fontWeight: 600,
+            "& .MuiAlert-icon": {
+              color: "white",
+              fontSize: "26px",
+            },
+          }}
+        >
+          {successSnackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

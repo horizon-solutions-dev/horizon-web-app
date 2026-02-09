@@ -2,9 +2,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  //padding: 24px;
-  //background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-  //min-height: 100vh;
 }
 
 .step-wizard-card {
@@ -20,20 +17,20 @@
 }
 
 .step-wizard-close {
-    position: absolute;
-    top: 18px;
-    right: 20px;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    border: 1px solid #f1c0c0;
-    background: #fff5f5;
-    color: #d32f2f;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #f1c0c0;
+  background: #fff5f5;
+  color: #d32f2f;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
  .MuiBox-root:has(> .MuiTextField-root[placeholder*="Buscar"]) {
@@ -161,10 +158,24 @@
   color: #1b1b1b;
 }
 
+// ============================================
+// SUBTÍTULO EM NEGRITO - PADRÃO (CONDOMÍNIO)
+// ============================================
 .step-wizard-subtitle {
   font-size: 14px;
-  color: #666;
+  font-weight: 700 !important;
+  color: #000000 !important;
   text-align: center;
+}
+
+// ============================================
+// SUBTÍTULO SEM NEGRITO - CUSTOMIZADO (BLOCOS)
+// ============================================
+.bloco-form-subtitle {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #000000 !important;
+  text-align: center !important;
 }
 
 .step-wizard-content {
@@ -197,7 +208,6 @@
   justify-content: center;
   gap: 8px;
   padding-top: 20px;
-
 }
 
 .step-dot {
