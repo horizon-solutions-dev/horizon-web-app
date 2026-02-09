@@ -58,18 +58,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const [activeStep, setActiveStep] = useState(0);
   const [validatingStep, setValidatingStep] = useState(false);
   const steps = ["Dados do residente", "Periodo", "Permissoes"];
-<<<<<<< HEAD
 
 const tokenUserId = useMemo(() => {
     const token = AuthService.getToken();
     return TokenService.getUserId(token) || '';
   }, []);    
-=======
-  const tokenUserId = useMemo(() => {
-    const token = AuthService.getToken();
-    return TokenService.getUserId(token) || "";
-  }, []);
->>>>>>> 1eea27b9c3e9d0285af0b2f3a7a6638006273f39
   useEffect(() => {
     if (!open) return;
     setActiveStep(0);
@@ -84,12 +77,7 @@ const tokenUserId = useMemo(() => {
       canMakeReservations: false,
       hasGatehouseAccess: false,
     });
-<<<<<<< HEAD
-    setErrors({});
-  }, [open, unitIdPreset]);
-=======
   }, [open, unitIdPreset, tokenUserId]);
->>>>>>> 1eea27b9c3e9d0285af0b2f3a7a6638006273f39
 
   if (!open) return null;
 
