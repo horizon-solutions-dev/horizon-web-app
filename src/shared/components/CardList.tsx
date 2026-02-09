@@ -117,27 +117,26 @@ export default function CardList({
       ) : null}
 
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-        <Box sx={{ flex: 1 }}>
-          <TextField
-            fullWidth
-            placeholder={searchPlaceholder}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: 'text.secondary' }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: '#fff',
-              },
-            }}
-          />
-        </Box>
-        {showFilters ? (
+        <TextField
+          fullWidth
+          placeholder={searchPlaceholder}
+          onChange={(e) => onSearchChange?.(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: 'text.secondary' }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            flex: 1,
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              backgroundColor: '#fff',
+            },
+          }}
+        />
+        {showFilters && (
           <IconButton
             sx={{
               width: 40,
@@ -145,6 +144,7 @@ export default function CardList({
               border: '2px solid #e0e0e0',
               borderRadius: 2,
               color: '#666',
+              flexShrink: 0,
               transition: 'all 0.3s ease',
               '&:hover': {
                 borderColor: '#1976d2',
@@ -155,8 +155,8 @@ export default function CardList({
           >
             <Tune />
           </IconButton>
-        ) : null}
-        {onAddClick && addButtonPlacement === 'toolbar' ? (
+        )}
+        {onAddClick && addButtonPlacement === 'toolbar' && (
           <IconButton
             onClick={onAddClick}
             sx={{
@@ -165,6 +165,7 @@ export default function CardList({
               border: '2px solid #e0e0e0',
               borderRadius: 2,
               color: '#666',
+              flexShrink: 0,
               transition: 'all 0.3s ease',
               '&:hover': {
                 borderColor: '#d32f2f',
@@ -175,7 +176,7 @@ export default function CardList({
           >
             <Add />
           </IconButton>
-        ) : null}
+        )}
       </Box>
 
       <Grid container spacing={2}>
