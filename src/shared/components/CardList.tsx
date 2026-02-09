@@ -138,23 +138,39 @@ export default function CardList({
           />
         </Box>
         {showFilters ? (
-          <Button
-            variant="outlined"
-            startIcon={<Tune />}
-            sx={{ borderRadius: 2, fontWeight: 600, textTransform: 'uppercase' }}
+          <IconButton
+            sx={{
+              width: 40,
+              height: 40,
+              border: '2px solid #e0e0e0',
+              borderRadius: 2,
+              color: '#666',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                borderColor: '#1976d2',
+                color: '#1976d2',
+                backgroundColor: 'rgba(25, 118, 210, 0.04)',
+              },
+            }}
           >
-            {filtersLabel}
-          </Button>
+            <Tune />
+          </IconButton>
         ) : null}
         {onAddClick && addButtonPlacement === 'toolbar' ? (
           <IconButton
             onClick={onAddClick}
             sx={{
-              width: 44,
-              height: 44,
-              background: 'linear-gradient(135deg, #7f5bff 0%, #6c63ff 100%)',
-              color: '#fff',
-              '&:hover': { background: 'linear-gradient(135deg, #6c63ff 0%, #5a52e6 100%)' },
+              width: 40,
+              height: 40,
+              border: '2px solid #e0e0e0',
+              borderRadius: 2,
+              color: '#666',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                borderColor: '#d32f2f',
+                color: '#d32f2f',
+                backgroundColor: 'rgba(211, 47, 47, 0.04)',
+              },
             }}
           >
             <Add />

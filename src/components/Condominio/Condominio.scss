@@ -68,13 +68,10 @@
   }
 
   // ============================================
-  // BOTÃO FECHAR - CINZA COM HOVER VERMELHO
-  // APLICA EM TODOS OS CONTEXTOS (LISTAGEM E WIZARD)
+  // BOTÃO FECHAR (HEADER) - CINZA COM HOVER VERMELHO
   // ============================================
   .close-button,
-  .MuiIconButton-root[aria-label="Fechar"],
-  .MuiIconButton-root:has(.MuiSvgIcon-root[data-testid="CloseIcon"]),
-  .MuiBox-root:first-child > .MuiIconButton-root:last-child {
+  .MuiIconButton-root[aria-label="Fechar"] {
     width: 40px !important;
     height: 40px !important;
     background: white !important;
@@ -82,7 +79,6 @@
     border-radius: 10px !important;
     color: #666 !important;
     transition: all 0.2s ease !important;
-    position: absolute !important;
 
     &:hover {
       background: white !important;
@@ -112,7 +108,7 @@
   }
 
   // ============================================
-  // BUSCA E NOVO
+  // TOOLBAR: BUSCA + BOTÃO CRIAR (BRANCO)
   // ============================================
   .MuiBox-root:has(> .MuiTextField-root[placeholder*="Buscar"]) {
     display: flex !important;
@@ -121,6 +117,7 @@
     margin-bottom: 16px !important;
     flex-wrap: wrap !important;
 
+    // Campo de busca
     .MuiTextField-root {
       flex: 1 !important;
       min-width: 260px !important;
@@ -159,24 +156,41 @@
       }
     }
 
-    .MuiButton-root:last-child,
-    .MuiFab-root {
-      width: 40px !important;
-      height: 40px !important;
-      min-width: 40px !important;
-      border-radius: 10px !important;
-      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
-      color: white !important;
-      box-shadow: 0 3px 12px rgba(25, 118, 210, 0.3) !important;
-      padding: 0 !important;
+    // BOTÃO "NOVO" (BRANCO COM BORDA AZUL) - PADRONIZADO
+    .MuiIconButton-root,
+    .MuiButtonBase-root,
+    .MuiButton-root,
+    .MuiFab-root,
+    button {
+      &:not(.close-button):not([aria-label="Fechar"]):not([aria-label="Voltar"]) {
+        width: auto !important;
+        height: 40px !important;
+        min-width: auto !important;
+        min-height: auto !important;
+        border-radius: 10px !important;
+        background: white !important;
+        color: #1976d2 !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        text-transform: none !important;
+        padding: 0 16px !important;
+        border: 2px solid #1976d2 !important;
+        box-shadow: 0 2px 6px rgba(25, 118, 210, 0.15) !important;
+        flex-shrink: 0 !important;
+        transition: all 0.2s ease !important;
 
-      &:hover {
-        background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
-        box-shadow: 0 5px 16px rgba(25, 118, 210, 0.4) !important;
-      }
+        &:hover {
+          background: rgba(25, 118, 210, 0.05) !important;
+          border-color: #1565c0 !important;
+          box-shadow: 0 3px 10px rgba(25, 118, 210, 0.25) !important;
+        }
 
-      .MuiSvgIcon-root {
-        font-size: 22px !important;
+        .MuiSvgIcon-root,
+        svg {
+          font-size: 18px !important;
+          margin-right: 4px !important;
+          color: #1976d2 !important;
+        }
       }
     }
   }
@@ -323,7 +337,7 @@
   }
 
   // ============================================
-  // BOTÕES EDITAR E EXCLUIR - ORIGINAL
+  // BOTÕES DOS CARDS: EDITAR E EXCLUIR
   // ============================================
   .action-button-edit {
     min-width: 80px !important;
@@ -522,7 +536,7 @@
   }
 
   // ============================================
-  // INPUTS
+  // INPUTS DO FORMULÁRIO
   // ============================================
   .condominio-form .MuiTextField-root {
     margin-bottom: 0 !important;
@@ -637,43 +651,37 @@
   }
 
   // ============================================
-  // BOTÕES DO FORMULÁRIO - PADRÃO LOGIN
-  // TAMANHO IGUAL AO BOTÃO DE LOGIN
+  // BOTÕES DO FORMULÁRIO (WIZARD) - ESTILO ARREDONDADO
   // ============================================
-  // Seletores múltiplos para garantir que pega os botões
-  .MuiButton-contained,
-  .MuiButton-containedPrimary,
-  button.MuiButton-contained,
-  button.MuiButton-containedPrimary,
-  .MuiButton-root.MuiButton-contained,
-  .MuiButton-root.MuiButton-containedPrimary,
-  .condominio-container .MuiButton-contained,
-  .condominio-container .MuiButton-containedPrimary {
-    background: #0067b8 !important;
+  .condominio-form .MuiButton-contained,
+  .condominio-form .MuiButton-containedPrimary {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
     color: white !important;
     border: none !important;
-    padding: 14px 40px !important;          /* ← IGUAL AO LOGIN */
+    padding: 10px 32px !important;
     font-size: 14px !important;
-    font-weight: 500 !important;
-    min-width: 140px !important;            /* ← IGUAL AO LOGIN */
-    border-radius: 12px !important;
+    font-weight: 600 !important;
+    min-width: 120px !important;
+    border-radius: 24px !important;
     transition: all 0.2s ease !important;
-    box-shadow: 0 2px 8px rgba(0, 103, 184, 0.2) !important;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.25) !important;
     text-transform: none !important;
-    height: auto !important;                /* Remove qualquer height fixo */
+    height: 40px !important;
     line-height: normal !important;
 
     &:hover {
-      background: #005a9e !important;
-      box-shadow: 0 4px 12px rgba(0, 103, 184, 0.3) !important;
+      background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
+      box-shadow: 0 6px 16px rgba(25, 118, 210, 0.35) !important;
+      transform: translateY(-1px) !important;
     }
 
     &:active {
-      transform: scale(0.98) !important;
+      transform: translateY(0) scale(0.98) !important;
     }
 
     &:disabled {
-      background: #c0c0c0 !important;
+      background: #e0e4e8 !important;
+      color: #999 !important;
       cursor: not-allowed !important;
       box-shadow: none !important;
       opacity: 0.6 !important;
