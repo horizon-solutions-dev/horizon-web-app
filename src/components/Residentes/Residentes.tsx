@@ -112,11 +112,14 @@ const Residentes: React.FC = () => {
           // ignore
         }
       }
-      const normalized = response?.data ?? [];
+      const normalized = response?.items ?? [];
       const computedTotalPages =
-        response?.totalPages ??
-        Math.max(1, Math.ceil((response?.total ?? normalized.length) / condoPageSize));
-      setCondoPage(response?.pageNumber ?? pageNumber);
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil((response?.paging?.total ?? normalized.length) / condoPageSize),
+        );
+      setCondoPage(response?.paging?.pageNumber ?? pageNumber);
       setCondoTotalPages(computedTotalPages);
       setCondominiums(normalized);
     } catch (error) {

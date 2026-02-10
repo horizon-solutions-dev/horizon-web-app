@@ -101,10 +101,13 @@ const CondominioPage: React.FC = () => {
  const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
+        response?.paging?.totalPages ??
         Math.max(
           1,
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
+      setListPage(response?.paging?.pageNumber ?? pageNumber);
       setListPage(response?.paging?.pageNumber ?? pageNumber);
       setTotalPages(computedTotalPages);
       setCondominiums(normalized);

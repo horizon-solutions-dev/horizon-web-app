@@ -93,14 +93,14 @@ const Blocos: React.FC = () => {
           // ignore organization name errors
         }
       }
-      const normalized = response?.data ?? [];
+      const normalized = response?.items ?? [];
       const computedTotalPages =
-        response?.totalPages ??
+        response?.paging?.totalPages ??
         Math.max(
           1,
-          Math.ceil((response?.total ?? normalized.length) / pageSize),
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
-      setListPage(response?.pageNumber ?? pageNumber);
+      setListPage(response?.paging?.pageNumber ?? pageNumber);
       setTotalPages(computedTotalPages);
       setCondominiums(normalized);
     } catch (error) {
@@ -133,6 +133,7 @@ const Blocos: React.FC = () => {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar blocos.";
       setListError(message);
+      setBlocks([]); // Adicionado para resetar blocks em caso de erro
     } finally {
       setListLoading(false);
     }
@@ -157,6 +158,7 @@ const Blocos: React.FC = () => {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar blocos.";
       setListError(message);
+      setBlocks([]); // Adicionado para resetar blocks em caso de erro
     } finally {
       setListLoading(false);
     }
@@ -366,7 +368,7 @@ const Blocos: React.FC = () => {
                     addButtonPlacement="toolbar"
                     emptyImageLabel="Sem imagem"
                     showPagination={false}
-                    items={blocks
+                    items={(Array.isArray(blocks) ? blocks : []) // Adicionado check para evitar erro se blocks não for array
                       .filter((block) =>
                         [block.name, block.code]
                           .filter(Boolean)

@@ -36,7 +36,6 @@ interface CardListProps {
   addLabel?: string;
   showTitle?: boolean;
   showFilters?: boolean;
-  filtersLabel?: string;
   addButtonPlacement?: 'header' | 'toolbar';
   emptyImageLabel?: string;
   page?: number;
@@ -61,7 +60,6 @@ export default function CardList({
   showPagination = true,
   showTitle = true,
   showFilters = true,
-  filtersLabel = 'Filtros',
   addButtonPlacement = 'header',
   emptyImageLabel = 'Sem imagem',
 }: CardListProps) {
