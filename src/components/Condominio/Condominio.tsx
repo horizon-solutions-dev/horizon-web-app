@@ -94,17 +94,18 @@ const CondominioPage: React.FC = () => {
             organizations?.[0]?.name || organizations?.[0]?.legalName;
           if (orgName) setOrganizationName(orgName);
         } catch (error) {
+          console.error("Erro ao carregar nome da organização:", error);
           // Silencioso - não é crítico
         }
       }
-      const normalized = response?.data ?? [];
+ const normalized = response?.items ?? [];
       const computedTotalPages =
-        response?.totalPages ??
+        response?.paging?.totalPages ??
         Math.max(
           1,
-          Math.ceil((response?.total ?? normalized.length) / pageSize),
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
-      setListPage(response?.pageNumber ?? pageNumber);
+      setListPage(response?.paging?.pageNumber ?? pageNumber);
       setTotalPages(computedTotalPages);
       setCondominiums(normalized);
       await loadCondominiumImages(normalized);
@@ -138,6 +139,7 @@ const CondominioPage: React.FC = () => {
               `data:${detail.contentType};base64,${detail.contentFile}`;
           }
         } catch (error) {
+          console.error("Erro ao carregar imagem do condomínio:", error);
           // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
           // Não loga nada no console para não poluir
         }
@@ -166,6 +168,7 @@ const CondominioPage: React.FC = () => {
   useEffect(() => {
     loadCondominiums(1);
     loadCondominiumTypes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [openDelete, setOpenDelete] = useState(false);
   const getCondominiumTypeLabel = (value: string | number) => {

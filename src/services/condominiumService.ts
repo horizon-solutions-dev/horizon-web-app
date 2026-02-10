@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { apiClient } from './apiClient';
+import type { PagedResponse } from '../models/pagination.model';
+import { normalizePagedResponse, type LegacyPagedResponse } from '../shared/utils/pagination';
 
 export interface CondominiumRequest {
   organizationId: string;
@@ -40,13 +42,7 @@ export interface AllocationTypeEnum {
   description: string;
 }
 
-export interface CondominiumPagedResponse {
-  data: Condominium[];
-  total: number;
-  pageNumber: number;
-  pageSize: number;
-  totalPages?: number;
-}
+export type CondominiumPagedResponse = PagedResponse<Condominium>;
 
 class CondominiumService {
   private baseUrl = 'https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/condominiums';
@@ -86,21 +82,12 @@ class CondominiumService {
         ...(pageSize !== undefined && { PageSize: pageSize.toString() }),
       });
 
-      const response = await apiClient.get<Condominium[] | CondominiumPagedResponse>(
+      const response = await apiClient.get<
+        Condominium[] | CondominiumPagedResponse | LegacyPagedResponse<Condominium>
+      >(
         `${this.baseUrl}?${params}`
       );
-
-      if (Array.isArray(response)) {
-        return {
-          data: response,
-          total: response.length,
-          pageNumber: pageNumber ?? 1,
-          pageSize: pageSize || response.length || 1,
-          totalPages: 1,
-        } satisfies CondominiumPagedResponse;
-      }
-
-      return response;
+      return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
       console.error('Erro ao buscar Condominios:', error);
       throw error;

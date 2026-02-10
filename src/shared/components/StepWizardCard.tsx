@@ -4,6 +4,7 @@ import "./StepWizardCard.scss";
 import { IoChevronBack } from "react-icons/io5";
 import { Tooltip, IconButton, Box } from "@mui/material";
 import '../../index.scss'
+import Logo from '../../assets/logo.svg'
 interface StepWizardCardProps {
   title: string;
   subtitle?: string;
@@ -59,7 +60,7 @@ export default function StepWizardCard({
 
         {showLogo ? (
           <div className="step-wizard-logo">
-            <img src="/src/assets/logo.svg" alt="Horizon" />
+            <img src={Logo} alt="Horizon" />
           </div>
         ) : null}
 
