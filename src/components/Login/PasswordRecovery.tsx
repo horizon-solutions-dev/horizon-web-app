@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import "./password-recovery.scss";
 import { IoIosArrowBack } from "react-icons/io";
+import Logo from '../../assets/logo.svg';
 
 interface PasswordRecoveryProps {
   onBack: () => void;
@@ -156,7 +157,7 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
           >
             <div className="step-header">
               <div className="logo">
-                <img src="/src/assets/logo.svg" alt="Logo" />
+                <img src={Logo} alt="Logo" />
               </div>
             </div>
 
@@ -232,7 +233,7 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
 
             <div className="step-header">
               <div className="logo">
-                <img src="/src/assets/logo.svg" alt="Logo" />
+                <img src={Logo} alt="Logo" />
               </div>
             </div>
 
@@ -315,7 +316,7 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
 
             <div className="step-header">
               <div className="logo">
-                <img src="/src/assets/logo.svg" alt="Logo" />
+                <img src={Logo} alt="Logo" />
               </div>
             </div>
 

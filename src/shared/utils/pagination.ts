@@ -1,4 +1,4 @@
-import type { PagedResponse, PagingInfo } from '../../models/pagination.model';
+import type { PagingInfo, PagedResponse } from "../../models/pagination.model";
 
 export type LegacyPagedResponse<T> = {
   data: T[];

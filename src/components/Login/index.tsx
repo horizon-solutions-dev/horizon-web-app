@@ -12,7 +12,7 @@ import { organizationService, type OrganizationMeResponse } from "../../services
 import { IoIosArrowBack } from "react-icons/io";
 import { MdCheckCircle } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
-
+import Logo from '../../assets/logo.svg';
 
 interface LoginFormValues {
   email: string;
@@ -245,7 +245,7 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
     >
       <div className="logo-section">
         <div className="logo">
-          <img src="/src/assets/logo.svg" alt="Logo" />
+          <img src={Logo} alt="Logo" />
         </div>
       </div>
 
@@ -316,7 +316,7 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
       </button>
       <div className="logo-section">
         <div className="logo">
-          <img src="/src/assets/logo.svg" alt="Logo" />
+          <img src={Logo} alt="Logo" />
         </div>
       </div>
 
@@ -379,7 +379,7 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
     <>
       <div className="logo-section">
         <div className="logo">
-          <img src="/src/assets/logo.svg" alt="Logo" />
+          <img src={Logo} alt="Logo" />
         </div>
       </div>
 
