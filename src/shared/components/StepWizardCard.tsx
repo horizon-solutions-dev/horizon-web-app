@@ -3,7 +3,7 @@ import { CheckCircle, Close } from "@mui/icons-material";
 import "./StepWizardCard.scss";
 import { IoChevronBack } from "react-icons/io5";
 import { Tooltip, IconButton, Box } from "@mui/material";
-
+import '../../index.scss'
 interface StepWizardCardProps {
   title: string;
   subtitle?: string;

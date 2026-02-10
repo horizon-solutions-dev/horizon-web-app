@@ -33,6 +33,7 @@ import { condominiumImageService } from "../../services/condominiumImageService"
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import CondominioForm from "./CondominioForm";
+import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
@@ -96,14 +97,14 @@ const CondominioPage: React.FC = () => {
           // Silencioso - não é crítico
         }
       }
-      const normalized = response?.data ?? [];
+      const normalized = response?.items ?? [];
       const computedTotalPages =
-        response?.totalPages ??
+        response?.paging?.totalPages ??
         Math.max(
           1,
-          Math.ceil((response?.total ?? normalized.length) / pageSize),
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
-      setListPage(response?.pageNumber ?? pageNumber);
+      setListPage(response?.paging?.pageNumber ?? pageNumber);
       setTotalPages(computedTotalPages);
       setCondominiums(normalized);
       await loadCondominiumImages(normalized);
@@ -166,7 +167,7 @@ const CondominioPage: React.FC = () => {
     loadCondominiums(1);
     loadCondominiumTypes();
   }, []);
-
+  const [openDelete, setOpenDelete] = useState(false);
   const getCondominiumTypeLabel = (value: string | number) => {
     const match = condominiumTypes.find(
       (type) => type.id === value || type.value === value,
@@ -180,11 +181,9 @@ const CondominioPage: React.FC = () => {
   };
 
   const handleDelete = (condominium: Condominium) => {
-    const confirmed = window.confirm(
-      `Deseja excluir o condomínio ${condominium.name}?`,
-    );
-    if (!confirmed) return;
-    handleNotify("Exclusão ainda não está disponível.", "error");
+    
+    console.log("Deletar condomínio:", condominium);
+    setOpenDelete(false);
   };
 
   const handleOpenCreate = () => {
@@ -355,7 +354,7 @@ const CondominioPage: React.FC = () => {
                             variant="outlined"
                             className="action-button-delete"
                             startIcon={<DeleteOutline />}
-                            onClick={() => handleDelete(condominium)}
+                            onClick={() => setOpenDelete(true)}
                           >
                             Excluir
                           </Button>
@@ -368,6 +367,17 @@ const CondominioPage: React.FC = () => {
           </Paper>
         )}
       </Container>
+
+      <DeleteConfirmModal
+        open={openDelete}
+        onConfirm={() => {
+          if (editingCondominium) {
+            handleDelete(editingCondominium);
+          }
+        }}
+        onCancel={() => setOpenDelete(false)}
+        onClose={() => setOpenDelete(false)}
+      />
 
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}

@@ -51,7 +51,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     canMakeReservations: false,
     hasGatehouseAccess: false,
   };
-
   const [formData, setFormData] = useState<CondominiumUnitResidentRequest>(
     initialForm,
   );
@@ -78,8 +77,7 @@ const tokenUserId = useMemo(() => {
       canMakeReservations: false,
       hasGatehouseAccess: false,
     });
-    setErrors({});
-  }, [open, unitIdPreset]);
+  }, [open, unitIdPreset, tokenUserId]);
 
   if (!open) return null;
 
@@ -160,7 +158,7 @@ const tokenUserId = useMemo(() => {
       await onSaved();
       setFormData({
         condominiumUnitId: unitIdPreset || "",
-        userId: "",
+        userId: tokenUserId,
         unitType: "Owner",
         startDate: new Date().toISOString().slice(0, 16),
         endDate: "",

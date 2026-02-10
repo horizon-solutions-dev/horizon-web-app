@@ -1,0 +1,125 @@
+.action-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1400;
+}
+
+.action-modal {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 20px;
+  border: 3px solid var(--accent-border);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
+  padding: 28px 28px 22px;
+  position: relative;
+  text-align: center;
+}
+
+.action-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: #9aa1aa;
+}
+
+.action-modal__image {
+  height: 140px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 12px;
+  overflow: hidden;
+  color: #a3a3a3;
+  font-size: 12px;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+}
+
+.action-modal__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-text);
+  margin-bottom: 6px;
+}
+
+.action-modal__message {
+  font-size: 14px;
+  color: #5f6368;
+  margin-bottom: 8px;
+}
+
+.action-modal__detail {
+  font-size: 13px;
+  color: #a16207;
+  margin-bottom: 8px;
+}
+
+.action-modal__actions {
+display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.action-modal__button {
+  min-width: 120px;
+  text-transform: none !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  padding: 10px 22px !important;
+}
+
+.action-modal__button--ghost {
+  border-color: #e5e7eb !important;
+  color: #6b7280 !important;
+  background: #f9fafb !important;
+}
+
+.action-modal__button--danger {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25) !important;
+}
+
+.action-modal__button--success {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25) !important;
+}
+
+.action-modal__button--primary {
+  background: #0067b8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(0, 103, 184, 0.25) !important;
+}
+
+.action-modal--delete {
+  --accent-border: #ef4444;
+  --accent-text: #ef4444;
+  --accent-soft: #fff1f2;
+}
+
+.action-modal--success {
+  --accent-border: #22c55e;
+  --accent-text: #16a34a;
+  --accent-soft: #ecfdf3;
+}
+
+.action-modal--warning {
+  --accent-border: #f59e0b;
+  --accent-text: #b45309;
+  --accent-soft: #fff7ed;
+}

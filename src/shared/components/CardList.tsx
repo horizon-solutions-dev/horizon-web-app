@@ -36,7 +36,6 @@ interface CardListProps {
   addLabel?: string;
   showTitle?: boolean;
   showFilters?: boolean;
-  filtersLabel?: string;
   addButtonPlacement?: 'header' | 'toolbar';
   emptyImageLabel?: string;
   page?: number;
@@ -61,7 +60,6 @@ export default function CardList({
   showPagination = true,
   showTitle = true,
   showFilters = true,
-  filtersLabel = 'Filtros',
   addButtonPlacement = 'header',
   emptyImageLabel = 'Sem imagem',
 }: CardListProps) {
@@ -117,49 +115,66 @@ export default function CardList({
       ) : null}
 
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-        <Box sx={{ flex: 1 }}>
-          <TextField
-            fullWidth
-            placeholder={searchPlaceholder}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: 'text.secondary' }} />
-                </InputAdornment>
-              ),
-            }}
+        <TextField
+          fullWidth
+          placeholder={searchPlaceholder}
+          onChange={(e) => onSearchChange?.(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search sx={{ color: 'text.secondary' }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            flex: 1,
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              backgroundColor: '#fff',
+            },
+          }}
+        />
+        {showFilters && (
+          <IconButton
             sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: '#fff',
+              width: 40,
+              height: 40,
+              border: '2px solid #e0e0e0',
+              borderRadius: 2,
+              color: '#666',
+              flexShrink: 0,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                borderColor: '#1976d2',
+                color: '#1976d2',
+                backgroundColor: 'rgba(25, 118, 210, 0.04)',
               },
             }}
-          />
-        </Box>
-        {showFilters ? (
-          <Button
-            variant="outlined"
-            startIcon={<Tune />}
-            sx={{ borderRadius: 2, fontWeight: 600, textTransform: 'uppercase' }}
           >
-            {filtersLabel}
-          </Button>
-        ) : null}
-        {onAddClick && addButtonPlacement === 'toolbar' ? (
+            <Tune />
+          </IconButton>
+        )}
+        {onAddClick && addButtonPlacement === 'toolbar' && (
           <IconButton
             onClick={onAddClick}
             sx={{
-              width: 44,
-              height: 44,
-              background: 'linear-gradient(135deg, #7f5bff 0%, #6c63ff 100%)',
-              color: '#fff',
-              '&:hover': { background: 'linear-gradient(135deg, #6c63ff 0%, #5a52e6 100%)' },
+              width: 40,
+              height: 40,
+              border: '2px solid #e0e0e0',
+              borderRadius: 2,
+              color: '#666',
+              flexShrink: 0,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                borderColor: '#d32f2f',
+                color: '#d32f2f',
+                backgroundColor: 'rgba(211, 47, 47, 0.04)',
+              },
             }}
           >
             <Add />
           </IconButton>
-        ) : null}
+        )}
       </Box>
 
       <Grid container spacing={2}>
