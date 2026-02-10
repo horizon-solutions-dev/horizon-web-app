@@ -97,14 +97,14 @@ const CondominioPage: React.FC = () => {
           // Silencioso - não é crítico
         }
       }
-      const normalized = response?.data ?? [];
+      const normalized = response?.items ?? [];
       const computedTotalPages =
-        response?.totalPages ??
+        response?.paging?.totalPages ??
         Math.max(
           1,
-          Math.ceil((response?.total ?? normalized.length) / pageSize),
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
-      setListPage(response?.pageNumber ?? pageNumber);
+      setListPage(response?.paging?.pageNumber ?? pageNumber);
       setTotalPages(computedTotalPages);
       setCondominiums(normalized);
       await loadCondominiumImages(normalized);
