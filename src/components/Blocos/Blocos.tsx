@@ -133,6 +133,7 @@ const Blocos: React.FC = () => {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar blocos.";
       setListError(message);
+      setBlocks([]); // Adicionado para resetar blocks em caso de erro
     } finally {
       setListLoading(false);
     }
@@ -157,6 +158,7 @@ const Blocos: React.FC = () => {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar blocos.";
       setListError(message);
+      setBlocks([]); // Adicionado para resetar blocks em caso de erro
     } finally {
       setListLoading(false);
     }
@@ -366,7 +368,7 @@ const Blocos: React.FC = () => {
                     addButtonPlacement="toolbar"
                     emptyImageLabel="Sem imagem"
                     showPagination={false}
-                    items={blocks
+                    items={(Array.isArray(blocks) ? blocks : []) // Adicionado check para evitar erro se blocks não for array
                       .filter((block) =>
                         [block.name, block.code]
                           .filter(Boolean)
