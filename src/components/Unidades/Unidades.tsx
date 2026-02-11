@@ -124,16 +124,19 @@ const Unidades: React.FC = () => {
     setListLoading(true);
     setListError(null);
     try {
-      const data = await unitService.getUnitsByCondominium(
+      const response = await unitService.getUnitsByCondominium(
         condominiumIdQuery.trim(),
         pageNumber,
         pageSize,
       );
-      const normalized = data?.data ?? [];
+      const normalized = response?.items ?? [];
       const computedTotalPages =
-        data?.totalPages ??
-        Math.max(1, Math.ceil((data?.total ?? normalized.length) / pageSize));
-      setListPage(data?.pageNumber ?? pageNumber);
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
+        );
+      setListPage(response?.paging?.pageNumber ?? pageNumber);
       setTotalPages(computedTotalPages);
       setUnits(normalized);
     } catch (error) {
@@ -147,8 +150,8 @@ const Unidades: React.FC = () => {
 
   const loadBlocks = async (condominiumId: string) => {
     try {
-      const data = await blockService.getBlocks(condominiumId);
-      setBlocks(data?.data ?? []);
+      const response = await blockService.getBlocks(condominiumId);
+      setBlocks(response?.items ?? []);
     } catch (error) {
       console.error("Erro ao carregar blocos:", error);
       setBlocks([]);
@@ -192,15 +195,18 @@ const Unidades: React.FC = () => {
     setListError(null);
     try {
       await loadBlocks(condominium.condominiumId);
-      const data = await unitService.getUnitsByCondominium(
+      const response = await unitService.getUnitsByCondominium(
         condominium.condominiumId,
         1,
         pageSize,
       );
-      const normalized = data?.data ?? [];
+      const normalized = response?.items ?? [];
       const computedTotalPages =
-        data?.totalPages ??
-        Math.max(1, Math.ceil((data?.total ?? normalized.length) / pageSize));
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
+        );
       setListPage(1);
       setTotalPages(computedTotalPages);
       setUnits(normalized);
@@ -279,12 +285,6 @@ const Unidades: React.FC = () => {
                   <Typography variant="body2">Carregando...</Typography>
                 </Box>
               ) : listError ? (
-                <Alert severity="error">{listError}</Alert>
-              ) : condominiums.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  Nenhum condomínio encontrado para esta organização.
-                </Typography>
-              ) : (
                 <CardList
                   title="Condomínios da organização"
                   showTitle={false}
@@ -294,6 +294,58 @@ const Unidades: React.FC = () => {
                   addButtonPlacement="toolbar"
                   emptyImageLabel="Sem imagem"
                   showFilters={false}
+                  showPagination={true}
+                  page={listPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => {
+                    setListPage(page);
+                    loadCondominiums(page);
+                  }}
+                  items={condominiums
+                    .filter((condominium) =>
+                      [condominium.name, condominium.city, condominium.state]
+                        .filter(Boolean)
+                        .join(" ")
+                        .toLowerCase()
+                        .includes(searchText.toLowerCase()),
+                    )
+                    .map((condominium, index) => ({
+                      id: condominium.condominiumId,
+                      title: condominium.name,
+                      subtitle: (
+                        <>
+                          <Apartment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
+                          {condominium.city} - {condominium.state}
+                        </>
+                      ),
+                      actions: (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          className="action-button-manage"
+                          startIcon={<SettingsOutlined />}
+                          onClick={() => handleSelectCondominium(condominium)}
+                        >
+                          Gerenciar Unidades
+                        </Button>
+                      ),
+                      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                    }))}
+                />) : condominiums.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Nenhum condomínio encontrado para esta organização.
+                  </Typography>
+                ) : (
+                <CardList
+                  title="Condomínios da organização"
+                  showTitle={false}
+                  searchPlaceholder="Buscar condomínio..."
+                  onSearchChange={setSearchText}
+                  onAddClick={undefined}
+                  addButtonPlacement="toolbar"
+                  emptyImageLabel="Sem imagem"
+                  showFilters={false}
+                  showPagination={true}
                   page={listPage}
                   totalPages={totalPages}
                   onPageChange={(page) => {
@@ -404,10 +456,6 @@ const Unidades: React.FC = () => {
                       <CircularProgress size={20} />
                       <Typography variant="body2">Carregando...</Typography>
                     </Box>
-                  ) : listError ? (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                      {listError}
-                    </Alert>
                   ) : null}
 
                   <CardList
@@ -420,6 +468,7 @@ const Unidades: React.FC = () => {
                     addLabel="Novo"
                     addButtonPlacement="toolbar"
                     emptyImageLabel="Sem imagem"
+                    showPagination={true}
                     page={listPage}
                     totalPages={totalPages}
                     onPageChange={(page) => {

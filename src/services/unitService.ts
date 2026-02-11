@@ -1,4 +1,6 @@
 import { apiClient } from './apiClient';
+import type { PagedResponse } from '../models/pagination.model';
+import { normalizePagedResponse } from '../shared/utils/pagination';
 
 export type UnitType = 'Owner' | 'Tenant' | string;
 
@@ -19,13 +21,7 @@ export interface CondominiumUnit extends CondominiumUnitResponse {
   condominiumUnitId: string;
 }
 
-export interface CondominiumUnitPagedResponse {
-  data: CondominiumUnit[];
-  total: number;
-  pageNumber: number;
-  pageSize: number;
-  totalPages?: number;
-}
+export type CondominiumUnitPagedResponse = PagedResponse<CondominiumUnit>;
 
 export interface UnitTypeEnum {
   id: number;
@@ -72,30 +68,14 @@ class UnitService {
         ...(pageSize !== undefined && { PageSize: pageSize.toString() }),
       });
 
-      const response = await apiClient.get<CondominiumUnitPagedResponse>(
+      const response = await apiClient.get<CondominiumUnit[] | CondominiumUnitPagedResponse>(
         `${this.baseUrl}/by-block?${params}`
       );
 
-      if (Array.isArray(response)) {
-        return {
-          data: response,
-          total: response.length,
-          pageNumber: pageNumber ?? 1,
-          pageSize: pageSize || response.length || 1,
-          totalPages: 1,
-        } satisfies CondominiumUnitPagedResponse;
-      }
-
-      return {};
+      return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
       console.error('Erro ao buscar unidades por bloco:', error);
-      return{
-        data: [] as CondominiumUnit[],
-        total: 0,
-        pageNumber: 1,
-        pageSize: 0,
-        totalPages: 0,
-      }
+      throw error;
     }
   }
 
@@ -111,17 +91,7 @@ class UnitService {
         `${this.baseUrl}/by-condominium?${params}`
       );
 
-      if (Array.isArray(response)) {
-        return {
-          data: response,
-          total: response.length,
-          pageNumber: pageNumber ?? 1,
-          pageSize: pageSize || response.length || 1,
-          totalPages: 1,
-        } satisfies CondominiumUnitPagedResponse;
-      }
-
-      return response;
+      return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
       console.error('Erro ao buscar unidades por condominio:', error);
       throw error;
