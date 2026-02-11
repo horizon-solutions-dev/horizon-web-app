@@ -196,6 +196,23 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     );
   };
 
+  // ✅ CORREÇÃO: MOVER OS BOTÕES PARA A PROP ACTIONS
+  const renderActions = () => {
+    if (activeStep === steps.length - 1) {
+      return (
+        <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+          {loading ? <CircularProgress size={20} /> : editingId ? "Atualizar" : "Criar"}
+        </Button>
+      );
+    }
+    
+    return (
+      <Button variant="contained" onClick={() => setActiveStep((prev) => prev + 1)}>
+        Proximo
+      </Button>
+    );
+  };
+
   return (
     <StepWizardCard
       title={editingId ? "Editar unidade" : "Criar unidade"}
@@ -205,19 +222,9 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       showBack={activeStep > 0 && activeStep < steps.length}
       onBack={() => setActiveStep((prev) => prev - 1)}
       onClose={onClose}
+      actions={renderActions()} 
     >
       {renderStepContent()}
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 3 }}>
-        {activeStep === steps.length - 1 ? (
-          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-            {loading ? <CircularProgress size={20} /> : editingId ? "Atualizar" : "Criar"}
-          </Button>
-        ) : (
-          <Button variant="contained" onClick={() => setActiveStep((prev) => prev + 1)}>
-            Proximo
-          </Button>
-        )}
-      </Box>
     </StepWizardCard>
   );
 };

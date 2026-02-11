@@ -196,13 +196,6 @@
   }
 }
 
-.step-wizard-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 6px;
-}
-
 .step-wizard-dots {
   display: flex;
   justify-content: center;
@@ -273,5 +266,127 @@
       font-size: 8px !important;
       font-weight: bold !important;
     }
+  }
+}
+
+// ============================================
+// BOTÕES DAS STEPS - ESPECIFICIDADE NUCLEAR ☢️
+// ESTA É A REGRA DEFINITIVA QUE VAI SOBRESCREVER TUDO
+// ============================================
+
+// Primeiro: limpar quaisquer estilos inline ou de outras fontes
+.step-wizard-card {
+  // Container dos botões
+  > div:last-child,
+  .step-wizard-actions {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    margin-top: 6px !important;
+  }
+}
+
+// Segundo: aplicar estilos com MÁXIMA especificidade
+.step-wizard .step-wizard-card > div:last-child,
+.step-wizard .step-wizard-card .step-wizard-actions,
+.step-wizard-card > div:last-child,
+.step-wizard-card .step-wizard-actions {
+  
+  // Todos os possíveis seletores de botão MUI
+  button.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButton-sizeMedium.MuiButton-containedSizeMedium.MuiButtonBase-root,
+  button.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary.MuiButtonBase-root,
+  button.MuiButtonBase-root.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary,
+  button.MuiButton-root.MuiButton-contained.MuiButton-containedPrimary,
+  button.MuiButton-root.MuiButton-contained,
+  .MuiButton-root.MuiButton-contained.MuiButton-containedPrimary,
+  .MuiButton-root.MuiButton-contained,
+  button[class*="MuiButton-contained"] {
+    // ESTILOS CORRETOS - NÃO MEXER! ⚠️
+    padding: 14px 40px !important;
+    min-width: 140px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important; // ← ISSO AQUI! 12px, NÃO 24px!
+    text-transform: none !important;
+    height: auto !important;
+    line-height: normal !important;
+    transition: all 0.2s ease !important;
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.25) !important;
+
+    &:hover {
+      background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
+      box-shadow: 0 6px 16px rgba(25, 118, 210, 0.35) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    &:active {
+      transform: translateY(0) scale(0.98) !important;
+    }
+
+    &:disabled {
+      background: #e0e4e8 !important;
+      color: #999 !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+      opacity: 0.6 !important;
+    }
+
+    .MuiCircularProgress-root {
+      width: 20px !important;
+      height: 20px !important;
+      color: white !important;
+    }
+  }
+
+  // Botões outlined
+  button.MuiButton-root.MuiButton-outlined,
+  button.MuiButtonBase-root.MuiButton-root.MuiButton-outlined,
+  .MuiButton-root.MuiButton-outlined {
+    padding: 14px 40px !important;
+    min-width: 140px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important; // ← ISSO AQUI TAMBÉM! 12px!
+    text-transform: none !important;
+    height: auto !important;
+    line-height: normal !important;
+    background: white !important;
+    color: #1976d2 !important;
+    border: 2px solid #1976d2 !important;
+    box-shadow: 0 2px 6px rgba(25, 118, 210, 0.15) !important;
+
+    &:hover {
+      background: rgba(25, 118, 210, 0.05) !important;
+      border-color: #1565c0 !important;
+      box-shadow: 0 3px 10px rgba(25, 118, 210, 0.25) !important;
+    }
+
+    &:active {
+      transform: scale(0.98) !important;
+    }
+  }
+}
+
+// Terceiro: fallback adicional com atributo selector
+.step-wizard-card [class*="MuiButton-contained"] {
+  padding: 14px 40px !important;
+  min-width: 140px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important; // ← DE NOVO! 12px!
+  height: auto !important;
+  line-height: normal !important;
+}
+
+// Quarto: regra de último recurso com !important em TUDO
+.step-wizard button,
+.step-wizard-card button,
+.step-wizard .MuiButton-root,
+.step-wizard-card .MuiButton-root {
+  &[class*="contained"] {
+    border-radius: 12px !important; // ← MAIS UMA VEZ! 12px!
   }
 }

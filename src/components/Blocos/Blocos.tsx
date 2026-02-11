@@ -34,6 +34,7 @@ import {
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BlocoForm from "./BlocoForm";
+import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
 
 const Blocos: React.FC = () => {
   const navigate = useNavigate();
@@ -54,6 +55,11 @@ const Blocos: React.FC = () => {
   const [editingBlock, setEditingBlock] = useState<CondominiumBlock | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [blockSearchText, setBlockSearchText] = useState("");
+  
+  // Estado para o modal de exclusão
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [blockToDelete, setBlockToDelete] = useState<CondominiumBlock | null>(null);
+  
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -198,11 +204,39 @@ const Blocos: React.FC = () => {
   };
 
   const handleDelete = (block: CondominiumBlock) => {
-    const confirmed = window.confirm(
-      `Deseja excluir o bloco ${block.name}?`,
-    );
-    if (!confirmed) return;
-    handleNotify("Exclusão ainda não está disponível.", "error");
+    setBlockToDelete(block);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!blockToDelete) return;
+
+    try {
+      setLoading(true);
+      await blockService.deleteBlock(blockToDelete.condominiumBlockId);
+      
+      handleNotify(`Bloco "${blockToDelete.name}" excluído com sucesso!`, "success");
+      
+      
+      await loadBlocks(listPage);
+      
+      
+      setDeleteModalOpen(false);
+      setBlockToDelete(null);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao excluir bloco.";
+      handleNotify(message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setBlockToDelete(null);
   };
 
   const handleOpenCreate = () => {
@@ -492,6 +526,19 @@ const Blocos: React.FC = () => {
           </>
         )}
       </Container>
+
+      {/* Modal de confirmação de exclusão */}
+      <DeleteConfirmModal
+        open={deleteModalOpen}
+        title="Deseja excluir este bloco?"
+        message={blockToDelete ? `O bloco "${blockToDelete.name}" será removido permanentemente.` : ""}
+        imageAlt="Remover bloco"
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        onClose={handleCancelDelete}
+      />
 
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
