@@ -32,3 +32,75 @@
       }
     }
   }
+
+    .MuiContainer-root > .MuiPaper-root > .MuiBox-root:first-child {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    margin-bottom: 16px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 2px solid #f0f0f0 !important;
+
+    & > .MuiBox-root:first-child {
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 12px !important;
+      padding-top: 2px !important;
+
+      .MuiSvgIcon-root:first-child {
+        font-size: 36px !important;
+        color: #1976d2 !important;
+        margin-top: -2px !important;
+      }
+
+      & > .MuiBox-root {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+      }
+
+      .MuiTypography-h5 {
+        font-size: 26px !important;
+        font-weight: 700 !important;
+        color: #1a1a2e !important;
+        letter-spacing: -0.5px !important;
+        line-height: 1.2 !important;
+        margin: 0 !important;
+
+        @media (max-width: 600px) {
+          font-size: 22px !important;
+        }
+      }
+    }
+
+    @media (max-width: 600px) {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 12px !important;
+    }
+  }
+
+    .close-button,
+  .MuiIconButton-root[aria-label="Fechar"],
+  .MuiIconButton-root[aria-label="Voltar"],
+  .MuiIconButton-root:has(.MuiSvgIcon-root[data-testid="CloseIcon"]),
+  .MuiBox-root:first-child > .MuiIconButton-root:last-child {
+    width: 40px !important;
+    height: 40px !important;
+    background: white !important;
+    border: 2px solid #e0e4e8 !important;
+    border-radius: 10px !important;
+    color: #666 !important;
+    transition: all 0.2s ease !important;
+
+    &:hover {
+      background: white !important;
+      border-color: #ef4444 !important;
+      color: #ef4444 !important;
+    }
+
+    .MuiSvgIcon-root {
+      font-size: 20px !important;
+      color: inherit !important;
+    }
+  }

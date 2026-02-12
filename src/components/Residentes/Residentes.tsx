@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import './Residentes.scss'
+import "./Residentes.scss";
 import {
   Box,
   Container,
@@ -12,16 +12,19 @@ import {
   CircularProgress,
   MenuItem,
   IconButton,
+  Tooltip,
 } from "@mui/material";
-import { ArrowBack, PeopleOutlined, SettingsOutlined } from "@mui/icons-material";
+import {
+  ArrowBack,
+  Close,
+  PeopleOutlined,
+  SettingsOutlined,
+} from "@mui/icons-material";
 import {
   unitResidentService,
   type CondominiumUnitResident,
 } from "../../services/unitResidentService";
-import {
-  unitService,
-  type CondominiumUnit,
-} from "../../services/unitService";
+import { unitService, type CondominiumUnit } from "../../services/unitService";
 import {
   blockService,
   type CondominiumBlock,
@@ -33,14 +36,16 @@ import {
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import ResidenteForm from "./ResidenteForm";
+import { useNavigate } from "react-router";
 
 const condoPageSize = 4;
 const unitPageSize = 6;
 const residentPageSize = 6;
 
 const Residentes: React.FC = () => {
-  const [activeView, setActiveView] =
-    useState<"condominios" | "unidades" | "residentes">("condominios");
+  const [activeView, setActiveView] = useState<
+    "condominios" | "unidades" | "residentes"
+  >("condominios");
 
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [organizationName, setOrganizationName] = useState("");
@@ -60,8 +65,9 @@ const Residentes: React.FC = () => {
   const [unitSearchText, setUnitSearchText] = useState("");
   const [unitsPage, setUnitsPage] = useState(1);
   const [unitsTotalPages, setUnitsTotalPages] = useState(1);
-  const [selectedUnit, setSelectedUnit] =
-    useState<CondominiumUnit | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<CondominiumUnit | null>(
+    null,
+  );
   const [selectedBlockNameState, setSelectedBlockName] = useState("");
 
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
@@ -92,7 +98,8 @@ const Residentes: React.FC = () => {
     try {
       let organizationId = localStorage.getItem("organizationId") || "";
       if (!organizationId) {
-        organizationId = (await organizationService.getMyOrganizationId()) || "";
+        organizationId =
+          (await organizationService.getMyOrganizationId()) || "";
         localStorage.setItem("organizationId", organizationId);
       }
 
@@ -104,7 +111,8 @@ const Residentes: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
-          const orgName = organizations?.[0]?.name || organizations?.[0]?.legalName;
+          const orgName =
+            organizations?.[0]?.name || organizations?.[0]?.legalName;
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore
@@ -115,14 +123,18 @@ const Residentes: React.FC = () => {
         response?.paging?.totalPages ??
         Math.max(
           1,
-          Math.ceil((response?.paging?.total ?? normalized.length) / condoPageSize),
+          Math.ceil(
+            (response?.paging?.total ?? normalized.length) / condoPageSize,
+          ),
         );
       setCondoPage(response?.paging?.pageNumber ?? pageNumber);
       setCondoTotalPages(computedTotalPages);
       setCondominiums(normalized);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro ao carregar condominios.";
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar condominios.";
       setCondoError(message);
     } finally {
       setCondoLoading(false);
@@ -138,16 +150,30 @@ const Residentes: React.FC = () => {
     }
   };
 
-  const loadUnits = async (condominiumId: string, blockId?: string, pageNumber = 1) => {
+  const loadUnits = async (
+    condominiumId: string,
+    blockId?: string,
+    pageNumber = 1,
+  ) => {
     setUnitsLoading(true);
     setUnitsError(null);
     try {
       const response = blockId
         ? await unitService.getUnitsByBlock(blockId, pageNumber, unitPageSize)
-        : await unitService.getUnitsByCondominium(condominiumId, pageNumber, unitPageSize);
+        : await unitService.getUnitsByCondominium(
+            condominiumId,
+            pageNumber,
+            unitPageSize,
+          );
       const normalized = response?.items ?? [];
       const computedTotalPages =
-        response?.paging?.totalPages ?? Math.max(1, Math.ceil((response?.paging?.total ?? normalized.length) / unitPageSize));
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil(
+            (response?.paging?.total ?? normalized.length) / unitPageSize,
+          ),
+        );
       setUnitsPage(response?.paging?.pageNumber ?? pageNumber);
       setUnitsTotalPages(computedTotalPages);
       setUnits(normalized);
@@ -174,8 +200,14 @@ const Residentes: React.FC = () => {
         residentPageSize,
       );
       const normalized = response?.items ?? [];
-      const totalPages = response?.paging?.totalPages ??
-        Math.max(1, Math.ceil((response?.paging?.total ?? normalized.length) / residentPageSize));
+      const totalPages =
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil(
+            (response?.paging?.total ?? normalized.length) / residentPageSize,
+          ),
+        );
 
       setResidentsPage(response?.paging?.pageNumber ?? pageNumber);
       setResidentsTotalPages(totalPages);
@@ -233,7 +265,7 @@ const Residentes: React.FC = () => {
   };
 
   const handleSaved = async () => {
-    await loadResidents('1');
+    await loadResidents("1");
   };
 
   const getUnitTypeLabel = (value?: string) => {
@@ -243,6 +275,7 @@ const Residentes: React.FC = () => {
     return value;
   };
 
+  const navigate = useNavigate();
   /*   const getResidentPermissions = (resident: CondominiumUnitResident) => {
       const labels = [
         resident.billingContact ? "Cobranca" : null,
@@ -253,15 +286,40 @@ const Residentes: React.FC = () => {
       return labels.length > 0 ? `Permissoes: ${labels.join(" • ")}` : "Sem permissoes";
     }; */
 
-
   return (
     <Box className="page-container" sx={{ py: 4 }}>
       <Container maxWidth="lg">
         {activeView === "condominios" ? (
           <Paper elevation={3} sx={{ p: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-              <PeopleOutlined sx={{ fontSize: 32, color: "#1976d2" }} />
-              <Typography variant="h4">{organizationName || "Residentes"}</Typography>
+            <Box
+              sx={{
+                mb: 2,
+                pb: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "2px solid #f0f0f0",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <PeopleOutlined sx={{ fontSize: 32, color: "#1976d2" }} />
+                <Typography
+                  variant="h5"
+                  fontWeight="bold"
+                  sx={{ fontSize: "26px" }}
+                >
+                  {organizationName}
+                </Typography>
+              </Box>
+              <Tooltip title="Fechar">
+                <IconButton
+                  onClick={() => navigate("/dashboard")}
+                  className="close-button"
+                  aria-label="Fechar"
+                >
+                  <Close sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Tooltip>
             </Box>
 
             {condoLoading ? (
@@ -303,7 +361,6 @@ const Residentes: React.FC = () => {
                     ),
                     accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                     actions: (
-
                       <Button
                         size="small"
                         variant="outlined"
@@ -315,7 +372,8 @@ const Residentes: React.FC = () => {
                       </Button>
                     ),
                   }))}
-              />) : (
+              />
+            ) : (
               <CardList
                 title="Condominios da organizacao"
                 showTitle={false}
@@ -395,7 +453,6 @@ const Residentes: React.FC = () => {
                 <CircularProgress size={20} />
                 <Typography variant="body2">Carregando...</Typography>
               </Box>
-
             ) : null}
 
             <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
@@ -407,20 +464,27 @@ const Residentes: React.FC = () => {
                   const value = e.target.value;
                   setSelectedBlockId(value);
                   const blockName =
-                    blocks.find((block) => block.condominiumBlockId === value)?.name ||
-                    "";
+                    blocks.find((block) => block.condominiumBlockId === value)
+                      ?.name || "";
                   setSelectedBlockName(blockName);
                   setUnitSearchText("");
                   setUnitsPage(1);
                   if (selectedCondominium) {
-                    await loadUnits(selectedCondominium.condominiumId, value || undefined, 1);
+                    await loadUnits(
+                      selectedCondominium.condominiumId,
+                      value || undefined,
+                      1,
+                    );
                   }
                 }}
                 fullWidth
               >
                 <MenuItem value="">Todos os blocos</MenuItem>
                 {blocks.map((block) => (
-                  <MenuItem key={block.condominiumBlockId} value={block.condominiumBlockId}>
+                  <MenuItem
+                    key={block.condominiumBlockId}
+                    value={block.condominiumBlockId}
+                  >
                     {block.name || block.code || block.condominiumBlockId}
                   </MenuItem>
                 ))}
@@ -442,7 +506,11 @@ const Residentes: React.FC = () => {
               onPageChange={(page) => {
                 setUnitsPage(page);
                 if (selectedCondominium) {
-                  loadUnits(selectedCondominium.condominiumId, selectedBlockId || undefined, page);
+                  loadUnits(
+                    selectedCondominium.condominiumId,
+                    selectedBlockId || undefined,
+                    page,
+                  );
                 }
               }}
               items={units
@@ -464,14 +532,19 @@ const Residentes: React.FC = () => {
                   meta: (
                     <Typography variant="caption" color="text.secondary">
                       Bloco:{" "}
-                      {blocks.find((b) => b.condominiumBlockId === unit.condominiumBlockId)
-                        ?.name ||
+                      {blocks.find(
+                        (b) => b.condominiumBlockId === unit.condominiumBlockId,
+                      )?.name ||
                         unit.condominiumBlockId ||
                         "Bloco desconhecido"}
                     </Typography>
                   ),
                   actions: (
-                    <Button size="small" variant="outlined" onClick={() => handleSelectUnit(unit)}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => handleSelectUnit(unit)}
+                    >
                       Ver residentes
                     </Button>
                   ),
@@ -494,7 +567,9 @@ const Residentes: React.FC = () => {
             ) : null}
             {!isFormOpen ? (
               <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}
+                >
                   <IconButton
                     onClick={() => {
                       setActiveView("unidades");
@@ -513,7 +588,9 @@ const Residentes: React.FC = () => {
                       {selectedUnit?.unitCode ||
                         selectedUnit?.condominiumUnitId ||
                         "Unidade"}
-                      {selectedBlockNameState ? ` • Bloco ${selectedBlockNameState}` : ""}
+                      {selectedBlockNameState
+                        ? ` • Bloco ${selectedBlockNameState}`
+                        : ""}
                     </Typography>
                   </Box>
                 </Box>
