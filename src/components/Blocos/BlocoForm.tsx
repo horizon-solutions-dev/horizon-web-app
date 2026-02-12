@@ -5,7 +5,7 @@ import {
   Button,
   TextField,
   CircularProgress,
-  Alert,
+ // Alert,
 } from "@mui/material";
 import { type CondominiumBlock, type CondominiumBlockRequest, blockService } from "../../services/blockService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
@@ -101,7 +101,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      onNotify("Por favor, corrija os erros antes de continuar.", "error");
+      ////onNotify("Por favor, corrija os erros antes de continuar.", "error");
       return;
     }
 
@@ -109,10 +109,10 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
     try {
       if (editingId) {
         await blockService.updateBlock(editingId, formData);
-        onNotify("Bloco atualizado com sucesso.", "success");
+        //onNotify("Bloco atualizado com sucesso.", "success");
       } else {
         await blockService.createBlock(formData);
-        onNotify("Bloco criado com sucesso.", "success");
+        //onNotify("Bloco criado com sucesso.", "success");
       }
 
       await onSaved();
@@ -162,11 +162,6 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
             />
           </Box>
           
-          {Object.keys(errors).length > 0 && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              Por favor, corrija os erros acima antes de continuar.
-            </Alert>
-          )}
         </>
       );
     }

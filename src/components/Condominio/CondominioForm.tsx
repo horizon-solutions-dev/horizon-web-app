@@ -366,7 +366,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
   const handleSubmit = async () => {
     if (!formData.organizationId.trim()) {
-      onNotify("OrganizationId não encontrado.", "error");
+      //onNotify("OrganizationId não encontrado.", "error");
       return;
     }
 

@@ -1,7 +1,11 @@
 .action-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.06), transparent 45%),
+    rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12,30 +16,45 @@
 .action-modal {
   width: 100%;
   max-width: 460px;
-  background: #ffffff;
-  border-radius: 20px;
-  border: 3px solid var(--accent-border);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
-  padding: 28px 28px 22px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+  border-radius: 24px;
+  border: 2px solid var(--accent-border);
+  box-shadow:
+    0 24px 50px rgba(2, 8, 23, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  padding: 28px 28px 24px;
   position: relative;
   text-align: center;
+  animation: modal-enter 0.2s ease-out;
 }
 
 .action-modal__close {
   position: absolute;
   top: 12px;
   right: 12px;
-  color: #9aa1aa;
+  color: #8a94a4;
+  background: #ffffff !important;
+  border: 1px solid #e4e8ef !important;
+  transition: all 0.2s ease !important;
+
+  &:hover {
+    color: #ef4444;
+    border-color: #f7b4b4 !important;
+    background: #fff7f7 !important;
+  }
 }
 
 .action-modal__image {
   height: 140px;
-  border-radius: 14px;
-  background: var(--accent-soft);
+  border-radius: 16px;
+  background:
+    linear-gradient(145deg, var(--accent-soft) 0%, #ffffff 100%);
+  border: 1px solid color-mix(in srgb, var(--accent-border) 24%, #ffffff 76%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 6px 0 12px;
+  margin: 8px 0 14px;
   overflow: hidden;
   color: #a3a3a3;
   font-size: 12px;
@@ -48,62 +67,77 @@
 }
 
 .action-modal__title {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
   color: var(--accent-text);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .action-modal__message {
-  font-size: 14px;
-  color: #5f6368;
-  margin-bottom: 8px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #5b6472;
+  margin-bottom: 10px;
 }
 
 .action-modal__detail {
   font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
   color: #a16207;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .action-modal__actions {
-display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 14px;
-    flex-wrap: wrap;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
 }
 
 .action-modal__button {
-  min-width: 120px;
+  min-width: 132px;
   text-transform: none !important;
-  font-weight: 600 !important;
-  border-radius: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1px;
+  border-radius: 12px !important;
   padding: 10px 22px !important;
+  transition: transform 0.15s ease, box-shadow 0.2s ease !important;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .action-modal__button--ghost {
   border-color: #e5e7eb !important;
-  color: #6b7280 !important;
-  background: #f9fafb !important;
+  color: #5f6774 !important;
+  background: #f8fafc !important;
 }
 
 .action-modal__button--danger {
-  background: #ef4444 !important;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25) !important;
+  box-shadow: 0 10px 22px rgba(239, 68, 68, 0.32) !important;
 }
 
 .action-modal__button--success {
-  background: #10b981 !important;
+  background: linear-gradient(135deg, #10b981 0%, #0d9f70 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25) !important;
+  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.28) !important;
 }
 
 .action-modal__button--primary {
-  background: #0067b8 !important;
+  background: linear-gradient(135deg, #0067b8 0%, #00539b 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 8px 20px rgba(0, 103, 184, 0.25) !important;
+  box-shadow: 0 10px 22px rgba(0, 103, 184, 0.3) !important;
 }
 
 .action-modal--delete {
@@ -122,4 +156,15 @@ display: flex;
   --accent-border: #f59e0b;
   --accent-text: #b45309;
   --accent-soft: #fff7ed;
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

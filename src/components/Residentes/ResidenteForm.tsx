@@ -144,7 +144,7 @@ const tokenUserId = useMemo(() => {
 
   const handleSubmit = async () => {
     if (!validateStep(0) || !validateStep(1)) {
-      onNotify("Revise os campos obrigatórios.", "error");
+      //onNotify("Revise os campos obrigatórios.", "error");
       return;
     }
 
@@ -154,7 +154,7 @@ const tokenUserId = useMemo(() => {
         ...formData,
         commit: true,
       });
-      onNotify("Residente criado com sucesso.", "success");
+      //onNotify("Residente criado com sucesso.", "success");
       await onSaved();
       setFormData({
         condominiumUnitId: unitIdPreset || "",

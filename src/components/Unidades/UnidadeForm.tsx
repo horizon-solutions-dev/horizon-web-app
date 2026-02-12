@@ -133,10 +133,10 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     const nextErrors: FormErrors = {};
 
     if (!formData.condominiumId) {
-      onNotify("Condomínio inválido. Selecione o condomínio novamente.", "error");
+      //onNotify("Condomínio inválido. Selecione o condomínio novamente.", "error");
     }
     if (!formData.condominiumBlockId) {
-      onNotify("Bloco inválido. Selecione um bloco para continuar.", "error");
+      //onNotify("Bloco inválido. Selecione um bloco para continuar.", "error");
     }
     if (!formData.unitCode.trim()) {
       nextErrors.unitCode = "Informe o código da unidade.";
@@ -155,7 +155,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
 
   const handleSubmit = async () => {
     if (!validate()) {
-      //onNotify("Preencha os campos obrigatórios.", "error");
+      ////onNotify("Preencha os campos obrigatórios.", "error");
       return;
     }
 
@@ -163,10 +163,10 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     try {
       if (editingId) {
         await unitService.updateUnit(editingId, formData);
-        onNotify("Unidade atualizada com sucesso.", "success");
+        //onNotify("Unidade atualizada com sucesso.", "success");
       } else {
         await unitService.createUnit(formData);
-        onNotify("Unidade criada com sucesso.", "success");
+        //onNotify("Unidade criada com sucesso.", "success");
       }
 
       await onSaved();
