@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import {
   Box,
   Container,
@@ -8,6 +8,8 @@ import {
   Snackbar,
   Alert,
   Chip,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import {
   Add,
@@ -18,10 +20,13 @@ import {
   Home,
   Badge,
   FilterList,
+  Close,
+  PeopleOutlined,
 } from "@mui/icons-material";
 import MoradorForm from "./MoradorForm";
 import CardList from "../../shared/components/CardList";
 import "./Moradores.scss";
+import { useNavigate } from "react-router";
 
 export interface Morador {
   id?: string;
@@ -133,16 +138,43 @@ const Moradores: React.FC = () => {
     (page - 1) * pageSize + pageSize,
   );
 
+  const navigate = useNavigate();
+
   return (
     <Box className="moradores-container">
       <Container maxWidth="xl">
         <Paper elevation={3} className="moradores-card">
-          <Box className="moradores-header">
-            <Person className="header-icon" />
-            <Typography variant="h4" className="header-title">
-              Gestao de Moradores
-            </Typography>
-          </Box>
+           <Box
+           className="moradores-header"
+              sx={{
+                mb: 2,
+                pb: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "2px solid #f0f0f0",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <PeopleOutlined sx={{ fontSize: 32, color: "#1976d2" }} />
+                <Typography
+                  variant="h5"
+                  fontWeight="bold"
+                  sx={{ fontSize: "26px" }}
+                >
+                  Gestao de Moradores
+                </Typography>
+              </Box>
+              <Tooltip title="Fechar">
+                <IconButton
+                  onClick={() => navigate("/dashboard")}
+                  className="close-button"
+                  aria-label="Fechar"
+                >
+                  <Close sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
 
           <Box className="moradores-content">
             <Box className="toolbar">
