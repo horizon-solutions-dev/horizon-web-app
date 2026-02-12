@@ -532,9 +532,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       case 0:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
-            <Typography variant="subtitle2" className="step-subtitle">
-              Informações Básicas
-            </Typography>
             <TextField
               fullWidth
               label={formData.name ? "" : "Nome do Condomínio"}
