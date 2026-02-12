@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import './Residentes.scss'
 import {
   Box,
   Container,
@@ -12,7 +13,7 @@ import {
   MenuItem,
   IconButton,
 } from "@mui/material";
-import { ArrowBack, PeopleOutlined } from "@mui/icons-material";
+import { ArrowBack, PeopleOutlined, SettingsOutlined } from "@mui/icons-material";
 import {
   unitResidentService,
   type CondominiumUnitResident,
@@ -52,10 +53,7 @@ const Residentes: React.FC = () => {
     useState<Condominium | null>(null);
 
   const [units, setUnits] = useState<CondominiumUnit[]>([]);
-  const [blocks, setBlocks] = useState<{
-    data: CondominiumBlock[];
-    success: boolean;
-  }>({ data: [], success: false });
+  const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
   const [unitsLoading, setUnitsLoading] = useState(false);
   const [unitsError, setUnitsError] = useState<string | null>(null);
@@ -133,14 +131,10 @@ const Residentes: React.FC = () => {
 
   const loadBlocks = async (condominiumId: string) => {
     try {
-      const data = await blockService.getBlocks(condominiumId);
-      if (data.success) {
-        setBlocks(data);
-      } else {
-        setBlocks({ data: [], success: false });
-      }
+      const response = await blockService.getBlocks(condominiumId);
+      setBlocks(response?.items ?? []);
     } catch {
-      setBlocks({ data: [], success: false });
+      setBlocks([]);
     }
   };
 
@@ -148,13 +142,13 @@ const Residentes: React.FC = () => {
     setUnitsLoading(true);
     setUnitsError(null);
     try {
-      const data = blockId
+      const response = blockId
         ? await unitService.getUnitsByBlock(blockId, pageNumber, unitPageSize)
         : await unitService.getUnitsByCondominium(condominiumId, pageNumber, unitPageSize);
-      const normalized = data?.data ?? [];
+      const normalized = response?.items ?? [];
       const computedTotalPages =
-        data?.totalPages ?? Math.max(1, Math.ceil((data?.total ?? normalized.length) / unitPageSize));
-      setUnitsPage(data?.pageNumber ?? pageNumber);
+        response?.paging?.totalPages ?? Math.max(1, Math.ceil((response?.paging?.total ?? normalized.length) / unitPageSize));
+      setUnitsPage(response?.paging?.pageNumber ?? pageNumber);
       setUnitsTotalPages(computedTotalPages);
       setUnits(normalized);
     } catch (error) {
@@ -174,14 +168,16 @@ const Residentes: React.FC = () => {
     setResidentsLoading(true);
     setResidentsError(null);
     try {
-      const data = await unitResidentService.getResidents(
+      const response = await unitResidentService.getResidents(
         unitId,
         pageNumber,
         residentPageSize,
       );
-      const normalized = data ?? [];
-      const totalPages = Math.max(1, Math.ceil(normalized.length / residentPageSize));
-      setResidentsPage(pageNumber);
+      const normalized = response?.items ?? [];
+      const totalPages = response?.paging?.totalPages ??
+        Math.max(1, Math.ceil((response?.paging?.total ?? normalized.length) / residentPageSize));
+
+      setResidentsPage(response?.paging?.pageNumber ?? pageNumber);
       setResidentsTotalPages(totalPages);
       setResidents(normalized);
     } catch (error) {
@@ -247,15 +243,15 @@ const Residentes: React.FC = () => {
     return value;
   };
 
-/*   const getResidentPermissions = (resident: CondominiumUnitResident) => {
-    const labels = [
-      resident.billingContact ? "Cobranca" : null,
-      resident.canVote ? "Voto" : null,
-      resident.canMakeReservations ? "Reservas" : null,
-      resident.hasGatehouseAccess ? "Portaria" : null,
-    ].filter(Boolean);
-    return labels.length > 0 ? `Permissoes: ${labels.join(" • ")}` : "Sem permissoes";
-  }; */
+  /*   const getResidentPermissions = (resident: CondominiumUnitResident) => {
+      const labels = [
+        resident.billingContact ? "Cobranca" : null,
+        resident.canVote ? "Voto" : null,
+        resident.canMakeReservations ? "Reservas" : null,
+        resident.hasGatehouseAccess ? "Portaria" : null,
+      ].filter(Boolean);
+      return labels.length > 0 ? `Permissoes: ${labels.join(" • ")}` : "Sem permissoes";
+    }; */
 
 
   return (
@@ -274,8 +270,6 @@ const Residentes: React.FC = () => {
                 <Typography variant="body2">Carregando...</Typography>
               </Box>
             ) : condoError ? (
-              <Alert severity="error">{condoError}</Alert>
-            ) : (
               <CardList
                 title="Condominios da organizacao"
                 showTitle={false}
@@ -284,6 +278,53 @@ const Residentes: React.FC = () => {
                 onAddClick={undefined}
                 addButtonPlacement="toolbar"
                 emptyImageLabel="Sem imagem"
+                showPagination={true}
+                page={condoPage}
+                totalPages={condoTotalPages}
+                onPageChange={(page) => {
+                  setCondoPage(page);
+                  loadCondominiums(page);
+                }}
+                items={condominiums
+                  .filter((condominium) =>
+                    [condominium.name, condominium.city, condominium.state]
+                      .filter(Boolean)
+                      .join(" ")
+                      .toLowerCase()
+                      .includes(condoSearchText.toLowerCase()),
+                  )
+                  .map((condominium, index) => ({
+                    id: condominium.condominiumId,
+                    title: condominium.name,
+                    subtitle: (
+                      <Typography variant="body2" color="text.secondary">
+                        {condominium.city} - {condominium.state}
+                      </Typography>
+                    ),
+                    accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                    actions: (
+
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        className="action-button-manage"
+                        startIcon={<SettingsOutlined />}
+                        onClick={() => handleSelectCondominium(condominium)}
+                      >
+                        Ver unidades
+                      </Button>
+                    ),
+                  }))}
+              />) : (
+              <CardList
+                title="Condominios da organizacao"
+                showTitle={false}
+                searchPlaceholder="Buscar condominio..."
+                onSearchChange={setCondoSearchText}
+                onAddClick={undefined}
+                addButtonPlacement="toolbar"
+                emptyImageLabel="Sem imagem"
+                showPagination={true}
                 page={condoPage}
                 totalPages={condoTotalPages}
                 onPageChange={(page) => {
@@ -312,9 +353,10 @@ const Residentes: React.FC = () => {
                         size="small"
                         variant="outlined"
                         className="action-button-manage"
+                        startIcon={<SettingsOutlined />}
                         onClick={() => handleSelectCondominium(condominium)}
                       >
-                        Ver unidades
+                        Gerenciar Residentes
                       </Button>
                     ),
                   }))}
@@ -329,7 +371,7 @@ const Residentes: React.FC = () => {
                   setActiveView("condominios");
                   setSelectedCondominium(null);
                   setUnits([]);
-                  setBlocks({ data: [], success: false });
+                  setBlocks([]);
                   setSelectedBlockId("");
                   setSelectedBlockName("");
                   setSelectedUnit(null);
@@ -353,10 +395,7 @@ const Residentes: React.FC = () => {
                 <CircularProgress size={20} />
                 <Typography variant="body2">Carregando...</Typography>
               </Box>
-            ) : unitsError ? (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {unitsError}
-              </Alert>
+
             ) : null}
 
             <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
@@ -368,7 +407,7 @@ const Residentes: React.FC = () => {
                   const value = e.target.value;
                   setSelectedBlockId(value);
                   const blockName =
-                    blocks.data.find((block) => block.condominiumBlockId === value)?.name ||
+                    blocks.find((block) => block.condominiumBlockId === value)?.name ||
                     "";
                   setSelectedBlockName(blockName);
                   setUnitSearchText("");
@@ -380,7 +419,7 @@ const Residentes: React.FC = () => {
                 fullWidth
               >
                 <MenuItem value="">Todos os blocos</MenuItem>
-                {blocks.data.map((block) => (
+                {blocks.map((block) => (
                   <MenuItem key={block.condominiumBlockId} value={block.condominiumBlockId}>
                     {block.name || block.code || block.condominiumBlockId}
                   </MenuItem>
@@ -397,6 +436,7 @@ const Residentes: React.FC = () => {
               onAddClick={undefined}
               addButtonPlacement="toolbar"
               emptyImageLabel="Sem imagem"
+              showPagination={true}
               page={unitsPage}
               totalPages={unitsTotalPages}
               onPageChange={(page) => {
@@ -424,7 +464,7 @@ const Residentes: React.FC = () => {
                   meta: (
                     <Typography variant="caption" color="text.secondary">
                       Bloco:{" "}
-                      {blocks.data.find((b) => b.condominiumBlockId === unit.condominiumBlockId)
+                      {blocks.find((b) => b.condominiumBlockId === unit.condominiumBlockId)
                         ?.name ||
                         unit.condominiumBlockId ||
                         "Bloco desconhecido"}
@@ -500,6 +540,7 @@ const Residentes: React.FC = () => {
                     addButtonPlacement="toolbar"
                     emptyImageLabel="Sem imagem"
                     showFilters={false}
+                    showPagination={true}
                     page={residentsPage}
                     totalPages={residentsTotalPages}
                     onPageChange={(page) => {

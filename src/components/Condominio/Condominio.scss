@@ -538,7 +538,7 @@
   // ============================================
   // INPUTS DO FORMULÁRIO
   // ============================================
-  .condominio-form .MuiTextField-root {
+  .MuiTextField-root {
     margin-bottom: 0 !important;
 
     .MuiOutlinedInput-root {
@@ -650,47 +650,7 @@
     }
   }
 
-  // ============================================
-  // BOTÕES DO FORMULÁRIO (WIZARD) - ESTILO ARREDONDADO
-  // ============================================
-  .condominio-form .MuiButton-contained,
-  .condominio-form .MuiButton-containedPrimary {
-    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
-    color: white !important;
-    border: none !important;
-    padding: 10px 32px !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    min-width: 120px !important;
-    border-radius: 24px !important;
-    transition: all 0.2s ease !important;
-    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.25) !important;
-    text-transform: none !important;
-    height: 40px !important;
-    line-height: normal !important;
-
-    &:hover {
-      background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%) !important;
-      box-shadow: 0 6px 16px rgba(25, 118, 210, 0.35) !important;
-      transform: translateY(-1px) !important;
-    }
-
-    &:active {
-      transform: translateY(0) scale(0.98) !important;
-    }
-
-    &:disabled {
-      background: #e0e4e8 !important;
-      color: #999 !important;
-      cursor: not-allowed !important;
-      box-shadow: none !important;
-      opacity: 0.6 !important;
-    }
-  }
-
-  // ============================================
-  // SUBTÍTULOS - NEGRITO
-  // ============================================
+    
   .MuiTypography-subtitle2 {
     font-size: 14px !important;
     font-weight: 700 !important;
@@ -701,9 +661,7 @@
     border-bottom: 2px solid rgba(25, 118, 210, 0.15) !important;
   }
 
-  // ============================================
-  // SEM SCROLL
-  // ============================================
+    
   .condominio-form {
     margin-top: 0 !important;
     padding: 8px 6px !important;
@@ -718,3 +676,4 @@
     scrollbar-width: none !important;
   }
 }
+

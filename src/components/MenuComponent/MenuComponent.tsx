@@ -41,8 +41,8 @@ const menuItems: MenuItem[] = [
     path: RouteNames.Dashboard,
   },
   {
-    id: "condominio",
-    label: "Condominio",
+    id: "condominios",
+    label: "Condominios",
     icon: <MdApartment />,
     path: RouteNames.Condominio,
   },

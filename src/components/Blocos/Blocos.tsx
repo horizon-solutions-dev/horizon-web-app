@@ -34,6 +34,7 @@ import {
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BlocoForm from "./BlocoForm";
+import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
 
 const Blocos: React.FC = () => {
   const navigate = useNavigate();
@@ -54,6 +55,11 @@ const Blocos: React.FC = () => {
   const [editingBlock, setEditingBlock] = useState<CondominiumBlock | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [blockSearchText, setBlockSearchText] = useState("");
+  
+  // Estado para o modal de exclusão
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [blockToDelete, setBlockToDelete] = useState<CondominiumBlock | null>(null);
+  
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -118,7 +124,7 @@ const Blocos: React.FC = () => {
     loadCondominiums(1);
   }, []);
 
-  const loadBlocks = async () => {
+  const loadBlocks = async (pageNumber = 1) => {
     if (!condominiumIdQuery.trim()) {
       setListError("Informe o CondominiumId para carregar os blocos.");
       return;
@@ -127,13 +133,27 @@ const Blocos: React.FC = () => {
     setListLoading(true);
     setListError(null);
     try {
-      const data = await blockService.getBlocks(condominiumIdQuery.trim());
-      setBlocks(data?.data ?? []);
+      const response = await blockService.getBlocks(
+        condominiumIdQuery.trim(),
+        pageNumber,
+        pageSize
+      );
+      const normalized = response?.items ?? [];
+      const computedTotalPages =
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
+        );
+
+      setListPage(response?.paging.pageNumber ?? pageNumber);
+      setTotalPages(computedTotalPages);
+      setBlocks(normalized);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar blocos.";
       setListError(message);
-      setBlocks([]); // Adicionado para resetar blocks em caso de erro
+      setBlocks([]);
     } finally {
       setListLoading(false);
     }
@@ -147,18 +167,32 @@ const Blocos: React.FC = () => {
     setIsCadastroOpen(false);
     setBlockSearchText("");
     setActiveView("blocos");
-    
+
     // Carregar blocos automaticamente
     setListLoading(true);
     setListError(null);
     try {
-      const data = await blockService.getBlocks(condominium.condominiumId);
-      setBlocks(data?.data ?? []);
+      const response = await blockService.getBlocks(
+        condominium.condominiumId,
+        1,
+        pageSize
+      );
+      const normalized = response?.items ?? [];
+      const computedTotalPages =
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
+        );
+
+      setListPage(1);
+      setTotalPages(computedTotalPages);
+      setBlocks(normalized);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar blocos.";
       setListError(message);
-      setBlocks([]); // Adicionado para resetar blocks em caso de erro
+      setBlocks([]);
     } finally {
       setListLoading(false);
     }
@@ -170,11 +204,39 @@ const Blocos: React.FC = () => {
   };
 
   const handleDelete = (block: CondominiumBlock) => {
-    const confirmed = window.confirm(
-      `Deseja excluir o bloco ${block.name}?`,
-    );
-    if (!confirmed) return;
-    handleNotify("Exclusão ainda não está disponível.", "error");
+    setBlockToDelete(block);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!blockToDelete) return;
+
+    try {
+      setLoading(true);
+      await blockService.deleteBlock(blockToDelete.condominiumBlockId);
+      
+      handleNotify(`Bloco "${blockToDelete.name}" excluído com sucesso!`, "success");
+      
+      
+      await loadBlocks(listPage);
+      
+      
+      setDeleteModalOpen(false);
+      setBlockToDelete(null);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao excluir bloco.";
+      handleNotify(message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setBlockToDelete(null);
   };
 
   const handleOpenCreate = () => {
@@ -188,7 +250,7 @@ const Blocos: React.FC = () => {
   };
 
   const handleSaved = async () => {
-    await loadBlocks();
+    await loadBlocks(listPage);
   };
 
   return (
@@ -230,12 +292,6 @@ const Blocos: React.FC = () => {
                   <Typography variant="body2">Carregando...</Typography>
                 </Box>
               ) : listError ? (
-                <Alert severity="error">{listError}</Alert>
-              ) : condominiums.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  Nenhum condomínio encontrado para esta organização.
-                </Typography>
-              ) : (
                 <CardList
                   title="Condomínios da organização"
                   showTitle={false}
@@ -245,6 +301,58 @@ const Blocos: React.FC = () => {
                   addButtonPlacement="toolbar"
                   emptyImageLabel="Sem imagem"
                   showFilters={false}
+                  showPagination={true}
+                  page={listPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => {
+                    setListPage(page);
+                    loadCondominiums(page);
+                  }}
+                  items={condominiums
+                    .filter((condominium) =>
+                      [condominium.name, condominium.city, condominium.state]
+                        .filter(Boolean)
+                        .join(" ")
+                        .toLowerCase()
+                        .includes(searchText.toLowerCase()),
+                    )
+                    .map((condominium, index) => ({
+                      id: condominium.condominiumId,
+                      title: condominium.name,
+                      subtitle: (
+                        <>
+                          <Apartment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
+                          {condominium.city} - {condominium.state}
+                        </>
+                      ),
+                      actions: (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          className="action-button-manage"
+                          startIcon={<SettingsOutlined />}
+                          onClick={() => handleSelectCondominium(condominium)}
+                        >
+                          Gerenciar Blocos
+                        </Button>
+                      ),
+                      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                    }))}
+                />) : condominiums.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Nenhum condomínio encontrado para esta organização.
+                  </Typography>
+                ) : (
+                <CardList
+                  title="Condomínios da organização"
+                  showTitle={false}
+                  searchPlaceholder="Buscar condomínio..."
+                  onSearchChange={setSearchText}
+                  onAddClick={undefined}
+                  addButtonPlacement="toolbar"
+                  emptyImageLabel="Sem imagem"
+                  showFilters={false}
+                  showPagination={true}
                   page={listPage}
                   totalPages={totalPages}
                   onPageChange={(page) => {
@@ -351,10 +459,6 @@ const Blocos: React.FC = () => {
                       <CircularProgress size={20} />
                       <Typography variant="body2">Carregando...</Typography>
                     </Box>
-                  ) : listError ? (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                      {listError}
-                    </Alert>
                   ) : null}
 
                   <CardList
@@ -367,8 +471,14 @@ const Blocos: React.FC = () => {
                     addLabel="Novo"
                     addButtonPlacement="toolbar"
                     emptyImageLabel="Sem imagem"
-                    showPagination={false}
-                    items={(Array.isArray(blocks) ? blocks : []) // Adicionado check para evitar erro se blocks não for array
+                    showPagination={true}
+                    page={listPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => {
+                      setListPage(page);
+                      loadBlocks(page);
+                    }}
+                    items={(Array.isArray(blocks) ? blocks : [])
                       .filter((block) =>
                         [block.name, block.code]
                           .filter(Boolean)
@@ -416,6 +526,19 @@ const Blocos: React.FC = () => {
           </>
         )}
       </Container>
+
+      {/* Modal de confirmação de exclusão */}
+      <DeleteConfirmModal
+        open={deleteModalOpen}
+        title="Deseja excluir este bloco?"
+        message={blockToDelete ? `O bloco "${blockToDelete.name}" será removido permanentemente.` : ""}
+        imageAlt="Remover bloco"
+        confirmLabel="Excluir"
+        cancelLabel="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        onClose={handleCancelDelete}
+      />
 
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "center" }}

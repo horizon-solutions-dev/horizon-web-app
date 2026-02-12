@@ -1,5 +1,7 @@
 import { apiClient } from './apiClient';
 import type { UnitType } from './unitService';
+import type { PagedResponse } from '../models/pagination.model';
+import { normalizePagedResponse } from '../shared/utils/pagination';
 
 export interface CondominiumUnitResidentRequest {
   condominiumUnitId: string;
@@ -17,6 +19,8 @@ export interface CondominiumUnitResidentRequest {
 export interface CondominiumUnitResident extends CondominiumUnitResidentRequest {
   condominiumUnitResidentId: string;
 }
+
+export type CondominiumUnitResidentPagedResponse = PagedResponse<CondominiumUnitResident>;
 
 class UnitResidentService {
   private baseUrl =
@@ -42,9 +46,11 @@ class UnitResidentService {
         ...(pageSize !== undefined && { PageSize: pageSize.toString() }),
       });
 
-      return await apiClient.get<CondominiumUnitResident[]>(
+      const response = await apiClient.get<CondominiumUnitResident[] | CondominiumUnitResidentPagedResponse>(
         `${this.baseUrl}?${params}`
       );
+      
+      return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
       console.error('Erro ao buscar residentes:', error);
       throw error;

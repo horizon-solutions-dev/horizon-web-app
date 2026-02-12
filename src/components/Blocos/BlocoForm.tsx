@@ -136,34 +136,51 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
   const renderStepContent = () => {
     if (activeStep === 0) {
       return (
-        <Box className="bloco-form" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <TextField
-            placeholder="Código"
-            value={formData.code}
-            onChange={(e) => handleChange("code", e.target.value)}
-            error={!!errors.code}
-            helperText={errors.code}
-            fullWidth
-            required
-            variant="outlined"
-            InputLabelProps={{ shrink: false }}
-          />
-          <TextField
-            placeholder="Nome"
-            value={formData.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            error={!!errors.name}
-            helperText={errors.name}
-            fullWidth
-            required
-            variant="outlined"
-            InputLabelProps={{ shrink: false }}
-          />
-        </Box>
+        <>
+          <Box className="bloco-form" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <TextField
+              placeholder="Código"
+              value={formData.code}
+              onChange={(e) => handleChange("code", e.target.value)}
+              error={!!errors.code}
+              helperText={errors.code}
+              fullWidth
+              required
+              variant="outlined"
+              InputLabelProps={{ shrink: false }}
+            />
+            <TextField
+              placeholder="Nome"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              error={!!errors.name}
+              helperText={errors.name}
+              fullWidth
+              required
+              variant="outlined"
+              InputLabelProps={{ shrink: false }}
+            />
+          </Box>
+          
+          {Object.keys(errors).length > 0 && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              Por favor, corrija os erros acima antes de continuar.
+            </Alert>
+          )}
+        </>
       );
     }
 
     return null;
+  };
+
+  
+  const renderActions = () => {
+    return (
+      <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+        {loading ? <CircularProgress size={20} /> : "Concluir"}
+      </Button>
+    );
   };
 
   return (
@@ -176,24 +193,9 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
         activeStep={activeStep}
         showBack={false}
         onClose={onClose}
+        actions={renderActions()} 
       >
         {renderStepContent()}
-        
-        {Object.keys(errors).length > 0 && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            Por favor, corrija os erros acima antes de continuar.
-          </Alert>
-        )}
-
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 3 }}>
-          <Button 
-            variant="contained" 
-            onClick={handleSubmit} 
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={20} /> : "Concluir"}
-          </Button>
-        </Box>
       </StepWizardCard>
     </Box>
   );

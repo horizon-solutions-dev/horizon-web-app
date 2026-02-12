@@ -1,4 +1,6 @@
 import { apiClient } from './apiClient';
+import type { PagedResponse } from '../models/pagination.model';
+import { normalizePagedResponse } from '../shared/utils/pagination';
 
 export interface CondominiumBlockRequest {
   condominiumId: string;
@@ -9,6 +11,8 @@ export interface CondominiumBlockRequest {
 export interface CondominiumBlock extends CondominiumBlockRequest {
   condominiumBlockId: string;
 }
+
+export type CondominiumBlockPagedResponse = PagedResponse<CondominiumBlock>;
 
 class BlockService {
   private baseUrl =
@@ -30,17 +34,14 @@ class BlockService {
         ...(pageNumber !== undefined && { PageNumber: pageNumber.toString() }),
         ...(pageSize !== undefined && { PageSize: pageSize.toString() }),
       });
-      const result = await apiClient.get<CondominiumBlock[]>(`${this.baseUrl}?${params}`);
-      return {
-        data: result,
-        success: true,
-      }
+      const response = await apiClient.get<CondominiumBlock[] | CondominiumBlockPagedResponse>(
+        `${this.baseUrl}?${params}`
+      );
+      
+      return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
       console.error('Erro ao buscar blocos:', error);
-      return{
-        data: [] as CondominiumBlock[],
-        success: false,
-      }
+      throw error;
     }
   }
 

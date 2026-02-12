@@ -98,7 +98,7 @@ const CondominioPage: React.FC = () => {
           // Silencioso - não é crítico
         }
       }
- const normalized = response?.items ?? [];
+      const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
         response?.paging?.totalPages ??
@@ -171,7 +171,7 @@ const CondominioPage: React.FC = () => {
   useEffect(() => {
     loadCondominiums(1);
     loadCondominiumTypes();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [openDelete, setOpenDelete] = useState(false);
   const getCondominiumTypeLabel = (value: string | number) => {
@@ -187,7 +187,7 @@ const CondominioPage: React.FC = () => {
   };
 
   const handleDelete = (condominium: Condominium) => {
-    
+
     console.log("Deletar condomínio:", condominium);
     setOpenDelete(false);
   };
@@ -262,12 +262,6 @@ const CondominioPage: React.FC = () => {
                   <Typography variant="body2">Carregando...</Typography>
                 </Box>
               ) : listError ? (
-                <Alert severity="error">{listError}</Alert>
-              ) : condominiums.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  Nenhum condomínio encontrado para esta organização.
-                </Typography>
-              ) : (
                 <CardList
                   title="Condominios da organizacao"
                   showTitle={false}
@@ -311,9 +305,9 @@ const CondominioPage: React.FC = () => {
                       meta: (
                         <>
                           {condominium.condominiumType === "Commercial" ||
-                          getCondominiumTypeLabel(
-                            condominium.condominiumType,
-                          ) === "Comercial" ? (
+                            getCondominiumTypeLabel(
+                              condominium.condominiumType,
+                            ) === "Comercial" ? (
                             <BusinessOutlined
                               sx={{
                                 fontSize: 14,
@@ -322,8 +316,112 @@ const CondominioPage: React.FC = () => {
                               }}
                             />
                           ) : getCondominiumTypeLabel(
+                            condominium.condominiumType,
+                          ) === "Residencial" ? (
+                            <HomeOutlined
+                              sx={{
+                                fontSize: 14,
+                                mr: 0.5,
+                                verticalAlign: "middle",
+                              }}
+                            />
+                          ) : (
+                            <ApartmentOutlined
+                              sx={{
+                                fontSize: 14,
+                                mr: 0.5,
+                                verticalAlign: "middle",
+                              }}
+                            />
+                          )}
+                          {getCondominiumTypeLabel(condominium.condominiumType)}
+                        </>
+                      ),
+                      imageUrl: condominiumImages[condominium.condominiumId],
+                      actions: (
+                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            className="action-button-edit"
+                            startIcon={<EditOutlined />}
+                            onClick={() => handleEdit(condominium)}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            className="action-button-delete"
+                            startIcon={<DeleteOutline />}
+                            onClick={() => setOpenDelete(true)}
+                          >
+                            Excluir
+                          </Button>
+                        </Box>
+                      ),
+                    }))}
+                />) : condominiums.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Nenhum condomínio encontrado para esta organização.
+                  </Typography>
+                ) : (
+                <CardList
+                  title="Condominios da organizacao"
+                  showTitle={false}
+                  searchPlaceholder="Buscar condominio..."
+                  onSearchChange={setSearchText}
+                  onAddClick={handleOpenCreate}
+                  addLabel="Novo"
+                  addButtonPlacement="toolbar"
+                  emptyImageLabel="Sem imagem"
+                  showFilters={true}
+                  page={listPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => {
+                    setListPage(page);
+                    loadCondominiums(page);
+                  }}
+                  items={condominiums
+                    .filter((condominium,) =>
+                      [condominium.name, condominium.city, condominium.state]
+                        .filter(Boolean)
+                        .join(" ")
+                        .toLowerCase()
+                        .includes(searchText.toLowerCase()),
+                    )
+                    .map((condominium, index) => ({
+                      id: condominium.condominiumId,
+                      title: condominium.name,
+                      subtitle: (
+                        <>
+                          <LocationOnOutlined
+                            sx={{
+                              fontSize: 14,
+                              mr: 0.5,
+                              verticalAlign: "middle",
+                            }}
+                          />
+                          {condominium.city} - {condominium.state}
+                        </>
+                      ),
+                      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                      meta: (
+                        <>
+                          {condominium.condominiumType === "Commercial" ||
+                            getCondominiumTypeLabel(
                               condominium.condominiumType,
-                            ) === "Residencial" ? (
+                            ) === "Comercial" ? (
+                            <BusinessOutlined
+                              sx={{
+                                fontSize: 14,
+                                mr: 0.5,
+                                verticalAlign: "middle",
+                              }}
+                            />
+                          ) : getCondominiumTypeLabel(
+                            condominium.condominiumType,
+                          ) === "Residencial" ? (
                             <HomeOutlined
                               sx={{
                                 fontSize: 14,
