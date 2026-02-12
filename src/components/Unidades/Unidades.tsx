@@ -18,6 +18,7 @@ import {
   EditOutlined,
   Close,
   MeetingRoom,
+  ViewModule,
   Apartment,
   SettingsOutlined,
   ChevronRight,
@@ -55,6 +56,8 @@ const Unidades: React.FC = () => {
   const [editingUnit, setEditingUnit] = useState<CondominiumUnit | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [unitSearchText, setUnitSearchText] = useState("");
+  const [blockSearchText, setBlockSearchText] = useState("");
+  const [selectedBlockId, setSelectedBlockId] = useState("");
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -115,8 +118,13 @@ const Unidades: React.FC = () => {
     }
   };
 
-  const loadUnits = async (pageNumber = 1) => {
-    if (!condominiumIdQuery.trim()) {
+  const loadUnits = async (
+    blockId?: string,
+    pageNumber = 1,
+    condominiumIdOverride?: string,
+  ) => {
+    const condominiumId = (condominiumIdOverride ?? condominiumIdQuery).trim();
+    if (!condominiumId) {
       setListError("Informe o CondominiumId para carregar as unidades.");
       return;
     }
@@ -124,11 +132,13 @@ const Unidades: React.FC = () => {
     setListLoading(true);
     setListError(null);
     try {
-      const response = await unitService.getUnitsByCondominium(
-        condominiumIdQuery.trim(),
-        pageNumber,
-        pageSize,
-      );
+      const response = blockId
+        ? await unitService.getUnitsByBlock(blockId, pageNumber, pageSize)
+        : await unitService.getUnitsByCondominium(
+            condominiumId,
+            pageNumber,
+            pageSize,
+          );
       const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
@@ -188,6 +198,8 @@ const Unidades: React.FC = () => {
     setEditingUnit(null);
     setIsCadastroOpen(false);
     setUnitSearchText("");
+    setBlockSearchText("");
+    setSelectedBlockId("");
     setActiveView("unidades");
 
     // Carregar blocos e unidades automaticamente
@@ -195,21 +207,7 @@ const Unidades: React.FC = () => {
     setListError(null);
     try {
       await loadBlocks(condominium.condominiumId);
-      const response = await unitService.getUnitsByCondominium(
-        condominium.condominiumId,
-        1,
-        pageSize,
-      );
-      const normalized = response?.items ?? [];
-      const computedTotalPages =
-        response?.paging?.totalPages ??
-        Math.max(
-          1,
-          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
-        );
-      setListPage(1);
-      setTotalPages(computedTotalPages);
-      setUnits(normalized);
+      await loadUnits(undefined, 1, condominium.condominiumId);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar unidades.";
@@ -243,7 +241,7 @@ const Unidades: React.FC = () => {
   };
 
   const handleSaved = async () => {
-    await loadUnits(listPage);
+    await loadUnits(selectedBlockId || undefined, listPage);
   };
 
   return (
@@ -399,8 +397,21 @@ const Unidades: React.FC = () => {
                 typesLoading={typesLoading}
                 typesError={typesError}
                 loading={loading}
+                blockId={selectedBlockId || editingUnit?.condominiumBlockId || ""}
+                blockNamePreset={
+                  blocks.find(
+                    (block) =>
+                      block.condominiumBlockId === (selectedBlockId || editingUnit?.condominiumBlockId),
+                  )?.name ||
+                  blocks.find(
+                    (block) =>
+                      block.condominiumBlockId === (selectedBlockId || editingUnit?.condominiumBlockId),
+                  )?.code ||
+                  ""
+                }
                 setLoading={setLoading}
                 condominiumIdPreset={selectedCondominium?.condominiumId}
+                condominiumNamePreset={selectedCondominium?.name || ""}
               />
             ) : (
               <Paper elevation={3} sx={{ p: 3 }}>
@@ -439,6 +450,8 @@ const Unidades: React.FC = () => {
                           setEditingUnit(null);
                           setIsCadastroOpen(false);
                           setUnitSearchText("");
+                          setBlockSearchText("");
+                          setSelectedBlockId("");
                           setListError(null);
                         }}
                         className="close-button"
@@ -458,74 +471,151 @@ const Unidades: React.FC = () => {
                     </Box>
                   ) : null}
 
-                  <CardList
-                    title="Unidades do condomínio"
-                    showTitle={false}
-                    showFilters={true}
-                    searchPlaceholder="Buscar unidade..."
-                    onSearchChange={setUnitSearchText}
-                    onAddClick={handleOpenCreate}
-                    addLabel="Novo"
-                    addButtonPlacement="toolbar"
-                    emptyImageLabel="Sem imagem"
-                    showPagination={true}
-                    page={listPage}
-                    totalPages={totalPages}
-                    onPageChange={(page) => {
-                      setListPage(page);
-                      loadUnits(page);
-                    }}
-                    items={units
-                      .filter((unit) =>
-                        [unit.unitCode, unit.unitType]
-                          .filter(Boolean)
-                          .join(" ")
-                          .toLowerCase()
-                          .includes(unitSearchText.toLowerCase()),
+                  {listError ? (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                      {listError}
+                    </Alert>
+                  ) : null}
+
+{!selectedBlockId && (
+  <CardList
+    onClose={()=> {
+      setSelectedBlockId("");
+      setUnitSearchText("");
+      setListPage(1);
+      loadUnits(undefined, 1);
+    }}
+    title="Blocos do condomínio"
+    showTitle={false}
+    showFilters={true}
+    searchPlaceholder="Buscar bloco..."
+    onSearchChange={setBlockSearchText}
+    onAddClick={undefined}
+    addButtonPlacement="toolbar"
+    emptyImageLabel="Sem imagem"
+    showPagination={false}
+    items={blocks
+      .filter((block) =>
+        [block.name, block.code]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(blockSearchText.toLowerCase()),
+      )
+      .map((block, index) => ({
+        id: block.condominiumBlockId,
+        title: block.name || "Sem nome",
+        subtitle: (
+          <>
+            <ViewModule sx={{ fontSize: 14, mr: 0.5, verticalAlign: "middle" }} />
+            Código: {block.code || "-"}
+          </>
+        ),
+        actions: (
+          <Button
+            size="small"
+            variant="outlined"
+            className="action-button-manage"
+            onClick={() => {
+              setSelectedBlockId(block.condominiumBlockId);
+              setUnitSearchText("");
+              setListPage(1);
+              loadUnits(block.condominiumBlockId, 1);
+            }}
+          >
+            Ver unidades
+          </Button>
+        ),
+        accentColor:
+          selectedBlockId === block.condominiumBlockId
+            ? "#dff1ff"
+            : index % 2 === 0
+              ? "#eef6ee"
+              : "#fdecef",
+      }))}
+  />
+
+)}
+
+                 
+                    {
+                      selectedBlockId && (
+                        <CardList
+                        onClose={()=>{
+                          setSelectedBlockId("");
+                          setListPage(1);
+                          loadUnits(undefined, 1);
+                        }}
+                          title="Unidades do condomínio"
+                          showTitle={false}
+                          showFilters={true}
+                          searchPlaceholder="Buscar unidade..."
+                          onSearchChange={setUnitSearchText}
+                          onAddClick={handleOpenCreate}
+                          addLabel="Novo"
+                          addButtonPlacement="toolbar"
+                          emptyImageLabel="Sem imagem"
+                          showPagination={true}
+                          page={listPage}
+                          totalPages={totalPages}
+                          onPageChange={(page) => {
+                            setListPage(page);
+                            loadUnits(selectedBlockId || undefined, page);
+                          }}
+                          items={units
+                            .filter((unit) =>
+                              [unit.unitCode, unit.unitType]
+                                .filter(Boolean)
+                                .join(" ")
+                                .toLowerCase()
+                                .includes(unitSearchText.toLowerCase()),
+                            )
+                            .map((unit, index) => ({
+                              id: unit.condominiumUnitId,
+                              title: unit.unitCode || "Sem código",
+                              subtitle: (
+                                <>
+                                  <MeetingRoom sx={{ fontSize: 14, mr: 0.5, verticalAlign: "middle" }} />
+                                  Tipo: {unit.unitType?.toString() === "1" ? "Proprietário" : "Inquilino"}
+                                </>
+                              ),
+                              meta: (
+                                <>
+                                  Bloco:{" "}
+                                  {blocks.find((b) => b.condominiumBlockId === unit.condominiumBlockId)
+                                    ?.name ||
+                                    unit.condominiumBlockId ||
+                                    "Desconhecido"}
+                                </>
+                              ),
+                              actions: (
+                                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    className="action-button-edit"
+                                    startIcon={<EditOutlined />}
+                                    onClick={() => handleEdit(unit)}
+                                  >
+                                    Editar
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    className="action-button-delete"
+                                    startIcon={<DeleteOutline />}
+                                    onClick={() => handleDelete(unit)}
+                                  >
+                                    Excluir
+                                  </Button>
+                                </Box>
+                              ),
+                              accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                            }))}
+                        />
+
                       )
-                      .map((unit, index) => ({
-                        id: unit.condominiumUnitId,
-                        title: unit.unitCode || "Sem código",
-                        subtitle: (
-                          <>
-                            <MeetingRoom sx={{ fontSize: 14, mr: 0.5, verticalAlign: "middle" }} />
-                            Tipo: {unit.unitType?.toString() === "1" ? "Proprietário" : "Inquilino"}
-                          </>
-                        ),
-                        meta: (
-                          <>
-                            Bloco:{" "}
-                            {blocks.find((b) => b.condominiumBlockId === unit.condominiumBlockId)
-                              ?.name ||
-                              unit.condominiumBlockId ||
-                              "Desconhecido"}
-                          </>
-                        ),
-                        actions: (
-                          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              className="action-button-edit"
-                              startIcon={<EditOutlined />}
-                              onClick={() => handleEdit(unit)}
-                            >
-                              Editar
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              className="action-button-delete"
-                              startIcon={<DeleteOutline />}
-                              onClick={() => handleDelete(unit)}
-                            >
-                              Excluir
-                            </Button>
-                          </Box>
-                        ),
-                        accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                      }))}
-                  />
+                    }
                 </Paper>
               </Paper>
             )}

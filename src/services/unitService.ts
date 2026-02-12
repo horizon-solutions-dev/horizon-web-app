@@ -2,19 +2,21 @@ import { apiClient } from './apiClient';
 import type { PagedResponse } from '../models/pagination.model';
 import { normalizePagedResponse } from '../shared/utils/pagination';
 
-export type UnitType = 'Owner' | 'Tenant' | string;
+//export type UnitType = 'Owner' | 'Tenant' | string;
 
 export interface CondominiumUnitRequest {
   condominiumId: string;
   condominiumBlockId: string;
   unitCode: string;
-  unitType?: UnitType;
+  unitType: 'Owner' | 'Tenant' | string | '1' | '2' | number; // 'Owner' | 'Tenant' | string;
+  allocationType?: 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string | number; // 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string;
 }
 export interface CondominiumUnitResponse {
   condominiumId: string;
   condominiumBlockId: string;
   unitCode: string;
-  unitType?: '1' | '2' | string;
+  unitType?: 1 | 2 | '1' | '2' | string;
+  allocationType?: 1 | 2 | 3 | '1' | '2' | '3' | string;
 }
 
 export interface CondominiumUnit extends CondominiumUnitResponse {

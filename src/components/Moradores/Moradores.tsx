@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -15,7 +15,6 @@ import {
   Add,
   Edit,
   Delete,
-  Person,
   Phone,
   Home,
   Badge,
@@ -65,6 +64,7 @@ const Moradores: React.FC = () => {
       // TODO: Implementar quando API estiver disponivel
       setMoradores([]);
     } catch (error) {
+      console.error("Erro ao carregar moradores:", error);
       setSnackbar({
         open: true,
         message: "Erro ao carregar moradores!",
@@ -96,6 +96,7 @@ const Moradores: React.FC = () => {
       handleCloseForm();
       loadMoradores();
     } catch (error) {
+      console.error("Erro ao salvar morador:", error);
       setSnackbar({
         open: true,
         message: "Erro ao salvar morador!",
@@ -115,6 +116,7 @@ const Moradores: React.FC = () => {
         });
         await loadMoradores();
       } catch (error) {
+        console.error("Erro ao excluir morador:", error);
         setSnackbar({
           open: true,
           message: "Erro ao excluir morador!",
