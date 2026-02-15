@@ -213,8 +213,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       showBack={false}
       onClose={onClose}
       actions={
-        <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : editingId ? "Atualizar" : "Criar"}
+        <Button variant="contained" onClick={handleSubmit} sx={{marginTop: '16px'}} disabled={loading}>
+          {loading ? <CircularProgress size={20} /> : editingId ? "Atualizar" : "Concluir"}
         </Button>
       }
     >
@@ -224,15 +224,31 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           value={resolvedCondominiumName}
           fullWidth
           disabled
+          sx={{
+            '& .MuiOutlinedInput-root.Mui-disabled:hover fieldset': {
+              borderColor: '#e0e0e0 !important',
+            },
+            '& .MuiOutlinedInput-root.Mui-disabled fieldset': {
+              borderColor: '#e0e0e0 !important',
+            },
+          }}
         />
         <TextField
           label="Bloco"
           value={resolvedBlockName}
           fullWidth
           disabled
+          sx={{
+            '& .MuiOutlinedInput-root.Mui-disabled:hover fieldset': {
+              borderColor: '#e0e0e0 !important',
+            },
+            '& .MuiOutlinedInput-root.Mui-disabled fieldset': {
+              borderColor: '#e0e0e0 !important',
+            },
+          }}
         />
         <TextField
-          label="Código da Unidade"
+          label="Código"
           value={formData.unitCode}
           onChange={(e) => handleChange("unitCode", e.target.value)}
           fullWidth
@@ -240,6 +256,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           helperText={errors.unitCode}
         />
         <TextField
+        
           label="Tipo da Unidade"
           select
           value={formData.unitType || ""}

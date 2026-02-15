@@ -279,6 +279,7 @@
   // Container dos botões
   > div:last-child,
   .step-wizard-actions {
+    margin-top: 16px !important;
     display: flex !important;
     justify-content: center !important;
     gap: 12px !important;

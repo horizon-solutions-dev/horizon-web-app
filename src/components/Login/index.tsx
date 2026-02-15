@@ -11,6 +11,8 @@ import { AuthService } from "../../services/authService";
 import { organizationService, type OrganizationMeResponse } from "../../services/organizationService";
 import { IoIosArrowBack } from "react-icons/io";
 import { MdCheckCircle } from "react-icons/md";
+import { Close } from "@mui/icons-material";
+import { IconButton, Tooltip } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
 import Logo from '../../assets/logo.svg';
 
@@ -160,6 +162,22 @@ export default function MultiStepLogin() {
         setPasswordError(null);
       }
     }
+  };
+
+  const handleCloseNoOrganization = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("condominiumId");
+    localStorage.removeItem("condominium");
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("organizationId");
+    setCondominiums([]);
+    formik.setFieldValue("email", "");
+    setPasswordError(null);
+    setIsLoadingCondominiums(false);
+    formik.setFieldValue("password", "");
+    formik.setFieldValue("condominium", null);
+    setStep(1);
   };
 
   const handleKeyPress = (
@@ -377,6 +395,18 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
 
   const renderStepThree = () => (
     <>
+      {!isLoadingCondominiums && condominiums.length === 0 ? (
+        <Tooltip title="Fechar">
+          <IconButton
+            className="login-close-button"
+            aria-label="Fechar"
+            onClick={handleCloseNoOrganization}
+          >
+            <Close />
+          </IconButton>
+        </Tooltip>
+      ) : null}
+
       <div className="logo-section">
         <div className="logo">
           <img src={Logo} alt="Logo" />

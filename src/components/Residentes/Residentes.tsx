@@ -15,10 +15,12 @@ import {
   Tooltip,
 } from "@mui/material";
 import {
-  ArrowBack,
   Close,
   PeopleOutlined,
   SettingsOutlined,
+  MeetingRoom,
+  ChevronRight,
+  Person2Sharp,
 } from "@mui/icons-material";
 import {
   unitResidentService,
@@ -37,7 +39,7 @@ import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import ResidenteForm from "./ResidenteForm";
 import { useNavigate } from "react-router";
-
+import moment from "moment";
 const condoPageSize = 4;
 const unitPageSize = 6;
 const residentPageSize = 6;
@@ -61,6 +63,7 @@ const Residentes: React.FC = () => {
   const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
   const [unitsLoading, setUnitsLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [unitsError, setUnitsError] = useState<string | null>(null);
   const [unitSearchText, setUnitSearchText] = useState("");
   const [unitsPage, setUnitsPage] = useState(1);
@@ -68,6 +71,7 @@ const Residentes: React.FC = () => {
   const [selectedUnit, setSelectedUnit] = useState<CondominiumUnit | null>(
     null,
   );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedBlockNameState, setSelectedBlockName] = useState("");
 
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
@@ -262,10 +266,11 @@ const Residentes: React.FC = () => {
 
   const handleCloseForm = () => {
     setIsFormOpen(false);
+    loadResidents(selectedUnit?.condominiumUnitId || "", 1);
   };
 
   const handleSaved = async () => {
-    await loadResidents("1");
+    await loadResidents(selectedUnit?.condominiumUnitId || "", 1);
   };
 
   const getUnitTypeLabel = (value?: string) => {
@@ -368,7 +373,7 @@ const Residentes: React.FC = () => {
                         startIcon={<SettingsOutlined />}
                         onClick={() => handleSelectCondominium(condominium)}
                       >
-                        Ver unidades
+                        Visualizar
                       </Button>
                     ),
                   }))}
@@ -423,28 +428,66 @@ const Residentes: React.FC = () => {
           </Paper>
         ) : activeView === "unidades" ? (
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-              <IconButton
-                onClick={() => {
-                  setActiveView("condominios");
-                  setSelectedCondominium(null);
-                  setUnits([]);
-                  setBlocks([]);
-                  setSelectedBlockId("");
-                  setSelectedBlockName("");
-                  setSelectedUnit(null);
-                  setResidents([]);
-                  setUnitsError(null);
-                  setResidentsError(null);
-                }}
-              >
-                <ArrowBack />
-              </IconButton>
-              <Box>
-                <Typography variant="h5">Unidades</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {selectedCondominium?.name || "Condominio selecionado"}
-                </Typography>
+            <Box
+              sx={{
+                mb: 2,
+                pb: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "2px solid #f0f0f0",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
+                <Box>
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    Unidades
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.3,
+                      mt: 0.5,
+                    }}
+                  >
+                    <ChevronRight
+                      sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }}
+                    />
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontSize: "12px" }}
+                    >
+                      {selectedCondominium?.name || "Condomínio selecionado"}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Tooltip title="Voltar">
+                  <IconButton
+                    onClick={() => {
+                      setActiveView("condominios");
+                      setSelectedCondominium(null);
+                      setUnits([]);
+                      setBlocks([]);
+                      setSelectedBlockId("");
+                      setSelectedBlockName("");
+                      setSelectedUnit(null);
+                      setResidents([]);
+                      setUnitsError(null);
+                      setResidentsError(null);
+                    }}
+                  >
+                    <Close sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Box>
 
@@ -541,12 +584,14 @@ const Residentes: React.FC = () => {
                   ),
                   actions: (
                     <Button
-                      size="small"
-                      variant="outlined"
+                        size="small"
+                        variant="outlined"
+                        className="action-button-manage"
+                        startIcon={<Person2Sharp />}
                       onClick={() => handleSelectUnit(unit)}
-                    >
-                      Ver residentes
-                    </Button>
+                      >
+                        Gerenciar Residentes
+                      </Button>
                   ),
                   accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                 }))}
@@ -568,32 +613,63 @@ const Residentes: React.FC = () => {
             {!isFormOpen ? (
               <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
                 <Box
-                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}
-                >
+              sx={{
+                mb: 2,
+                pb: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "2px solid #f0f0f0",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
+                <Box>
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    Residentes
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.3,
+                      mt: 0.5,
+                    }}
+                  >
+                    <ChevronRight
+                      sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }}
+                    />
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontSize: "12px" }}
+                    >
+                      {selectedCondominium?.name || "Condomínio selecionado"}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Tooltip title="Voltar">
                   <IconButton
                     onClick={() => {
                       setActiveView("unidades");
                       setSelectedUnit(null);
                       setResidents([]);
-                      setResidentSearchText("");
                       setResidentsError(null);
+                      setResidentSearchText("");
+                      setResidentsPage(1);
                     }}
                   >
-                    <ArrowBack />
+                    <Close sx={{ fontSize: 20 }} />
                   </IconButton>
-                  <Box>
-                    <Typography variant="h5">Residentes</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedCondominium?.name || "Condominio"} •{" "}
-                      {selectedUnit?.unitCode ||
-                        selectedUnit?.condominiumUnitId ||
-                        "Unidade"}
-                      {selectedBlockNameState
-                        ? ` • Bloco ${selectedBlockNameState}`
-                        : ""}
-                    </Typography>
-                  </Box>
-                </Box>
+                </Tooltip>
+              </Box>
+            </Box>
 
                 {residentsError ? (
                   <Alert severity="error" sx={{ mb: 2 }}>
@@ -636,9 +712,9 @@ const Residentes: React.FC = () => {
                       )
                       .map((resident, index) => ({
                         id: resident.condominiumUnitResidentId,
-                        title: resident.userId,
-                        subtitle: `Unidade: ${resident.condominiumUnitId}`,
-                        meta: `Periodo: ${resident.startDate || "-"} -> ${resident.endDate || "-"}`,
+                        title: getUnitTypeLabel(resident.unitType?.toString()),
+                        subtitle: `Unidade: ${units.find((u) => u.condominiumUnitId === resident.condominiumUnitId)?.unitCode || resident.condominiumUnitId}`,
+                        meta: `Periodo: ${moment(resident.startDate).format("DD/MM/YYYY")} - ${resident.endDate ? moment(resident.endDate).format("DD/MM/YYYY") : "Atual"}`,
                         accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                       }))}
                   />

@@ -513,6 +513,7 @@ const Unidades: React.FC = () => {
         ),
         actions: (
           <Button
+            startIcon={<SettingsOutlined />}
             size="small"
             variant="outlined"
             className="action-button-manage"
@@ -523,7 +524,7 @@ const Unidades: React.FC = () => {
               loadUnits(block.condominiumBlockId, 1);
             }}
           >
-            Ver unidades
+            Visualizar
           </Button>
         ),
         accentColor:

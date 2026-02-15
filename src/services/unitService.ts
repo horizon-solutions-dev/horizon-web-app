@@ -2,7 +2,7 @@ import { apiClient } from './apiClient';
 import type { PagedResponse } from '../models/pagination.model';
 import { normalizePagedResponse } from '../shared/utils/pagination';
 
-//export type UnitType = 'Owner' | 'Tenant' | string;
+export type UnitType = 'Owner' | 'Tenant' | string | '1' | '2' | number;
 
 export interface CondominiumUnitRequest {
   condominiumId: string;

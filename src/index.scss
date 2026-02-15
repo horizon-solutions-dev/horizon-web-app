@@ -78,3 +78,37 @@
       }
     }
   }
+
+    .MuiPagination-root {
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: 16px !important;
+    padding-top: 16px !important;
+    border-top: 2px solid #f0f2f5 !important;
+
+    .MuiPaginationItem-root {
+      min-width: 36px !important;
+      height: 36px !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      font-size: 13px !important;
+
+      &.Mui-selected {
+        background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+        color: white !important;
+        box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3) !important;
+      }
+
+      &:not(.Mui-selected) {
+        color: #666 !important;
+        background: white !important;
+        border: 2px solid #e0e4e8 !important;
+
+        &:hover {
+          background: rgba(25, 118, 210, 0.05) !important;
+          border-color: #1976d2 !important;
+          color: #1976d2 !important;
+        }
+      }
+    }
+  }

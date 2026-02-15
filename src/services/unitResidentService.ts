@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient } from './apiClient';
 import type { UnitType } from './unitService';
 import type { PagedResponse } from '../models/pagination.model';
@@ -34,6 +35,27 @@ class UnitResidentService {
       );
     } catch (error) {
       console.error('Erro ao criar residente:', error);
+      throw error;
+    }
+  }
+
+  async validateResident(resident: CondominiumUnitResidentRequest) {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(this.baseUrl, resident, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
       throw error;
     }
   }
