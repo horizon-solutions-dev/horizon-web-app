@@ -205,6 +205,7 @@ export default function CardList({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 2,
+                   maxHeight: 135,
                 }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>

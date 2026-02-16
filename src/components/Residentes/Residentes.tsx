@@ -6,11 +6,9 @@ import {
   Paper,
   Typography,
   Button,
-  TextField,
   Snackbar,
   Alert,
   CircularProgress,
-  MenuItem,
   IconButton,
   Tooltip,
 } from "@mui/material";
@@ -19,7 +17,6 @@ import {
   PeopleOutlined,
   SettingsOutlined,
   MeetingRoom,
-  ChevronRight,
   Person2Sharp,
 } from "@mui/icons-material";
 import {
@@ -37,6 +34,7 @@ import {
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
+import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import ResidenteForm from "./ResidenteForm";
 import { useNavigate } from "react-router";
 import moment from "moment";
@@ -76,6 +74,7 @@ const Residentes: React.FC = () => {
 
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
   const [residentsLoading, setResidentsLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [residentsError, setResidentsError] = useState<string | null>(null);
   const [residentSearchText, setResidentSearchText] = useState("");
   const [residentsPage, setResidentsPage] = useState(1);
@@ -419,7 +418,7 @@ const Residentes: React.FC = () => {
                         startIcon={<SettingsOutlined />}
                         onClick={() => handleSelectCondominium(condominium)}
                       >
-                        Gerenciar Residentes
+                        Visualizar unidades
                       </Button>
                     ),
                   }))}
@@ -448,25 +447,13 @@ const Residentes: React.FC = () => {
                   >
                     Unidades
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.3,
-                      mt: 0.5,
-                    }}
-                  >
-                    <ChevronRight
-                      sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }}
-                    />
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ fontSize: "12px" }}
-                    >
-                      {selectedCondominium?.name || "Condomínio selecionado"}
-                    </Typography>
-                  </Box>
+                  <BreadcrumbTrail
+                    items={[
+                      organizationName || "Organizacao",
+                      selectedCondominium?.name || "Condominio selecionado",
+                      "Unidades",
+                    ]}
+                  />
                 </Box>
               </Box>
               <Box sx={{ display: "flex", gap: 1 }}>
@@ -498,46 +485,11 @@ const Residentes: React.FC = () => {
               </Box>
             ) : null}
 
-            <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
-              <TextField
-                label="Filtrar por bloco"
-                select
-                value={selectedBlockId}
-                onChange={async (e) => {
-                  const value = e.target.value;
-                  setSelectedBlockId(value);
-                  const blockName =
-                    blocks.find((block) => block.condominiumBlockId === value)
-                      ?.name || "";
-                  setSelectedBlockName(blockName);
-                  setUnitSearchText("");
-                  setUnitsPage(1);
-                  if (selectedCondominium) {
-                    await loadUnits(
-                      selectedCondominium.condominiumId,
-                      value || undefined,
-                      1,
-                    );
-                  }
-                }}
-                fullWidth
-              >
-                <MenuItem value="">Todos os blocos</MenuItem>
-                {blocks.map((block) => (
-                  <MenuItem
-                    key={block.condominiumBlockId}
-                    value={block.condominiumBlockId}
-                  >
-                    {block.name || block.code || block.condominiumBlockId}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
 
             <CardList
               title="Unidades do condominio"
               showTitle={false}
-              showFilters={false}
+              showFilters={true}
               searchPlaceholder="Buscar unidade..."
               onSearchChange={setUnitSearchText}
               onAddClick={undefined}
@@ -590,7 +542,7 @@ const Residentes: React.FC = () => {
                         startIcon={<Person2Sharp />}
                       onClick={() => handleSelectUnit(unit)}
                       >
-                        Gerenciar Residentes
+                        Visualizar Residentes
                       </Button>
                   ),
                   accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -632,25 +584,14 @@ const Residentes: React.FC = () => {
                   >
                     Residentes
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.3,
-                      mt: 0.5,
-                    }}
-                  >
-                    <ChevronRight
-                      sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }}
-                    />
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ fontSize: "12px" }}
-                    >
-                      {selectedCondominium?.name || "Condomínio selecionado"}
-                    </Typography>
-                  </Box>
+                  <BreadcrumbTrail
+                    items={[
+                      organizationName || "Organizacao",
+                      selectedCondominium?.name || "Condominio selecionado",
+                      selectedUnit?.unitCode || "Unidade selecionada",
+                      "Residentes",
+                    ]}
+                  />
                 </Box>
               </Box>
               <Box sx={{ display: "flex", gap: 1 }}>
@@ -671,11 +612,6 @@ const Residentes: React.FC = () => {
               </Box>
             </Box>
 
-                {residentsError ? (
-                  <Alert severity="error" sx={{ mb: 2 }}>
-                    {residentsError}
-                  </Alert>
-                ) : null}
 
                 {residentsLoading ? (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -692,7 +628,7 @@ const Residentes: React.FC = () => {
                     addLabel="Novo"
                     addButtonPlacement="toolbar"
                     emptyImageLabel="Sem imagem"
-                    showFilters={false}
+                    showFilters={true}
                     showPagination={true}
                     page={residentsPage}
                     totalPages={residentsTotalPages}

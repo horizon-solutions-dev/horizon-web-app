@@ -21,7 +21,6 @@ import {
   ViewModule,
   Apartment,
   SettingsOutlined,
-  ChevronRight,
 } from "@mui/icons-material";
 import {
   unitService,
@@ -32,6 +31,7 @@ import { blockService, type CondominiumBlock } from "../../services/blockService
 import { condominiumService, type Condominium } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
+import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import UnidadeForm from "./UnidadeForm";
 
 const Unidades: React.FC = () => {
@@ -431,12 +431,13 @@ const Unidades: React.FC = () => {
                       <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
                         Unidades
                       </Typography>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, mt: 0.5 }}>
-                        <ChevronRight sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }} />
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
-                          {selectedCondominium?.name || "Condomínio selecionado"}
-                        </Typography>
-                      </Box>
+                      <BreadcrumbTrail
+                        items={[
+                          organizationName || "Organizacao",
+                          selectedCondominium?.name || "Condominio selecionado",
+                          "Unidades",
+                        ]}
+                      />
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
