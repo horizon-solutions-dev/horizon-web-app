@@ -61,7 +61,6 @@ const Residentes: React.FC = () => {
   const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
   const [unitsLoading, setUnitsLoading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [unitsError, setUnitsError] = useState<string | null>(null);
   const [unitSearchText, setUnitSearchText] = useState("");
   const [unitsPage, setUnitsPage] = useState(1);
@@ -69,12 +68,10 @@ const Residentes: React.FC = () => {
   const [selectedUnit, setSelectedUnit] = useState<CondominiumUnit | null>(
     null,
   );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedBlockNameState, setSelectedBlockName] = useState("");
+  const [, setSelectedBlockName] = useState("");
 
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
   const [residentsLoading, setResidentsLoading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [residentsError, setResidentsError] = useState<string | null>(null);
   const [residentSearchText, setResidentSearchText] = useState("");
   const [residentsPage, setResidentsPage] = useState(1);
@@ -228,6 +225,55 @@ const Residentes: React.FC = () => {
     loadCondominiums(1);
   }, []);
 
+  const resetResidentsContext = () => {
+    setSelectedUnit(null);
+    setResidents([]);
+    setResidentsError(null);
+    setResidentSearchText("");
+    setResidentsPage(1);
+  };
+
+  const resetUnitsContext = () => {
+    setUnits([]);
+    setBlocks([]);
+    setSelectedBlockId("");
+    setSelectedBlockName("");
+    setUnitsError(null);
+    setUnitSearchText("");
+    setUnitsPage(1);
+    resetResidentsContext();
+  };
+
+  const condominiumItems = condominiums
+    .filter((condominium) =>
+      [condominium.name, condominium.city, condominium.state]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(condoSearchText.toLowerCase()),
+    )
+    .map((condominium, index) => ({
+      id: condominium.condominiumId,
+      title: condominium.name,
+      subtitle: (
+        <Typography variant="body2" color="text.secondary">
+          {condominium.city} - {condominium.state}
+        </Typography>
+      ),
+      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+      actions: (
+        <Button
+          size="small"
+          variant="outlined"
+          className="action-button-manage"
+          startIcon={<SettingsOutlined />}
+          onClick={() => handleSelectCondominium(condominium)}
+        >
+          Visualizar unidades
+        </Button>
+      ),
+    }));
+
   const handleSelectCondominium = async (condominium: Condominium) => {
     setSelectedCondominium(condominium);
     setSelectedBlockId("");
@@ -236,10 +282,7 @@ const Residentes: React.FC = () => {
     setUnitsError(null);
     setUnitSearchText("");
     setUnitsPage(1);
-    setSelectedUnit(null);
-    setResidents([]);
-    setResidentsError(null);
-    setResidentSearchText("");
+    resetResidentsContext();
     setActiveView("unidades");
     await loadBlocks(condominium.condominiumId);
     await loadUnits(condominium.condominiumId, undefined, 1);
@@ -331,53 +374,9 @@ const Residentes: React.FC = () => {
                 <CircularProgress size={20} />
                 <Typography variant="body2">Carregando...</Typography>
               </Box>
-            ) : condoError ? (
-              <CardList
-                title="Condominios da organizacao"
-                showTitle={false}
-                searchPlaceholder="Buscar condominio..."
-                onSearchChange={setCondoSearchText}
-                onAddClick={undefined}
-                addButtonPlacement="toolbar"
-                emptyImageLabel="Sem imagem"
-                showPagination={true}
-                page={condoPage}
-                totalPages={condoTotalPages}
-                onPageChange={(page) => {
-                  setCondoPage(page);
-                  loadCondominiums(page);
-                }}
-                items={condominiums
-                  .filter((condominium) =>
-                    [condominium.name, condominium.city, condominium.state]
-                      .filter(Boolean)
-                      .join(" ")
-                      .toLowerCase()
-                      .includes(condoSearchText.toLowerCase()),
-                  )
-                  .map((condominium, index) => ({
-                    id: condominium.condominiumId,
-                    title: condominium.name,
-                    subtitle: (
-                      <Typography variant="body2" color="text.secondary">
-                        {condominium.city} - {condominium.state}
-                      </Typography>
-                    ),
-                    accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                    actions: (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        className="action-button-manage"
-                        startIcon={<SettingsOutlined />}
-                        onClick={() => handleSelectCondominium(condominium)}
-                      >
-                        Visualizar
-                      </Button>
-                    ),
-                  }))}
-              />
             ) : (
+              <>
+               
               <CardList
                 title="Condominios da organizacao"
                 showTitle={false}
@@ -393,36 +392,9 @@ const Residentes: React.FC = () => {
                   setCondoPage(page);
                   loadCondominiums(page);
                 }}
-                items={condominiums
-                  .filter((condominium) =>
-                    [condominium.name, condominium.city, condominium.state]
-                      .filter(Boolean)
-                      .join(" ")
-                      .toLowerCase()
-                      .includes(condoSearchText.toLowerCase()),
-                  )
-                  .map((condominium, index) => ({
-                    id: condominium.condominiumId,
-                    title: condominium.name,
-                    subtitle: (
-                      <Typography variant="body2" color="text.secondary">
-                        {condominium.city} - {condominium.state}
-                      </Typography>
-                    ),
-                    accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                    actions: (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        className="action-button-manage"
-                        startIcon={<SettingsOutlined />}
-                        onClick={() => handleSelectCondominium(condominium)}
-                      >
-                        Visualizar unidades
-                      </Button>
-                    ),
-                  }))}
+                items={condominiumItems}
               />
+              </>
             )}
           </Paper>
         ) : activeView === "unidades" ? (
@@ -462,14 +434,7 @@ const Residentes: React.FC = () => {
                     onClick={() => {
                       setActiveView("condominios");
                       setSelectedCondominium(null);
-                      setUnits([]);
-                      setBlocks([]);
-                      setSelectedBlockId("");
-                      setSelectedBlockName("");
-                      setSelectedUnit(null);
-                      setResidents([]);
-                      setUnitsError(null);
-                      setResidentsError(null);
+                      resetUnitsContext();
                     }}
                   >
                     <Close sx={{ fontSize: 20 }} />
@@ -484,6 +449,8 @@ const Residentes: React.FC = () => {
                 <Typography variant="body2">Carregando...</Typography>
               </Box>
             ) : null}
+
+         
 
 
             <CardList
@@ -560,6 +527,15 @@ const Residentes: React.FC = () => {
                 loading={loading}
                 setLoading={setLoading}
                 unitIdPreset={selectedUnit?.condominiumUnitId}
+                condominiumNamePreset={selectedCondominium?.name}
+                blockNamePreset={
+                  blocks.find(
+                    (b) =>
+                      b.condominiumBlockId === selectedUnit?.condominiumBlockId,
+                  )?.name ||
+                  selectedUnit?.condominiumBlockId
+                }
+                unitCodePreset={selectedUnit?.unitCode}
               />
             ) : null}
             {!isFormOpen ? (
@@ -599,11 +575,7 @@ const Residentes: React.FC = () => {
                   <IconButton
                     onClick={() => {
                       setActiveView("unidades");
-                      setSelectedUnit(null);
-                      setResidents([]);
-                      setResidentsError(null);
-                      setResidentSearchText("");
-                      setResidentsPage(1);
+                      resetResidentsContext();
                     }}
                   >
                     <Close sx={{ fontSize: 20 }} />
@@ -619,41 +591,44 @@ const Residentes: React.FC = () => {
                     <Typography variant="body2">Carregando...</Typography>
                   </Box>
                 ) : (
-                  <CardList
-                    title="Residentes"
-                    showTitle={false}
-                    searchPlaceholder="Buscar residente..."
-                    onSearchChange={setResidentSearchText}
-                    onAddClick={handleOpenCreate}
-                    addLabel="Novo"
-                    addButtonPlacement="toolbar"
-                    emptyImageLabel="Sem imagem"
-                    showFilters={true}
-                    showPagination={true}
-                    page={residentsPage}
-                    totalPages={residentsTotalPages}
-                    onPageChange={(page) => {
-                      setResidentsPage(page);
-                      if (selectedUnit) {
-                        loadResidents(selectedUnit.condominiumUnitId, page);
-                      }
-                    }}
-                    items={residents
-                      .filter((resident) =>
-                        [resident.userId, resident.condominiumUnitId]
-                          .filter(Boolean)
-                          .join(" ")
-                          .toLowerCase()
-                          .includes(residentSearchText.toLowerCase()),
-                      )
-                      .map((resident, index) => ({
-                        id: resident.condominiumUnitResidentId,
-                        title: getUnitTypeLabel(resident.unitType?.toString()),
-                        subtitle: `Unidade: ${units.find((u) => u.condominiumUnitId === resident.condominiumUnitId)?.unitCode || resident.condominiumUnitId}`,
-                        meta: `Periodo: ${moment(resident.startDate).format("DD/MM/YYYY")} - ${resident.endDate ? moment(resident.endDate).format("DD/MM/YYYY") : "Atual"}`,
-                        accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                      }))}
-                  />
+                  <>
+                   
+                    <CardList
+                      title="Residentes"
+                      showTitle={false}
+                      searchPlaceholder="Buscar residente..."
+                      onSearchChange={setResidentSearchText}
+                      onAddClick={handleOpenCreate}
+                      addLabel="Novo"
+                      addButtonPlacement="toolbar"
+                      emptyImageLabel="Sem imagem"
+                      showFilters={true}
+                      showPagination={true}
+                      page={residentsPage}
+                      totalPages={residentsTotalPages}
+                      onPageChange={(page) => {
+                        setResidentsPage(page);
+                        if (selectedUnit) {
+                          loadResidents(selectedUnit.condominiumUnitId, page);
+                        }
+                      }}
+                      items={residents
+                        .filter((resident) =>
+                          [resident.userId, resident.condominiumUnitId]
+                            .filter(Boolean)
+                            .join(" ")
+                            .toLowerCase()
+                            .includes(residentSearchText.toLowerCase()),
+                        )
+                        .map((resident, index) => ({
+                          id: resident.condominiumUnitResidentId,
+                          title: getUnitTypeLabel(resident.unitType?.toString()),
+                          subtitle: `Unidade: ${units.find((u) => u.condominiumUnitId === resident.condominiumUnitId)?.unitCode || resident.condominiumUnitId}`,
+                          meta: `Periodo: ${moment(resident.startDate).format("DD/MM/YYYY")} - ${resident.endDate ? moment(resident.endDate).format("DD/MM/YYYY") : "Atual"}`,
+                          accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                        }))}
+                    />
+                  </>
                 )}
               </Paper>
             ) : null}

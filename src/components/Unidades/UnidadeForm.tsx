@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
-//  Typography,
+  //  Typography,
   Button,
   TextField,
   MenuItem,
@@ -172,7 +172,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       await onSaved();
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao salvar unidade.";
+      const message =
+        error instanceof Error ? error.message : "Erro ao salvar unidade.";
       onNotify(message, "error");
     } finally {
       setLoading(false);
@@ -213,8 +214,19 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       showBack={false}
       onClose={onClose}
       actions={
-        <Button variant="contained" onClick={handleSubmit} sx={{marginTop: '16px'}} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : editingId ? "Atualizar" : "Concluir"}
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          sx={{ marginTop: "16px" }}
+          disabled={loading}
+        >
+          {loading ? (
+            <CircularProgress size={20} />
+          ) : editingId ? (
+            "Concluir"
+          ) : (
+            "Concluir"
+          )}
         </Button>
       }
     >
@@ -225,11 +237,11 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           fullWidth
           disabled
           sx={{
-            '& .MuiOutlinedInput-root.Mui-disabled:hover fieldset': {
-              borderColor: '#e0e0e0 !important',
+            "& .MuiOutlinedInput-root.Mui-disabled:hover fieldset": {
+              borderColor: "#e0e0e0 !important",
             },
-            '& .MuiOutlinedInput-root.Mui-disabled fieldset': {
-              borderColor: '#e0e0e0 !important',
+            "& .MuiOutlinedInput-root.Mui-disabled fieldset": {
+              borderColor: "#e0e0e0 !important",
             },
           }}
         />
@@ -239,24 +251,33 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           fullWidth
           disabled
           sx={{
-            '& .MuiOutlinedInput-root.Mui-disabled:hover fieldset': {
-              borderColor: '#e0e0e0 !important',
+            "& .MuiOutlinedInput-root.Mui-disabled:hover fieldset": {
+              borderColor: "#e0e0e0 !important",
             },
-            '& .MuiOutlinedInput-root.Mui-disabled fieldset': {
-              borderColor: '#e0e0e0 !important',
+            "& .MuiOutlinedInput-root.Mui-disabled fieldset": {
+              borderColor: "#e0e0e0 !important",
             },
           }}
         />
+
         <TextField
-          label="Código"
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            height: 46,
+            display: "flex",
+            
+          },
+        }}
+          fullWidth
+          label="Unidade"
           value={formData.unitCode}
           onChange={(e) => handleChange("unitCode", e.target.value)}
-          fullWidth
           error={Boolean(errors.unitCode)}
           helperText={errors.unitCode}
+          placeholder="Ex: A101"
+          size="small"
         />
         <TextField
-        
           label="Tipo da Unidade"
           select
           value={formData.unitType || ""}

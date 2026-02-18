@@ -29,15 +29,17 @@ interface ResidenteFormProps {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   unitIdPreset?: string;
+  condominiumNamePreset?: string;
+  blockNamePreset?: string;
+  unitCodePreset?: string;
 }
 
-const STEPS = ["Dados do residente", "Periodo", "Permissoes"];
+const STEPS = ["Periodo", "Permissoes"];
 
 type ValidationItem = { field: string; message: string };
 
 const STEP_FIELDS: Array<Array<keyof CondominiumUnitResidentRequest>> = [
-  ["condominiumUnitId", "userId", "unitType"],
-  ["startDate", "endDate"],
+  ["condominiumUnitId", "userId", "unitType", "startDate", "endDate"],
   ["billingContact", "canVote", "canMakeReservations", "hasGatehouseAccess"],
 ];
 
@@ -62,6 +64,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   loading,
   setLoading,
   unitIdPreset,
+  condominiumNamePreset,
+  blockNamePreset,
+  unitCodePreset,
 }) => {
   const tokenUserId = useMemo(() => {
     const token = AuthService.getToken();
@@ -83,6 +88,13 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeStep, setActiveStep] = useState(0);
   const [validatingStep, setValidatingStep] = useState(false);
+
+  const buildResidentPayload = (commit: boolean) => ({
+    ...formData,
+    //enviar data final igual data inicial.
+    endDate: formData.startDate,
+    commit,
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -139,12 +151,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       }
     }
 
-    if (step === 1 && formData.startDate && formData.endDate) {
-      const start = new Date(formData.startDate).getTime();
-      const end = new Date(formData.endDate).getTime();
-      if (!Number.isNaN(start) && !Number.isNaN(end) && end < start) {
-        nextErrors.endDate = "Fim deve ser maior que o inicio.";
-      }
+    if (step === 0 && !formData.startDate) {
+      nextErrors.startDate = "Inicio e obrigatorio.";
     }
 
     return nextErrors;
@@ -177,8 +185,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setValidatingStep(true);
     try {
       const { valid, validations } = await unitResidentService.validateResident({
-        ...formData,
-        commit: false,
+        ...buildResidentPayload(false),
       });
 
       if (!valid && validations.length > 0) {
@@ -201,20 +208,18 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const handleSubmit = async () => {
     const localErrors = {
       ...getLocalStepErrors(0),
-      ...getLocalStepErrors(1),
     };
 
     if (Object.keys(localErrors).length > 0) {
       setErrors(localErrors);
-      setActiveStep(localErrors.endDate ? 1 : 0);
+      setActiveStep(0);
       return;
     }
 
     setLoading(true);
     try {
       const validationResult = await unitResidentService.validateResident({
-        ...formData,
-        commit: false,
+        ...buildResidentPayload(false),
       });
 
       if (!validationResult.valid && validationResult.validations.length > 0) {
@@ -238,8 +243,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       }
 
       await unitResidentService.createResident({
-        ...formData,
-        commit: true,
+        ...buildResidentPayload(true),
       });
 
       await onSaved();
@@ -270,44 +274,68 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <TextField
-            label="Tipo da Unidade"
-            select
-            value={formData.unitType || ""}
-            onChange={(e) => handleChange("unitType", e.target.value)}
-            error={Boolean(errors.unitType)}
-            helperText={errors.unitType}
+            label="Condominio"
+            value={condominiumNamePreset || "-"}
             fullWidth
-          >
-            <MenuItem value="Owner">Proprietario</MenuItem>
-            <MenuItem value="Tenant">Inquilino</MenuItem>
-          </TextField>
-        </Box>
-      );
-    }
+            disabled
+            tabIndex={-1}
+            InputProps={{ readOnly: true }}
+          />
+          <TextField
+            label="Bloco"
+            value={blockNamePreset || "-"}
+            fullWidth
+            disabled
+            tabIndex={-1}
+            InputProps={{ readOnly: true }}
+          />
+          <TextField
+            label="Unidade"
+            value={unitCodePreset || "-"}
+            fullWidth
+            disabled
+            tabIndex={-1}
+            InputProps={{ readOnly: true }}
+          />
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <TextField
+              label="Tipo de Residencia"
+              select
+              value={formData.unitType || ""}
+              onChange={(e) => handleChange("unitType", e.target.value)}
+              error={Boolean(errors.unitType)}
+              helperText={errors.unitType}
+              fullWidth
+              size="small"
+              sx={{
+                "& .MuiSelect-select": {
+                  fontSize: "14px",
+                  py: "10px",
+                },
+              }}
+            >
+              <MenuItem value="Owner">Proprietario</MenuItem>
+              <MenuItem value="Tenant">Inquilino</MenuItem>
+            </TextField>
+            <TextField
+              label="Inicio"
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              value={formData.startDate || ""}
+              onChange={(e) => handleChange("startDate", e.target.value)}
+              error={Boolean(errors.startDate)}
+              helperText={errors.startDate}
+              fullWidth
+              size="small"
+              sx={{
+                "& input": {
+                  fontSize: "14px",
+                  py: "10px",
+                },
+              }}
+            />
+          </Box>
 
-    if (step === 1) {
-      return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <TextField
-            label="Inicio"
-            type="datetime-local"
-            InputLabelProps={{ shrink: true }}
-            value={formData.startDate || ""}
-            onChange={(e) => handleChange("startDate", e.target.value)}
-            error={Boolean(errors.startDate)}
-            helperText={errors.startDate}
-            fullWidth
-          />
-          <TextField
-            label="Fim"
-            type="datetime-local"
-            InputLabelProps={{ shrink: true }}
-            value={formData.endDate || ""}
-            onChange={(e) => handleChange("endDate", e.target.value)}
-            error={Boolean(errors.endDate)}
-            helperText={errors.endDate}
-            fullWidth
-          />
         </Box>
       );
     }
@@ -359,9 +387,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           <Typography variant="subtitle2">
             Inicio: {formData.startDate ? moment(formData.startDate).format("DD/MM/YYYY") : "-"}
           </Typography>
-          <Typography variant="subtitle2">
-            Fim: {formData.endDate ? moment(formData.endDate).format("DD/MM/YYYY") : "-"}
-          </Typography>
         </Box>
       </Box>
     );
@@ -377,8 +402,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
 
     return (
-      <Button variant="contained" onClick={handleNext} disabled={validatingStep}>
-        {validatingStep ? <CircularProgress size={20} /> : "Proximo"}
+      <Button variant="contained" sx={{marginTop:2}} onClick={handleNext} disabled={validatingStep}>
+        {validatingStep ? <CircularProgress size={20} /> : "Próximo"}
       </Button>
     );
   };
@@ -389,8 +414,14 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       subtitle={STEPS[activeStep]}
       steps={STEPS}
       activeStep={activeStep}
-      showBack={activeStep > 0 && activeStep < STEPS.length}
-      onBack={() => setActiveStep((prev) => prev - 1)}
+      showBack={true}
+      onBack={() => {
+        if (activeStep === 0) {
+          onClose();
+          return;
+        }
+        setActiveStep((prev) => prev - 1);
+      }}
       onClose={onClose}
       actions={renderActions()}
     >

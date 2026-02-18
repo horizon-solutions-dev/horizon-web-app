@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./Unidades.scss";
 import {
   Box,
@@ -27,15 +27,24 @@ import {
   type CondominiumUnit,
   type UnitTypeEnum,
 } from "../../services/unitService";
-import { blockService, type CondominiumBlock } from "../../services/blockService";
-import { condominiumService, type Condominium } from "../../services/condominiumService";
+import {
+  blockService,
+  type CondominiumBlock,
+} from "../../services/blockService";
+import {
+  condominiumService,
+  type Condominium,
+} from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import UnidadeForm from "./UnidadeForm";
+import { set } from "date-fns";
 
 const Unidades: React.FC = () => {
-  const [activeView, setActiveView] = useState<"condominios" | "unidades">("condominios");
+  const [activeView, setActiveView] = useState<"condominios" | "unidades">(
+    "condominios",
+  );
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [organizationName, setOrganizationName] = useState("");
   const [listLoading, setListLoading] = useState(false);
@@ -46,7 +55,8 @@ const Unidades: React.FC = () => {
   const pageSize = 4;
 
   const [condominiumIdQuery, setCondominiumIdQuery] = useState("");
-  const [selectedCondominium, setSelectedCondominium] = useState<Condominium | null>(null);
+  const [selectedCondominium, setSelectedCondominium] =
+    useState<Condominium | null>(null);
   const [units, setUnits] = useState<CondominiumUnit[]>([]);
   const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [unitTypes, setUnitTypes] = useState<UnitTypeEnum[]>([]);
@@ -57,6 +67,7 @@ const Unidades: React.FC = () => {
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [unitSearchText, setUnitSearchText] = useState("");
   const [blockSearchText, setBlockSearchText] = useState("");
+  const [blockPage, setBlockPage] = useState(1);
   const [selectedBlockId, setSelectedBlockId] = useState("");
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -152,7 +163,17 @@ const Unidades: React.FC = () => {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar unidades.";
-      setListError(message);
+      const isNotFoundMessage = /nada encontrado|not found/i.test(message);
+      setUnits([]);
+      setListPage(pageNumber);
+      if (isNotFoundMessage) {
+        setListError(null);
+        setTotalPages(1);
+        setUnits([]);
+        setListPage(1);
+      } else {
+        setListError(message);
+      }
     } finally {
       setListLoading(false);
     }
@@ -190,6 +211,37 @@ const Unidades: React.FC = () => {
     loadUnitTypes();
   }, []);
 
+  const blockPageSize = 6;
+  const filteredBlocks = useMemo(
+    () =>
+      blocks.filter((block) =>
+        [block.name, block.code]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(blockSearchText.toLowerCase()),
+      ),
+    [blocks, blockSearchText],
+  );
+  const blockTotalPages = Math.max(
+    1,
+    Math.ceil(filteredBlocks.length / blockPageSize),
+  );
+  const paginatedBlocks = useMemo(
+    () =>
+      filteredBlocks.slice(
+        (blockPage - 1) * blockPageSize,
+        blockPage * blockPageSize,
+      ),
+    [filteredBlocks, blockPage],
+  );
+
+  useEffect(() => {
+    if (blockPage > blockTotalPages) {
+      setBlockPage(1);
+    }
+  }, [blockPage, blockTotalPages]);
+
   const handleSelectCondominium = async (condominium: Condominium) => {
     setSelectedCondominium(condominium);
     setCondominiumIdQuery(condominium.condominiumId);
@@ -199,6 +251,7 @@ const Unidades: React.FC = () => {
     setIsCadastroOpen(false);
     setUnitSearchText("");
     setBlockSearchText("");
+    setBlockPage(1);
     setSelectedBlockId("");
     setActiveView("unidades");
 
@@ -261,7 +314,11 @@ const Unidades: React.FC = () => {
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 <Business sx={{ fontSize: 36, color: "#1976d2" }} />
-                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
+                <Typography
+                  variant="h5"
+                  fontWeight="bold"
+                  sx={{ fontSize: "26px" }}
+                >
                   {organizationName}
                 </Typography>
               </Box>
@@ -312,7 +369,13 @@ const Unidades: React.FC = () => {
                       title: condominium.name,
                       subtitle: (
                         <>
-                          <Apartment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
+                          <Apartment
+                            sx={{
+                              fontSize: 16,
+                              mr: 0.5,
+                              verticalAlign: "middle",
+                            }}
+                          />
                           {condominium.city} - {condominium.state}
                         </>
                       ),
@@ -329,11 +392,12 @@ const Unidades: React.FC = () => {
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                     }))}
-                />) : condominiums.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    Nenhum condomínio encontrado para esta organização.
-                  </Typography>
-                ) : (
+                />
+              ) : condominiums.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Nenhum condomínio encontrado para esta organização.
+                </Typography>
+              ) : (
                 <CardList
                   title="Condomínios da organização"
                   showTitle={false}
@@ -363,7 +427,13 @@ const Unidades: React.FC = () => {
                       title: condominium.name,
                       subtitle: (
                         <>
-                          <Apartment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
+                          <Apartment
+                            sx={{
+                              fontSize: 16,
+                              mr: 0.5,
+                              verticalAlign: "middle",
+                            }}
+                          />
                           {condominium.city} - {condominium.state}
                         </>
                       ),
@@ -397,15 +467,19 @@ const Unidades: React.FC = () => {
                 typesLoading={typesLoading}
                 typesError={typesError}
                 loading={loading}
-                blockId={selectedBlockId || editingUnit?.condominiumBlockId || ""}
+                blockId={
+                  selectedBlockId || editingUnit?.condominiumBlockId || ""
+                }
                 blockNamePreset={
                   blocks.find(
                     (block) =>
-                      block.condominiumBlockId === (selectedBlockId || editingUnit?.condominiumBlockId),
+                      block.condominiumBlockId ===
+                      (selectedBlockId || editingUnit?.condominiumBlockId),
                   )?.name ||
                   blocks.find(
                     (block) =>
-                      block.condominiumBlockId === (selectedBlockId || editingUnit?.condominiumBlockId),
+                      block.condominiumBlockId ===
+                      (selectedBlockId || editingUnit?.condominiumBlockId),
                   )?.code ||
                   ""
                 }
@@ -428,7 +502,11 @@ const Unidades: React.FC = () => {
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                     <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
                     <Box>
-                      <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
+                      <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        sx={{ fontSize: "26px" }}
+                      >
                         Unidades
                       </Typography>
                       <BreadcrumbTrail
@@ -452,6 +530,7 @@ const Unidades: React.FC = () => {
                           setIsCadastroOpen(false);
                           setUnitSearchText("");
                           setBlockSearchText("");
+                          setBlockPage(1);
                           setSelectedBlockId("");
                           setListError(null);
                         }}
@@ -472,152 +551,164 @@ const Unidades: React.FC = () => {
                     </Box>
                   ) : null}
 
-                  {listError ? (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                      {listError}
-                    </Alert>
-                  ) : null}
+                  {!selectedBlockId && (
+                    <CardList
+                      onClose={() => {
+                        setSelectedBlockId("");
+                        setUnitSearchText("");
+                        setBlockPage(1);
+                      }}
+                      title="Blocos do condomínio"
+                      showTitle={false}
+                      showFilters={true}
+                      searchPlaceholder="Buscar bloco..."
+                      onSearchChange={(value) => {
+                        setBlockSearchText(value);
+                        setBlockPage(1);
+                      }}
+                      onAddClick={undefined}
+                      addButtonPlacement="toolbar"
+                      emptyImageLabel="Sem imagem"
+                      showPagination={true}
+                      page={blockPage}
+                      totalPages={blockTotalPages}
+                      onPageChange={(page) => {
+                        setBlockPage(page);
+                      }}
+                      items={paginatedBlocks
+                        .map((block, index) => ({
+                          id: block.condominiumBlockId,
+                          title: block.name || "Sem nome",
+                          subtitle: (
+                            <>
+                              <ViewModule
+                                sx={{
+                                  fontSize: 14,
+                                  mr: 0.5,
+                                  verticalAlign: "middle",
+                                }}
+                              />
+                              Código: {block.code || "-"}
+                            </>
+                          ),
+                          actions: (
+                            <Button
+                              startIcon={<SettingsOutlined />}
+                              size="small"
+                              variant="outlined"
+                              className="action-button-manage"
+                              onClick={() => {
+                                setSelectedBlockId(block.condominiumBlockId);
+                                setUnitSearchText("");
+                                setListPage(1);
+                                loadUnits(block.condominiumBlockId, 1);
+                                setEditingUnit(null);
+                                setIsCadastroOpen(false);
+                                setListPage(1);
+                              }}
+                            >
+                              Visualizar
+                            </Button>
+                          ),
+                          accentColor:
+                            selectedBlockId === block.condominiumBlockId
+                              ? "#dff1ff"
+                              : index % 2 === 0
+                                ? "#eef6ee"
+                                : "#fdecef",
+                        }))}
+                    />
+                  )}
 
-{!selectedBlockId && (
-  <CardList
-    onClose={()=> {
-      setSelectedBlockId("");
-      setUnitSearchText("");
-      setListPage(1);
-      loadUnits(undefined, 1);
-    }}
-    title="Blocos do condomínio"
-    showTitle={false}
-    showFilters={true}
-    searchPlaceholder="Buscar bloco..."
-    onSearchChange={setBlockSearchText}
-    onAddClick={undefined}
-    addButtonPlacement="toolbar"
-    emptyImageLabel="Sem imagem"
-    showPagination={false}
-    items={blocks
-      .filter((block) =>
-        [block.name, block.code]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-          .includes(blockSearchText.toLowerCase()),
-      )
-      .map((block, index) => ({
-        id: block.condominiumBlockId,
-        title: block.name || "Sem nome",
-        subtitle: (
-          <>
-            <ViewModule sx={{ fontSize: 14, mr: 0.5, verticalAlign: "middle" }} />
-            Código: {block.code || "-"}
-          </>
-        ),
-        actions: (
-          <Button
-            startIcon={<SettingsOutlined />}
-            size="small"
-            variant="outlined"
-            className="action-button-manage"
-            onClick={() => {
-              setSelectedBlockId(block.condominiumBlockId);
-              setUnitSearchText("");
-              setListPage(1);
-              loadUnits(block.condominiumBlockId, 1);
-            }}
-          >
-            Visualizar
-          </Button>
-        ),
-        accentColor:
-          selectedBlockId === block.condominiumBlockId
-            ? "#dff1ff"
-            : index % 2 === 0
-              ? "#eef6ee"
-              : "#fdecef",
-      }))}
-  />
-
-)}
-
-                 
-                    {
-                      selectedBlockId && (
-                        <CardList
-                        onClose={()=>{
-                          setSelectedBlockId("");
-                          setListPage(1);
-                          loadUnits(undefined, 1);
-                        }}
-                          title="Unidades do condomínio"
-                          showTitle={false}
-                          showFilters={true}
-                          searchPlaceholder="Buscar unidade..."
-                          onSearchChange={setUnitSearchText}
-                          onAddClick={handleOpenCreate}
-                          addLabel="Novo"
-                          addButtonPlacement="toolbar"
-                          emptyImageLabel="Sem imagem"
-                          showPagination={true}
-                          page={listPage}
-                          totalPages={totalPages}
-                          onPageChange={(page) => {
-                            setListPage(page);
-                            loadUnits(selectedBlockId || undefined, page);
-                          }}
-                          items={units
-                            .filter((unit) =>
-                              [unit.unitCode, unit.unitType]
-                                .filter(Boolean)
-                                .join(" ")
-                                .toLowerCase()
-                                .includes(unitSearchText.toLowerCase()),
-                            )
-                            .map((unit, index) => ({
-                              id: unit.condominiumUnitId,
-                              title: unit.unitCode || "Sem código",
-                              subtitle: (
-                                <>
-                                  <MeetingRoom sx={{ fontSize: 14, mr: 0.5, verticalAlign: "middle" }} />
-                                  Tipo: {unit.unitType?.toString() === "1" ? "Proprietário" : "Inquilino"}
-                                </>
-                              ),
-                              meta: (
-                                <>
-                                  Bloco:{" "}
-                                  {blocks.find((b) => b.condominiumBlockId === unit.condominiumBlockId)
-                                    ?.name ||
-                                    unit.condominiumBlockId ||
-                                    "Desconhecido"}
-                                </>
-                              ),
-                              actions: (
-                                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    className="action-button-edit"
-                                    startIcon={<EditOutlined />}
-                                    onClick={() => handleEdit(unit)}
-                                  >
-                                    Editar
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    className="action-button-delete"
-                                    startIcon={<DeleteOutline />}
-                                    onClick={() => handleDelete(unit)}
-                                  >
-                                    Excluir
-                                  </Button>
-                                </Box>
-                              ),
-                              accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                            }))}
-                        />
-
-                      )
-                    }
+                  {selectedBlockId && (
+                    <CardList
+                      onClose={() => {
+                        setSelectedBlockId("");
+                        setListPage(1);
+                        loadUnits(undefined, 1);
+                      }}
+                      title="Unidades do condomínio"
+                      showTitle={false}
+                      showFilters={true}
+                      searchPlaceholder="Buscar unidade..."
+                      onSearchChange={setUnitSearchText}
+                      onAddClick={handleOpenCreate}
+                      addLabel="Novo"
+                      addButtonPlacement="toolbar"
+                      emptyImageLabel="Sem imagem"
+                      showPagination={true}
+                      page={listPage}
+                      totalPages={totalPages}
+                      onPageChange={(page) => {
+                        setListPage(page);
+                        loadUnits(selectedBlockId || undefined, page);
+                      }}
+                      items={units
+                        .filter((unit) =>
+                          [unit.unitCode, unit.unitType]
+                            .filter(Boolean)
+                            .join(" ")
+                            .toLowerCase()
+                            .includes(unitSearchText.toLowerCase()),
+                        )
+                        .map((unit, index) => ({
+                          id: unit.condominiumUnitId,
+                          title: unit.unitCode || "Sem código",
+                          subtitle: (
+                            <>
+                              <MeetingRoom
+                                sx={{
+                                  fontSize: 14,
+                                  mr: 0.5,
+                                  verticalAlign: "middle",
+                                }}
+                              />
+                              Tipo:{" "}
+                              {unit.unitType?.toString() === "1"
+                                ? "Proprietário"
+                                : "Inquilino"}
+                            </>
+                          ),
+                          meta: (
+                            <>
+                              Bloco:{" "}
+                              {blocks.find(
+                                (b) =>
+                                  b.condominiumBlockId ===
+                                  unit.condominiumBlockId,
+                              )?.name ||
+                                unit.condominiumBlockId ||
+                                "Desconhecido"}
+                            </>
+                          ),
+                          actions: (
+                            <Box
+                              sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}
+                            >
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                className="action-button-edit"
+                                startIcon={<EditOutlined />}
+                                onClick={() => handleEdit(unit)}
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                className="action-button-delete"
+                                startIcon={<DeleteOutline />}
+                                onClick={() => handleDelete(unit)}
+                              >
+                                Excluir
+                              </Button>
+                            </Box>
+                          ),
+                          accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                        }))}
+                    />
+                  )}
                 </Paper>
               </Paper>
             )}
@@ -643,3 +734,5 @@ const Unidades: React.FC = () => {
 };
 
 export default Unidades;
+
+

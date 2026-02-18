@@ -1,4 +1,4 @@
-import type { AxiosInstance, AxiosError } from 'axios';
+import type { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import type { LoginResponse } from '../models/api.model';
 
@@ -28,36 +28,21 @@ export class ApiClient {
     // Interceptor para tratar erros de resposta
     this.client.interceptors.response.use(
       (response) => response,
-      async (error: AxiosError) => {
-        const originalRequest = error.config;
+      (error: AxiosError) => this.handleUnauthorized(error, (config) => this.client(config))
+    );
 
-        // Se receber 401 e houver refreshToken, tenta renovar
-        if (error.response?.status === 401 && originalRequest) {
-          const refreshToken = localStorage.getItem('refreshToken');
-          
-          if (refreshToken) {
-            try {
-              const response = await this.refreshAccessToken(refreshToken);
-              localStorage.setItem('token', response.token);
-              localStorage.setItem('refreshToken', response.refreshToken);
-              
-              // Retry da requisição original com novo token
-              if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${response.token}`;
-              }
-              return this.client(originalRequest);
-            } catch (refreshError) {
-              // Refresh falhou, faz logout
-              localStorage.removeItem('token');
-              localStorage.removeItem('refreshToken');
-              window.location.href = '/login';
-              return Promise.reject(refreshError);
-            }
-          }
-        }
-
-        return Promise.reject(error);
+    // Interceptor global para chamadas diretas via axios
+    axios.interceptors.request.use((config) => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
+      return config;
+    });
+
+    axios.interceptors.response.use(
+      (response) => response,
+      (error: AxiosError) => this.handleUnauthorized(error, (config) => axios(config))
     );
   }
 
@@ -114,6 +99,45 @@ export class ApiClient {
       }
     );
     return response.data;
+  }
+
+  private async handleUnauthorized(
+    error: AxiosError,
+    retryRequest: (config: AxiosRequestConfig) => Promise<unknown>
+  ) {
+    const originalRequest = error.config as (AxiosRequestConfig & { _retry?: boolean }) | undefined;
+
+    const isUnauthorized = error.response?.status === 401;
+    const requestUrl = String(originalRequest?.url || '').toLowerCase();
+    const isRefreshRequest = requestUrl.includes('/refresh-token');
+
+    if (!isUnauthorized || !originalRequest || originalRequest._retry || isRefreshRequest) {
+      return Promise.reject(error);
+    }
+
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    try {
+      const response = await this.refreshAccessToken(refreshToken);
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('refreshToken', response.refreshToken);
+
+      if (originalRequest.headers) {
+        originalRequest.headers.Authorization = `Bearer ${response.token}`;
+      }
+
+      return retryRequest(originalRequest);
+    } catch (refreshError) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      window.location.href = '/login';
+      return Promise.reject(refreshError);
+    }
   }
 
   private handleError(error: unknown): never {
