@@ -138,7 +138,7 @@ export default function MainLayout() {
     [RouteNames.CadastrosBlocos]: { label: "Blocos", parent: "Cadastros" },
     [RouteNames.CadastrosUnidades]: { label: "Unidades", parent: "Cadastros" },
     [RouteNames.CadastrosResidentes]: { label: "Residentes", parent: "Cadastros" },
-    [RouteNames.CadastrosOrganizacoes]: { label: "Organizacoes", parent: "Cadastros" },
+    [RouteNames.CadastrosOrganizacoes]: { label: "Organizações", parent: "Cadastros" },
     [RouteNames.CadastrosPerfis]: { label: "Perfis", parent: "Cadastros" },
   };
 

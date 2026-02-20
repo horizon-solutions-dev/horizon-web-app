@@ -26,6 +26,7 @@ import {
   type OrganizationTypeEnum,
 } from "../../services/organizationService";
 import OrganizacaoForm from "./OrganizacaoForm";
+import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 
 const pageSize = 4;
 
@@ -183,7 +184,7 @@ const Organizacoes: React.FC = () => {
     await loadOrganizations();
   };
 
-  const organizationName = organizations[0]?.name || "Organizacoes";
+  const organizationName = organizations[0]?.name || "Organizações";
 
   return (
     <Box className="page-container" sx={{ py: 4 }}>
@@ -215,13 +216,16 @@ const Organizacoes: React.FC = () => {
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 <Business sx={{ fontSize: 36, color: "#1976d2" }} />
-                <Typography
-                  variant="h5"
-                  fontWeight="bold"
-                  sx={{ fontSize: "26px" }}
-                >
-                  {organizationName}
-                </Typography>
+                <Box>
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    {organizationName}
+                  </Typography>
+                  <BreadcrumbTrail items={["Organização", "Condôminios"]} />
+                </Box>
               </Box>
               <Tooltip title="Fechar">
                 <IconButton
@@ -242,9 +246,8 @@ const Organizacoes: React.FC = () => {
                 </Box>
               ) : (
                 <>
-                
                   <CardList
-                    title="Organizacoes"
+                    title="Organizações"
                     showTitle={false}
                     searchPlaceholder="Buscar organizacao..."
                     onSearchChange={(value) => {

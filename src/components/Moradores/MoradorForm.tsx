@@ -1,21 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useState } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Grid,
   Box,
-  Typography,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Grid,
   MenuItem,
-  IconButton,
-  Avatar
-} from '@mui/material';
-import { Close, CloudUpload } from '@mui/icons-material';
-import { useDropzone } from 'react-dropzone';
-import './Moradores.scss';
+  TextField,
+  Typography,
+} from "@mui/material";
+import { FileUploadOutlined } from "@mui/icons-material";
+import StepWizardCard from "../../shared/components/StepWizardCard";
+import "./Moradores.scss";
 
 export interface Morador {
   id?: string;
@@ -25,206 +21,378 @@ export interface Morador {
   telefone: string;
   email: string;
   foto?: string | null;
-  status: 'ativo' | 'inativo';
+  status: "ativo" | "inativo";
+}
+
+export interface MoradorCreatePayload {
+  name: string;
+  surname: string;
+  docType: "CPF";
+  doc: string;
+  email: string;
+  phone: string;
+  photoBase64: string | null;
+  condominiumUnitId: string;
+  billingContact: boolean;
+  canVote: boolean;
+  canMakeReservations: boolean;
+  hasGatehouseAccess: boolean;
 }
 
 interface MoradorFormProps {
   open: boolean;
   onClose: () => void;
-  onSave: (morador: Omit<Morador, 'id'>) => void;
+  onSave: (payload: MoradorCreatePayload) => Promise<void> | void;
   morador: Morador | null;
+  unitIdPreset?: string;
 }
 
-const MoradorForm: React.FC<MoradorFormProps> = ({ open, onClose, onSave, morador }) => {
-  const [formData, setFormData] = useState({
-    nome: '',
-    cpf: '',
-    unidade: '',
-    telefone: '',
-    email: '',
-    foto: null as string | null,
-    status: 'ativo' as 'ativo' | 'inativo'
+type DocumentType = "CPF";
+
+const formatCpf = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return digits.replace(/(\d{3})(\d+)/, "$1.$2");
+  if (digits.length <= 9) {
+    return digits.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
+  }
+  return digits.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, "$1.$2.$3-$4");
+};
+
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 6) return digits.replace(/(\d{2})(\d+)/, "($1) $2");
+  if (digits.length <= 10) {
+    return digits.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+  }
+  return digits.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
+};
+
+const fileToDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("Erro ao ler foto."));
+    reader.readAsDataURL(file);
   });
 
+const MoradorForm: React.FC<MoradorFormProps> = ({
+  open,
+  onClose,
+  onSave,
+  morador,
+  unitIdPreset,
+}) => {
+  const [activeStep, setActiveStep] = useState(0);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [documentType, setDocumentType] = useState<DocumentType>("CPF");
+  const [documentNumber, setDocumentNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [isBillingContact, setIsBillingContact] = useState(true);
+  const [canVote, setCanVote] = useState(true);
+  const [canBook, setCanBook] = useState(true);
+  const [hasGateAccess, setHasGateAccess] = useState(true);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    if (!open) return;
+
+    setActiveStep(0);
+    setIsBillingContact(true);
+    setCanVote(true);
+    setCanBook(true);
+    setHasGateAccess(true);
+    setPhotoFile(null);
+
     if (morador) {
-      setFormData({
-        nome: morador.nome,
-        cpf: morador.cpf,
-        unidade: morador.unidade,
-        telefone: morador.telefone,
-        email: morador.email,
-        foto: morador.foto || null,
-        status: morador.status
-      });
+      const [name = "", ...rest] = (morador.nome || "").trim().split(" ");
+      setFirstName(name);
+      setLastName(rest.join(" "));
+      setDocumentType("CPF");
+      setDocumentNumber(formatCpf(morador.cpf || ""));
+      setEmail(morador.email || "");
+      setPhone(formatPhone(morador.telefone || ""));
     } else {
-      setFormData({
-        nome: '',
-        cpf: '',
-        unidade: '',
-        telefone: '',
-        email: '',
-        foto: null,
-        status: 'ativo'
-      });
+      setFirstName("");
+      setLastName("");
+      setDocumentType("CPF");
+      setDocumentNumber("");
+      setEmail("");
+      setPhone("");
     }
+
     setErrors({});
-  }, [morador, open]);
+  }, [open, morador]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setFormData(prev => ({ ...prev, foto: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+  if (!open) return null;
+
+  const validateStepOne = () => {
+    const nextErrors: Record<string, string> = {};
+
+    if (!firstName.trim()) nextErrors.firstName = "Nome obrigatorio.";
+    if (!lastName.trim()) nextErrors.lastName = "Sobrenome obrigatorio.";
+
+    const cleanDocument = documentNumber.replace(/\D/g, "");
+    if (!cleanDocument) nextErrors.documentNumber = "Documento obrigatorio.";
+    if (documentType === "CPF" && cleanDocument.length !== 11) {
+      nextErrors.documentNumber = "CPF invalido.";
     }
-  }, []);
 
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg']
-    },
-    maxFiles: 1
-  });
+    if (!email.trim()) nextErrors.email = "Email obrigatorio.";
+    if (!phone.trim()) nextErrors.phone = "Celular obrigatorio.";
 
-  const handleChange = (field: string, value: unknown): void => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.nome.trim()) newErrors.nome = 'Nome é obrigatório';
-    if (!formData.cpf.trim()) newErrors.cpf = 'CPF é obrigatório';
-    if (!formData.unidade.trim()) newErrors.unidade = 'Unidade é obrigatória';
-    if (!formData.email.trim()) newErrors.email = 'Email é obrigatório';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (validate()) {
-      onSave(formData);
+  const handlePrimaryAction = async () => {
+    if (activeStep === 0) {
+      if (!validateStepOne()) return;
+      setActiveStep(1);
+      return;
     }
+
+    const photoBase64 = photoFile
+      ? await fileToDataUrl(photoFile)
+      : (morador?.foto ?? null);
+
+    await onSave({
+      name: firstName.trim(),
+      surname: lastName.trim(),
+      docType: documentType,
+      doc: documentNumber.replace(/\D/g, ""),
+      email: email.trim(),
+      phone: phone.replace(/\D/g, ""),
+      photoBase64: photoBase64,
+      condominiumUnitId: unitIdPreset || "",
+      billingContact: isBillingContact,
+      canVote,
+      canMakeReservations: canBook,
+      hasGatehouseAccess: hasGateAccess,
+    });
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth className="morador-form-dialog">
-      <DialogTitle className="form-title">
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">
-            {morador ? 'Editar Morador' : 'Novo Morador'}
-          </Typography>
-          <IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
-            <Close />
-          </IconButton>
-        </Box>
-      </DialogTitle>
+    <Box className="morador-form-overlay">
+      <StepWizardCard
+        title={morador ? "Editar Morador" : "Criar um Morador"}
+        subtitle={
+          activeStep === 0 ? "Dados do Morador" : "Permissoes e Foto do Morador"
+        }
+        steps={["dados", "permissoes"]}
+        activeStep={activeStep}
+        showBack
+        onBack={() => {
+          if (activeStep === 0) {
+            onClose();
+            return;
+          }
+          setActiveStep(0);
+        }}
+        backLabel="Voltar"
+        onClose={onClose}
+      >
+        {activeStep === 0 ? (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
+            <Grid container spacing={1.2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={firstName ? "" : "Nome"}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  error={!!errors.firstName}
+                  helperText={errors.firstName}
+                  inputProps={{ maxLength: 80 }}
+                  InputLabelProps={{ shrink: false }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={lastName ? "" : "Sobrenome"}
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  error={!!errors.lastName}
+                  helperText={errors.lastName}
+                  inputProps={{ maxLength: 120 }}
+                  InputLabelProps={{ shrink: false }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  select
+                  label="Tipo de Documento"
+                  value={documentType}
+                  onChange={(e) =>
+                    setDocumentType(e.target.value as DocumentType)
+                  }
+                  InputLabelProps={{ shrink: false }}
+                >
+                  <MenuItem value="CPF">CPF</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label={documentNumber ? "" : "Documento"}
+                  value={documentNumber}
+                  onChange={(e) => setDocumentNumber(formatCpf(e.target.value))}
+                  error={!!errors.documentNumber}
+                  helperText={errors.documentNumber}
+                  inputProps={{ maxLength: 14 }}
+                  InputLabelProps={{ shrink: false }}
+                />
+              </Grid>
+            </Grid>
 
-      <DialogContent dividers className="form-content">
-        <Grid container spacing={3}>
-          <Grid item xs={12} display="flex" flexDirection="column" alignItems="center">
-            <Box {...getRootProps()} className="avatar-upload">
-              <input {...getInputProps()} />
-              <Avatar
-                src={formData.foto || undefined}
-                sx={{ width: 100, height: 100, cursor: 'pointer' }}
-              >
-                {formData.nome ? formData.nome.charAt(0) : <CloudUpload />}
-              </Avatar>
-              <Typography variant="caption" sx={{ mt: 1, color: '#666' }}>
-                Clique para alterar a foto
-              </Typography>
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Nome Completo"
-              value={formData.nome}
-              onChange={(e) => handleChange('nome', e.target.value)}
-              error={!!errors.nome}
-              helperText={errors.nome}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="CPF"
-              value={formData.cpf}
-              onChange={(e) => handleChange('cpf', e.target.value)}
-              error={!!errors.cpf}
-              helperText={errors.cpf}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Unidade (Bloco/Apto)"
-              value={formData.unidade}
-              onChange={(e) => handleChange('unidade', e.target.value)}
-              error={!!errors.unidade}
-              helperText={errors.unidade}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Status"
-              select
-              value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value)}
-            >
-              <MenuItem value="ativo">Ativo</MenuItem>
-              <MenuItem value="inativo">Inativo</MenuItem>
-            </TextField>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Telefone"
-              value={formData.telefone}
-              onChange={(e) => handleChange('telefone', e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
+              size="small"
+              label={email ? "" : "Email"}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               error={!!errors.email}
               helperText={errors.email}
+              inputProps={{ maxLength: 254 }}
+              InputLabelProps={{ shrink: false }}
             />
-          </Grid>
-        </Grid>
-      </DialogContent>
 
-      <DialogActions className="form-actions">
-        <Button onClick={onClose} variant="outlined">
-          Cancelar
-        </Button>
-        <Button onClick={handleSubmit} variant="contained" className="save-button">
-          Salvar
-        </Button>
-      </DialogActions>
-    </Dialog>
+            <TextField
+              fullWidth
+              size="small"
+              label={phone ? "" : "Celular"}
+              value={phone}
+              onChange={(e) => setPhone(formatPhone(e.target.value))}
+              error={!!errors.phone}
+              helperText={errors.phone}
+              inputProps={{ maxLength: 15 }}
+              InputLabelProps={{ shrink: false }}
+            />
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mt: 2,
+                pt: 2,
+                borderTop: "2px solid #f0f2f5",
+              }}
+            >
+              <Button
+                variant="contained"
+                onClick={() => void handlePrimaryAction()}
+                sx={{ textTransform: "none" }}
+              >
+                Próximo
+              </Button>
+            </Box>
+          </Box>
+        ) : (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", mb: 1 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={isBillingContact}
+                    onChange={(e) => setIsBillingContact(e.target.checked)}
+                    size="small"
+                  />
+                }
+                label="Contato da Cobranca"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={canVote}
+                    onChange={(e) => setCanVote(e.target.checked)}
+                    size="small"
+                  />
+                }
+                label="Pode Votar"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={canBook}
+                    onChange={(e) => setCanBook(e.target.checked)}
+                    size="small"
+                  />
+                }
+                label="Pode reservar"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={hasGateAccess}
+                    onChange={(e) => setHasGateAccess(e.target.checked)}
+                    size="small"
+                  />
+                }
+                label="Acesso a Portaria"
+              />
+            </Box>
+
+            <Typography
+              variant="subtitle2"
+              sx={{
+                color: "#3f4654",
+                fontSize: 14,
+                fontWeight: 600,
+                borderBottom: "1px solid #d7dbe2",
+                pb: 0.5,
+              }}
+            >
+              Foto do Morador
+            </Typography>
+
+            <Box
+              component="label"
+              className="morador-photo-dropzone"
+              htmlFor="morador-photo-input"
+            >
+              <input
+                id="morador-photo-input"
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+              />
+              <FileUploadOutlined sx={{ fontSize: 46, color: "#7ba0d1" }} />
+              <Typography sx={{ color: "#4d5562", fontSize: 16 }}>
+                {photoFile ? photoFile.name : "Adicionar foto"}
+              </Typography>
+            </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mt: 2,
+                pt: 2,
+                borderTop: "2px solid #f0f2f5",
+              }}
+            >
+              <Button
+                variant="contained"
+                onClick={() => void handlePrimaryAction()}
+                sx={{ textTransform: "none" }}
+              >
+                Criar
+              </Button>
+            </Box>
+          </Box>
+        )}
+      </StepWizardCard>
+    </Box>
   );
 };
 

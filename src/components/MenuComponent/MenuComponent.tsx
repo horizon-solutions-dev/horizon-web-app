@@ -91,7 +91,7 @@ const menuItems: MenuItem[] = [
       { id: "cadastros-blocos", label: "Blocos", icon: <></>, path: RouteNames.CadastrosBlocos },
       { id: "cadastros-unidades", label: "Unidades", icon: <></>, path: RouteNames.CadastrosUnidades },
       { id: "cadastros-residentes", label: "Residentes", icon: <></>, path: RouteNames.CadastrosResidentes },
-      { id: "cadastros-organizacoes", label: "Organizacoes", icon: <></>, path: RouteNames.CadastrosOrganizacoes },
+      { id: "cadastros-organizacoes", label: "Organizações", icon: <></>, path: RouteNames.CadastrosOrganizacoes },
       { id: "cadastros-perfis", label: "Perfis", icon: <></>, path: RouteNames.CadastrosPerfis },
     ],
   },

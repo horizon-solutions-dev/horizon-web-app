@@ -511,7 +511,7 @@ const Unidades: React.FC = () => {
                       </Typography>
                       <BreadcrumbTrail
                         items={[
-                          organizationName || "Organizacao",
+                          organizationName || "Organização",
                           selectedCondominium?.name || "Condominio selecionado",
                           "Unidades",
                         ]}

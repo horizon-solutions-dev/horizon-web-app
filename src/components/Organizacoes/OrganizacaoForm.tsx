@@ -19,6 +19,7 @@ import {
 import { AuthService } from "../../services/authService";
 import { TokenService } from "../../services/tokenService";
 import "./Organizacoes.scss";
+import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
 
 interface OrganizacaoFormProps {
   open: boolean;
@@ -46,6 +47,7 @@ const initialForm: OrganizationRequest = {
   city: "",
   state: "",
 };
+
 
 const formatCNPJ = (value: string) => {
   const numbers = value.replace(/\D/g, "").slice(0, 14);
@@ -91,17 +93,17 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   onNotify,
   organizationTypes,
   typesLoading,
-  typesError,
   loading,
   setLoading,
 }) => {
-  const steps = ["Informacoes iniciais", "Contato e endereco"];
+  const steps = ["Informacoes iniciais", "Contato e Endereço"];
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<OrganizationRequest>(initialForm);
   const [cep, setCep] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
+  const [locationFieldsDisabled, setLocationFieldsDisabled] = useState(true);
   const [states, setStates] = useState<Array<{ sigla: string; nome: string }>>(
     [],
   );
@@ -137,6 +139,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
     setCep("");
     setErrors({});
     setCepError(null);
+    setLocationFieldsDisabled(true);
 
     if (editingOrganization) {
       const existingZip =
@@ -239,15 +242,21 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
 
   const handleCepLookup = async (rawCep: string) => {
     const cep = rawCep.replace(/\D/g, "");
-    if (cep.length !== 8) return;
+    if (cep.length !== 8) {
+      setLocationFieldsDisabled(true);
+      return;
+    }
 
     setCepLoading(true);
     setCepError(null);
+    setLocationFieldsDisabled(true);
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
       if (data?.erro) {
         setCepError("CEP nao encontrado.");
+        setFormData((prev) => ({ ...prev, city: "", state: "" }));
+        setLocationFieldsDisabled(false);
         return;
       }
       const nextCity = data.localidade || "";
@@ -267,8 +276,10 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
           return nextErrors;
         });
       }
+      setLocationFieldsDisabled(true);
     } catch {
       setCepError("Erro ao consultar CEP.");
+      setLocationFieldsDisabled(false);
     } finally {
       setCepLoading(false);
     }
@@ -394,8 +405,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
       backLabel="Voltar"
       onClose={onClose}
     >
-   
-
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {activeStep === 0 ? (
           <>
@@ -488,7 +497,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
 
             <Box sx={{ border: "1px solid #e8edf3", borderRadius: 2, p: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>
-                Localizacao
+                Localização
               </Typography>
               {statesError ? (
                 <Alert severity="warning" sx={{ mb: 1.5 }}>
@@ -503,11 +512,19 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                     value={cep}
                     onChange={(e) => {
                       const cepFormatted = formatCEP(e.target.value);
+                      const cepNumbers = cepFormatted.replace(/\D/g, "");
                       setCep(cepFormatted);
+                      setCepError(null);
                       setFormData((prev) => ({
                         ...prev,
-                        zipCode: cepFormatted.replace(/\D/g, ""),
+                        zipCode: cepNumbers,
+                        city: cepNumbers.length === 8 ? prev.city : "",
+                        state: cepNumbers.length === 8 ? prev.state : "",
                       }));
+                      if (cepNumbers.length < 8) {
+                        setLocationFieldsDisabled(true);
+                        return;
+                      }
                       handleCepLookup(cepFormatted);
                     }}
                     onBlur={(e) => handleCepLookup(e.target.value)}
@@ -520,38 +537,58 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    placeholder="Cidade"
-                    value={formData.city}
-                    onChange={(e) => handleChange("city", e.target.value)}
-                    error={!!errors.city}
-                    helperText={errors.city}
-                    size="small"
-                    inputProps={{ maxLength: 100 }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    select
-                    label="UF"
-                    value={formData.state}
-                    onChange={(e) => handleChange("state", e.target.value)}
-                    error={!!errors.state}
-                    helperText={errors.state}
-                    size="small"
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 1,
+                      alignItems: "center",
+                      width: "100%",
+                    }}
                   >
-                    <MenuItem value="" disabled>
-                      {statesLoading ? "Carregando..." : "Selecione o estado"}
-                    </MenuItem>
-                    {states.map((state) => (
-                      <MenuItem key={state.sigla} value={state.sigla}>
-                        {state.nome} ({state.sigla})
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    <TextField
+                      disabled={locationFieldsDisabled}
+                      fullWidth
+                      sx={desabilitarCampos}
+                      placeholder="Cidade"
+                      value={formData.city}
+                      onChange={(e) => handleChange("city", e.target.value)}
+                      error={!!errors.city}
+                      helperText={errors.city}
+                      size="small"
+                      inputProps={{ maxLength: 100 }}
+                    />
+                    <Box
+                      sx={{
+                        width: "75px",
+                      }}
+                    >
+                      <TextField
+                        sx={desabilitarCampos}
+                        fullWidth
+                        select
+                        disabled={locationFieldsDisabled}
+                        label="UF"
+                        value={formData.state}
+                        onChange={(e) => handleChange("state", e.target.value)}
+                        error={!!errors.state}
+                        helperText={errors.state}
+                        size="small"
+                      >
+                        <MenuItem value="" disabled>
+                          {statesLoading
+                            ? "Carregando..."
+                            : "Selecione o estado"}
+                        </MenuItem>
+                        {states.map((state) => (
+                          <MenuItem key={state.sigla} value={state.sigla}>
+                            {state.sigla}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Box>
+                  </Box>
                 </Grid>
+                <Grid item xs={12} md={6}></Grid>
               </Grid>
               {cepError ? (
                 <Alert severity="warning" sx={{ mt: 1.5 }}>
@@ -573,17 +610,22 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
         }}
       >
         {activeStep === 0 ? (
-          <Button variant="contained" onClick={handleNext} disabled={loading}>
-            Proximo
+          <Button
+            variant="contained"
+            onClick={handleNext}
+            disabled={loading}
+            sx={{ textTransform: "none" }}
+          >
+            Próximo
           </Button>
         ) : (
           <Button variant="contained" onClick={handleSubmit} disabled={loading}>
             {loading ? (
               <CircularProgress size={20} />
             ) : editingOrganization ? (
-              "Salvar alteracoes"
+              ""
             ) : (
-              "Continuar"
+              "Criar"
             )}
           </Button>
         )}

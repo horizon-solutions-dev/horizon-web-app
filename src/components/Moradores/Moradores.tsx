@@ -22,10 +22,16 @@ import {
   Close,
   PeopleOutlined,
 } from "@mui/icons-material";
-import MoradorForm from "./MoradorForm";
+import MoradorForm, { type MoradorCreatePayload } from "./MoradorForm";
 import CardList from "../../shared/components/CardList";
 import "./Moradores.scss";
 import { useNavigate } from "react-router";
+import { AccountService } from "../../services/accountService";
+import { unitResidentService } from "../../services/unitResidentService";
+import { organizationService } from "../../services/organizationService";
+import { condominiumService } from "../../services/condominiumService";
+import { blockService } from "../../services/blockService";
+import { unitService } from "../../services/unitService";
 
 export interface Morador {
   id?: string;
@@ -39,6 +45,111 @@ export interface Morador {
 }
 
 const pageSize = 10;
+const normalizePhoneToE164 = (phone: string) => {
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("55")) return `+${digits}`;
+  return `+55${digits}`;
+};
+
+const isNotFoundError = (error: unknown) => {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return message.includes("404") || message.includes("not found");
+};
+
+const resolveCondominiumId = async () => {
+  const storedCondominiumIdRaw =
+    localStorage.getItem("moradoresCondominiumId") ||
+    localStorage.getItem("selectedCondominiumId") ||
+    localStorage.getItem("condominiumId") ||
+    "";
+
+  if (storedCondominiumIdRaw) {
+    try {
+      const condominium =
+        await condominiumService.getCondominiumById(storedCondominiumIdRaw);
+      if (condominium?.condominiumId) return condominium.condominiumId;
+    } catch {
+      localStorage.removeItem("moradoresCondominiumId");
+      localStorage.removeItem("selectedCondominiumId");
+      localStorage.removeItem("condominiumId");
+    }
+  }
+
+  let organizationId = localStorage.getItem("organizationId") || "";
+  if (!organizationId) {
+    organizationId = (await organizationService.getMyOrganizationId()) || "";
+    if (organizationId) localStorage.setItem("organizationId", organizationId);
+  }
+
+  if (!organizationId) return "";
+
+  const response = await condominiumService.getCondominiums(organizationId, 1, 1);
+  const firstCondominiumId = response?.items?.[0]?.condominiumId || "";
+  if (firstCondominiumId) {
+    localStorage.setItem("moradoresCondominiumId", firstCondominiumId);
+  }
+  return firstCondominiumId;
+};
+
+const resolveCondominiumUnitId = () =>
+  localStorage.getItem("moradoresUnitId") ||
+  localStorage.getItem("selectedUnitId") ||
+  localStorage.getItem("selectedCondominiumUnitId") ||
+  localStorage.getItem("condominiumUnitId") ||
+  localStorage.getItem("unitId") ||
+  "";
+
+const resolveCondominiumUnitIdAsync = async () => {
+  const storedUnitId = resolveCondominiumUnitId();
+  if (storedUnitId) return storedUnitId;
+
+  const condominiumId = await resolveCondominiumId();
+  if (!condominiumId) return "";
+
+  try {
+    const unitsByCondominium = await unitService.getUnitsByCondominium(
+      condominiumId,
+      1,
+      1,
+    );
+    const firstUnitByCondominium =
+      unitsByCondominium?.items?.[0]?.condominiumUnitId || "";
+    if (firstUnitByCondominium) {
+      localStorage.setItem("moradoresUnitId", firstUnitByCondominium);
+      return firstUnitByCondominium;
+    }
+  } catch (error) {
+    if (!isNotFoundError(error)) throw error;
+  }
+
+  let blocks: Awaited<ReturnType<typeof blockService.getBlocks>> | null = null;
+  try {
+    blocks = await blockService.getBlocks(condominiumId, 1, 20);
+  } catch (error) {
+    if (!isNotFoundError(error)) throw error;
+  }
+
+  for (const block of blocks?.items ?? []) {
+    try {
+      const unitsByBlock = await unitService.getUnitsByBlock(
+        block.condominiumBlockId,
+        1,
+        1,
+      );
+      const firstUnitByBlock = unitsByBlock?.items?.[0]?.condominiumUnitId || "";
+      if (firstUnitByBlock) {
+        localStorage.setItem("moradoresUnitId", firstUnitByBlock);
+        return firstUnitByBlock;
+      }
+    } catch (error) {
+      if (!isNotFoundError(error)) throw error;
+    }
+  }
+
+  return "";
+};
 
 const Moradores: React.FC = () => {
   const [moradores, setMoradores] = useState<Morador[]>([]);
@@ -46,6 +157,7 @@ const Moradores: React.FC = () => {
   const [openForm, setOpenForm] = useState(false);
   const [selectedMorador, setSelectedMorador] = useState<Morador | null>(null);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -55,14 +167,44 @@ const Moradores: React.FC = () => {
 
   // Buscar moradores na API
   useEffect(() => {
-    loadMoradores();
-  }, []);
+    loadMoradores(page);
+  }, [page]);
 
-  const loadMoradores = async () => {
+  const loadMoradores = async (pageNumber: number = 1) => {
     try {
       setLoading(true);
-      // TODO: Implementar quando API estiver disponivel
-      setMoradores([]);
+      const condominiumId = await resolveCondominiumId();
+      if (!condominiumId) {
+        setMoradores([]);
+        setSnackbar({
+          open: true,
+          message: "Nenhum condominio encontrado para listar moradores.",
+          severity: "error",
+        });
+        return;
+      }
+
+      const response = await AccountService.getAccountsByCondominium(
+        condominiumId,
+        pageNumber,
+        pageSize,
+      );
+
+      setMoradores(
+        (response?.data || []).map((account) => ({
+          id: account.userId,
+          nome: `${account.name || ""} ${account.surname || ""}`.trim(),
+          cpf: account.doc || "",
+          unidade: "-",
+          telefone: account.phone || "",
+          email: account.email || "",
+          foto: null,
+          status: "ativo",
+        })),
+      );
+
+      const total = response?.total ?? 0;
+      setTotalPages(Math.max(1, Math.ceil(total / pageSize)));
     } catch (error) {
       console.error("Erro ao carregar moradores:", error);
       setSnackbar({
@@ -85,21 +227,62 @@ const Moradores: React.FC = () => {
     setSelectedMorador(null);
   };
 
-  const handleSaveMorador = async () => {
+  const handleSaveMorador = async (payload: MoradorCreatePayload) => {
+    console.log('entrou handleSaveMorador')
     try {
-      // TODO: Implementar quando API estiver disponivel
+      console.log('payload', payload)
+      const condominiumUnitId =
+        payload.condominiumUnitId || (await resolveCondominiumUnitIdAsync());
+
+      if (!condominiumUnitId) {
+        console.log('condominiumUnitId nao encontrado')
+        throw new Error(
+          "CondominiumUnitId nao encontrado. Selecione uma unidade antes de criar o morador.",
+        );
+      }
+
+      const accountResponse = await AccountService.createAccount({
+        name: payload.name,
+        surname: payload.surname,
+        docType: payload.docType,
+        doc: payload.doc,
+        email: payload.email,
+        phone: normalizePhoneToE164(payload.phone),
+      });
+
+      const userId = accountResponse;
+      if (!userId) {
+        throw new Error("Nao foi possivel obter userId apos criar conta.");
+      }
+
+      const startDate = new Date().toISOString().split("T")[0];
+      await unitResidentService.createResident({
+        condominiumUnitId,
+        userId,
+        unitType: "Owner",
+        startDate,
+        endDate: startDate,
+        billingContact: payload.billingContact,
+        canVote: payload.canVote,
+        canMakeReservations: payload.canMakeReservations,
+        hasGatehouseAccess: payload.hasGatehouseAccess,
+        commit: true,
+      });
+
       setSnackbar({
         open: true,
-        message: "Morador salvo com sucesso!",
+        message: "Morador criado e associado com sucesso!",
         severity: "success",
       });
       handleCloseForm();
-      loadMoradores();
+      await loadMoradores(page);
     } catch (error) {
       console.error("Erro ao salvar morador:", error);
+      const message =
+        error instanceof Error ? error.message : "Erro ao salvar morador!";
       setSnackbar({
         open: true,
-        message: "Erro ao salvar morador!",
+        message,
         severity: "error",
       });
     }
@@ -134,11 +317,7 @@ const Moradores: React.FC = () => {
       .includes(searchTerm.toLowerCase()),
   );
 
-  const totalPages = Math.max(1, Math.ceil(filteredMoradores.length / pageSize));
-  const paginatedMoradores = filteredMoradores.slice(
-    (page - 1) * pageSize,
-    (page - 1) * pageSize + pageSize,
-  );
+  const paginatedMoradores = filteredMoradores;
 
   const navigate = useNavigate();
 
@@ -279,6 +458,12 @@ const Moradores: React.FC = () => {
         onClose={handleCloseForm}
         onSave={handleSaveMorador}
         morador={selectedMorador}
+        unitIdPreset={
+          localStorage.getItem("moradoresUnitId") ||
+          localStorage.getItem("selectedUnitId") ||
+          localStorage.getItem("selectedCondominiumUnitId") ||
+          ""
+        }
       />
 
       <Snackbar
