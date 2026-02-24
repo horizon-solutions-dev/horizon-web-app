@@ -253,7 +253,7 @@ const Boletos: React.FC = () => {
                       startIcon={<Visibility fontSize="small" />}
                       onClick={() => handleOpenViewer(boleto)}
                     >
-                      Visualizar
+                      Visualizar Boleto
                     </Button>
                     <Button
                       size="small"

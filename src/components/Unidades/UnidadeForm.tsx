@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
@@ -172,9 +173,15 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       await onSaved();
       onClose();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro ao salvar unidade.";
-      onNotify(message, "error");
+      if (error instanceof AxiosError && error.response?.status === 422) {
+        setErrors({
+          unitCode: "Já existe uma unidade com este código neste bloco.",
+        });
+      } else {
+        const message =
+          error instanceof Error ? error.message : "Erro ao salvar unidade.";
+        onNotify(message, "error");
+      }
     } finally {
       setLoading(false);
     }

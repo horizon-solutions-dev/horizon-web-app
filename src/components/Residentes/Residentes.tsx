@@ -50,7 +50,7 @@ const Residentes: React.FC = () => {
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [organizationName, setOrganizationName] = useState("");
   const [condoLoading, setCondoLoading] = useState(false);
-  const [condoError, setCondoError] = useState<string | null>(null);
+  const [, setCondoError] = useState<string | null>(null);
   const [condoSearchText, setCondoSearchText] = useState("");
   const [condoPage, setCondoPage] = useState(1);
   const [condoTotalPages, setCondoTotalPages] = useState(1);
@@ -61,7 +61,7 @@ const Residentes: React.FC = () => {
   const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
   const [unitsLoading, setUnitsLoading] = useState(false);
-  const [unitsError, setUnitsError] = useState<string | null>(null);
+  const [, setUnitsError] = useState<string | null>(null);
   const [unitSearchText, setUnitSearchText] = useState("");
   const [unitsPage, setUnitsPage] = useState(1);
   const [unitsTotalPages, setUnitsTotalPages] = useState(1);
@@ -72,7 +72,7 @@ const Residentes: React.FC = () => {
 
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
   const [residentsLoading, setResidentsLoading] = useState(false);
-  const [residentsError, setResidentsError] = useState<string | null>(null);
+  const [, setResidentsError] = useState<string | null>(null);
   const [residentSearchText, setResidentSearchText] = useState("");
   const [residentsPage, setResidentsPage] = useState(1);
   const [residentsTotalPages, setResidentsTotalPages] = useState(1);
@@ -111,8 +111,10 @@ const Residentes: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
+       const nameStorage = localStorage.getItem('condominium');
+          const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
-            organizations?.[0]?.name || organizations?.[0]?.legalName;
+            organizations?.find(o => o.organizationId === dataParse?.organizationId)?.name || dataParse?.name
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore

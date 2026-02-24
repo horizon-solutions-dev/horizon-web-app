@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -22,6 +23,7 @@ import {
 import { condominiumImageService } from "../../services/condominiumImageService";
 import { organizationService } from "../../services/organizationService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
+import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
 
 interface CondominioFormProps {
   open: boolean;
@@ -74,7 +76,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   };
 
   const [activeStep, setActiveStep] = useState(0);
-  const [allocationTypes, setAllocationTypes] = useState<AllocationTypeEnum[]>([]);
+  const [allocationTypes, setAllocationTypes] = useState<AllocationTypeEnum[]>(
+    [],
+  );
   const [allocationLoading, setAllocationLoading] = useState(false);
   const [allocationError, setAllocationError] = useState<string | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
@@ -87,6 +91,14 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     open: false,
     message: "",
   });
+  const [addressFieldsDisabled, setAddressFieldsDisabled] = useState({
+    address: true,
+    neighborhood: true,
+    city: true,
+    state: true,
+    addressNumber: true,
+    complement: true,
+  });
 
   const steps = ["Informações Básicas", "Endereço", "Configurações e Rateio"];
 
@@ -95,9 +107,14 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     if (numbers.length === 0) return "";
     if (numbers.length <= 2) return numbers;
     if (numbers.length <= 5) return numbers.replace(/(\d{2})(\d+)/, "$1.$2");
-    if (numbers.length <= 8) return numbers.replace(/(\d{2})(\d{3})(\d+)/, "$1.$2.$3");
-    if (numbers.length <= 12) return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, "$1.$2.$3/$4");
-    return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/, "$1.$2.$3/$4-$5");
+    if (numbers.length <= 8)
+      return numbers.replace(/(\d{2})(\d{3})(\d+)/, "$1.$2.$3");
+    if (numbers.length <= 12)
+      return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, "$1.$2.$3/$4");
+    return numbers.replace(
+      /(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/,
+      "$1.$2.$3/$4-$5",
+    );
   };
 
   const formatCEP = (value: string) => {
@@ -128,8 +145,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const ensureOrganizationId = async () => {
     let organizationId = localStorage.getItem("organizationId") || "";
     if (!organizationId) {
-      organizationId =
-        (await organizationService.getMyOrganizationId()) || "";
+      organizationId = (await organizationService.getMyOrganizationId()) || "";
       localStorage.setItem("organizationId", organizationId);
     }
 
@@ -149,6 +165,14 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     setCepError(null);
     setCoverFile(null);
     ensureOrganizationId();
+    setAddressFieldsDisabled({
+      address: true,
+      neighborhood: true,
+      city: true,
+      state: true,
+      addressNumber: true,
+      complement: true,
+    });
 
     if (editingCondominium) {
       setEditingId(editingCondominium.condominiumId);
@@ -198,6 +222,14 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       const cepDigits = String(value).replace(/\D/g, "");
       if (cepDigits.length !== 8) {
         setCepError(null);
+        setAddressFieldsDisabled({
+          address: true,
+          neighborhood: true,
+          city: true,
+          state: true,
+          addressNumber: true,
+          complement: true,
+        });
       }
     }
 
@@ -211,95 +243,68 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     }
   };
 
-  const handleNext = async () => {
-    // Remove formatação do CNPJ e CEP antes de validar
-    const cleanDoc = formData.doc.replace(/\D/g, "");
-    const cleanZipCode = formData.zipCode.replace(/\D/g, "");
-    
-    const payload: CondominiumRequest = {
-      ...formData,
-      doc: cleanDoc,
-      zipCode: cleanZipCode,
-      condominiumType: normalizeCondominiumTypeValue(formData.condominiumType),
-      allocationType: normalizeAllocationTypeValue(formData.allocationType),
-      commit: false,
-    };
-
-    try {
-      const { valid, validations } = await condominiumService.validateCondominium(payload);
-      
-      if (valid || validations.length === 0) {
-        setActiveStep((prev) => prev + 1);
-        return;
-      }
-
-      const fieldMap: Record<string, keyof CondominiumRequest> = {
-        organizationid: "organizationId",
-        name: "name",
-        doc: "doc",
-        address: "address",
-        addressnumber: "addressNumber",
-        complement: "complement",
-        neighborhood: "neighborhood",
-        city: "city",
-        state: "state",
-        zipcode: "zipCode",
-        condominiumtype: "condominiumType",
-        unitcount: "unitCount",
-        hasblocks: "hasBlocks",
-        haswaterindividual: "hasWaterIndividual",
-        haspowerbyblock: "hasPowerByBlock",
-        hasgasbyblock: "hasGasByBlock",
-        allocationtype: "allocationType",
-        allocationvalueperc: "allocationValuePerc",
-        commit: "commit",
-      };
-
-      const stepFields: Array<keyof CondominiumRequest> =
-        activeStep === 0
-          ? ["organizationId", "name", "doc", "condominiumType", "unitCount"]
-          : activeStep === 1
-            ? [
-                "zipCode",
-                "address",
-                "addressNumber",
-                "neighborhood",
-                "city",
-                "state",
-                "complement",
-              ]
-            : [
-                "hasBlocks",
-                "hasWaterIndividual",
-                "hasPowerByBlock",
-                "hasGasByBlock",
-                "allocationType",
-                "allocationValuePerc",
-              ];
-
-      const nextErrors: Record<string, string> = {};
-
-      validations.forEach((validation) => {
-        const key = validation.field?.replace(/\s+/g, "").toLowerCase();
-        const field = key ? fieldMap[key] : undefined;
-        if (field && stepFields.includes(field)) {
-          nextErrors[field] = validation.message;
-        }
-      });
-
-      if (Object.keys(nextErrors).length > 0) {
-        setErrors(nextErrors);
-        return;
-      }
-
-      setActiveStep((prev) => prev + 1);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Erro ao validar dados do condomínio.";
-      onNotify(message, "error");
+  const validateStep0 = () => {
+    const nextErrors: Record<string, string> = {};
+    if (!formData.name.trim()) {
+      nextErrors.name = "Nome do Condomínio é obrigatório.";
     }
+    if (formData.doc.replace(/\D/g, "").length !== 14) {
+      nextErrors.doc = "CNPJ inválido.";
+    }
+    if (!formData.condominiumType) {
+      nextErrors.condominiumType = "Tipo de Condomínio é obrigatório.";
+    }
+    if (!formData.unitCount || formData.unitCount <= 0) {
+      nextErrors.unitCount = "Quantidade de Unidades deve ser maior que 0.";
+    }
+    return nextErrors;
+  };
+
+  const validateStep1 = () => {
+    const nextErrors: Record<string, string> = {};
+    if (formData.zipCode.replace(/\D/g, "").length !== 8) {
+      nextErrors.zipCode = "CEP inválido.";
+    }
+    if (!formData.address.trim()) {
+      nextErrors.address = "Logradouro é obrigatório.";
+    }
+    if (!formData.addressNumber.trim()) {
+      nextErrors.addressNumber = "Número é obrigatório.";
+    }
+    if (!formData.neighborhood.trim()) {
+      nextErrors.neighborhood = "Bairro é obrigatório.";
+    }
+    if (!formData.city.trim()) {
+      nextErrors.city = "Cidade é obrigatória.";
+    }
+    if (formData.state.trim().length !== 2) {
+      nextErrors.state = "UF inválida.";
+    }
+    return nextErrors;
+  };
+
+  const validateStep2 = () => {
+    const nextErrors: Record<string, string> = {};
+    if (!formData.allocationType) {
+      nextErrors.allocationType = "Tipo de rateio é obrigatório.";
+    }
+    return nextErrors;
+  };
+
+  const handleNext = async () => {
+    let localErrors: Record<string, string> = {};
+    if (activeStep === 0) {
+      localErrors = validateStep0();
+    } else if (activeStep === 1) {
+      localErrors = validateStep1();
+    }
+
+    if (Object.keys(localErrors).length > 0) {
+      setErrors(localErrors);
+      return;
+    }
+
+    setActiveStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
@@ -309,42 +314,118 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const handleCepLookup = async () => {
     const cepDigits = formData.zipCode.replace(/\D/g, "");
 
-    if (cepDigits.length > 0 && cepDigits.length < 8) {
-      setCepError("CEP incompleto. Digite 8 dígitos.");
-      return;
-    }
-
     if (cepDigits.length !== 8) {
       setCepError(null);
+
       return;
     }
 
     setCepLoading(true);
+
     setCepError(null);
 
     try {
       const response = await fetch(
         `https://viacep.com.br/ws/${cepDigits}/json/`,
       );
+
       const data = await response.json();
+
       if (data?.erro) {
-        setCepError("CEP não encontrado.");
+        setCepError("CEP não encontrado. Preencha o endereço manualmente.");
+
+        setAddressFieldsDisabled({
+          address: false,
+
+          neighborhood: false,
+
+          city: false,
+
+          state: false,
+
+          addressNumber: false,
+
+          complement: false,
+        });
+
+        setFormData((prev) => ({
+          ...prev,
+          address: "",
+          neighborhood: "",
+          city: "",
+          state: "",
+        }));
+
         return;
       }
 
+      const newAddressData = {
+        address: data.logradouro || "",
+
+        neighborhood: data.bairro || "",
+
+        city: data.localidade || "",
+
+        state: data.uf || "",
+      };
+
       setFormData((prev) => ({
         ...prev,
-        address: data.logradouro || prev.address,
-        neighborhood: data.bairro || prev.neighborhood,
-        city: data.localidade || prev.city,
-        state: data.uf || prev.state,
+
+        ...newAddressData,
       }));
+
+      // Clear errors for fields that just got populated
+
+      setErrors((prevErrors) => {
+        const newErrors = { ...prevErrors };
+
+        if (newAddressData.address) delete newErrors.address;
+
+        if (newAddressData.neighborhood) delete newErrors.neighborhood;
+
+        if (newAddressData.city) delete newErrors.city;
+
+        if (newAddressData.state) delete newErrors.state;
+
+        return newErrors;
+      });
+
+      setAddressFieldsDisabled({
+        address: !!data.logradouro,
+
+        neighborhood: !!data.bairro,
+
+        city: !!data.localidade,
+
+        state: !!data.uf,
+
+        addressNumber: false,
+
+        complement: false,
+      });
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : "Erro ao consultar CEP.";
+        error instanceof Error ? error.message : "Erro ao consultar CEP.";
+
       setCepError(message);
+
+      setAddressFieldsDisabled({
+        address: false,
+        neighborhood: false,
+        city: false,
+        state: false,
+        addressNumber: false,
+        complement: false,
+      });
+
+      setFormData((prev) => ({
+        ...prev,
+        address: "",
+        neighborhood: "",
+        city: "",
+        state: "",
+      }));
     } finally {
       setCepLoading(false);
     }
@@ -365,6 +446,12 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   };
 
   const handleSubmit = async () => {
+    const step2Errors = validateStep2();
+    if (Object.keys(step2Errors).length > 0) {
+      setErrors(step2Errors);
+      return;
+    }
+
     if (!formData.organizationId.trim()) {
       //onNotify("OrganizationId não encontrado.", "error");
       return;
@@ -372,11 +459,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
     try {
       setLoading(true);
-      
+
       // Remove formatação do CNPJ e CEP antes de enviar
       const cleanDoc = formData.doc.replace(/\D/g, "");
       const cleanZipCode = formData.zipCode.replace(/\D/g, "");
-      
+
       const payload: CondominiumRequest = {
         ...formData,
         doc: cleanDoc,
@@ -388,14 +475,12 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         commit: true,
       };
 
-      const validationPayload: CondominiumRequest = {
-        ...payload,
-        commit: false,
-      };
-
-      const { valid, validations } = await condominiumService.validateCondominium(
-        validationPayload,
-      );
+      // Backend validation still happens, but after local validation
+      const { valid, validations } =
+        await condominiumService.validateCondominium({
+          ...payload,
+          commit: false,
+        });
 
       if (!valid && validations.length > 0) {
         const fieldMap: Record<string, keyof CondominiumRequest> = {
@@ -449,7 +534,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           const field = key ? fieldMap[key] : undefined;
           if (!field) return;
           nextErrors[field] = validation.message;
-          const stepIndex = stepFields.findIndex((fields) => fields.includes(field));
+          const stepIndex = stepFields.findIndex((fields) =>
+            fields.includes(field),
+          );
           if (stepIndex >= 0) {
             targetStep = Math.max(targetStep, stepIndex);
           }
@@ -458,6 +545,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         if (Object.keys(nextErrors).length > 0) {
           setErrors(nextErrors);
           setActiveStep(targetStep);
+          setLoading(false); // stop loading because we found validation errors
           return;
         }
       }
@@ -474,7 +562,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           open: true,
           message: `Condomínio "${formData.name}" criado com sucesso!`,
         });
-        
+
         if (coverFile && response?.condominiumId) {
           try {
             await condominiumImageService.uploadCondominiumImage({
@@ -502,13 +590,18 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       setEditingId(null);
       onClose();
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : editingId
-            ? "Erro ao atualizar condomínio!"
-            : "Erro ao criar condomínio!";
-      onNotify(message, "error");
+      if (error instanceof AxiosError && error.response?.status === 422) {
+        setErrors({ doc: "Já existe um condomínio com este CNPJ." });
+        setActiveStep(0);
+      } else {
+        const message =
+          error instanceof Error
+            ? error.message
+            : editingId
+              ? "Erro ao atualizar condomínio!"
+              : "Erro ao criar condomínio!";
+        onNotify(message, "error");
+      }
     } finally {
       setLoading(false);
     }
@@ -606,9 +699,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       case 1:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
-            <Typography variant="subtitle2" className="step-subtitle">
-              Endereço
-            </Typography>
             <TextField
               fullWidth
               label={formData.zipCode ? "" : "CEP"}
@@ -631,6 +721,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               <Grid item xs={12}>
                 <TextField
                   fullWidth
+                  disabled={addressFieldsDisabled.address}
+                  sx={addressFieldsDisabled.address ? desabilitarCampos : {}}
                   label={formData.address ? "" : "Logradouro"}
                   value={formData.address}
                   onChange={(e) => handleChange("address", e.target.value)}
@@ -640,33 +732,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   InputLabelProps={{ shrink: false }}
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label={formData.addressNumber ? "" : "Número"}
-                  value={formData.addressNumber}
-                  onChange={(e) => handleChange("addressNumber", e.target.value)}
-                  error={!!errors.addressNumber}
-                  helperText={errors.addressNumber}
-                  size="small"
-                  InputLabelProps={{ shrink: false }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  label={formData.complement ? "" : "Complemento"}
-                  value={formData.complement}
-                  onChange={(e) => handleChange("complement", e.target.value)}
-                  error={!!errors.complement}
-                  helperText={errors.complement}
-                  size="small"
-                  InputLabelProps={{ shrink: false }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
+                  disabled={addressFieldsDisabled.neighborhood}
+                  sx={desabilitarCampos}
                   label={formData.neighborhood ? "" : "Bairro"}
                   value={formData.neighborhood}
                   onChange={(e) => handleChange("neighborhood", e.target.value)}
@@ -676,9 +746,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   InputLabelProps={{ shrink: false }}
                 />
               </Grid>
-              <Grid item xs={12} sm={8}>
+              <Grid item xs={12} sm={4}>
                 <TextField
                   fullWidth
+                  disabled={addressFieldsDisabled.city}
+                  sx={addressFieldsDisabled.city ? desabilitarCampos : {}}
                   label={formData.city ? "" : "Cidade"}
                   value={formData.city}
                   onChange={(e) => handleChange("city", e.target.value)}
@@ -688,17 +760,55 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   InputLabelProps={{ shrink: false }}
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={2}>
                 <TextField
                   fullWidth
+                  disabled={addressFieldsDisabled.state}
+                  sx={addressFieldsDisabled.state ? desabilitarCampos : {}}
                   label={formData.state ? "" : "UF"}
                   value={formData.state}
-                  onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    handleChange("state", e.target.value.toUpperCase())
+                  }
                   error={!!errors.state}
                   helperText={errors.state}
                   size="small"
                   InputLabelProps={{ shrink: false }}
                   inputProps={{ maxLength: 2 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  disabled={addressFieldsDisabled.addressNumber}
+                  sx={
+                    addressFieldsDisabled.addressNumber ? desabilitarCampos : {}
+                  }
+                  label={formData.addressNumber ? "" : "Número"}
+                  value={formData.addressNumber}
+                  onChange={(e) =>
+                    handleChange("addressNumber", e.target.value)
+                  }
+                  error={!!errors.addressNumber}
+                  helperText={errors.addressNumber}
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={8}>
+                <TextField
+                  fullWidth
+                  disabled={addressFieldsDisabled.complement}
+                  sx={
+                    addressFieldsDisabled.addressNumber ? desabilitarCampos : {}
+                  }
+                  label={formData.complement ? "" : "Complemento"}
+                  value={formData.complement}
+                  onChange={(e) => handleChange("complement", e.target.value)}
+                  error={!!errors.complement}
+                  helperText={errors.complement}
+                  size="small"
+                  InputLabelProps={{ shrink: false }}
                 />
               </Grid>
             </Grid>
@@ -708,20 +818,23 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       case 2:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
-            <Typography variant="subtitle2" className="step-subtitle">
-              Configurações e Rateio
-            </Typography>
             <Grid container spacing={0.8}>
               <Grid item xs={12} sm={6}>
                 <FormControlLabel
                   control={
                     <Checkbox
                       checked={formData.hasBlocks}
-                      onChange={(e) => handleChange("hasBlocks", e.target.checked)}
+                      onChange={(e) =>
+                        handleChange("hasBlocks", e.target.checked)
+                      }
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Possui blocos</Typography>}
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: "13px" }}>
+                      Possui blocos
+                    </Typography>
+                  }
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -735,7 +848,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Medição individual de água</Typography>}
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: "13px" }}>
+                      Medição individual de água
+                    </Typography>
+                  }
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -749,7 +866,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Energia por bloco</Typography>}
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: "13px" }}>
+                      Energia por bloco
+                    </Typography>
+                  }
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -763,7 +884,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       size="small"
                     />
                   }
-                  label={<Typography variant="body2" sx={{ fontSize: "13px" }}>Gás por bloco</Typography>}
+                  label={
+                    <Typography variant="body2" sx={{ fontSize: "13px" }}>
+                      Gás por bloco
+                    </Typography>
+                  }
                 />
               </Grid>
             </Grid>
@@ -811,11 +936,18 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label={formData.allocationValuePerc > 0 ? "" : "Percentual de rateio (%)"}
+                  label={
+                    formData.allocationValuePerc > 0
+                      ? ""
+                      : "Percentual de rateio (%)"
+                  }
                   type="number"
                   value={formData.allocationValuePerc || ""}
                   onChange={(e) =>
-                    handleChange("allocationValuePerc", parseFloat(e.target.value) || 0)
+                    handleChange(
+                      "allocationValuePerc",
+                      parseFloat(e.target.value) || 0,
+                    )
                   }
                   error={!!errors.allocationValuePerc}
                   helperText={errors.allocationValuePerc}
@@ -826,16 +958,24 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               </Grid>
             </Grid>
 
-            <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
-              <Button 
-                variant="outlined" 
-                component="label" 
+            <Box
+              sx={{
+                mt: 1,
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                flexWrap: "wrap",
+              }}
+            >
+              <Button
+                variant="outlined"
+                component="label"
                 size="small"
                 sx={{
                   minWidth: 130,
                   height: 36,
-                  textTransform: 'none',
-                  fontSize: '13px',
+                  textTransform: "none",
+                  fontSize: "13px",
                 }}
               >
                 Selecionar imagem
@@ -846,7 +986,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
                 />
               </Button>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontSize: "12px" }}
+              >
                 {coverFile ? coverFile.name : "Nenhuma imagem selecionada"}
               </Typography>
             </Box>
@@ -869,9 +1013,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         showBack={activeStep > 0 && activeStep < steps.length}
         onBack={handleBack}
       >
-        <div className="condominio-form">
-          {renderStepContent(activeStep)}
-        </div>
+        <div className="condominio-form">{renderStepContent(activeStep)}</div>
         <Box
           sx={{
             display: "flex",
@@ -884,6 +1026,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         >
           {activeStep === steps.length - 1 ? (
             <Button
+              sx={{ textTransform: "none" }}
               variant="contained"
               color="primary"
               onClick={handleSubmit}
@@ -893,6 +1036,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             </Button>
           ) : (
             <Button
+              sx={{ textTransform: "none" }}
               variant="contained"
               onClick={handleNext}
             >
@@ -914,7 +1058,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             minWidth: "400px",
             borderRadius: "16px",
             boxShadow: "0 12px 40px rgba(0, 0, 0, 0.2)",
-          }
+          },
         }}
       >
         <Alert

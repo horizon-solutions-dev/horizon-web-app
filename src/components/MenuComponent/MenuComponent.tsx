@@ -2,13 +2,12 @@ import { useEffect, useState, type JSX } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   MdDashboard,
-  MdEventAvailable,
+/*   MdEventAvailable,
   MdAttachMoney,
   MdSecurity,
-  MdPeople,
   MdDirectionsCar,
+  MdLocalShipping, */
   MdEmail,
-  MdLocalShipping,
   MdApartment,
   MdSettings,
   MdExpandMore,
@@ -46,7 +45,8 @@ const menuItems: MenuItem[] = [
     icon: <MdApartment />,
     path: RouteNames.Condominio,
   },
-  {
+  //Implementação futura
+/*   {
     id: "reservas",
     label: "Reservas",
     icon: <MdEventAvailable />,
@@ -56,7 +56,7 @@ const menuItems: MenuItem[] = [
       { id: "reservas-calendario", label: "Calendário", icon: <></>, path: RouteNames.ReservasCalendario },
       { id: "reservas-disponibilidade", label: "Disponibilidade", icon: <></>, path: RouteNames.ReservasDisponibilidade },
     ],
-  },
+  }, 
   {
     id: "financeiro",
     label: "Financeiro",
@@ -67,6 +67,7 @@ const menuItems: MenuItem[] = [
       { id: "financeiro-despesas", label: "Despesas", icon: <></>, path: RouteNames.FinanceiroDespesas },
     ],
   },
+  
   {
     id: "portaria",
     label: "Portaria",
@@ -76,13 +77,7 @@ const menuItems: MenuItem[] = [
       { id: "portaria-liberacao", label: "Liberação", icon: <></>, path: RouteNames.PortariaLiberacao },
       { id: "portaria-relatorios", label: "Relatórios", icon: <></>, path: RouteNames.PortariaRelatorios },
     ],
-  },
-  {
-    id: "moradores",
-    label: "Moradores",
-    icon: <MdPeople />,
-    path: RouteNames.Moradores,
-  },
+  },*/
   {
     id: "cadastros",
     label: "Cadastros",
@@ -95,19 +90,19 @@ const menuItems: MenuItem[] = [
       { id: "cadastros-perfis", label: "Perfis", icon: <></>, path: RouteNames.CadastrosPerfis },
     ],
   },
-  {
+/*   {
     id: "veiculos",
     label: "Veículos",
     icon: <MdDirectionsCar />,
     path: RouteNames.Veiculos,
-  },
+  }, */
   {
     id: "fale-conosco",
     label: "Fale Conosco",
     icon: <MdEmail />,
     path: RouteNames.FaleConosco,
   },
-  {
+/*   {
     id: "encomendas",
     label: "Encomendas",
     icon: <MdLocalShipping />,
@@ -115,7 +110,7 @@ const menuItems: MenuItem[] = [
       { id: "encomendas-recebimento", label: "Recebimento", icon: <></>, path: RouteNames.EncomendasRecebimento },
       { id: "encomendas-notificacao", label: "Notificação", icon: <></>, path: RouteNames.EncomendasNotificacao },
     ],
-  },
+  }, */
 ];
 
 export default function MenuComponent({ collapsed = false, onToggleCollapse }: MenuComponentProps) {

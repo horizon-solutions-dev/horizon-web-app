@@ -90,8 +90,10 @@ const CondominioPage: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
+          const nameStorage = localStorage.getItem('condominium');
+          const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
-            organizations?.[0]?.name || organizations?.[0]?.legalName;
+            organizations?.find(o => o.organizationId === dataParse?.organizationId)?.name || dataParse?.name
           if (orgName) setOrganizationName(orgName);
         } catch (error) {
           console.error("Erro ao carregar nome da organização:", error);

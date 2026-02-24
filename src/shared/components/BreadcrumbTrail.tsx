@@ -15,8 +15,10 @@ export default function BreadcrumbTrail({ items }: BreadcrumbTrailProps) {
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, mt: 0.5 }}>
       {validItems.map((item, index) => (
         <React.Fragment key={`${item}-${index}`}>
-          <ChevronRight sx={{ fontSize: 36, color: "#1976d2", mr: 0.2 }} />
-          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
+          {index> 0 && (
+            <ChevronRight sx={{ fontSize: 36, color: "#1976d2", mr: 0.2 }} />
+          )}
+          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px", fontWeight: index === validItems.length - 1 ? 600 : 400}}>
             {item}
           </Typography>
         </React.Fragment>

@@ -35,8 +35,6 @@ const CondominioRoutes = {
   
   // Condominio
   Condominio: "/condominio",
-  // Moradores
-  Moradores: "/moradores",
 
   // Cadastros
   CadastrosBlocos: "/cadastros/blocos",

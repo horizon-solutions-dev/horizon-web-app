@@ -65,6 +65,15 @@ class BlockService {
       throw error;
     }
   }
+
+  async deleteBlock(id: string) {
+    try {
+      return await apiClient.delete<void>(`${this.baseUrl}/${id}`);
+    } catch (error) {
+      console.error('Erro ao excluir bloco:', error);
+      throw error;
+    }
+  }
 }
 
 export const blockService = new BlockService();

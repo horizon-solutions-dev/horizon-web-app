@@ -7,7 +7,7 @@ export default function Dashboard() {
   const stats = [
     {
       id: 1,
-      title: 'Total de Moradores',
+      title: 'Total de Residentes',
       value: '245',
       icon: <People />,
       color: '#4facfe',
@@ -42,7 +42,7 @@ export default function Dashboard() {
   const recentActivities = [
     { id: 1, text: 'Nova reserva do salao de festas', time: 'Ha 2 horas' },
     { id: 2, text: 'Encomenda recebida para Apto 301', time: 'Ha 3 horas' },
-    { id: 3, text: 'Novo morador cadastrado', time: 'Ha 5 horas' },
+    { id: 3, text: 'Novo residente cadastrado', time: 'Ha 5 horas' },
     { id: 4, text: 'Boleto pago - Apto 205', time: 'Ha 1 dia' },
   ];
 
@@ -114,7 +114,7 @@ export default function Dashboard() {
           </button>
           <button className="action-btn">
             <MdPeople />
-            <span>Cadastrar Morador</span>
+            <span>Cadastrar Residente</span>
           </button>
           <button className="action-btn">
             <MdAttachMoney />

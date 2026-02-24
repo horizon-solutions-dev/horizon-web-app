@@ -182,6 +182,10 @@ export default function CardList({
           <Grid item xs={12}>
             <Box
               sx={{
+                height: '300px',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
                 p: 3,
                 borderRadius: 2,
                 border: '1px dashed #d0d7de',

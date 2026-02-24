@@ -180,9 +180,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
       <DialogContent dividers className="form-content">
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Typography variant="subtitle2" className="section-title">
-              Informações do Boleto
-            </Typography>
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -287,9 +284,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
           </Grid>
 
           <Grid item xs={12}>
-            <Typography variant="subtitle2" className="section-title">
-              Imagem do Boleto
-            </Typography>
           </Grid>
 
           <Grid item xs={12}>

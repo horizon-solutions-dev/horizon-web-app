@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -47,7 +48,6 @@ const initialForm: OrganizationRequest = {
   city: "",
   state: "",
 };
-
 
 const formatCNPJ = (value: string) => {
   const numbers = value.replace(/\D/g, "").slice(0, 14);
@@ -103,7 +103,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
-  const [locationFieldsDisabled, setLocationFieldsDisabled] = useState(true);
+  const [locationFieldsDisabled, setLocationFieldsDisabled] = useState({ city: true, state: true });
   const [states, setStates] = useState<Array<{ sigla: string; nome: string }>>(
     [],
   );
@@ -139,7 +139,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
     setCep("");
     setErrors({});
     setCepError(null);
-    setLocationFieldsDisabled(true);
+    setLocationFieldsDisabled({ city: true, state: true });
 
     if (editingOrganization) {
       const existingZip =
@@ -243,43 +243,48 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   const handleCepLookup = async (rawCep: string) => {
     const cep = rawCep.replace(/\D/g, "");
     if (cep.length !== 8) {
-      setLocationFieldsDisabled(true);
+      setLocationFieldsDisabled({ city: true, state: true });
       return;
     }
 
     setCepLoading(true);
     setCepError(null);
-    setLocationFieldsDisabled(true);
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
       if (data?.erro) {
         setCepError("CEP nao encontrado.");
         setFormData((prev) => ({ ...prev, city: "", state: "" }));
-        setLocationFieldsDisabled(false);
+        setLocationFieldsDisabled({ city: false, state: false });
         return;
       }
-      const nextCity = data.localidade || "";
-      const nextState = data.uf || "";
+
+      const newAddressData = {
+        city: data.localidade || "",
+        state: data.uf || "",
+      };
 
       setFormData((prev) => ({
         ...prev,
-        city: nextCity || prev.city,
-        state: nextState || prev.state,
+        ...newAddressData,
       }));
 
-      if (nextCity || nextState) {
-        setErrors((prev) => {
-          const nextErrors = { ...prev };
-          if (nextCity) delete nextErrors.city;
-          if (nextState) delete nextErrors.state;
-          return nextErrors;
-        });
-      }
-      setLocationFieldsDisabled(true);
+      // Clear errors for fields that just got populated
+      setErrors((prevErrors) => {
+        const newErrors = { ...prevErrors };
+        if (newAddressData.city) delete newErrors.city;
+        if (newAddressData.state) delete newErrors.state;
+        return newErrors;
+      });
+
+      setLocationFieldsDisabled({
+        city: !!data.localidade,
+        state: !!data.uf,
+      });
     } catch {
       setCepError("Erro ao consultar CEP.");
-      setLocationFieldsDisabled(false);
+      setFormData((prev) => ({ ...prev, city: "", state: "" }));
+      setLocationFieldsDisabled({ city: false, state: false });
     } finally {
       setCepLoading(false);
     }
@@ -382,13 +387,18 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
       await onSaved();
       onClose();
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : editingOrganization
-            ? "Erro ao atualizar organizacao."
-            : "Erro ao criar organizacao.";
-      onNotify(message, "error");
+      if (error instanceof AxiosError && error.response?.status === 422) {
+        setErrors({ doc: "Já existe uma organização com este CNPJ." });
+        setActiveStep(0);
+      } else {
+        const message =
+          error instanceof Error
+            ? error.message
+            : editingOrganization
+              ? "Erro ao atualizar organizacao."
+              : "Erro ao criar organizacao.";
+        onNotify(message, "error");
+      }
     } finally {
       setLoading(false);
     }
@@ -522,7 +532,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                         state: cepNumbers.length === 8 ? prev.state : "",
                       }));
                       if (cepNumbers.length < 8) {
-                        setLocationFieldsDisabled(true);
+                        setLocationFieldsDisabled({ city: true, state: true });
                         return;
                       }
                       handleCepLookup(cepFormatted);
@@ -546,7 +556,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                     }}
                   >
                     <TextField
-                      disabled={locationFieldsDisabled}
+                      disabled={locationFieldsDisabled.city}
                       fullWidth
                       sx={desabilitarCampos}
                       placeholder="Cidade"
@@ -559,14 +569,14 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                     />
                     <Box
                       sx={{
-                        width: "75px",
+                        width: "125px",
                       }}
                     >
                       <TextField
                         sx={desabilitarCampos}
                         fullWidth
                         select
-                        disabled={locationFieldsDisabled}
+                        disabled={locationFieldsDisabled.state}
                         label="UF"
                         value={formData.state}
                         onChange={(e) => handleChange("state", e.target.value)}
@@ -619,13 +629,18 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
             Próximo
           </Button>
         ) : (
-          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+          <Button
+            sx={{ textTransform: "none" }}
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
             {loading ? (
               <CircularProgress size={20} />
             ) : editingOrganization ? (
-              ""
+              "Concluir"
             ) : (
-              "Criar"
+              "Concluir"
             )}
           </Button>
         )}

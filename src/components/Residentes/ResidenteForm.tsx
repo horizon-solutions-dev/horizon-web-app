@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { AxiosError } from "axios";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -8,15 +9,19 @@ import {
   FormControlLabel,
   Checkbox,
   CircularProgress,
+  Grid,
 } from "@mui/material";
+import { FileUploadOutlined } from "@mui/icons-material";
 import {
   unitResidentService,
   type CondominiumUnitResidentRequest,
 } from "../../services/unitResidentService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
-import { AuthService } from "../../services/authService";
-import { TokenService } from "../../services/tokenService";
+import { AccountService } from "../../services/accountService";
 import moment from "moment";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { ptBR } from "date-fns/locale";
 
 interface ResidenteFormProps {
   open: boolean;
@@ -34,27 +39,99 @@ interface ResidenteFormProps {
   unitCodePreset?: string;
 }
 
-const STEPS = ["Periodo", "Permissoes"];
+const STEPS = ["Periodo", "Dados do Morador", "Permissoes e Foto"];
 
-type ValidationItem = { field: string; message: string };
+type DocumentType = "CPF" | "CNPJ";
 
-const STEP_FIELDS: Array<Array<keyof CondominiumUnitResidentRequest>> = [
-  ["condominiumUnitId", "userId", "unitType", "startDate", "endDate"],
-  ["billingContact", "canVote", "canMakeReservations", "hasGatehouseAccess"],
-];
-
-const FIELD_MAP: Record<string, keyof CondominiumUnitResidentRequest> = {
-  condominiumunitid: "condominiumUnitId",
-  userid: "userId",
-  unittype: "unitType",
-  startdate: "startDate",
-  enddate: "endDate",
-  billingcontact: "billingContact",
-  canvote: "canVote",
-  canmakereservations: "canMakeReservations",
-  hasgatehouseaccess: "hasGatehouseAccess",
-  commit: "commit",
+const formatCpf = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return digits.replace(/(\d{3})(\d+)/, "$1.$2");
+  if (digits.length <= 9) {
+    return digits.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
+  }
+  return digits.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, "$1.$2.$3-$4");
 };
+
+const formatCnpj = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 14);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 5) return digits.replace(/(\d{2})(\d+)/, "$1.$2");
+  if (digits.length <= 8) return digits.replace(/(\d{2})(\d{3})(\d+)/, "$1.$2.$3");
+  if (digits.length <= 12)
+    return digits.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, "$1.$2.$3/$4");
+  return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/, "$1.$2.$3/$4-$5");
+};
+
+const validateCnpj = (cnpj: string) => {
+  const cnpjClean = cnpj.replace(/\D/g, "");
+
+  if (cnpjClean.length !== 14 || /^(\d)\1+$/.test(cnpjClean)) {
+    return false;
+  }
+
+  let size = cnpjClean.length - 2;
+  let numbers = cnpjClean.substring(0, size);
+  let digits = cnpjClean.substring(size);
+  let sum = 0;
+  let pos = size - 7;
+
+  for (let i = size; i >= 1; i--) {
+    sum += parseInt(numbers.charAt(size - i), 10) * pos--;
+    if (pos < 2) {
+      pos = 9;
+    }
+  }
+
+  let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  if (result !== parseInt(digits.charAt(0), 10)) {
+    return false;
+  }
+
+  size = size + 1;
+  numbers = cnpjClean.substring(0, size);
+  sum = 0;
+  pos = size - 7;
+
+  for (let i = size; i >= 1; i--) {
+    sum += parseInt(numbers.charAt(size - i), 10) * pos--;
+    if (pos < 2) {
+      pos = 9;
+    }
+  }
+
+  result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  if (result !== parseInt(digits.charAt(1), 10)) {
+    return false;
+  }
+
+  return true;
+};
+
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 6) return digits.replace(/(\d{2})(\d+)/, "($1) $2");
+  if (digits.length <= 10) {
+    return digits.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+  }
+  return digits.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
+};
+
+const normalizePhoneToE164 = (phone: string) => {
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("55")) return `+${digits}`;
+  return `+55${digits}`;
+};
+
+const fileToDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("Erro ao ler foto."));
+    reader.readAsDataURL(file);
+  });
 
 const ResidenteForm: React.FC<ResidenteFormProps> = ({
   open,
@@ -68,14 +145,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   blockNamePreset,
   unitCodePreset,
 }) => {
-  const tokenUserId = useMemo(() => {
-    const token = AuthService.getToken();
-    return TokenService.getUserId(token) || "";
-  }, []);
-
   const [formData, setFormData] = useState<CondominiumUnitResidentRequest>({
     condominiumUnitId: unitIdPreset || "",
-    userId: tokenUserId,
+    userId: "",
     unitType: "Owner",
     startDate: "",
     endDate: "",
@@ -87,14 +159,13 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeStep, setActiveStep] = useState(0);
-  const [validatingStep, setValidatingStep] = useState(false);
-
-  const buildResidentPayload = (commit: boolean) => ({
-    ...formData,
-    //enviar data final igual data inicial.
-    endDate: formData.startDate,
-    commit,
-  });
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [documentType, setDocumentType] = useState<DocumentType>("CPF");
+  const [documentNumber, setDocumentNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -102,7 +173,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setErrors({});
     setFormData({
       condominiumUnitId: unitIdPreset || "",
-      userId: tokenUserId,
+      userId: "",
       unitType: "Owner",
       startDate: "",
       endDate: "",
@@ -111,9 +182,24 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       canMakeReservations: false,
       hasGatehouseAccess: false,
     });
-  }, [open, unitIdPreset, tokenUserId]);
+    setFirstName("");
+    setLastName("");
+    setDocumentType("CPF");
+    setDocumentNumber("");
+    setEmail("");
+    setPhone("");
+    setPhotoFile(null);
+  }, [open, unitIdPreset]);
 
   if (!open) return null;
+
+  const handleDocumentChange = (value: string) => {
+    if (documentType === "CPF") {
+      setDocumentNumber(formatCpf(value));
+    } else {
+      setDocumentNumber(formatCnpj(value));
+    }
+  };
 
   const getUnitTypeLabel = (value?: string | number) => {
     if (!value) return "-";
@@ -136,120 +222,115 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
   };
 
-  const getLocalStepErrors = (step: number) => {
+  const getPeriodErrors = () => {
     const nextErrors: Record<string, string> = {};
-
-    if (step === 0) {
-      if (!formData.condominiumUnitId) {
-        nextErrors.condominiumUnitId = "CondominiumUnitId e obrigatorio.";
-      }
-      if (!formData.userId) {
-        nextErrors.userId = "UserId e obrigatorio.";
-      }
-      if (!formData.unitType) {
-        nextErrors.unitType = "Tipo da unidade e obrigatorio.";
-      }
+    if (!formData.condominiumUnitId) {
+      nextErrors.condominiumUnitId = "Unidade obrigatoria.";
     }
-
-    if (step === 0 && !formData.startDate) {
+    if (!formData.unitType) {
+      nextErrors.unitType = "Tipo da unidade obrigatorio.";
+    }
+    if (!formData.startDate) {
       nextErrors.startDate = "Inicio e obrigatorio.";
     }
-
     return nextErrors;
   };
 
-  const mapValidationErrors = (
-    validations: ValidationItem[],
-    allowedFields?: Array<keyof CondominiumUnitResidentRequest>,
-  ) => {
+  const getResidentDataErrors = () => {
     const nextErrors: Record<string, string> = {};
 
-    validations.forEach((validation) => {
-      const key = validation.field?.replace(/\s+/g, "").toLowerCase();
-      const field = key ? FIELD_MAP[key] : undefined;
-      if (!field) return;
-      if (allowedFields && !allowedFields.includes(field)) return;
-      nextErrors[field] = validation.message;
-    });
+    if (!firstName.trim()) nextErrors.firstName = "Nome obrigatorio.";
+    if (!lastName.trim()) nextErrors.lastName = "Sobrenome obrigatorio.";
+
+    const cleanDoc = documentNumber.replace(/\D/g, "");
+    if (!cleanDoc) {
+      nextErrors.documentNumber = "Documento obrigatorio.";
+    } else if (documentType === "CPF") {
+      if (cleanDoc.length !== 11) {
+        nextErrors.documentNumber = "CPF invalido.";
+      }
+    } else if (documentType === "CNPJ") {
+      if (!validateCnpj(cleanDoc)) {
+        nextErrors.documentNumber = "CNPJ invalido.";
+      }
+    }
+
+    if (!email.trim()) {
+      nextErrors.email = "Email obrigatorio.";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      nextErrors.email = "Email invalido.";
+    }
+
+    if (!phone.trim()) nextErrors.phone = "Celular obrigatorio.";
 
     return nextErrors;
   };
 
-  const handleNext = async () => {
-    const localErrors = getLocalStepErrors(activeStep);
+  const getStepErrors = (step: number) => {
+    if (step === 0) return getPeriodErrors();
+    if (step === 1) return getResidentDataErrors();
+    return {};
+  };
+
+  const handleNext = () => {
+    const localErrors = getStepErrors(activeStep);
     if (Object.keys(localErrors).length > 0) {
       setErrors(localErrors);
       return;
     }
-
-    setValidatingStep(true);
-    try {
-      const { valid, validations } = await unitResidentService.validateResident({
-        ...buildResidentPayload(false),
-      });
-
-      if (!valid && validations.length > 0) {
-        const stepErrors = mapValidationErrors(validations, STEP_FIELDS[activeStep]);
-        if (Object.keys(stepErrors).length > 0) {
-          setErrors(stepErrors);
-          return;
-        }
-      }
-
-      setActiveStep((prev) => prev + 1);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao validar residente.";
-      onNotify(message, "error");
-    } finally {
-      setValidatingStep(false);
-    }
+    setActiveStep((prev) => prev + 1);
   };
 
   const handleSubmit = async () => {
     const localErrors = {
-      ...getLocalStepErrors(0),
+      ...getPeriodErrors(),
+      ...getResidentDataErrors(),
     };
 
     if (Object.keys(localErrors).length > 0) {
       setErrors(localErrors);
-      setActiveStep(0);
+      setActiveStep(localErrors.firstName ? 1 : 0);
       return;
     }
 
     setLoading(true);
     try {
-      const validationResult = await unitResidentService.validateResident({
-        ...buildResidentPayload(false),
+      const account = await AccountService.createAccount({
+        name: firstName.trim(),
+        surname: lastName.trim(),
+        docType: documentType,
+        doc: documentNumber.replace(/\D/g, ""),
+        email: email.trim(),
+        phone: normalizePhoneToE164(phone),
       });
 
-      if (!validationResult.valid && validationResult.validations.length > 0) {
-        const allStepErrors = mapValidationErrors(validationResult.validations);
-        if (Object.keys(allStepErrors).length > 0) {
-          setErrors(allStepErrors);
-
-          let targetStep = 0;
-          (Object.keys(allStepErrors) as Array<keyof CondominiumUnitResidentRequest>).forEach(
-            (field) => {
-              const stepIndex = STEP_FIELDS.findIndex((fields) => fields.includes(field));
-              if (stepIndex >= 0) {
-                targetStep = Math.max(targetStep, stepIndex);
-              }
-            },
-          );
-
-          setActiveStep(targetStep);
-          return;
-        }
+      if (!account) {
+        throw new Error("Nao foi possivel criar a conta do morador.");
       }
 
       await unitResidentService.createResident({
-        ...buildResidentPayload(true),
+        condominiumUnitId: formData.condominiumUnitId,
+        userId: account,
+        unitType: formData.unitType,
+        startDate: formData.startDate,
+        endDate: formData.startDate,
+        billingContact: formData.billingContact,
+        canVote: formData.canVote,
+        canMakeReservations: formData.canMakeReservations,
+        hasGatehouseAccess: formData.hasGatehouseAccess,
+        commit: true,
       });
 
+      if (photoFile) {
+        await fileToDataUrl(photoFile);
+      }
+
       await onSaved();
+      onNotify("Morador criado com sucesso!", "success");
+
       setFormData({
         condominiumUnitId: unitIdPreset || "",
-        userId: tokenUserId,
+        userId: "",
         unitType: "Owner",
         startDate: "",
         endDate: "",
@@ -258,12 +339,26 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         canMakeReservations: false,
         hasGatehouseAccess: false,
       });
+      setFirstName("");
+      setLastName("");
+      setDocumentNumber("");
+      setEmail("");
+      setPhone("");
+      setPhotoFile(null);
       setErrors({});
       setActiveStep(0);
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao criar residente.";
-      onNotify(message, "error");
+      if (error instanceof AxiosError && error.response?.status === 422) {
+        setErrors({
+          documentNumber: "Documento ou e-mail já cadastrado.",
+          email: "Documento ou e-mail já cadastrado.",
+        });
+        setActiveStep(1);
+      } else {
+        const message = error instanceof Error ? error.message : "Erro ao criar morador.";
+        onNotify(message, "error");
+      }
     } finally {
       setLoading(false);
     }
@@ -307,35 +402,124 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               helperText={errors.unitType}
               fullWidth
               size="small"
-              sx={{
-                "& .MuiSelect-select": {
-                  fontSize: "14px",
-                  py: "10px",
-                },
-              }}
             >
               <MenuItem value="Owner">Proprietario</MenuItem>
               <MenuItem value="Tenant">Inquilino</MenuItem>
             </TextField>
-            <TextField
-              label="Inicio"
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={formData.startDate || ""}
-              onChange={(e) => handleChange("startDate", e.target.value)}
-              error={Boolean(errors.startDate)}
-              helperText={errors.startDate}
-              fullWidth
-              size="small"
-              sx={{
-                "& input": {
-                  fontSize: "14px",
-                  py: "10px",
-                },
-              }}
-            />
+            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
+              <DatePicker
+                label="Inicio"
+                value={
+                  formData.startDate
+                    ? new Date(`${formData.startDate}T00:00:00`)
+                    : null
+                }
+                minDate={new Date()}
+                onChange={(newValue) =>
+                  handleChange(
+                    "startDate",
+                    newValue ? moment(newValue).format("YYYY-MM-DD") : "",
+                  )
+                }
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: "small",
+                    error: Boolean(errors.startDate),
+                    helperText: errors.startDate || "Selecione a data no calendario",
+                  },
+                }}
+              />
+            </LocalizationProvider>
           </Box>
+        </Box>
+      );
+    }
 
+    if (step === 1) {
+      return (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
+          <Grid container spacing={1.2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label={firstName ? "" : "Nome"}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                error={Boolean(errors.firstName)}
+                helperText={errors.firstName}
+                inputProps={{ maxLength: 80 }}
+                InputLabelProps={{ shrink: false }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label={lastName ? "" : "Sobrenome"}
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                error={Boolean(errors.lastName)}
+                helperText={errors.lastName}
+                inputProps={{ maxLength: 120 }}
+                InputLabelProps={{ shrink: false }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size="small"
+                select
+                label="Tipo de Documento"
+                value={documentType}
+                onChange={(e) => {
+                  setDocumentType(e.target.value as DocumentType);
+                  setDocumentNumber(""); // Limpa o campo de documento ao trocar o tipo
+                }}
+              >
+                <MenuItem value="CPF">CPF</MenuItem>
+                <MenuItem value="CNPJ">CNPJ</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label={documentNumber ? "" : "Documento"}
+                value={documentNumber}
+                onChange={(e) => handleDocumentChange(e.target.value)}
+                error={Boolean(errors.documentNumber)}
+                helperText={errors.documentNumber}
+                inputProps={{ maxLength: 18 }}
+                InputLabelProps={{ shrink: false }}
+              />
+            </Grid>
+          </Grid>
+
+          <TextField
+            fullWidth
+            size="small"
+            label={email ? "" : "Email"}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={Boolean(errors.email)}
+            helperText={errors.email}
+            inputProps={{ maxLength: 254 }}
+            InputLabelProps={{ shrink: false }}
+          />
+
+          <TextField
+            fullWidth
+            size="small"
+            label={phone ? "" : "Celular"}
+            value={phone}
+            onChange={(e) => setPhone(formatPhone(e.target.value))}
+            error={Boolean(errors.phone)}
+            helperText={errors.phone}
+            inputProps={{ maxLength: 15 }}
+            InputLabelProps={{ shrink: false }}
+          />
         </Box>
       );
     }
@@ -377,9 +561,39 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 onChange={(e) => handleChange("hasGatehouseAccess", e.target.checked)}
               />
             }
-            label="Acesso portaria"
+            label="Acesso a portaria"
           />
         </Box>
+
+        <Typography variant="subtitle2">Foto do Morador</Typography>
+        <Box
+          component="label"
+          sx={{
+            border: "1px dashed #c8cfdb",
+            borderRadius: "10px",
+            minHeight: "120px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: 1,
+            cursor: "pointer",
+          }}
+          htmlFor="morador-photo-input"
+        >
+          <input
+            id="morador-photo-input"
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+          />
+          <FileUploadOutlined sx={{ fontSize: 40, color: "#7ba0d1" }} />
+          <Typography sx={{ fontSize: 14 }}>
+            {photoFile ? photoFile.name : "Adicionar foto"}
+          </Typography>
+        </Box>
+
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <Typography variant="subtitle2">
             Tipo: {getUnitTypeLabel(formData.unitType)}
@@ -396,21 +610,21 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     if (activeStep === STEPS.length - 1) {
       return (
         <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : "Criar residente"}
+          {loading ? <CircularProgress size={20} /> : "Concluir"}
         </Button>
       );
     }
 
     return (
-      <Button variant="contained" sx={{marginTop:2}} onClick={handleNext} disabled={validatingStep}>
-        {validatingStep ? <CircularProgress size={20} /> : "Próximo"}
+      <Button variant="contained" sx={{ marginTop: 2 }} onClick={handleNext}>
+        Proximo
       </Button>
     );
   };
 
   return (
     <StepWizardCard
-      title="Criar residente"
+      title="Criar morador"
       subtitle={STEPS[activeStep]}
       steps={STEPS}
       activeStep={activeStep}

@@ -48,7 +48,7 @@ const Organizacoes: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
-  const [listError, setListError] = useState<string | null>(null);
+  const [, setListError] = useState<string | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [searchText, setSearchText] = useState("");
   const [listPage, setListPage] = useState(1);
@@ -183,8 +183,12 @@ const Organizacoes: React.FC = () => {
   const handleSaved = async () => {
     await loadOrganizations();
   };
-
-  const organizationName = organizations[0]?.name || "Organizações";
+  const nameStorage = localStorage.getItem("condominium");
+  const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
+  const orgName =
+    organizations?.find((o) => o.organizationId === dataParse?.organizationId)
+      ?.name || dataParse?.name;
+  const organizationName = orgName || "Organizações";
 
   return (
     <Box className="page-container" sx={{ py: 4 }}>
@@ -224,7 +228,7 @@ const Organizacoes: React.FC = () => {
                   >
                     {organizationName}
                   </Typography>
-                  <BreadcrumbTrail items={["Organização", "Condôminios"]} />
+                  <BreadcrumbTrail items={[orgName,"Organização", "Condôminios"]} />
                 </Box>
               </Box>
               <Tooltip title="Fechar">

@@ -35,10 +35,13 @@ import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BlocoForm from "./BlocoForm";
 import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
+import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 
 const Blocos: React.FC = () => {
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState<"condominios" | "blocos">("condominios");
+  const [activeView, setActiveView] = useState<"condominios" | "blocos">(
+    "condominios",
+  );
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [organizationName, setOrganizationName] = useState("");
   const [listLoading, setListLoading] = useState(false);
@@ -49,17 +52,22 @@ const Blocos: React.FC = () => {
   const pageSize = 4;
 
   const [condominiumIdQuery, setCondominiumIdQuery] = useState("");
-  const [selectedCondominium, setSelectedCondominium] = useState<Condominium | null>(null);
+  const [selectedCondominium, setSelectedCondominium] =
+    useState<Condominium | null>(null);
   const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingBlock, setEditingBlock] = useState<CondominiumBlock | null>(null);
+  const [editingBlock, setEditingBlock] = useState<CondominiumBlock | null>(
+    null,
+  );
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [blockSearchText, setBlockSearchText] = useState("");
-  
+
   // Estado para o modal de exclusão
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [blockToDelete, setBlockToDelete] = useState<CondominiumBlock | null>(null);
-  
+  const [blockToDelete, setBlockToDelete] = useState<CondominiumBlock | null>(
+    null,
+  );
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -92,8 +100,10 @@ const Blocos: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
+       const nameStorage = localStorage.getItem('condominium');
+          const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
-            organizations?.[0]?.name || organizations?.[0]?.legalName;
+            organizations?.find(o => o.organizationId === dataParse?.organizationId)?.name || dataParse?.nameations?.[0]?.legalName;
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore organization name errors
@@ -136,7 +146,7 @@ const Blocos: React.FC = () => {
       const response = await blockService.getBlocks(
         condominiumIdQuery.trim(),
         pageNumber,
-        pageSize
+        pageSize,
       );
       const normalized = response?.items ?? [];
       const computedTotalPages =
@@ -175,7 +185,7 @@ const Blocos: React.FC = () => {
       const response = await blockService.getBlocks(
         condominium.condominiumId,
         1,
-        pageSize
+        pageSize,
       );
       const normalized = response?.items ?? [];
       const computedTotalPages =
@@ -214,20 +224,19 @@ const Blocos: React.FC = () => {
     try {
       setLoading(true);
       await blockService.deleteBlock(blockToDelete.condominiumBlockId);
-      
-      handleNotify(`Bloco "${blockToDelete.name}" excluído com sucesso!`, "success");
-      
-      
+
+      handleNotify(
+        `Bloco "${blockToDelete.name}" excluído com sucesso!`,
+        "success",
+      );
+
       await loadBlocks(listPage);
-      
-      
+
       setDeleteModalOpen(false);
       setBlockToDelete(null);
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : "Erro ao excluir bloco.";
+        error instanceof Error ? error.message : "Erro ao excluir bloco.";
       handleNotify(message, "error");
     } finally {
       setLoading(false);
@@ -270,7 +279,11 @@ const Blocos: React.FC = () => {
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 <Business sx={{ fontSize: 36, color: "#1976d2" }} />
-                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
+                <Typography
+                  variant="h5"
+                  fontWeight="bold"
+                  sx={{ fontSize: "26px" }}
+                >
                   {organizationName}
                 </Typography>
               </Box>
@@ -321,7 +334,13 @@ const Blocos: React.FC = () => {
                       title: condominium.name,
                       subtitle: (
                         <>
-                          <Apartment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
+                          <Apartment
+                            sx={{
+                              fontSize: 16,
+                              mr: 0.5,
+                              verticalAlign: "middle",
+                            }}
+                          />
                           {condominium.city} - {condominium.state}
                         </>
                       ),
@@ -338,11 +357,12 @@ const Blocos: React.FC = () => {
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                     }))}
-                />) : condominiums.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    Nenhum condomínio encontrado para esta organização.
-                  </Typography>
-                ) : (
+                />
+              ) : condominiums.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Nenhum condomínio encontrado para esta organização.
+                </Typography>
+              ) : (
                 <CardList
                   title="Condomínios da organização"
                   showTitle={false}
@@ -372,7 +392,13 @@ const Blocos: React.FC = () => {
                       title: condominium.name,
                       subtitle: (
                         <>
-                          <Apartment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
+                          <Apartment
+                            sx={{
+                              fontSize: 16,
+                              mr: 0.5,
+                              verticalAlign: "middle",
+                            }}
+                          />
                           {condominium.city} - {condominium.state}
                         </>
                       ),
@@ -421,15 +447,24 @@ const Blocos: React.FC = () => {
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                     <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
                     <Box>
-                      <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
+                      <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        sx={{ fontSize: "26px" }}
+                      >
                         Blocos
                       </Typography>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, mt: 0.5 }}>
-                        <ChevronRight sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }} />
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
-                          {selectedCondominium?.name || "Condomínio selecionado"}
-                        </Typography>
-                      </Box>
+                      <BreadcrumbTrail
+                        items={[
+                          localStorage.getItem("condominium")
+                            ? JSON.parse(
+                                localStorage.getItem("condominium") || "{}",
+                              )?.name
+                            : {},
+                          selectedCondominium?.name || "Condominio selecionado",
+                          "Unidades",
+                        ]}
+                      />
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
@@ -491,12 +526,20 @@ const Blocos: React.FC = () => {
                         title: block.name || "Sem nome",
                         subtitle: (
                           <>
-                            <ViewModule sx={{ fontSize: 14, mr: 0.5, verticalAlign: "middle" }} />
-                            Código: {block.code || "-"}
+                            <ViewModule
+                              sx={{
+                                fontSize: 14,
+                                mr: 0.5,
+                                verticalAlign: "middle",
+                              }}
+                            />
+                            {block.code || "-"}
                           </>
                         ),
                         actions: (
-                          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                          <Box
+                            sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}
+                          >
                             <Button
                               size="small"
                               variant="outlined"
@@ -531,7 +574,11 @@ const Blocos: React.FC = () => {
       <DeleteConfirmModal
         open={deleteModalOpen}
         title="Deseja excluir este bloco?"
-        message={blockToDelete ? `O bloco "${blockToDelete.name}" será removido permanentemente.` : ""}
+        message={
+          blockToDelete
+            ? `O bloco "${blockToDelete.name}" será removido permanentemente.`
+            : ""
+        }
         imageAlt="Remover bloco"
         confirmLabel="Excluir"
         cancelLabel="Cancelar"

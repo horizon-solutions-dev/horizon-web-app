@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import React, { useEffect, useState } from "react";
 import "./Bloco.scss";
 import {
@@ -126,8 +127,12 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
       setErrors({});
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao salvar bloco.";
-      onNotify(message, "error");
+      if (error instanceof AxiosError && error.response?.status === 422) {
+        setErrors({ code: "Já existe um bloco com este código." });
+      } else {
+        const message = error instanceof Error ? error.message : "Erro ao salvar bloco.";
+        onNotify(message, "error");
+      }
     } finally {
       setLoading(false);
     }

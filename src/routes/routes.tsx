@@ -1,5 +1,6 @@
 import {
 	createBrowserRouter,
+  Navigate,
 } from "react-router-dom";
 import LoginFlow from "../components/Login";
 import MainLayout from "../components/Layout/MainLayout";
@@ -39,7 +40,6 @@ import EncomendasRecebimento from "../components/Encomendas/EncomendasRecebiment
 import EncomendasNotificacao from "../components/Encomendas/EncomendasNotificacao";
 
 import RouteNames from "./routeNames";
-import Moradores from "../components/Moradores/Moradores";
 import Veiculos from "../components/Veiculos/Veiculos";
 import Blocos from "../components/Blocos/Blocos";
 import Unidades from "../components/Unidades/Unidades";
@@ -139,10 +139,6 @@ const router = createBrowserRouter([
 			{
 				path: RouteNames.Condominio,
 				element: <CondominioForm />,
-			},
-			{
-				path: RouteNames.Moradores,
-				element: <Moradores />,
 			},
 			
 			// Cadastros

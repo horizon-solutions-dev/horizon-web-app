@@ -110,7 +110,6 @@ export default function MainLayout() {
   const routeTitles: Record<string, { label: string; parent?: string }> = {
     [RouteNames.Dashboard]: { label: "Dashboard" },
     [RouteNames.Condominio]: { label: "Condominio" },
-    [RouteNames.Moradores]: { label: "Moradores" },
     [RouteNames.Veiculos]: { label: "Veiculos" },
     [RouteNames.FaleConosco]: { label: "Fale Conosco" },
 

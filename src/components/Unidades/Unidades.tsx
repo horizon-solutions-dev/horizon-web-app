@@ -39,7 +39,6 @@ import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import UnidadeForm from "./UnidadeForm";
-import { set } from "date-fns";
 
 const Unidades: React.FC = () => {
   const [activeView, setActiveView] = useState<"condominios" | "unidades">(
@@ -101,8 +100,10 @@ const Unidades: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
+       const nameStorage = localStorage.getItem('condominium');
+          const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
-            organizations?.[0]?.name || organizations?.[0]?.legalName;
+            organizations?.find(o => o.organizationId === dataParse?.organizationId)?.name || dataParse?.name
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore organization name errors
@@ -607,7 +608,7 @@ const Unidades: React.FC = () => {
                                 setListPage(1);
                               }}
                             >
-                              Visualizar
+                              Visualizar Unidades
                             </Button>
                           ),
                           accentColor:

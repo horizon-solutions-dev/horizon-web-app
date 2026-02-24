@@ -110,7 +110,7 @@ export const BoletoCard: React.FC<BoletoCardProps> = ({
           startIcon={<Visibility />}
           onClick={() => onViewer(boleto)}
         >
-          Visualizar
+          Visualizar Boleto
         </Button>
         <Button
           size="small"
