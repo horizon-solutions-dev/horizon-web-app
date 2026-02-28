@@ -9,10 +9,9 @@ import {
   Stepper,
   Step,
   StepLabel,
-  Snackbar,
-  Alert,
   CircularProgress,
 } from '@mui/material';
+import { notify } from '../../shared/utils/toastMessage';
 
 interface ContactForm {
   name: string;
@@ -37,12 +36,6 @@ export default function FaleConosco() {
   const [formData, setFormData] = useState<ContactForm>(initialForm);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error',
-  });
-
   const handleChange = (field: keyof ContactForm, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -86,19 +79,11 @@ export default function FaleConosco() {
     setLoading(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 600));
-      setSnackbar({
-        open: true,
-        message: 'Mensagem enviada com sucesso!',
-        severity: 'success',
-      });
+      notify({ message: 'Mensagem enviada com sucesso!', type: 'success' });
       setFormData(initialForm);
       setActiveStep(0);
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Erro ao enviar mensagem.',
-        severity: 'error',
-      });
+      notify({ message: 'Erro ao enviar mensagem.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -126,6 +111,11 @@ export default function FaleConosco() {
           {activeStep === 0 ? (
             <Box sx={{ display: 'grid', gap: 2 }}>
               <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 label="Nome completo"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
@@ -134,6 +124,11 @@ export default function FaleConosco() {
                 fullWidth
               />
               <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 label="Email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
@@ -142,6 +137,11 @@ export default function FaleConosco() {
                 fullWidth
               />
               <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 label="Telefone"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
@@ -153,6 +153,11 @@ export default function FaleConosco() {
           {activeStep === 1 ? (
             <Box sx={{ display: 'grid', gap: 2 }}>
               <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 label="Assunto"
                 value={formData.subject}
                 onChange={(e) => handleChange('subject', e.target.value)}
@@ -161,6 +166,11 @@ export default function FaleConosco() {
                 fullWidth
               />
               <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 label="Mensagem"
                 value={formData.message}
                 onChange={(e) => handleChange('message', e.target.value)}
@@ -203,19 +213,6 @@ export default function FaleConosco() {
           </Box>
         </Paper>
       </Container>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

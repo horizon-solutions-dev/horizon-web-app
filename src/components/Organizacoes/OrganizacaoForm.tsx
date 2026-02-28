@@ -5,10 +5,8 @@ import {
   Box,
   Button,
   CircularProgress,
-  Grid,
   MenuItem,
   TextField,
-  Typography,
 } from "@mui/material";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import {
@@ -20,7 +18,6 @@ import {
 import { AuthService } from "../../services/authService";
 import { TokenService } from "../../services/tokenService";
 import "./Organizacoes.scss";
-import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
 
 interface OrganizacaoFormProps {
   open: boolean;
@@ -96,7 +93,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   loading,
   setLoading,
 }) => {
-  const steps = ["Informacoes iniciais", "Contato e Endereço"];
+  const steps = ["Informações iniciais", "Contato e Endereço"];
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<OrganizationRequest>(initialForm);
   const [cep, setCep] = useState("");
@@ -419,44 +416,64 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
         {activeStep === 0 ? (
           <>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
+              label="Nome Fantasia"
               placeholder="Nome Fantasia"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
               error={!!errors.name}
               helperText={errors.name}
-              size="small"
               inputProps={{ maxLength: 150 }}
             />
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
+              label="Razao Social"
               placeholder="Razao Social"
               value={formData.legalName}
               onChange={(e) => handleChange("legalName", e.target.value)}
               error={!!errors.legalName}
               helperText={errors.legalName}
-              size="small"
               inputProps={{ maxLength: 200 }}
             />
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
+              label="CNPJ"
               fullWidth
               placeholder="00.000.000/0000-00"
               value={formData.doc}
               onChange={(e) => handleChange("doc", e.target.value)}
               error={!!errors.doc}
               helperText={errors.doc}
-              size="small"
               inputProps={{ maxLength: 18 }}
             />
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               select
+              placeholder="Tipo de Organizacao"
               label="Tipo de Organizacao"
               value={formData.orgType ?? ""}
               onChange={(e) => handleChange("orgType", e.target.value)}
               error={!!errors.orgType}
               helperText={errors.orgType}
-              size="small"
             >
               {typesLoading ? (
                 <MenuItem value="" disabled>
@@ -473,139 +490,124 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
           </>
         ) : (
           <>
-            <Box sx={{ border: "1px solid #e8edf3", borderRadius: 2, p: 2 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>
-                Contato
-              </Typography>
-              <Grid container spacing={1.5}>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                    error={!!errors.email}
-                    helperText={errors.email}
-                    size="small"
-                    inputProps={{ maxLength: 254 }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    placeholder="Telefone"
-                    value={formData.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
-                    error={!!errors.phone}
-                    helperText={errors.phone}
-                    size="small"
-                    inputProps={{ maxLength: 17 }}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
+       
+                <TextField
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: 46,
+                    },
+                  }}
+                  label="Email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  inputProps={{ maxLength: 254 }}
+                />
+                <TextField
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: 46,
+                    },
+                  }}
+                  fullWidth
+                  label="Telefone"
+                  placeholder="Telefone"
+                  value={formData.phone}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                  error={!!errors.phone}
+                  helperText={errors.phone}
+                  inputProps={{ maxLength: 17 }}
+                />
 
-            <Box sx={{ border: "1px solid #e8edf3", borderRadius: 2, p: 2 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>
-                Localização
-              </Typography>
               {statesError ? (
                 <Alert severity="warning" sx={{ mb: 1.5 }}>
                   {statesError}
                 </Alert>
               ) : null}
-              <Grid container spacing={1.5}>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    placeholder="CEP"
-                    value={cep}
-                    onChange={(e) => {
-                      const cepFormatted = formatCEP(e.target.value);
-                      const cepNumbers = cepFormatted.replace(/\D/g, "");
-                      setCep(cepFormatted);
-                      setCepError(null);
-                      setFormData((prev) => ({
-                        ...prev,
-                        zipCode: cepNumbers,
-                        city: cepNumbers.length === 8 ? prev.city : "",
-                        state: cepNumbers.length === 8 ? prev.state : "",
-                      }));
-                      if (cepNumbers.length < 8) {
-                        setLocationFieldsDisabled({ city: true, state: true });
-                        return;
-                      }
-                      handleCepLookup(cepFormatted);
-                    }}
-                    onBlur={(e) => handleCepLookup(e.target.value)}
-                    size="small"
-                    InputProps={{
-                      endAdornment: cepLoading ? (
-                        <CircularProgress size={16} />
-                      ) : null,
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: 1,
-                      alignItems: "center",
-                      width: "100%",
-                    }}
-                  >
-                    <TextField
-                      disabled={locationFieldsDisabled.city}
-                      fullWidth
-                      sx={desabilitarCampos}
-                      placeholder="Cidade"
-                      value={formData.city}
-                      onChange={(e) => handleChange("city", e.target.value)}
-                      error={!!errors.city}
-                      helperText={errors.city}
-                      size="small"
-                      inputProps={{ maxLength: 100 }}
-                    />
-                    <Box
-                      sx={{
-                        width: "125px",
-                      }}
-                    >
-                      <TextField
-                        sx={desabilitarCampos}
-                        fullWidth
-                        select
-                        disabled={locationFieldsDisabled.state}
-                        label="UF"
-                        value={formData.state}
-                        onChange={(e) => handleChange("state", e.target.value)}
-                        error={!!errors.state}
-                        helperText={errors.state}
-                        size="small"
-                      >
-                        <MenuItem value="" disabled>
-                          {statesLoading
-                            ? "Carregando..."
-                            : "Selecione o estado"}
-                        </MenuItem>
-                        {states.map((state) => (
-                          <MenuItem key={state.sigla} value={state.sigla}>
-                            {state.sigla}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} md={6}></Grid>
-              </Grid>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                <TextField
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: 46,
+                    },
+                  }}
+                  fullWidth
+                  label="CEP"
+                  placeholder="CEP"
+                  value={cep}
+                  onChange={(e) => {
+                    const cepFormatted = formatCEP(e.target.value);
+                    const cepNumbers = cepFormatted.replace(/\D/g, "");
+                    setCep(cepFormatted);
+                    setCepError(null);
+                    setFormData((prev) => ({
+                      ...prev,
+                      zipCode: cepNumbers,
+                      city: cepNumbers.length === 8 ? prev.city : "",
+                      state: cepNumbers.length === 8 ? prev.state : "",
+                    }));
+                    if (cepNumbers.length < 8) {
+                      setLocationFieldsDisabled({ city: true, state: true });
+                      return;
+                    }
+                    handleCepLookup(cepFormatted);
+                  }}
+                  onBlur={(e) => handleCepLookup(e.target.value)}
+                  InputProps={{
+                    endAdornment: cepLoading ? (
+                      <CircularProgress size={16} />
+                    ) : null,
+                  }}
+                />
+                <TextField
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: 46,
+                    },
+                  }}
+                  label="Cidade"
+                  disabled={locationFieldsDisabled.city}
+                  fullWidth
+                  placeholder="Cidade"
+                  value={formData.city}
+                  onChange={(e) => handleChange("city", e.target.value)}
+                  error={!!errors.city}
+                  helperText={errors.city}
+                  inputProps={{ maxLength: 100 }}
+                />
+                <TextField
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: 46,
+                    },
+                  }}
+                  fullWidth
+                  select
+                  placeholder="UF"
+                  disabled={locationFieldsDisabled.state}
+                  label="UF"
+                  value={formData.state}
+                  onChange={(e) => handleChange("state", e.target.value)}
+                  error={!!errors.state}
+                  helperText={errors.state}
+                >
+                  <MenuItem value="" disabled>
+                    {statesLoading ? "Carregando..." : "Selecione o estado"}
+                  </MenuItem>
+                  {states.map((state) => (
+                    <MenuItem key={state.sigla} value={state.sigla}>
+                      {state.sigla}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
               {cepError ? (
                 <Alert severity="warning" sx={{ mt: 1.5 }}>
                   {cepError}
                 </Alert>
               ) : null}
-            </Box>
           </>
         )}
       </Box>
@@ -616,7 +618,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
           justifyContent: "center",
           mt: 2,
           pt: 2,
-          borderTop: "2px solid #f0f2f5",
         }}
       >
         {activeStep === 0 ? (
@@ -630,10 +631,9 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
           </Button>
         ) : (
           <Button
-            sx={{ textTransform: "none" }}
+            sx={{ textTransform: "none", backgroundColor: loading ? "#ddd" : '#1976d2' }}
             variant="contained"
-            onClick={handleSubmit}
-            disabled={loading}
+            onClick={loading ? ()=>{} : handleSubmit}
           >
             {loading ? (
               <CircularProgress size={20} />

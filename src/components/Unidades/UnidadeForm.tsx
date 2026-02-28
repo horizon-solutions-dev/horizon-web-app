@@ -15,6 +15,7 @@ import {
   type UnitTypeEnum,
 } from "../../services/unitService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
+import { notify } from "../../shared/utils/toastMessage";
 
 interface UnidadeFormProps {
   open: boolean;
@@ -154,6 +155,35 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     return !hasIdErrors && Object.keys(nextErrors).length === 0;
   };
 
+  const fieldMap: Record<string, keyof CondominiumUnitRequest> = {
+    condominiumid: "condominiumId",
+    condominiumblockid: "condominiumBlockId",
+    unitcode: "unitCode",
+    unittype: "unitType",
+    allocationtype: "allocationType",
+    commit: "commit",
+  };
+
+  const applyBackendValidationErrors = (
+    validations: Array<{ field: string; message: string }>,
+  ) => {
+    const nextErrors: FormErrors = {};
+    validations.forEach((validation) => {
+      const key = validation.field?.replace(/\s+/g, "").toLowerCase();
+      const field = key ? fieldMap[key] : undefined;
+      if (!field) return;
+      if (field === "unitCode") nextErrors.unitCode = validation.message;
+      if (field === "unitType") nextErrors.unitType = validation.message;
+      if (field === "allocationType") nextErrors.allocationType = validation.message;
+    });
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return true;
+    }
+    return false;
+  };
+
   const handleSubmit = async () => {
     if (!validate()) {
       ////onNotify("Preencha os campos obrigatórios.", "error");
@@ -162,11 +192,35 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
 
     setLoading(true);
     try {
+      const payload: CondominiumUnitRequest = {
+        ...formData,
+        commit: true,
+      };
+
+      const { valid, validations } = await unitService.validateUnit({
+        ...payload,
+        commit: false,
+      });
+
+      if (!valid && validations.length > 0) {
+        if (applyBackendValidationErrors(validations)) {
+          return;
+        }
+      }
+
       if (editingId) {
-        await unitService.updateUnit(editingId, formData);
+        await unitService.updateUnit(editingId, payload);
         //onNotify("Unidade atualizada com sucesso.", "success");
+        notify({
+          message: "Unidade atualizada com sucesso.",
+          type: "success",
+        })
       } else {
-        await unitService.createUnit(formData);
+        await unitService.createUnit(payload);
+        notify({
+          message: "Unidade criada com sucesso.",
+          type: "success",
+        })
         //onNotify("Unidade criada com sucesso.", "success");
       }
 
@@ -239,11 +293,28 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     >
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <TextField
+          sx={{
+                      "& .MuiOutlinedInput-root": {
+                        height: 46,
+                      },
+            "& .MuiOutlinedInput-root.Mui-disabled:hover fieldset": {
+              borderColor: "#e0e0e0 !important",
+            },
+            "& .MuiOutlinedInput-root.Mui-disabled fieldset": {
+              borderColor: "#e0e0e0 !important",
+            },
+          }}
           label="Condomínio"
           value={resolvedCondominiumName}
           fullWidth
           disabled
+        />
+        <TextField
           sx={{
+            "& .MuiOutlinedInput-root": {
+              height: 46,
+              display: "flex",
+            },
             "& .MuiOutlinedInput-root.Mui-disabled:hover fieldset": {
               borderColor: "#e0e0e0 !important",
             },
@@ -251,30 +322,19 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
               borderColor: "#e0e0e0 !important",
             },
           }}
-        />
-        <TextField
           label="Bloco"
           value={resolvedBlockName}
           fullWidth
           disabled
-          sx={{
-            "& .MuiOutlinedInput-root.Mui-disabled:hover fieldset": {
-              borderColor: "#e0e0e0 !important",
-            },
-            "& .MuiOutlinedInput-root.Mui-disabled fieldset": {
-              borderColor: "#e0e0e0 !important",
-            },
-          }}
         />
 
         <TextField
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            height: 46,
-            display: "flex",
-            
-          },
-        }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              height: 46,
+              display: "flex",
+            },
+          }}
           fullWidth
           label="Unidade"
           value={formData.unitCode}
@@ -282,9 +342,14 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           error={Boolean(errors.unitCode)}
           helperText={errors.unitCode}
           placeholder="Ex: A101"
-          size="small"
         />
         <TextField
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              height: 46,
+              display: "flex",
+            },
+          }}
           label="Tipo da Unidade"
           select
           value={formData.unitType || ""}
@@ -296,6 +361,12 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           {renderUnitTypeOptions()}
         </TextField>
         <TextField
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              height: 46,
+              display: "flex",
+            },
+          }}
           label="Tipo de Alocação"
           select
           value={formData.allocationType || ""}

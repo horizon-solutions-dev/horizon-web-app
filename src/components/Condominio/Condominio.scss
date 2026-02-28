@@ -30,8 +30,6 @@
   // ============================================
   .MuiContainer-root > .MuiPaper-root > .MuiBox-root:first-child {
     display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
     margin-bottom: 16px !important;
     padding-bottom: 12px !important;
     border-bottom: 2px solid #f0f0f0 !important;
@@ -176,7 +174,6 @@
         padding: 0 16px !important;
         border: 2px solid #1976d2 !important;
         box-shadow: 0 2px 6px rgba(25, 118, 210, 0.15) !important;
-        flex-shrink: 0 !important;
         transition: all 0.2s ease !important;
 
         &:hover {
@@ -252,7 +249,6 @@
       }
 
       & > div:first-child {
-        flex-shrink: 0 !important;
         width: 70px !important;
         height: 70px !important;
         border-radius: 10px !important;
@@ -327,7 +323,6 @@
       & > div:last-child {
         display: flex !important;
         gap: 8px !important;
-        flex-shrink: 0 !important;
 
         @media (max-width: 768px) {
           width: 100% !important;
@@ -587,19 +582,14 @@
       &.MuiInputLabel-sizeSmall {
         transform: translate(14px, 11px) scale(1) !important;
 
-        &.MuiInputLabel-shrink {
-          transform: translate(14px, -6px) scale(0.75) !important;
-        }
+
       }
 
-      &.MuiInputLabel-shrink {
-        background: white !important;
-        padding: 0 6px !important;
-      }
+
 
       &.Mui-focused {
         font-weight: 600 !important;
-        color: #1976d2 !important;
+   //     color: #1976d2 !important;
       }
 
       &.Mui-error {

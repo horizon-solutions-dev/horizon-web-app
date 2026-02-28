@@ -7,8 +7,6 @@ import {
   Button,
   TextField,
   MenuItem,
-  Alert,
-  Snackbar,
 } from "@mui/material";
 import {
   Add,
@@ -22,6 +20,7 @@ import BoletoForm from "./BoletoForm";
 import BoletoViewer from "./BoletoViewer";
 import CardList from "../../shared/components/CardList";
 import "./Boletos.scss";
+import { notify } from "../../shared/utils/toastMessage";
 
 interface Boleto {
   id: number;
@@ -84,12 +83,6 @@ const Boletos: React.FC = () => {
   const [openViewer, setOpenViewer] = useState(false);
   const [selectedBoleto, setSelectedBoleto] = useState<Boleto | null>(null);
   const [page, setPage] = useState(1);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
-
   const handleOpenForm = (boleto?: Boleto) => {
     setSelectedBoleto(boleto || null);
     setOpenForm(true);
@@ -117,19 +110,11 @@ const Boletos: React.FC = () => {
           b.id === selectedBoleto.id ? { ...boleto, id: selectedBoleto.id } : b,
         ),
       );
-      setSnackbar({
-        open: true,
-        message: "Boleto atualizado com sucesso!",
-        severity: "success",
-      });
+      notify({ message: "Boleto atualizado com sucesso!", type: "success" });
     } else {
       const newId = Math.max(...boletos.map((b) => b.id), 0) + 1;
       setBoletos([...boletos, { ...boleto, id: newId }]);
-      setSnackbar({
-        open: true,
-        message: "Boleto criado com sucesso!",
-        severity: "success",
-      });
+      notify({ message: "Boleto criado com sucesso!", type: "success" });
     }
     handleCloseForm();
   };
@@ -137,11 +122,7 @@ const Boletos: React.FC = () => {
   const handleDeleteBoleto = (boleto: Boleto) => {
     if (window.confirm(`Deseja realmente excluir o boleto ${boleto.numero}?`)) {
       setBoletos(boletos.filter((b) => b.id !== boleto.id));
-      setSnackbar({
-        open: true,
-        message: "Boleto excluido com sucesso!",
-        severity: "success",
-      });
+      notify({ message: "Boleto excluido com sucesso!", type: "success" });
     }
   };
 
@@ -151,9 +132,9 @@ const Boletos: React.FC = () => {
       link.href = boleto.imagem;
       link.download = `boleto_${boleto.numero}.png`;
       link.click();
-      setSnackbar({ open: true, message: "Download iniciado!", severity: "success" });
+      notify({ message: "Download iniciado!", type: "success" });
     } else {
-      setSnackbar({ open: true, message: "Este boleto nao possui imagem!", severity: "error" });
+      notify({ message: "Este boleto nao possui imagem!", type: "error" });
     }
   };
 
@@ -192,8 +173,12 @@ const Boletos: React.FC = () => {
             <Box className="toolbar">
               <Box className="toolbar-actions">
                 <TextField
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: 46,
+                    },
+                  }}
                   select
-                  size="small"
                   value={filterStatus}
                   onChange={(e) => {
                     setFilterStatus(e.target.value);
@@ -317,16 +302,6 @@ const Boletos: React.FC = () => {
         boleto={selectedBoleto}
         onDownload={handleDownload}
       />
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

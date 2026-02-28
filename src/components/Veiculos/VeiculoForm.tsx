@@ -103,6 +103,11 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Morador Responsável"
               value={formData.moradorNome}
@@ -115,6 +120,11 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Placa"
               value={formData.placa}
@@ -127,6 +137,11 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Marca"
               value={formData.marca}
@@ -138,6 +153,11 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Modelo"
               value={formData.modelo}
@@ -149,6 +169,11 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Cor"
               value={formData.cor}
@@ -160,6 +185,11 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Ano"
               type="number"

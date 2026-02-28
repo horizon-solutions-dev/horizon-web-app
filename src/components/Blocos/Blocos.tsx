@@ -7,8 +7,6 @@ import {
   Paper,
   Typography,
   Button,
-  Snackbar,
-  Alert,
   CircularProgress,
   IconButton,
   Tooltip,
@@ -21,7 +19,6 @@ import {
   ViewModule,
   Apartment,
   SettingsOutlined,
-  ChevronRight,
 } from "@mui/icons-material";
 import {
   blockService,
@@ -35,6 +32,7 @@ import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BlocoForm from "./BlocoForm";
 import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
+import { notify } from "../../shared/utils/toastMessage";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 
 const Blocos: React.FC = () => {
@@ -47,8 +45,10 @@ const Blocos: React.FC = () => {
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [listPage, setListPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [condominiumsPage, setCondominiumsPage] = useState(1);
+  const [condominiumsTotalPages, setCondominiumsTotalPages] = useState(1);
+  const [blocksPage, setBlocksPage] = useState(1);
+  const [blocksTotalPages, setBlocksTotalPages] = useState(1);
   const pageSize = 4;
 
   const [condominiumIdQuery, setCondominiumIdQuery] = useState("");
@@ -68,17 +68,11 @@ const Blocos: React.FC = () => {
     null,
   );
 
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "info" | "warning",
-  });
-
   const handleNotify = (
     message: string,
     severity: "success" | "error" | "info" | "warning" = "success",
   ) => {
-    setSnackbar({ open: true, message, severity });
+    notify({ message, type: severity });
   };
 
   const loadCondominiums = async (pageNumber = 1) => {
@@ -100,10 +94,12 @@ const Blocos: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
-       const nameStorage = localStorage.getItem('condominium');
+          const nameStorage = localStorage.getItem("condominium");
           const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
-            organizations?.find(o => o.organizationId === dataParse?.organizationId)?.name || dataParse?.nameations?.[0]?.legalName;
+            organizations?.find(
+              (o) => o.organizationId === dataParse?.organizationId,
+            )?.name || dataParse?.nameations?.[0]?.legalName;
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore organization name errors
@@ -116,8 +112,8 @@ const Blocos: React.FC = () => {
           1,
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
-      setListPage(response?.paging?.pageNumber ?? pageNumber);
-      setTotalPages(computedTotalPages);
+      setCondominiumsPage(response?.paging?.pageNumber ?? pageNumber);
+      setCondominiumsTotalPages(computedTotalPages);
       setCondominiums(normalized);
     } catch (error) {
       const message =
@@ -156,14 +152,16 @@ const Blocos: React.FC = () => {
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
 
-      setListPage(response?.paging.pageNumber ?? pageNumber);
-      setTotalPages(computedTotalPages);
+      setBlocksPage(response?.paging.pageNumber ?? pageNumber);
+      setBlocksTotalPages(computedTotalPages);
       setBlocks(normalized);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar blocos.";
       setListError(message);
       setBlocks([]);
+      setBlocksPage(1);
+      setBlocksTotalPages(1);
     } finally {
       setListLoading(false);
     }
@@ -176,6 +174,8 @@ const Blocos: React.FC = () => {
     setEditingBlock(null);
     setIsCadastroOpen(false);
     setBlockSearchText("");
+    setBlocksPage(1);
+    setBlocksTotalPages(1);
     setActiveView("blocos");
 
     // Carregar blocos automaticamente
@@ -195,8 +195,8 @@ const Blocos: React.FC = () => {
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
 
-      setListPage(1);
-      setTotalPages(computedTotalPages);
+      setBlocksPage(1);
+      setBlocksTotalPages(computedTotalPages);
       setBlocks(normalized);
     } catch (error) {
       const message =
@@ -230,7 +230,7 @@ const Blocos: React.FC = () => {
         "success",
       );
 
-      await loadBlocks(listPage);
+      await loadBlocks(blocksPage);
 
       setDeleteModalOpen(false);
       setBlockToDelete(null);
@@ -259,7 +259,7 @@ const Blocos: React.FC = () => {
   };
 
   const handleSaved = async () => {
-    await loadBlocks(listPage);
+    await loadBlocks(blocksPage);
   };
 
   return (
@@ -273,29 +273,47 @@ const Blocos: React.FC = () => {
                 pb: 1.5,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                flexDirection: "column",
                 borderBottom: "2px solid #f0f0f0",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
-                <Typography
-                  variant="h5"
-                  fontWeight="bold"
-                  sx={{ fontSize: "26px" }}
-                >
-                  {organizationName}
-                </Typography>
+              <Container
+                sx={{
+                  p:'0 !important',
+                  maxWidth: "100vw !important",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    {organizationName}
+                  </Typography>
+                </Box>
+                <Tooltip title="Fechar">
+                  <IconButton
+                    onClick={() => navigate("/dashboard")}
+                    className="close-button"
+                    aria-label="Fechar"
+                  >
+                    <Close sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
+              </Container>
+              <Box >
+                <BreadcrumbTrail
+                  items={[
+                    "Organização",
+                    "Condomínios",
+                  ]}
+                />
               </Box>
-              <Tooltip title="Fechar">
-                <IconButton
-                  onClick={() => navigate("/dashboard")}
-                  className="close-button"
-                  aria-label="Fechar"
-                >
-                  <Close sx={{ fontSize: 20 }} />
-                </IconButton>
-              </Tooltip>
             </Box>
 
             <Paper variant="outlined" sx={{ p: 2 }}>
@@ -315,10 +333,10 @@ const Blocos: React.FC = () => {
                   emptyImageLabel="Sem imagem"
                   showFilters={false}
                   showPagination={true}
-                  page={listPage}
-                  totalPages={totalPages}
+                  page={condominiumsPage}
+                  totalPages={condominiumsTotalPages}
                   onPageChange={(page) => {
-                    setListPage(page);
+                    setCondominiumsPage(page);
                     loadCondominiums(page);
                   }}
                   items={condominiums
@@ -352,7 +370,7 @@ const Blocos: React.FC = () => {
                           startIcon={<SettingsOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Gerenciar Blocos
+                          Visualizar Blocos
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -373,10 +391,10 @@ const Blocos: React.FC = () => {
                   emptyImageLabel="Sem imagem"
                   showFilters={false}
                   showPagination={true}
-                  page={listPage}
-                  totalPages={totalPages}
+                  page={condominiumsPage}
+                  totalPages={condominiumsTotalPages}
                   onPageChange={(page) => {
-                    setListPage(page);
+                    setCondominiumsPage(page);
                     loadCondominiums(page);
                   }}
                   items={condominiums
@@ -410,7 +428,7 @@ const Blocos: React.FC = () => {
                           startIcon={<SettingsOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Gerenciar Blocos
+                          Visualizar Blocos
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -462,7 +480,7 @@ const Blocos: React.FC = () => {
                               )?.name
                             : {},
                           selectedCondominium?.name || "Condominio selecionado",
-                          "Unidades",
+                          "Blocos",
                         ]}
                       />
                     </Box>
@@ -478,6 +496,9 @@ const Blocos: React.FC = () => {
                           setIsCadastroOpen(false);
                           setBlockSearchText("");
                           setListError(null);
+                          setBlocksPage(1);
+                          setBlocksTotalPages(1);
+                          void loadCondominiums(condominiumsPage);
                         }}
                         className="close-button"
                         aria-label="Voltar"
@@ -507,10 +528,10 @@ const Blocos: React.FC = () => {
                     addButtonPlacement="toolbar"
                     emptyImageLabel="Sem imagem"
                     showPagination={true}
-                    page={listPage}
-                    totalPages={totalPages}
+                    page={blocksPage}
+                    totalPages={blocksTotalPages}
                     onPageChange={(page) => {
-                      setListPage(page);
+                      setBlocksPage(page);
                       loadBlocks(page);
                     }}
                     items={(Array.isArray(blocks) ? blocks : [])
@@ -586,20 +607,6 @@ const Blocos: React.FC = () => {
         onCancel={handleCancelDelete}
         onClose={handleCancelDelete}
       />
-
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

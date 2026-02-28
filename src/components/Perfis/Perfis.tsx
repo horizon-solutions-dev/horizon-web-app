@@ -5,23 +5,17 @@ import {
   CircularProgress,
   Container,
   Paper,
-  Snackbar,
   Typography,
 } from "@mui/material";
 import CardList from "../../shared/components/CardList";
 import { profileService, type Profile } from "../../services/profileService";
+import { notify } from "../../shared/utils/toastMessage";
 
 const Perfis: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
-
   const loadProfiles = async () => {
     setLoading(true);
     setError(null);
@@ -32,7 +26,7 @@ const Perfis: React.FC = () => {
       const message =
         err instanceof Error ? err.message : "Erro ao carregar perfis.";
       setError(message);
-      setSnackbar({ open: true, message, severity: "error" });
+      notify({ message, type: "error" });
     } finally {
       setLoading(false);
     }
@@ -101,18 +95,6 @@ const Perfis: React.FC = () => {
         </Paper>
       </Container>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

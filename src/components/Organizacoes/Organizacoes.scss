@@ -82,19 +82,12 @@
       &.MuiInputLabel-sizeSmall {
         transform: translate(14px, 11px) scale(1) !important;
 
-        &.MuiInputLabel-shrink {
-          transform: translate(14px, -6px) scale(0.75) !important;
-        }
+  
       }
 
-      &.MuiInputLabel-shrink {
-        background: white !important;
-        padding: 0 6px !important;
-      }
 
       &.Mui-focused {
         font-weight: 600 !important;
-        color: #1976d2 !important;
       }
 
       &.Mui-error {

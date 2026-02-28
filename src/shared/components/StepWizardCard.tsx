@@ -18,6 +18,7 @@ interface StepWizardCardProps {
   backLabel?: string;
   onClose?: () => void;
   showLogo?: boolean;
+  width?: string;
 }
 
 export default function StepWizardCard({
@@ -33,10 +34,11 @@ export default function StepWizardCard({
   backLabel = "Voltar",
   onClose,
   showLogo = true,
+  width = '650px'
 }: StepWizardCardProps) {
   return (
     <div className="step-wizard">
-      <div className="step-wizard-card">
+      <Box className="step-wizard-card" sx={{width}}>
         {showBack && onBack ? (
           <button className="step-wizard-back" type="button" onClick={onBack}>
             <IoChevronBack />
@@ -85,7 +87,7 @@ export default function StepWizardCard({
             </div>
           ))}
         </div>
-      </div>
+      </Box>
     </div>
   );
 }

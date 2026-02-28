@@ -127,10 +127,8 @@ export default function CardList({
             ),
           }}
           sx={{
-            flex: 1,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              backgroundColor: '#fff',
+            "& .MuiOutlinedInput-root": {
+              height: 46,
             },
           }}
         />
@@ -142,7 +140,6 @@ export default function CardList({
               border: '2px solid #e0e0e0',
               borderRadius: 2,
               color: '#666',
-              flexShrink: 0,
               transition: 'all 0.3s ease',
               '&:hover': {
                 borderColor: '#1976d2',
@@ -163,7 +160,6 @@ export default function CardList({
               border: '2px solid #e0e0e0',
               borderRadius: 2,
               color: '#666',
-              flexShrink: 0,
               transition: 'all 0.3s ease',
               '&:hover': {
                 borderColor: '#d32f2f',
@@ -238,7 +234,6 @@ export default function CardList({
                     alignItems: 'center',
                     justifyContent: 'center',
                     overflow: 'hidden',
-                    flexShrink: 0,
                   }}
                 >
                   {item.imageUrl ? (

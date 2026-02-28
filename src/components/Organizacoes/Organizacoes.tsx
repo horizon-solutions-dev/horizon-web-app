@@ -1,13 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   Box,
   Button,
   CircularProgress,
   Container,
   IconButton,
   Paper,
-  Snackbar,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -27,6 +25,7 @@ import {
 } from "../../services/organizationService";
 import OrganizacaoForm from "./OrganizacaoForm";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
+import { notify } from "../../shared/utils/toastMessage";
 
 const pageSize = 4;
 
@@ -60,17 +59,11 @@ const Organizacoes: React.FC = () => {
   >([]);
   const [typesLoading, setTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "info" | "warning",
-  });
-
   const handleNotify = (
     message: string,
     severity: "success" | "error" | "info" | "warning" = "success",
   ) => {
-    setSnackbar({ open: true, message, severity });
+    notify({ message, type: severity });
   };
 
   const loadOrganizations = async () => {
@@ -228,7 +221,7 @@ const Organizacoes: React.FC = () => {
                   >
                     {organizationName}
                   </Typography>
-                  <BreadcrumbTrail items={[orgName,"Organização", "Condôminios"]} />
+                  <BreadcrumbTrail items={["Organização", "Condôminios"]} />
                 </Box>
               </Box>
               <Tooltip title="Fechar">
@@ -308,19 +301,6 @@ const Organizacoes: React.FC = () => {
           </Paper>
         )}
       </Container>
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

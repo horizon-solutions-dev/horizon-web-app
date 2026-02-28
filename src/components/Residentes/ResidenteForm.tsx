@@ -22,6 +22,9 @@ import moment from "moment";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { ptBR } from "date-fns/locale";
+import { AuthService } from "../../services/authService";
+import { TokenService } from "../../services/tokenService";
+import { notify } from "../../shared/utils/toastMessage";
 
 interface ResidenteFormProps {
   open: boolean;
@@ -39,7 +42,7 @@ interface ResidenteFormProps {
   unitCodePreset?: string;
 }
 
-const STEPS = ["Periodo", "Dados do Morador", "Permissoes e Foto"];
+const STEPS = ["Período", "Dados do Morador", "Permissões e Foto"];
 
 type DocumentType = "CPF" | "CNPJ";
 
@@ -272,12 +275,101 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     return {};
   };
 
-  const handleNext = () => {
+  const residentFieldMap: Record<string, keyof CondominiumUnitResidentRequest> = {
+    condominiumunitid: "condominiumUnitId",
+    userid: "userId",
+    unittype: "unitType",
+    startdate: "startDate",
+    enddate: "endDate",
+    billingcontact: "billingContact",
+    canvote: "canVote",
+    canmakereservations: "canMakeReservations",
+    hasgatehouseaccess: "hasGatehouseAccess",
+    commit: "commit",
+  };
+
+  const residentStepFields: Array<Array<keyof CondominiumUnitResidentRequest>> = [
+    ["condominiumUnitId", "unitType", "startDate", "endDate"],
+    [],
+    ["billingContact", "canVote", "canMakeReservations", "hasGatehouseAccess"],
+  ];
+
+          const token = AuthService.getToken();
+          const userId = TokenService.getUserId(token);
+
+  const buildResidentValidationPayload = (): CondominiumUnitResidentRequest => ({
+    condominiumUnitId: formData.condominiumUnitId,
+    userId: userId!,
+    unitType: formData.unitType,
+    startDate: formData.startDate,
+    endDate: formData.endDate || formData.startDate,
+    billingContact: formData.billingContact,
+    canVote: formData.canVote,
+    canMakeReservations: formData.canMakeReservations,
+    hasGatehouseAccess: formData.hasGatehouseAccess,
+    commit: false,
+  });
+
+  const mapBackendValidationErrors = (
+    validations: Array<{ field: string; message: string }>,
+    onlyStep?: number,
+  ) => {
+    const nextErrors: Record<string, string> = {};
+    let targetStep = 0;
+
+    validations.forEach((validation) => {
+      const key = validation.field?.replace(/\s+/g, "").toLowerCase();
+      const field = key ? residentFieldMap[key] : undefined;
+      if (!field) return;
+
+      const stepIndex = residentStepFields.findIndex((fields) =>
+        fields.includes(field),
+      );
+
+      if (typeof onlyStep === "number") {
+        if (stepIndex !== onlyStep) return;
+        nextErrors[field] = validation.message;
+        targetStep = onlyStep;
+        return;
+      }
+
+      nextErrors[field] = validation.message;
+      if (stepIndex >= 0) {
+        targetStep = Math.max(targetStep, stepIndex);
+      }
+    });
+
+    return { nextErrors, targetStep };
+  };
+
+  const handleNext = async () => {
     const localErrors = getStepErrors(activeStep);
     if (Object.keys(localErrors).length > 0) {
       setErrors(localErrors);
       return;
     }
+
+    try {
+      setLoading(true);
+      const { valid, validations } =
+        await unitResidentService.validateResident(buildResidentValidationPayload());
+
+      if (!valid && validations.length > 0) {
+        const { nextErrors } = mapBackendValidationErrors(validations, activeStep);
+        if (Object.keys(nextErrors).length > 0) {
+          setErrors(nextErrors);
+          return;
+        }
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao validar morador.";
+      onNotify(message, "error");
+      return;
+    } finally {
+      setLoading(false);
+    }
+
     setActiveStep((prev) => prev + 1);
   };
 
@@ -293,8 +385,20 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       return;
     }
 
-    setLoading(true);
     try {
+      setLoading(true);
+      const { valid, validations } =
+        await unitResidentService.validateResident(buildResidentValidationPayload());
+
+      if (!valid && validations.length > 0) {
+        const { nextErrors, targetStep } = mapBackendValidationErrors(validations);
+        if (Object.keys(nextErrors).length > 0) {
+          setErrors(nextErrors);
+          setActiveStep(targetStep);
+          return;
+        }
+      }
+
       const account = await AccountService.createAccount({
         name: firstName.trim(),
         surname: lastName.trim(),
@@ -304,13 +408,13 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         phone: normalizePhoneToE164(phone),
       });
 
-      if (!account) {
+      if (!account?.userId) {
         throw new Error("Nao foi possivel criar a conta do morador.");
       }
 
       await unitResidentService.createResident({
         condominiumUnitId: formData.condominiumUnitId,
-        userId: account,
+        userId: account.userId,
         unitType: formData.unitType,
         startDate: formData.startDate,
         endDate: formData.startDate,
@@ -326,7 +430,10 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       }
 
       await onSaved();
-      onNotify("Morador criado com sucesso!", "success");
+      notify({
+        message: "Morador criado com sucesso!",
+        type: "success",
+      })
 
       setFormData({
         condominiumUnitId: unitIdPreset || "",
@@ -357,7 +464,10 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         setActiveStep(1);
       } else {
         const message = error instanceof Error ? error.message : "Erro ao criar morador.";
-        onNotify(message, "error");
+        notify({
+          message,
+          type: "error",
+        });
       }
     } finally {
       setLoading(false);
@@ -369,6 +479,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+              },
+            }}
             label="Condominio"
             value={condominiumNamePreset || "-"}
             fullWidth
@@ -377,6 +492,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             InputProps={{ readOnly: true }}
           />
           <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+              },
+            }}
             label="Bloco"
             value={blockNamePreset || "-"}
             fullWidth
@@ -385,6 +505,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             InputProps={{ readOnly: true }}
           />
           <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+              },
+            }}
             label="Unidade"
             value={unitCodePreset || "-"}
             fullWidth
@@ -394,6 +519,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           />
           <Box sx={{ display: "flex", gap: 1 }}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               label="Tipo de Residencia"
               select
               value={formData.unitType || ""}
@@ -401,7 +531,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               error={Boolean(errors.unitType)}
               helperText={errors.unitType}
               fullWidth
-              size="small"
             >
               <MenuItem value="Owner">Proprietario</MenuItem>
               <MenuItem value="Tenant">Inquilino</MenuItem>
@@ -414,7 +543,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                     ? new Date(`${formData.startDate}T00:00:00`)
                     : null
                 }
-                minDate={new Date()}
                 onChange={(newValue) =>
                   handleChange(
                     "startDate",
@@ -423,8 +551,12 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 }
                 slotProps={{
                   textField: {
+                    sx: {
+                      "& .MuiOutlinedInput-root": {
+                        height: 46,
+                      },
+                    },
                     fullWidth: true,
-                    size: "small",
                     error: Boolean(errors.startDate),
                     helperText: errors.startDate || "Selecione a data no calendario",
                   },
@@ -442,40 +574,52 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           <Grid container spacing={1.2}>
             <Grid item xs={12} sm={6}>
               <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 fullWidth
-                size="small"
                 label={firstName ? "" : "Nome"}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 error={Boolean(errors.firstName)}
                 helperText={errors.firstName}
                 inputProps={{ maxLength: 80 }}
-                InputLabelProps={{ shrink: false }}
+                 
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 fullWidth
-                size="small"
                 label={lastName ? "" : "Sobrenome"}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 error={Boolean(errors.lastName)}
                 helperText={errors.lastName}
                 inputProps={{ maxLength: 120 }}
-                InputLabelProps={{ shrink: false }}
+                 
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 fullWidth
-                size="small"
                 select
                 label="Tipo de Documento"
                 value={documentType}
                 onChange={(e) => {
                   setDocumentType(e.target.value as DocumentType);
-                  setDocumentNumber(""); // Limpa o campo de documento ao trocar o tipo
+                  setDocumentNumber(""); 
                 }}
               >
                 <MenuItem value="CPF">CPF</MenuItem>
@@ -484,41 +628,53 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 fullWidth
-                size="small"
                 label={documentNumber ? "" : "Documento"}
                 value={documentNumber}
                 onChange={(e) => handleDocumentChange(e.target.value)}
                 error={Boolean(errors.documentNumber)}
                 helperText={errors.documentNumber}
                 inputProps={{ maxLength: 18 }}
-                InputLabelProps={{ shrink: false }}
+                 
               />
             </Grid>
           </Grid>
 
           <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+              },
+            }}
             fullWidth
-            size="small"
             label={email ? "" : "Email"}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             error={Boolean(errors.email)}
             helperText={errors.email}
             inputProps={{ maxLength: 254 }}
-            InputLabelProps={{ shrink: false }}
+             
           />
 
           <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+              },
+            }}
             fullWidth
-            size="small"
             label={phone ? "" : "Celular"}
             value={phone}
             onChange={(e) => setPhone(formatPhone(e.target.value))}
             error={Boolean(errors.phone)}
             helperText={errors.phone}
             inputProps={{ maxLength: 15 }}
-            InputLabelProps={{ shrink: false }}
+             
           />
         </Box>
       );
@@ -526,7 +682,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
     return (
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column" }}>
           <FormControlLabel
             control={
               <Checkbox
@@ -616,7 +772,12 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
 
     return (
-      <Button variant="contained" sx={{ marginTop: 2 }} onClick={handleNext}>
+      <Button
+        variant="contained"
+        sx={{ marginTop: 2 }}
+        onClick={handleNext}
+        disabled={loading}
+      >
         Proximo
       </Button>
     );
@@ -624,7 +785,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
   return (
     <StepWizardCard
-      title="Criar morador"
+      title="Registrar Morador"
       subtitle={STEPS[activeStep]}
       steps={STEPS}
       activeStep={activeStep}
@@ -636,6 +797,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         }
         setActiveStep((prev) => prev - 1);
       }}
+      width="500px"
       onClose={onClose}
       actions={renderActions()}
     >

@@ -8,11 +8,17 @@ import {
   MenuItem,
   FormControlLabel,
   Checkbox,
+  RadioGroup,
+  Radio,
   CircularProgress,
   Grid,
-  Snackbar,
-  Alert,
+
 } from "@mui/material";
+import {
+  ApartmentOutlined,
+  TuneOutlined,
+  PhotoOutlined,
+} from "@mui/icons-material";
 import {
   condominiumService,
   type Condominium,
@@ -24,6 +30,7 @@ import { condominiumImageService } from "../../services/condominiumImageService"
 import { organizationService } from "../../services/organizationService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
+import { notify } from "../../shared/utils/toastMessage";
 
 interface CondominioFormProps {
   open: boolean;
@@ -86,11 +93,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<CondominiumRequest>(initialFormData);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [successSnackbar, setSuccessSnackbar] = useState({
-    open: false,
-    message: "",
-  });
   const [addressFieldsDisabled, setAddressFieldsDisabled] = useState({
     address: true,
     neighborhood: true,
@@ -209,6 +213,17 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       });
     }
   }, [open, editingCondominium]);
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreview(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(coverFile);
+    setCoverPreview(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [coverFile]);
 
   if (!open) return null;
 
@@ -291,6 +306,79 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     return nextErrors;
   };
 
+  const fieldMap: Record<string, keyof CondominiumRequest> = {
+    organizationid: "organizationId",
+    name: "name",
+    doc: "doc",
+    address: "address",
+    addressnumber: "addressNumber",
+    complement: "complement",
+    neighborhood: "neighborhood",
+    city: "city",
+    state: "state",
+    zipcode: "zipCode",
+    condominiumtype: "condominiumType",
+    unitcount: "unitCount",
+    hasblocks: "hasBlocks",
+    haswaterindividual: "hasWaterIndividual",
+    haspowerbyblock: "hasPowerByBlock",
+    hasgasbyblock: "hasGasByBlock",
+    allocationtype: "allocationType",
+    allocationvalueperc: "allocationValuePerc",
+    commit: "commit",
+  };
+
+  const stepFields: Array<Array<keyof CondominiumRequest>> = [
+    ["organizationId", "name", "doc", "condominiumType", "unitCount"],
+    [
+      "zipCode",
+      "address",
+      "addressNumber",
+      "neighborhood",
+      "city",
+      "state",
+      "complement",
+    ],
+    [
+      "hasBlocks",
+      "hasWaterIndividual",
+      "hasPowerByBlock",
+      "hasGasByBlock",
+      "allocationType",
+      "allocationValuePerc",
+    ],
+  ];
+
+  const mapBackendValidationErrors = (
+    validations: Array<{ field: string; message: string }>,
+    onlyStep?: number,
+  ) => {
+    const nextErrors: Record<string, string> = {};
+    let targetStep = 0;
+
+    validations.forEach((validation) => {
+      const key = validation.field?.replace(/\s+/g, "").toLowerCase();
+      const field = key ? fieldMap[key] : undefined;
+      if (!field) return;
+
+      const stepIndex = stepFields.findIndex((fields) => fields.includes(field));
+
+      if (typeof onlyStep === "number") {
+        if (stepIndex !== onlyStep) return;
+        nextErrors[field] = validation.message;
+        targetStep = onlyStep;
+        return;
+      }
+
+      nextErrors[field] = validation.message;
+      if (stepIndex >= 0) {
+        targetStep = Math.max(targetStep, stepIndex);
+      }
+    });
+
+    return { nextErrors, targetStep };
+  };
+
   const handleNext = async () => {
     let localErrors: Record<string, string> = {};
     if (activeStep === 0) {
@@ -302,6 +390,36 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     if (Object.keys(localErrors).length > 0) {
       setErrors(localErrors);
       return;
+    }
+
+    try {
+      setLoading(true);
+      const payload: CondominiumRequest = {
+        ...formData,
+        doc: formData.doc.replace(/\D/g, ""),
+        zipCode: formData.zipCode.replace(/\D/g, ""),
+        condominiumType: normalizeCondominiumTypeValue(formData.condominiumType),
+        allocationType: normalizeAllocationTypeValue(formData.allocationType),
+        commit: false,
+      };
+
+      const { valid, validations } =
+        await condominiumService.validateCondominium(payload);
+
+      if (!valid && validations.length > 0) {
+        const { nextErrors } = mapBackendValidationErrors(validations, activeStep);
+        if (Object.keys(nextErrors).length > 0) {
+          setErrors(nextErrors);
+          return;
+        }
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao validar condomínio.";
+      onNotify(message, "error");
+      return;
+    } finally {
+      setLoading(false);
     }
 
     setActiveStep((prev) => prev + 1);
@@ -552,15 +670,15 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
       if (editingId) {
         await condominiumService.updateCondominium(editingId, payload);
-        setSuccessSnackbar({
-          open: true,
+       notify({
           message: `Condomínio "${formData.name}" atualizado com sucesso!`,
+          type:'success'
         });
       } else {
         const response = await condominiumService.createCondominium(payload);
-        setSuccessSnackbar({
-          open: true,
+        notify({
           message: `Condomínio "${formData.name}" criado com sucesso!`,
+          type:'success'
         });
 
         if (coverFile && response?.condominiumId) {
@@ -626,28 +744,41 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                  display: "flex",
+                },
+              }}
               fullWidth
-              label={formData.name ? "" : "Nome do Condomínio"}
+              placeholder="Digite o nome do condomínio"
+              label="Nome do Condomínio"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
               error={!!errors.name}
               helperText={errors.name}
-              size="small"
-              InputLabelProps={{ shrink: false }}
             />
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label={formData.doc ? "" : "CNPJ"}
+              label="CNPJ"
               value={formData.doc}
               onChange={(e) => handleChange("doc", e.target.value)}
               error={!!errors.doc}
               helperText={errors.doc}
               placeholder="00.000.000/0000-00"
-              size="small"
-              InputLabelProps={{ shrink: false }}
               inputProps={{ maxLength: 18 }}
             />
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Tipo de Condomínio"
               select
@@ -660,7 +791,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               }
               error={!!errors.condominiumType}
               helperText={typesError || errors.condominiumType}
-              size="small"
             >
               {typesLoading ? (
                 <MenuItem value={formData.condominiumType} disabled>
@@ -681,17 +811,22 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               )}
             </TextField>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                  display: "flex",
+                },
+              }}
               fullWidth
-              label={formData.unitCount > 0 ? "" : "Quantidade de Unidades"}
+              placeholder="Digite a quantidade de unidades"
+              label="Quantidade de Unidades"
               type="number"
-              value={formData.unitCount || ""}
+              value={formData.unitCount || 0}
               onChange={(e) =>
                 handleChange("unitCount", parseInt(e.target.value) || 0)
               }
               error={!!errors.unitCount}
               helperText={errors.unitCount}
-              size="small"
-              InputLabelProps={{ shrink: false }}
             />
           </Box>
         );
@@ -708,8 +843,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               error={!!errors.zipCode || !!cepError}
               helperText={errors.zipCode || cepError}
               placeholder="00000-000"
-              size="small"
-              InputLabelProps={{ shrink: false }}
               inputProps={{ maxLength: 9 }}
               InputProps={{
                 endAdornment: cepLoading ? (
@@ -717,286 +850,349 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 ) : null,
               }}
             />
-            <Grid container spacing={1.2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  disabled={addressFieldsDisabled.address}
-                  sx={addressFieldsDisabled.address ? desabilitarCampos : {}}
-                  label={formData.address ? "" : "Logradouro"}
-                  value={formData.address}
-                  onChange={(e) => handleChange("address", e.target.value)}
-                  error={!!errors.address}
-                  helperText={errors.address}
-                  size="small"
-                  InputLabelProps={{ shrink: false }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  disabled={addressFieldsDisabled.neighborhood}
-                  sx={desabilitarCampos}
-                  label={formData.neighborhood ? "" : "Bairro"}
-                  value={formData.neighborhood}
-                  onChange={(e) => handleChange("neighborhood", e.target.value)}
-                  error={!!errors.neighborhood}
-                  helperText={errors.neighborhood}
-                  size="small"
-                  InputLabelProps={{ shrink: false }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  disabled={addressFieldsDisabled.city}
-                  sx={addressFieldsDisabled.city ? desabilitarCampos : {}}
-                  label={formData.city ? "" : "Cidade"}
-                  value={formData.city}
-                  onChange={(e) => handleChange("city", e.target.value)}
-                  error={!!errors.city}
-                  helperText={errors.city}
-                  size="small"
-                  InputLabelProps={{ shrink: false }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <TextField
-                  fullWidth
-                  disabled={addressFieldsDisabled.state}
-                  sx={addressFieldsDisabled.state ? desabilitarCampos : {}}
-                  label={formData.state ? "" : "UF"}
-                  value={formData.state}
-                  onChange={(e) =>
-                    handleChange("state", e.target.value.toUpperCase())
-                  }
-                  error={!!errors.state}
-                  helperText={errors.state}
-                  size="small"
-                  InputLabelProps={{ shrink: false }}
-                  inputProps={{ maxLength: 2 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  disabled={addressFieldsDisabled.addressNumber}
-                  sx={
-                    addressFieldsDisabled.addressNumber ? desabilitarCampos : {}
-                  }
-                  label={formData.addressNumber ? "" : "Número"}
-                  value={formData.addressNumber}
-                  onChange={(e) =>
-                    handleChange("addressNumber", e.target.value)
-                  }
-                  error={!!errors.addressNumber}
-                  helperText={errors.addressNumber}
-                  size="small"
-                  InputLabelProps={{ shrink: false }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={8}>
-                <TextField
-                  fullWidth
-                  disabled={addressFieldsDisabled.complement}
-                  sx={
-                    addressFieldsDisabled.addressNumber ? desabilitarCampos : {}
-                  }
-                  label={formData.complement ? "" : "Complemento"}
-                  value={formData.complement}
-                  onChange={(e) => handleChange("complement", e.target.value)}
-                  error={!!errors.complement}
-                  helperText={errors.complement}
-                  size="small"
-                  InputLabelProps={{ shrink: false }}
-                />
-              </Grid>
-            </Grid>
+            <TextField
+              fullWidth
+              disabled={addressFieldsDisabled.address}
+              sx={addressFieldsDisabled.address ? desabilitarCampos : {}}
+              label={formData.address ? "" : "Logradouro"}
+              value={formData.address}
+              onChange={(e) => handleChange("address", e.target.value)}
+              error={!!errors.address}
+              helperText={errors.address}
+            />
+            <TextField
+              fullWidth
+              disabled={addressFieldsDisabled.neighborhood}
+              sx={addressFieldsDisabled.neighborhood ? desabilitarCampos : {}}
+              label={formData.neighborhood ? "" : "Bairro"}
+              value={formData.neighborhood}
+              onChange={(e) => handleChange("neighborhood", e.target.value)}
+              error={!!errors.neighborhood}
+              helperText={errors.neighborhood}
+            />
+            <TextField
+              fullWidth
+              disabled={addressFieldsDisabled.city}
+              sx={addressFieldsDisabled.city ? desabilitarCampos : {}}
+              label={formData.city ? "" : "Cidade"}
+              value={formData.city}
+              onChange={(e) => handleChange("city", e.target.value)}
+              error={!!errors.city}
+              helperText={errors.city}
+            />
+            <TextField
+              fullWidth
+              disabled={addressFieldsDisabled.state}
+              sx={addressFieldsDisabled.state ? desabilitarCampos : {}}
+              label={formData.state ? "" : "UF"}
+              value={formData.state}
+              onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
+              error={!!errors.state}
+              helperText={errors.state}
+              inputProps={{ maxLength: 2 }}
+            />
+            <TextField
+              fullWidth
+              disabled={addressFieldsDisabled.addressNumber}
+              sx={addressFieldsDisabled.addressNumber ? desabilitarCampos : {}}
+              label={formData.addressNumber ? "" : "Número"}
+              value={formData.addressNumber}
+              onChange={(e) => handleChange("addressNumber", e.target.value)}
+              error={!!errors.addressNumber}
+              helperText={errors.addressNumber}
+            />
+            <TextField
+              fullWidth
+              disabled={addressFieldsDisabled.complement}
+              sx={addressFieldsDisabled.complement ? desabilitarCampos : {}}
+              label={formData.complement ? "" : "Complemento"}
+              value={formData.complement}
+              onChange={(e) => handleChange("complement", e.target.value)}
+              error={!!errors.complement}
+              helperText={errors.complement}
+            />
           </Box>
         );
-
       case 2:
         return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
-            <Grid container spacing={0.8}>
-              <Grid item xs={12} sm={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.hasBlocks}
-                      onChange={(e) =>
-                        handleChange("hasBlocks", e.target.checked)
-                      }
-                      size="small"
-                    />
-                  }
-                  label={
-                    <Typography variant="body2" sx={{ fontSize: "13px" }}>
-                      Possui blocos
-                    </Typography>
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.hasWaterIndividual}
-                      onChange={(e) =>
-                        handleChange("hasWaterIndividual", e.target.checked)
-                      }
-                      size="small"
-                    />
-                  }
-                  label={
-                    <Typography variant="body2" sx={{ fontSize: "13px" }}>
-                      Medição individual de água
-                    </Typography>
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.hasPowerByBlock}
-                      onChange={(e) =>
-                        handleChange("hasPowerByBlock", e.target.checked)
-                      }
-                      size="small"
-                    />
-                  }
-                  label={
-                    <Typography variant="body2" sx={{ fontSize: "13px" }}>
-                      Energia por bloco
-                    </Typography>
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.hasGasByBlock}
-                      onChange={(e) =>
-                        handleChange("hasGasByBlock", e.target.checked)
-                      }
-                      size="small"
-                    />
-                  }
-                  label={
-                    <Typography variant="body2" sx={{ fontSize: "13px" }}>
-                      Gás por bloco
-                    </Typography>
-                  }
-                />
-              </Grid>
-            </Grid>
-
-            <Grid container spacing={1.2} sx={{ mt: 0.5 }}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Tipo de rateio"
-                  select
-                  value={formData.allocationType}
-                  onChange={(e) =>
-                    handleChange(
-                      "allocationType",
-                      normalizeAllocationTypeValue(e.target.value as string),
-                    )
-                  }
-                  error={!!errors.allocationType}
-                  helperText={errors.allocationType || allocationError}
-                  size="small"
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            <Grid container spacing={1}>
+              <Grid item xs={8} md={6}>
+                <Box
+                  sx={{
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "12px",
+                    p: 1,
+                    height: "100%",
+                    backgroundColor: "#fff",
+                  }}
                 >
-                  {allocationLoading ? (
-                    <MenuItem value={formData.allocationType} disabled>
-                      Carregando...
-                    </MenuItem>
-                  ) : allocationTypes.length > 0 ? (
-                    allocationTypes.map((type) => (
-                      <MenuItem key={type.id} value={type.id}>
-                        {type.description || type.value}
-                      </MenuItem>
-                    ))
-                  ) : (
-                    <>
-                      <MenuItem value="FractionalAllocation">
-                        Rateio fracionário
-                      </MenuItem>
-                      <MenuItem value="FixedAllocation">Rateio fixo</MenuItem>
-                      <MenuItem value="ProportionalAllocation">
-                        Rateio proporcional
-                      </MenuItem>
-                    </>
-                  )}
-                </TextField>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 0.5,
+                    }}
+                  >
+                    <ApartmentOutlined
+                      sx={{ color: "#2563eb", fontSize: 20 }}
+                    />
+                    <Typography
+                      sx={{ fontWeight: 700, fontSize: 18, lineHeight: 1 }}
+                    >
+                      Estrutura do Condomínio
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ color: "#64748b", fontSize: 14, mb: 1.5 }}>
+                    Configure como as unidades são organizadas.
+                  </Typography>
+                  <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
+
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}
+                  >
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.hasBlocks}
+                          onChange={(e) =>
+                            handleChange("hasBlocks", e.target.checked)
+                          }
+                          size="small"
+                        />
+                      }
+                      label="Possui blocos"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.hasPowerByBlock}
+                          onChange={(e) =>
+                            handleChange("hasPowerByBlock", e.target.checked)
+                          }
+                          size="small"
+                        />
+                      }
+                      label="Energia por bloco"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.hasGasByBlock}
+                          onChange={(e) =>
+                            handleChange("hasGasByBlock", e.target.checked)
+                          }
+                          size="small"
+                        />
+                      }
+                      label="Gás por bloco"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.hasWaterIndividual}
+                          onChange={(e) =>
+                            handleChange("hasWaterIndividual", e.target.checked)
+                          }
+                          size="small"
+                        />
+                      }
+                      label="Medição individual de água"
+                    />
+                  </Box>
+                </Box>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label={
-                    formData.allocationValuePerc > 0
-                      ? ""
-                      : "Percentual de rateio (%)"
-                  }
-                  type="number"
-                  value={formData.allocationValuePerc || ""}
-                  onChange={(e) =>
-                    handleChange(
-                      "allocationValuePerc",
-                      parseFloat(e.target.value) || 0,
-                    )
-                  }
-                  error={!!errors.allocationValuePerc}
-                  helperText={errors.allocationValuePerc}
-                  inputProps={{ min: 0, max: 100, step: 0.01 }}
-                  size="small"
-                  InputLabelProps={{ shrink: false }}
-                />
+
+              <Grid item xs={12} md={6}>
+                <Box
+                  sx={{
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "12px",
+                    p: 2,
+                    height: "100%",
+                    backgroundColor: "#fff",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 0.5,
+                    }}
+                  >
+                    <TuneOutlined sx={{ color: "#16a34a", fontSize: 20 }} />
+                    <Typography
+                      sx={{ fontWeight: 700, fontSize: 18, lineHeight: 1 }}
+                    >
+                      Configuração de Rateio
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ color: "#64748b", fontSize: 14, mb: 1.5 }}>
+                    Defina como as despesas serão divididas.
+                  </Typography>
+                  <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
+
+                  <RadioGroup
+                    value={String(formData.allocationType)}
+                    onChange={(e) =>
+                      handleChange("allocationType", e.target.value)
+                    }
+                    sx={{ mb: 1, gap: 0.5 }}
+                  >
+                    <FormControlLabel
+                      sx={{ height: "40px" }}
+                      value="FixedAllocation"
+                      control={<Radio size="small" />}
+                      label="Igualitário"
+                    />
+                    <FormControlLabel
+                      sx={{ height: "40px" }}
+                      value="ProportionalAllocation"
+                      control={<Radio size="small" />}
+                      label="Percentual"
+                    />
+                    <FormControlLabel
+                      sx={{ height: "40px" }}
+                      value="FractionalAllocation"
+                      control={<Radio size="small" />}
+                      label="Fracionário"
+                    />
+                  </RadioGroup>
+                  {allocationLoading ? (
+                    <Typography sx={{ color: "#64748b", fontSize: 12, mb: 1 }}>
+                      Carregando tipos de rateio...
+                    </Typography>
+                  ) : null}
+
+                  <TextField
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        height: 40,
+                      },
+                    }}
+                    fullWidth
+                    label="Percentual padrão (%)"
+                    type="number"
+                    value={formData.allocationValuePerc || ""}
+                    onChange={(e) =>
+                      handleChange(
+                        "allocationValuePerc",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
+                    error={!!errors.allocationValuePerc}
+                    helperText={errors.allocationValuePerc}
+                    inputProps={{ min: 0, max: 100, step: 0.01 }}
+                  />
+                  {!!errors.allocationType && (
+                    <Typography
+                      sx={{ color: "#d32f2f", fontSize: 12, mt: 0.5 }}
+                    >
+                      {errors.allocationType}
+                    </Typography>
+                  )}
+                  {!!allocationError && (
+                    <Typography
+                      sx={{ color: "#d32f2f", fontSize: 12, mt: 0.25 }}
+                    >
+                      {allocationError}
+                    </Typography>
+                  )}
+                </Box>
               </Grid>
             </Grid>
 
             <Box
               sx={{
-                mt: 1,
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                flexWrap: "wrap",
+                border: "1px solid #e2e8f0",
+                borderRadius: "12px",
+                p: 2,
+                backgroundColor: "#fff",
               }}
             >
-              <Button
-                variant="outlined"
-                component="label"
-                size="small"
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}
+              >
+                <PhotoOutlined sx={{ color: "#4f46e5", fontSize: 20 }} />
+                <Typography
+                  sx={{ fontWeight: 700, fontSize: 18, lineHeight: 1 }}
+                >
+                  Identidade
+                </Typography>
+              </Box>
+              <Typography sx={{ color: "#64748b", fontSize: 14, mb: 1 }}>
+                Imagem do condomínio (opcional).
+              </Typography>
+              <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1 }} />
+
+              <Box
                 sx={{
-                  minWidth: 130,
-                  height: 36,
-                  textTransform: "none",
-                  fontSize: "13px",
+                  display: "flex",
+                  flexDirection: { xs: "column", md: "row" },
+                  alignItems: { xs: "flex-start", md: "center" },
+                  justifyContent: "space-between",
+                  gap: 2,
                 }}
               >
-                Selecionar imagem
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-                />
-              </Button>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ fontSize: "12px" }}
-              >
-                {coverFile ? coverFile.name : "Nenhuma imagem selecionada"}
-              </Typography>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  size="small"
+                  sx={{
+                    minWidth: 152,
+                    height: 38,
+                    textTransform: "none",
+                    fontSize: "14px",
+                  }}
+                >
+                  Selecionar imagem
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                  />
+                </Button>
+
+                <Box
+                  sx={{
+                    width: { xs: "100%", md: 240 },
+                    height: 110,
+                    borderRadius: "10px",
+                    border: "1px dashed #cbd5e1",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden",
+                    background: "#f8fafc",
+                  }}
+                >
+                  {coverPreview ? (
+                    <Box
+                      component="img"
+                      src={coverPreview}
+                      alt="Prévia da imagem do condomínio"
+                      sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <Typography
+                      sx={{
+                        color: "#94a3b8",
+                        fontSize: 12,
+                        px: 1,
+                        textAlign: "center",
+                      }}
+                    >
+                      Nenhuma imagem selecionada
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
             </Box>
           </Box>
         );
-
       default:
         return null;
     }
@@ -1012,6 +1208,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         activeStep={activeStep}
         showBack={activeStep > 0 && activeStep < steps.length}
         onBack={handleBack}
+        width={activeStep === 2 ? "980px" : "650px"}
       >
         <div className="condominio-form">{renderStepContent(activeStep)}</div>
         <Box
@@ -1021,7 +1218,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             gap: 2,
             mt: 1.5,
             pt: 1.5,
-            borderTop: "2px solid #f0f2f5",
           }}
         >
           {activeStep === steps.length - 1 ? (
@@ -1039,6 +1235,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               sx={{ textTransform: "none" }}
               variant="contained"
               onClick={handleNext}
+              disabled={loading}
             >
               Próximo
             </Button>
@@ -1046,41 +1243,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         </Box>
       </StepWizardCard>
 
-      {/* Snackbar de Sucesso - Interno ao Form */}
-      <Snackbar
-        open={successSnackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSuccessSnackbar({ open: false, message: "" })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        sx={{
-          top: "32px !important",
-          "& .MuiAlert-root": {
-            minWidth: "400px",
-            borderRadius: "16px",
-            boxShadow: "0 12px 40px rgba(0, 0, 0, 0.2)",
-          },
-        }}
-      >
-        <Alert
-          onClose={() => setSuccessSnackbar({ open: false, message: "" })}
-          severity="success"
-          variant="filled"
-          sx={{
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            color: "white",
-            fontSize: "15px",
-            fontWeight: 600,
-            "& .MuiAlert-icon": {
-              color: "white",
-              fontSize: "26px",
-            },
-          }}
-        >
-          {successSnackbar.message}
-        </Alert>
-      </Snackbar>
     </>
   );
 };
 
 export default CondominioForm;
+
+
+

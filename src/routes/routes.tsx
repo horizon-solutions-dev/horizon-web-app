@@ -1,6 +1,5 @@
 import {
 	createBrowserRouter,
-  Navigate,
 } from "react-router-dom";
 import LoginFlow from "../components/Login";
 import MainLayout from "../components/Layout/MainLayout";

@@ -147,6 +147,8 @@ export default function MultiStepLogin() {
   };
 
   const handleFinalLogin = () => {
+    console.log(formik.values.condominium)
+    localStorage.setItem('dataCondominium', JSON.stringify(formik.values.condominium));
     formik.validateForm().then((errors) => {
       if (Object.keys(errors).length === 0) {
         formik.handleSubmit();

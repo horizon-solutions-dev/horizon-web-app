@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { type CondominiumBlock, type CondominiumBlockRequest, blockService } from "../../services/blockService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
+import { notify } from "../../shared/utils/toastMessage";
 
 interface BlocoFormProps {
   open: boolean;
@@ -111,8 +112,16 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
       if (editingId) {
         await blockService.updateBlock(editingId, formData);
         //onNotify("Bloco atualizado com sucesso.", "success");
+        notify({
+          message: "Bloco atualizado com sucesso.",
+          type: "success",
+        });
       } else {
         await blockService.createBlock(formData);
+        notify({
+          message: "Bloco criado com sucesso.",
+          type: "success",
+        });
         //onNotify("Bloco criado com sucesso.", "success");
       }
 
@@ -132,6 +141,10 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
       } else {
         const message = error instanceof Error ? error.message : "Erro ao salvar bloco.";
         onNotify(message, "error");
+        notify({
+          message: 'Erro ao salvar bloco.',
+          type: "error",
+        });
       }
     } finally {
       setLoading(false);
@@ -144,6 +157,11 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
         <>
           <Box className="bloco-form" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               placeholder="Código"
               value={formData.code}
               onChange={(e) => handleChange("code", e.target.value)}
@@ -152,9 +170,14 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
               fullWidth
               required
               variant="outlined"
-              InputLabelProps={{ shrink: false }}
+               
             />
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               placeholder="Nome"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
@@ -163,7 +186,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
               fullWidth
               required
               variant="outlined"
-              InputLabelProps={{ shrink: false }}
+               
             />
           </Box>
           

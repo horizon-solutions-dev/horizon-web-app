@@ -184,6 +184,11 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Número do Boleto"
               value={formData.numero}
@@ -196,6 +201,11 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Descrição"
               value={formData.descricao}
@@ -208,6 +218,11 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={4}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Valor"
               type="number"
@@ -223,6 +238,11 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={4}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Vencimento"
               type="date"
@@ -236,6 +256,11 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={4}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               select
               label="Status"
@@ -250,6 +275,11 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Beneficiário"
               value={formData.beneficiario}
@@ -262,6 +292,11 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Pagador"
               value={formData.pagador}
@@ -274,6 +309,11 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               label="Data de Emissão"
               type="date"

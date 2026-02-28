@@ -6,8 +6,6 @@ import {
   Paper,
   Typography,
   Button,
-  Snackbar,
-  Alert,
   CircularProgress,
   IconButton,
   Tooltip,
@@ -39,6 +37,8 @@ import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import UnidadeForm from "./UnidadeForm";
+import { notify } from "../../shared/utils/toastMessage";
+import { useNavigate } from "react-router-dom";
 
 const Unidades: React.FC = () => {
   const [activeView, setActiveView] = useState<"condominios" | "unidades">(
@@ -49,8 +49,10 @@ const Unidades: React.FC = () => {
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [listPage, setListPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [condominiumsPage, setCondominiumsPage] = useState(1);
+  const [condominiumsTotalPages, setCondominiumsTotalPages] = useState(1);
+  const [unitsPage, setUnitsPage] = useState(1);
+  const [unitsTotalPages, setUnitsTotalPages] = useState(1);
   const pageSize = 4;
 
   const [condominiumIdQuery, setCondominiumIdQuery] = useState("");
@@ -68,17 +70,11 @@ const Unidades: React.FC = () => {
   const [blockSearchText, setBlockSearchText] = useState("");
   const [blockPage, setBlockPage] = useState(1);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "info" | "warning",
-  });
-
   const handleNotify = (
     message: string,
     severity: "success" | "error" | "info" | "warning" = "success",
   ) => {
-    setSnackbar({ open: true, message, severity });
+    notify({ message, type: severity });
   };
 
   const loadCondominiums = async (pageNumber = 1) => {
@@ -116,8 +112,8 @@ const Unidades: React.FC = () => {
           1,
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
-      setListPage(response?.paging?.pageNumber ?? pageNumber);
-      setTotalPages(computedTotalPages);
+      setCondominiumsPage(response?.paging?.pageNumber ?? pageNumber);
+      setCondominiumsTotalPages(computedTotalPages);
       setCondominiums(normalized);
     } catch (error) {
       const message =
@@ -158,20 +154,20 @@ const Unidades: React.FC = () => {
           1,
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
-      setListPage(response?.paging?.pageNumber ?? pageNumber);
-      setTotalPages(computedTotalPages);
+      setUnitsPage(response?.paging?.pageNumber ?? pageNumber);
+      setUnitsTotalPages(computedTotalPages);
       setUnits(normalized);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar unidades.";
       const isNotFoundMessage = /nada encontrado|not found/i.test(message);
       setUnits([]);
-      setListPage(pageNumber);
+      setUnitsPage(pageNumber);
       if (isNotFoundMessage) {
         setListError(null);
-        setTotalPages(1);
+        setUnitsTotalPages(1);
         setUnits([]);
-        setListPage(1);
+        setUnitsPage(1);
       } else {
         setListError(message);
       }
@@ -253,6 +249,8 @@ const Unidades: React.FC = () => {
     setUnitSearchText("");
     setBlockSearchText("");
     setBlockPage(1);
+    setUnitsPage(1);
+    setUnitsTotalPages(1);
     setSelectedBlockId("");
     setActiveView("unidades");
 
@@ -295,44 +293,70 @@ const Unidades: React.FC = () => {
   };
 
   const handleSaved = async () => {
-    await loadUnits(selectedBlockId || undefined, listPage);
+    await loadUnits(selectedBlockId || undefined, unitsPage);
   };
+
+  const navigate = useNavigate()
 
   return (
     <Box className="unidade-container">
       <Container maxWidth="xl">
         {activeView === "condominios" ? (
           <Paper elevation={3} sx={{ p: 3 }}>
-            <Box
+
+  <Box
               sx={{
                 mb: 2,
                 pb: 1.5,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                flexDirection: "column",
                 borderBottom: "2px solid #f0f0f0",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
-                <Typography
-                  variant="h5"
-                  fontWeight="bold"
-                  sx={{ fontSize: "26px" }}
-                >
-                  {organizationName}
-                </Typography>
+              <Container
+                sx={{
+                  p:'0 !important',
+                  maxWidth: "100vw !important",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    {organizationName}
+                  </Typography>
+                </Box>
+                <Tooltip title="Fechar">
+                  <IconButton
+                    onClick={() => navigate("/dashboard")}
+                    className="close-button"
+                    aria-label="Fechar"
+                  >
+                    <Close sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
+              </Container>
+              <Box >
+                <BreadcrumbTrail
+                  items={[
+                    "Organização",
+                    "Condomínios",
+                  ]}
+                />
               </Box>
-              <Tooltip title="Fechar">
-                <IconButton
-                  onClick={() => window.history.back()}
-                  className="close-button"
-                  aria-label="Fechar"
-                >
-                  <Close sx={{ fontSize: 20 }} />
-                </IconButton>
-              </Tooltip>
             </Box>
+
+
+
+
+     
 
             <Paper variant="outlined" sx={{ p: 2 }}>
               {listLoading ? (
@@ -351,10 +375,10 @@ const Unidades: React.FC = () => {
                   emptyImageLabel="Sem imagem"
                   showFilters={false}
                   showPagination={true}
-                  page={listPage}
-                  totalPages={totalPages}
+                  page={condominiumsPage}
+                  totalPages={condominiumsTotalPages}
                   onPageChange={(page) => {
-                    setListPage(page);
+                    setCondominiumsPage(page);
                     loadCondominiums(page);
                   }}
                   items={condominiums
@@ -388,7 +412,7 @@ const Unidades: React.FC = () => {
                           startIcon={<SettingsOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Gerenciar Unidades
+                          Visualizar Unidades 1
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -409,10 +433,10 @@ const Unidades: React.FC = () => {
                   emptyImageLabel="Sem imagem"
                   showFilters={false}
                   showPagination={true}
-                  page={listPage}
-                  totalPages={totalPages}
+                  page={condominiumsPage}
+                  totalPages={condominiumsTotalPages}
                   onPageChange={(page) => {
-                    setListPage(page);
+                    setCondominiumsPage(page);
                     loadCondominiums(page);
                   }}
                   items={condominiums
@@ -446,7 +470,7 @@ const Unidades: React.FC = () => {
                           startIcon={<SettingsOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Gerenciar Unidades
+                          Visualizar Blocos
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -514,7 +538,7 @@ const Unidades: React.FC = () => {
                         items={[
                           organizationName || "Organização",
                           selectedCondominium?.name || "Condominio selecionado",
-                          "Unidades",
+                          "Blocos"
                         ]}
                       />
                     </Box>
@@ -534,6 +558,9 @@ const Unidades: React.FC = () => {
                           setBlockPage(1);
                           setSelectedBlockId("");
                           setListError(null);
+                          setUnitsPage(1);
+                          setUnitsTotalPages(1);
+                          void loadCondominiums(condominiumsPage);
                         }}
                         className="close-button"
                         aria-label="Voltar"
@@ -562,7 +589,7 @@ const Unidades: React.FC = () => {
                       title="Blocos do condomínio"
                       showTitle={false}
                       showFilters={true}
-                      searchPlaceholder="Buscar bloco..."
+                      searchPlaceholder="Buscar blocos..."
                       onSearchChange={(value) => {
                         setBlockSearchText(value);
                         setBlockPage(1);
@@ -601,11 +628,11 @@ const Unidades: React.FC = () => {
                               onClick={() => {
                                 setSelectedBlockId(block.condominiumBlockId);
                                 setUnitSearchText("");
-                                setListPage(1);
+                                setUnitsPage(1);
                                 loadUnits(block.condominiumBlockId, 1);
                                 setEditingUnit(null);
                                 setIsCadastroOpen(false);
-                                setListPage(1);
+                                setUnitsPage(1);
                               }}
                             >
                               Visualizar Unidades
@@ -625,23 +652,23 @@ const Unidades: React.FC = () => {
                     <CardList
                       onClose={() => {
                         setSelectedBlockId("");
-                        setListPage(1);
+                        setUnitsPage(1);
                         loadUnits(undefined, 1);
                       }}
                       title="Unidades do condomínio"
                       showTitle={false}
                       showFilters={true}
-                      searchPlaceholder="Buscar unidade..."
+                      searchPlaceholder="Buscar unidades..."
                       onSearchChange={setUnitSearchText}
                       onAddClick={handleOpenCreate}
                       addLabel="Novo"
                       addButtonPlacement="toolbar"
                       emptyImageLabel="Sem imagem"
                       showPagination={true}
-                      page={listPage}
-                      totalPages={totalPages}
+                      page={unitsPage}
+                      totalPages={unitsTotalPages}
                       onPageChange={(page) => {
-                        setListPage(page);
+                        setUnitsPage(page);
                         loadUnits(selectedBlockId || undefined, page);
                       }}
                       items={units
@@ -717,19 +744,6 @@ const Unidades: React.FC = () => {
         )}
       </Container>
 
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

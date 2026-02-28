@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient } from './apiClient';
 import type { PagedResponse } from '../models/pagination.model';
 import { normalizePagedResponse } from '../shared/utils/pagination';
@@ -10,6 +11,7 @@ export interface CondominiumUnitRequest {
   unitCode: string;
   unitType: 'Owner' | 'Tenant' | string | '1' | '2' | number; // 'Owner' | 'Tenant' | string;
   allocationType?: 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string | number; // 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string;
+  commit?: boolean;
 }
 export interface CondominiumUnitResponse {
   condominiumId: string;
@@ -40,6 +42,27 @@ class UnitService {
       return await apiClient.post<{ condominiumUnitId: string }>(this.baseUrl, unit);
     } catch (error) {
       console.error('Erro ao criar unidade:', error);
+      throw error;
+    }
+  }
+
+  async validateUnit(unit: CondominiumUnitRequest) {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(this.baseUrl, unit, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
       throw error;
     }
   }

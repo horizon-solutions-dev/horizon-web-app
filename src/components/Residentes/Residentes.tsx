@@ -6,18 +6,18 @@ import {
   Paper,
   Typography,
   Button,
-  Snackbar,
-  Alert,
   CircularProgress,
   IconButton,
   Tooltip,
 } from "@mui/material";
 import {
   Close,
-  PeopleOutlined,
   SettingsOutlined,
   MeetingRoom,
   Person2Sharp,
+  Business,
+  DeleteOutline,
+  EditOutlined,
 } from "@mui/icons-material";
 import {
   unitResidentService,
@@ -38,6 +38,7 @@ import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import ResidenteForm from "./ResidenteForm";
 import { useNavigate } from "react-router";
 import moment from "moment";
+import { notify } from "../../shared/utils/toastMessage";
 const condoPageSize = 4;
 const unitPageSize = 6;
 const residentPageSize = 6;
@@ -79,17 +80,11 @@ const Residentes: React.FC = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "info" | "warning",
-  });
-
   const handleNotify = (
     message: string,
     severity: "success" | "error" | "info" | "warning" = "success",
   ) => {
-    setSnackbar({ open: true, message, severity });
+    notify({ message, type: severity });
   };
 
   const loadCondominiums = async (pageNumber = 1) => {
@@ -111,10 +106,12 @@ const Residentes: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
-       const nameStorage = localStorage.getItem('condominium');
+          const nameStorage = localStorage.getItem("condominium");
           const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
-            organizations?.find(o => o.organizationId === dataParse?.organizationId)?.name || dataParse?.name
+            organizations?.find(
+              (o) => o.organizationId === dataParse?.organizationId,
+            )?.name || dataParse?.name;
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore
@@ -271,7 +268,7 @@ const Residentes: React.FC = () => {
           startIcon={<SettingsOutlined />}
           onClick={() => handleSelectCondominium(condominium)}
         >
-          Visualizar unidades
+          Visualizar Condomínios
         </Button>
       ),
     }));
@@ -346,29 +343,42 @@ const Residentes: React.FC = () => {
                 pb: 1.5,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                flexDirection: "column",
                 borderBottom: "2px solid #f0f0f0",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <PeopleOutlined sx={{ fontSize: 32, color: "#1976d2" }} />
-                <Typography
-                  variant="h5"
-                  fontWeight="bold"
-                  sx={{ fontSize: "26px" }}
-                >
-                  {organizationName}
-                </Typography>
+              <Container
+                sx={{
+                  p: "0 !important",
+                  maxWidth: "100vw !important",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    {organizationName}
+                  </Typography>
+                </Box>
+                <Tooltip title="Fechar">
+                  <IconButton
+                    onClick={() => navigate("/dashboard")}
+                    className="close-button"
+                    aria-label="Fechar"
+                  >
+                    <Close sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
+              </Container>
+              <Box>
+                <BreadcrumbTrail items={["Organização", "Condomínios"]} />
               </Box>
-              <Tooltip title="Fechar">
-                <IconButton
-                  onClick={() => navigate("/dashboard")}
-                  className="close-button"
-                  aria-label="Fechar"
-                >
-                  <Close sx={{ fontSize: 20 }} />
-                </IconButton>
-              </Tooltip>
             </Box>
 
             {condoLoading ? (
@@ -378,24 +388,23 @@ const Residentes: React.FC = () => {
               </Box>
             ) : (
               <>
-               
-              <CardList
-                title="Condominios da organizacao"
-                showTitle={false}
-                searchPlaceholder="Buscar condominio..."
-                onSearchChange={setCondoSearchText}
-                onAddClick={undefined}
-                addButtonPlacement="toolbar"
-                emptyImageLabel="Sem imagem"
-                showPagination={true}
-                page={condoPage}
-                totalPages={condoTotalPages}
-                onPageChange={(page) => {
-                  setCondoPage(page);
-                  loadCondominiums(page);
-                }}
-                items={condominiumItems}
-              />
+                <CardList
+                  title="Condominios da organizacao"
+                  showTitle={false}
+                  searchPlaceholder="Buscar condominio..."
+                  onSearchChange={setCondoSearchText}
+                  onAddClick={undefined}
+                  addButtonPlacement="toolbar"
+                  emptyImageLabel="Sem imagem"
+                  showPagination={true}
+                  page={condoPage}
+                  totalPages={condoTotalPages}
+                  onPageChange={(page) => {
+                    setCondoPage(page);
+                    loadCondominiums(page);
+                  }}
+                  items={condominiumItems}
+                />
               </>
             )}
           </Paper>
@@ -419,7 +428,7 @@ const Residentes: React.FC = () => {
                     fontWeight="bold"
                     sx={{ fontSize: "26px" }}
                   >
-                    Unidades
+                    Residentes
                   </Typography>
                   <BreadcrumbTrail
                     items={[
@@ -437,6 +446,7 @@ const Residentes: React.FC = () => {
                       setActiveView("condominios");
                       setSelectedCondominium(null);
                       resetUnitsContext();
+                      void loadCondominiums(condoPage);
                     }}
                   >
                     <Close sx={{ fontSize: 20 }} />
@@ -452,14 +462,11 @@ const Residentes: React.FC = () => {
               </Box>
             ) : null}
 
-         
-
-
             <CardList
               title="Unidades do condominio"
               showTitle={false}
               showFilters={true}
-              searchPlaceholder="Buscar unidade..."
+              searchPlaceholder="Buscar Unidades..."
               onSearchChange={setUnitSearchText}
               onAddClick={undefined}
               addButtonPlacement="toolbar"
@@ -504,15 +511,37 @@ const Residentes: React.FC = () => {
                     </Typography>
                   ),
                   actions: (
-                    <Button
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <Button
                         size="small"
                         variant="outlined"
                         className="action-button-manage"
                         startIcon={<Person2Sharp />}
-                      onClick={() => handleSelectUnit(unit)}
+                        onClick={() => handleSelectUnit(unit)}
                       >
                         Visualizar Residentes
                       </Button>
+                      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          className="action-button-edit"
+                          startIcon={<EditOutlined />}
+                          onClick={() => {}}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          className="action-button-delete"
+                          startIcon={<DeleteOutline />}
+                          onClick={() => {}}
+                        >
+                          Excluir
+                        </Button>
+                      </Box>
+                    </Box>
                   ),
                   accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                 }))}
@@ -534,8 +563,7 @@ const Residentes: React.FC = () => {
                   blocks.find(
                     (b) =>
                       b.condominiumBlockId === selectedUnit?.condominiumBlockId,
-                  )?.name ||
-                  selectedUnit?.condominiumBlockId
+                  )?.name || selectedUnit?.condominiumBlockId
                 }
                 unitCodePreset={selectedUnit?.unitCode}
               />
@@ -543,49 +571,55 @@ const Residentes: React.FC = () => {
             {!isFormOpen ? (
               <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
                 <Box
-              sx={{
-                mb: 2,
-                pb: 1.5,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderBottom: "2px solid #f0f0f0",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
-                <Box>
-                  <Typography
-                    variant="h5"
-                    fontWeight="bold"
-                    sx={{ fontSize: "26px" }}
-                  >
-                    Residentes
-                  </Typography>
-                  <BreadcrumbTrail
-                    items={[
-                      organizationName || "Organização",
-                      selectedCondominium?.name || "Condominio selecionado",
-                      selectedUnit?.unitCode || "Unidade selecionada",
-                      "Residentes",
-                    ]}
-                  />
+                  sx={{
+                    mb: 2,
+                    pb: 1.5,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    borderBottom: "2px solid #f0f0f0",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
+                    <Box>
+                      <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        sx={{ fontSize: "26px" }}
+                      >
+                        Residentes
+                      </Typography>
+                      <BreadcrumbTrail
+                        items={[
+                          organizationName || "Organização",
+                          selectedCondominium?.name || "Condominio selecionado",
+                          selectedUnit?.unitCode || "Unidade selecionada",
+                          "Residentes",
+                        ]}
+                      />
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Tooltip title="Voltar">
+                      <IconButton
+                        onClick={() => {
+                          setActiveView("unidades");
+                          resetResidentsContext();
+                          if (selectedCondominium) {
+                            void loadUnits(
+                              selectedCondominium.condominiumId,
+                              selectedBlockId || undefined,
+                              unitsPage,
+                            );
+                          }
+                        }}
+                      >
+                        <Close sx={{ fontSize: 20 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </Box>
-              </Box>
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <Tooltip title="Voltar">
-                  <IconButton
-                    onClick={() => {
-                      setActiveView("unidades");
-                      resetResidentsContext();
-                    }}
-                  >
-                    <Close sx={{ fontSize: 20 }} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-
 
                 {residentsLoading ? (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -594,7 +628,6 @@ const Residentes: React.FC = () => {
                   </Box>
                 ) : (
                   <>
-                   
                     <CardList
                       title="Residentes"
                       showTitle={false}
@@ -624,7 +657,9 @@ const Residentes: React.FC = () => {
                         )
                         .map((resident, index) => ({
                           id: resident.condominiumUnitResidentId,
-                          title: getUnitTypeLabel(resident.unitType?.toString()),
+                          title: getUnitTypeLabel(
+                            resident.unitType?.toString(),
+                          ),
                           subtitle: `Unidade: ${units.find((u) => u.condominiumUnitId === resident.condominiumUnitId)?.unitCode || resident.condominiumUnitId}`,
                           meta: `Periodo: ${moment(resident.startDate).format("DD/MM/YYYY")} - ${resident.endDate ? moment(resident.endDate).format("DD/MM/YYYY") : "Atual"}`,
                           accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -637,19 +672,6 @@ const Residentes: React.FC = () => {
           </>
         )}
       </Container>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

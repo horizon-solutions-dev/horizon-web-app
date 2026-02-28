@@ -6,7 +6,6 @@
 }
 
 .main-layout-sidebar {
-  flex-shrink: 0 !important;
   position: relative !important;
   z-index: 100 !important;
   transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1) !important;

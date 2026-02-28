@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient } from './apiClient';
 import type { PagedResponse } from '../models/pagination.model';
 import { normalizePagedResponse } from '../shared/utils/pagination';
@@ -6,6 +7,7 @@ export interface CondominiumBlockRequest {
   condominiumId: string;
   code: string;
   name: string;
+  commit?: boolean;
 }
 
 export interface CondominiumBlock extends CondominiumBlockRequest {
@@ -23,6 +25,27 @@ class BlockService {
       return await apiClient.post<{ condominiumBlockId: string }>(this.baseUrl, block);
     } catch (error) {
       console.error('Erro ao criar bloco:', error);
+      
+    }
+  }
+
+  async validateBlock(block: CondominiumBlockRequest) {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(this.baseUrl, block, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
       throw error;
     }
   }
@@ -41,7 +64,7 @@ class BlockService {
       return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
       console.error('Erro ao buscar blocos:', error);
-      throw error;
+      
     }
   }
 
@@ -50,7 +73,7 @@ class BlockService {
       return await apiClient.get<CondominiumBlock>(`${this.baseUrl}/${id}`);
     } catch (error) {
       console.error('Erro ao buscar bloco:', error);
-      throw error;
+      
     }
   }
 
@@ -62,7 +85,7 @@ class BlockService {
       );
     } catch (error) {
       console.error('Erro ao atualizar bloco:', error);
-      throw error;
+      
     }
   }
 
@@ -71,7 +94,7 @@ class BlockService {
       return await apiClient.delete<void>(`${this.baseUrl}/${id}`);
     } catch (error) {
       console.error('Erro ao excluir bloco:', error);
-      throw error;
+      
     }
   }
 }

@@ -7,8 +7,6 @@ import {
   Paper,
   Typography,
   Button,
-  Snackbar,
-  Alert,
   CircularProgress,
   IconButton,
   Tooltip,
@@ -34,6 +32,8 @@ import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import CondominioForm from "./CondominioForm";
 import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
+import { notify } from "../../shared/utils/toastMessage";
+import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
@@ -55,20 +55,13 @@ const CondominioPage: React.FC = () => {
   const [typesLoading, setTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
-  const [editingCondominium, setEditingCondominium] = useState<
-    Condominium | null
-  >(null);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "info" | "warning",
-  });
-
+  const [editingCondominium, setEditingCondominium] =
+    useState<Condominium | null>(null);
   const handleNotify = (
     message: string,
     severity: "success" | "error" | "info" | "warning" = "success",
   ) => {
-    setSnackbar({ open: true, message, severity });
+    notify({ message, type: severity });
   };
 
   const loadCondominiums = async (pageNumber = 1) => {
@@ -81,6 +74,10 @@ const CondominioPage: React.FC = () => {
           (await organizationService.getMyOrganizationId()) || "";
         localStorage.setItem("organizationId", organizationId);
       }
+      const dataCondominium = JSON.parse(
+        localStorage.getItem("dataCondominium") || "",
+      );
+      setOrganizationName(dataCondominium.name);
 
       const response = await condominiumService.getCondominiums(
         organizationId,
@@ -90,10 +87,12 @@ const CondominioPage: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
-          const nameStorage = localStorage.getItem('condominium');
+          const nameStorage = localStorage.getItem("condominium");
           const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
-            organizations?.find(o => o.organizationId === dataParse?.organizationId)?.name || dataParse?.name
+            organizations?.find(
+              (o) => o.organizationId === dataParse?.organizationId,
+            )?.name || dataParse?.name;
           if (orgName) setOrganizationName(orgName);
         } catch (error) {
           console.error("Erro ao carregar nome da organização:", error);
@@ -189,7 +188,6 @@ const CondominioPage: React.FC = () => {
   };
 
   const handleDelete = (condominium: Condominium) => {
-
     console.log("Deletar condomínio:", condominium);
     setOpenDelete(false);
   };
@@ -232,29 +230,46 @@ const CondominioPage: React.FC = () => {
                 pb: 1.5,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                flexDirection: "column",
                 borderBottom: "2px solid #f0f0f0",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
-                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
-                  {organizationName}
-                </Typography>
+              <Container
+                sx={{
+                  p: "0 !important",
+                  maxWidth: "100vw !important",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    {organizationName}
+                  </Typography>
+                </Box>
+                <Tooltip title="Fechar">
+                  <IconButton
+                    onClick={() => {
+                      navigate("/dashboard");
+                      setIsCadastroOpen(false);
+                      setEditingCondominium(null);
+                    }}
+                    className="close-button"
+                    aria-label="Fechar"
+                  >
+                    <Close sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
+              </Container>
+              <Box>
+                <BreadcrumbTrail items={["Organização", "Condomínios"]} />
               </Box>
-              <Tooltip title="Fechar">
-                <IconButton
-                  onClick={() => {
-                    navigate("/dashboard");
-                    setIsCadastroOpen(false);
-                    setEditingCondominium(null);
-                  }}
-                  className="close-button"
-                  aria-label="Fechar"
-                >
-                  <Close sx={{ fontSize: 20 }} />
-                </IconButton>
-              </Tooltip>
             </Box>
 
             <Paper variant="outlined" sx={{ p: 2 }}>
@@ -281,7 +296,7 @@ const CondominioPage: React.FC = () => {
                     loadCondominiums(page);
                   }}
                   items={condominiums
-                    .filter((condominium,) =>
+                    .filter((condominium) =>
                       [condominium.name, condominium.city, condominium.state]
                         .filter(Boolean)
                         .join(" ")
@@ -307,9 +322,9 @@ const CondominioPage: React.FC = () => {
                       meta: (
                         <>
                           {condominium.condominiumType === "Commercial" ||
-                            getCondominiumTypeLabel(
-                              condominium.condominiumType,
-                            ) === "Comercial" ? (
+                          getCondominiumTypeLabel(
+                            condominium.condominiumType,
+                          ) === "Comercial" ? (
                             <BusinessOutlined
                               sx={{
                                 fontSize: 14,
@@ -318,8 +333,8 @@ const CondominioPage: React.FC = () => {
                               }}
                             />
                           ) : getCondominiumTypeLabel(
-                            condominium.condominiumType,
-                          ) === "Residencial" ? (
+                              condominium.condominiumType,
+                            ) === "Residencial" ? (
                             <HomeOutlined
                               sx={{
                                 fontSize: 14,
@@ -363,11 +378,12 @@ const CondominioPage: React.FC = () => {
                         </Box>
                       ),
                     }))}
-                />) : condominiums.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    Nenhum condomínio encontrado para esta organização.
-                  </Typography>
-                ) : (
+                />
+              ) : condominiums.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  Nenhum condomínio encontrado para esta organização.
+                </Typography>
+              ) : (
                 <CardList
                   title="Condominios da organizacao"
                   showTitle={false}
@@ -385,7 +401,7 @@ const CondominioPage: React.FC = () => {
                     loadCondominiums(page);
                   }}
                   items={condominiums
-                    .filter((condominium,) =>
+                    .filter((condominium) =>
                       [condominium.name, condominium.city, condominium.state]
                         .filter(Boolean)
                         .join(" ")
@@ -411,9 +427,9 @@ const CondominioPage: React.FC = () => {
                       meta: (
                         <>
                           {condominium.condominiumType === "Commercial" ||
-                            getCondominiumTypeLabel(
-                              condominium.condominiumType,
-                            ) === "Comercial" ? (
+                          getCondominiumTypeLabel(
+                            condominium.condominiumType,
+                          ) === "Comercial" ? (
                             <BusinessOutlined
                               sx={{
                                 fontSize: 14,
@@ -422,8 +438,8 @@ const CondominioPage: React.FC = () => {
                               }}
                             />
                           ) : getCondominiumTypeLabel(
-                            condominium.condominiumType,
-                          ) === "Residencial" ? (
+                              condominium.condominiumType,
+                            ) === "Residencial" ? (
                             <HomeOutlined
                               sx={{
                                 fontSize: 14,
@@ -484,20 +500,6 @@ const CondominioPage: React.FC = () => {
         onCancel={() => setOpenDelete(false)}
         onClose={() => setOpenDelete(false)}
       />
-
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

@@ -134,11 +134,11 @@ export default function MainLayout() {
     [RouteNames.EncomendasRecebimento]: { label: "Recebimento", parent: "Encomendas" },
     [RouteNames.EncomendasNotificacao]: { label: "Notificacao", parent: "Encomendas" },
 
-    [RouteNames.CadastrosBlocos]: { label: "Blocos", parent: "Cadastros" },
-    [RouteNames.CadastrosUnidades]: { label: "Unidades", parent: "Cadastros" },
-    [RouteNames.CadastrosResidentes]: { label: "Residentes", parent: "Cadastros" },
-    [RouteNames.CadastrosOrganizacoes]: { label: "Organizações", parent: "Cadastros" },
-    [RouteNames.CadastrosPerfis]: { label: "Perfis", parent: "Cadastros" },
+    [RouteNames.CadastrosBlocos]: { label: "Blocos",  },
+    [RouteNames.CadastrosUnidades]: { label: "Unidades",  },
+    [RouteNames.CadastrosResidentes]: { label: "Residentes",  },
+    [RouteNames.CadastrosOrganizacoes]: { label: "Organizações",  },
+    [RouteNames.CadastrosPerfis]: { label: "Perfis",  },
   };
 
   const getHeaderTitle = () => {

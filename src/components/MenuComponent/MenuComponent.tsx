@@ -18,6 +18,7 @@ import {
 } from "react-icons/md";
 import "./MenuComponent.scss";
 import RouteNames from "../../routes/routeNames";
+import { AssignmentInd, Home, People, ViewModule  } from "@mui/icons-material";
 
 interface MenuItem {
   id: string;
@@ -39,12 +40,18 @@ const menuItems: MenuItem[] = [
     icon: <MdDashboard />,
     path: RouteNames.Dashboard,
   },
+  { id: "cadastros-organizacoes", label: "Organizações", icon: <MdBusiness/>, path: RouteNames.CadastrosOrganizacoes },
   {
     id: "condominios",
     label: "Condominios",
     icon: <MdApartment />,
     path: RouteNames.Condominio,
   },
+  { id: "cadastros-blocos", label: "Blocos", icon: <ViewModule/>, path: RouteNames.CadastrosBlocos },
+  { id: "cadastros-unidades", label: "Unidades", icon: <Home/>, path: RouteNames.CadastrosUnidades },
+  { id: "cadastros-residentes", label: "Residentes", icon: <People/>, path: RouteNames.CadastrosResidentes },
+  { id: "cadastros-perfis", label: "Perfis", icon: <AssignmentInd/>, path: RouteNames.CadastrosPerfis },
+  
   //Implementação futura
 /*   {
     id: "reservas",
@@ -83,11 +90,6 @@ const menuItems: MenuItem[] = [
     label: "Cadastros",
     icon: <MdSettings />,
     children: [
-      { id: "cadastros-blocos", label: "Blocos", icon: <></>, path: RouteNames.CadastrosBlocos },
-      { id: "cadastros-unidades", label: "Unidades", icon: <></>, path: RouteNames.CadastrosUnidades },
-      { id: "cadastros-residentes", label: "Residentes", icon: <></>, path: RouteNames.CadastrosResidentes },
-      { id: "cadastros-organizacoes", label: "Organizações", icon: <></>, path: RouteNames.CadastrosOrganizacoes },
-      { id: "cadastros-perfis", label: "Perfis", icon: <></>, path: RouteNames.CadastrosPerfis },
     ],
   },
 /*   {
