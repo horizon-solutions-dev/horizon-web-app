@@ -13,8 +13,8 @@ export class AccountService {
   /**
    * Cria uma nova conta de usuário
    */
-  static async createAccount(payload: CreateAccountRequest): Promise<CreateAccountResponse> {
-    return apiClient.post<CreateAccountResponse>(`${BASE_PATH}`, payload);
+  static async createAccount(payload: CreateAccountRequest): Promise<string> {
+    return apiClient.post<string>(`${BASE_PATH}`, payload);
   }
 
   /**

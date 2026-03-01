@@ -116,7 +116,7 @@ export default function FaleConosco() {
                     height: 46,
                   },
                 }}
-                label="Nome completo"
+                placeholder="Nome completo"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 error={!!errors.name}
@@ -129,7 +129,7 @@ export default function FaleConosco() {
                     height: 46,
                   },
                 }}
-                label="Email"
+                placeholder="Email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
                 error={!!errors.email}
@@ -142,7 +142,7 @@ export default function FaleConosco() {
                     height: 46,
                   },
                 }}
-                label="Telefone"
+                placeholder="Telefone"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
                 fullWidth
@@ -158,7 +158,7 @@ export default function FaleConosco() {
                     height: 46,
                   },
                 }}
-                label="Assunto"
+                placeholder="Assunto"
                 value={formData.subject}
                 onChange={(e) => handleChange('subject', e.target.value)}
                 error={!!errors.subject}
@@ -171,7 +171,7 @@ export default function FaleConosco() {
                     height: 46,
                   },
                 }}
-                label="Mensagem"
+                placeholder="Mensagem"
                 value={formData.message}
                 onChange={(e) => handleChange('message', e.target.value)}
                 error={!!errors.message}
@@ -207,7 +207,7 @@ export default function FaleConosco() {
               </Button>
             ) : (
               <Button variant="contained" onClick={handleNext}>
-                Proximo
+                Avançar
               </Button>
             )}
           </Box>

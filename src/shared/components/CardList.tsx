@@ -10,6 +10,7 @@ import {
   Pagination,
   PaginationItem,
   InputAdornment,
+  Tooltip,
 } from '@mui/material';
 import { Add, Search, Tune, ArrowBack, ArrowForward, Close } from '@mui/icons-material';
 
@@ -133,6 +134,7 @@ export default function CardList({
           }}
         />
         {showFilters && (
+          <Tooltip title="Clique aqui para Abrir a janela de Configurações">
           <IconButton
             sx={{
               width: 40,
@@ -150,8 +152,11 @@ export default function CardList({
           >
             <Tune />
           </IconButton>
+          </Tooltip>
         )}
         {onAddClick && addButtonPlacement === 'toolbar' && (
+          <Tooltip title="Clique aqui para Criar um novo Item">
+
           <IconButton
             onClick={onAddClick}
             sx={{
@@ -167,9 +172,10 @@ export default function CardList({
                 backgroundColor: 'rgba(211, 47, 47, 0.04)',
               },
             }}
-          >
+            >
             <Add />
           </IconButton>
+            </Tooltip>
         )}
       </Box>
 

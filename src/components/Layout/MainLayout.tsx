@@ -2,11 +2,13 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import MenuComponent from "../MenuComponent/MenuComponent";
 import { MdNotifications, MdAccountCircle, MdLogout, MdMenu } from "react-icons/md";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./MainLayout.scss";
 import NotificationsModal, { type Notification } from "../NotificationsModal/NotificationsModal";
 import { useAuth } from "../../contexts/useAuth";
 import RouteNames from "../../routes/routeNames";
+import { Backdrop, Box, CircularProgress, Typography } from "@mui/material";
+import { ApiClient } from "../../services/apiClient";
 
 export default function MainLayout() {
   const navigate = useNavigate();
@@ -15,6 +17,12 @@ export default function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [globalProcessing, setGlobalProcessing] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = ApiClient.subscribeProcessing(setGlobalProcessing);
+    return unsubscribe;
+  }, []);
 
   // Nome do morador - depois pode vir de um contexto/API
 
@@ -221,6 +229,33 @@ export default function MainLayout() {
         onMarkAsRead={handleMarkAsRead}
         onMarkAllAsRead={handleMarkAllAsRead}
       />
+
+      <Backdrop
+        open={globalProcessing}
+        sx={{
+          color: "#fff",
+          zIndex: (theme) => theme.zIndex.drawer + 2000,
+          backgroundColor: "rgba(10, 19, 38, 0.55)",
+          backdropFilter: "blur(1px)",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1.5,
+            p: 3,
+            borderRadius: 2,
+            backgroundColor: "rgba(0,0,0,0.25)",
+          }}
+        >
+          <CircularProgress color="inherit" />
+          <Typography sx={{ fontWeight: 600 }}>
+            Processando, aguarde...
+          </Typography>
+        </Box>
+      </Backdrop>
     </div>
   );
 }

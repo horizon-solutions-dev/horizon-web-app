@@ -25,19 +25,13 @@ class BlockService {
       return await apiClient.post<{ condominiumBlockId: string }>(this.baseUrl, block);
     } catch (error) {
       console.error('Erro ao criar bloco:', error);
-      
+      throw error;
     }
   }
 
   async validateBlock(block: CondominiumBlockRequest) {
-    const token = localStorage.getItem('token');
     try {
-      await axios.post(this.baseUrl, block, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      await apiClient.post<{ condominiumBlockId?: string }>(this.baseUrl, block);
       return { valid: true, validations: [] as Array<{ field: string; message: string }> };
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 422) {
@@ -64,7 +58,7 @@ class BlockService {
       return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
       console.error('Erro ao buscar blocos:', error);
-      
+      throw error;
     }
   }
 
@@ -73,7 +67,7 @@ class BlockService {
       return await apiClient.get<CondominiumBlock>(`${this.baseUrl}/${id}`);
     } catch (error) {
       console.error('Erro ao buscar bloco:', error);
-      
+      throw error;
     }
   }
 
@@ -85,7 +79,7 @@ class BlockService {
       );
     } catch (error) {
       console.error('Erro ao atualizar bloco:', error);
-      
+      throw error;
     }
   }
 
@@ -94,7 +88,7 @@ class BlockService {
       return await apiClient.delete<void>(`${this.baseUrl}/${id}`);
     } catch (error) {
       console.error('Erro ao excluir bloco:', error);
-      
+      throw error;
     }
   }
 }

@@ -304,7 +304,6 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
               borderColor: "#e0e0e0 !important",
             },
           }}
-          label="Condomínio"
           value={resolvedCondominiumName}
           fullWidth
           disabled
@@ -322,7 +321,6 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
               borderColor: "#e0e0e0 !important",
             },
           }}
-          label="Bloco"
           value={resolvedBlockName}
           fullWidth
           disabled
@@ -336,7 +334,6 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
             },
           }}
           fullWidth
-          label="Unidade"
           value={formData.unitCode}
           onChange={(e) => handleChange("unitCode", e.target.value)}
           error={Boolean(errors.unitCode)}
@@ -350,7 +347,6 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
               display: "flex",
             },
           }}
-          label="Tipo da Unidade"
           select
           value={formData.unitType || ""}
           onChange={(e) => handleChange("unitType", e.target.value)}
@@ -367,7 +363,6 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
               display: "flex",
             },
           }}
-          label="Tipo de Alocação"
           select
           value={formData.allocationType || ""}
           onChange={(e) => handleChange("allocationType", e.target.value)}

@@ -47,7 +47,8 @@ export default function StepWizardCard({
         ) : null}
         {onClose ? (
           <Box className="step-wizard-close">
-            <Tooltip title="Fechar">
+            <Tooltip title="Clique aqui para Fechar a janela">
+
               <IconButton
                 color="error"
                 onClick={() => {

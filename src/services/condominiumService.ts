@@ -54,14 +54,8 @@ class CondominiumService {
   }
 
   async validateCondominium(condominium: CondominiumRequest) {
-    const token = localStorage.getItem('token');
     try {
-      await axios.post(this.baseUrl, condominium, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      await apiClient.post<{ condominiumId?: string }>(this.baseUrl, condominium);
       return { valid: true, validations: [] as Array<{ field: string; message: string }> };
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 422) {

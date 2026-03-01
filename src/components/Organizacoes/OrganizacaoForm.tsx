@@ -422,7 +422,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                 },
               }}
               fullWidth
-              label="Nome Fantasia"
               placeholder="Nome Fantasia"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
@@ -437,7 +436,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                 },
               }}
               fullWidth
-              label="Razao Social"
               placeholder="Razao Social"
               value={formData.legalName}
               onChange={(e) => handleChange("legalName", e.target.value)}
@@ -451,7 +449,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                   height: 46,
                 },
               }}
-              label="CNPJ"
               fullWidth
               placeholder="00.000.000/0000-00"
               value={formData.doc}
@@ -469,7 +466,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
               fullWidth
               select
               placeholder="Tipo de Organizacao"
-              label="Tipo de Organizacao"
               value={formData.orgType ?? ""}
               onChange={(e) => handleChange("orgType", e.target.value)}
               error={!!errors.orgType}
@@ -497,7 +493,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                       height: 46,
                     },
                   }}
-                  label="Email"
                   placeholder="Email"
                   value={formData.email}
                   onChange={(e) => handleChange("email", e.target.value)}
@@ -512,7 +507,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                     },
                   }}
                   fullWidth
-                  label="Telefone"
                   placeholder="Telefone"
                   value={formData.phone}
                   onChange={(e) => handleChange("phone", e.target.value)}
@@ -534,7 +528,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                     },
                   }}
                   fullWidth
-                  label="CEP"
                   placeholder="CEP"
                   value={cep}
                   onChange={(e) => {
@@ -567,7 +560,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                       height: 46,
                     },
                   }}
-                  label="Cidade"
                   disabled={locationFieldsDisabled.city}
                   fullWidth
                   placeholder="Cidade"
@@ -587,7 +579,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                   select
                   placeholder="UF"
                   disabled={locationFieldsDisabled.state}
-                  label="UF"
                   value={formData.state}
                   onChange={(e) => handleChange("state", e.target.value)}
                   error={!!errors.state}
@@ -627,7 +618,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
             disabled={loading}
             sx={{ textTransform: "none" }}
           >
-            Próximo
+            Avançar
           </Button>
         ) : (
           <Button

@@ -190,7 +190,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
                 },
               }}
               fullWidth
-              label="Número do Boleto"
               value={formData.numero}
               onChange={(e) => handleChange('numero', e.target.value)}
               error={!!errors.numero}
@@ -207,7 +206,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
                 },
               }}
               fullWidth
-              label="Descrição"
               value={formData.descricao}
               onChange={(e) => handleChange('descricao', e.target.value)}
               error={!!errors.descricao}
@@ -224,7 +222,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
                 },
               }}
               fullWidth
-              label="Valor"
               type="number"
               value={formData.valor}
               onChange={(e) => handleChange('valor', e.target.value)}
@@ -244,7 +241,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
                 },
               }}
               fullWidth
-              label="Vencimento"
               type="date"
               value={formData.vencimento}
               onChange={(e) => handleChange('vencimento', e.target.value)}
@@ -263,7 +259,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
               }}
               fullWidth
               select
-              label="Status"
               value={formData.status}
               onChange={(e) => handleChange('status', e.target.value)}
             >
@@ -281,7 +276,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
                 },
               }}
               fullWidth
-              label="Beneficiário"
               value={formData.beneficiario}
               onChange={(e) => handleChange('beneficiario', e.target.value)}
               error={!!errors.beneficiario}
@@ -298,7 +292,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
                 },
               }}
               fullWidth
-              label="Pagador"
               value={formData.pagador}
               onChange={(e) => handleChange('pagador', e.target.value)}
               error={!!errors.pagador}
@@ -315,7 +308,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
                 },
               }}
               fullWidth
-              label="Data de Emissão"
               type="date"
               value={formData.dataEmissao}
               onChange={(e) => handleChange('dataEmissao', e.target.value)}

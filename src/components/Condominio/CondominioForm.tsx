@@ -12,7 +12,6 @@ import {
   Radio,
   CircularProgress,
   Grid,
-
 } from "@mui/material";
 import {
   ApartmentOutlined,
@@ -361,7 +360,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       const field = key ? fieldMap[key] : undefined;
       if (!field) return;
 
-      const stepIndex = stepFields.findIndex((fields) => fields.includes(field));
+      const stepIndex = stepFields.findIndex((fields) =>
+        fields.includes(field),
+      );
 
       if (typeof onlyStep === "number") {
         if (stepIndex !== onlyStep) return;
@@ -398,7 +399,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         ...formData,
         doc: formData.doc.replace(/\D/g, ""),
         zipCode: formData.zipCode.replace(/\D/g, ""),
-        condominiumType: normalizeCondominiumTypeValue(formData.condominiumType),
+        condominiumType: normalizeCondominiumTypeValue(
+          formData.condominiumType,
+        ),
         allocationType: normalizeAllocationTypeValue(formData.allocationType),
         commit: false,
       };
@@ -407,7 +410,10 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         await condominiumService.validateCondominium(payload);
 
       if (!valid && validations.length > 0) {
-        const { nextErrors } = mapBackendValidationErrors(validations, activeStep);
+        const { nextErrors } = mapBackendValidationErrors(
+          validations,
+          activeStep,
+        );
         if (Object.keys(nextErrors).length > 0) {
           setErrors(nextErrors);
           return;
@@ -670,15 +676,15 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
       if (editingId) {
         await condominiumService.updateCondominium(editingId, payload);
-       notify({
+        notify({
           message: `Condomínio "${formData.name}" atualizado com sucesso!`,
-          type:'success'
+          type: "success",
         });
       } else {
         const response = await condominiumService.createCondominium(payload);
         notify({
           message: `Condomínio "${formData.name}" criado com sucesso!`,
-          type:'success'
+          type: "success",
         });
 
         if (coverFile && response?.condominiumId) {
@@ -752,7 +758,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               }}
               fullWidth
               placeholder="Digite o nome do condomínio"
-              label="Nome do Condomínio"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
               error={!!errors.name}
@@ -765,7 +770,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 },
               }}
               fullWidth
-              label="CNPJ"
               value={formData.doc}
               onChange={(e) => handleChange("doc", e.target.value)}
               error={!!errors.doc}
@@ -780,7 +784,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 },
               }}
               fullWidth
-              label="Tipo de Condomínio"
               select
               value={formData.condominiumType}
               onChange={(e) =>
@@ -819,7 +822,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               }}
               fullWidth
               placeholder="Digite a quantidade de unidades"
-              label="Quantidade de Unidades"
               type="number"
               value={formData.unitCount || 0}
               onChange={(e) =>
@@ -886,7 +888,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               sx={addressFieldsDisabled.state ? desabilitarCampos : {}}
               label={formData.state ? "" : "UF"}
               value={formData.state}
-              onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
+              onChange={(e) =>
+                handleChange("state", e.target.value.toUpperCase())
+              }
               error={!!errors.state}
               helperText={errors.state}
               inputProps={{ maxLength: 2 }}
@@ -952,54 +956,66 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   <Box
                     sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}
                   >
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.hasBlocks}
-                          onChange={(e) =>
-                            handleChange("hasBlocks", e.target.checked)
-                          }
-                          size="small"
-                        />
-                      }
-                      label="Possui blocos"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.hasPowerByBlock}
-                          onChange={(e) =>
-                            handleChange("hasPowerByBlock", e.target.checked)
-                          }
-                          size="small"
-                        />
-                      }
-                      label="Energia por bloco"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.hasGasByBlock}
-                          onChange={(e) =>
-                            handleChange("hasGasByBlock", e.target.checked)
-                          }
-                          size="small"
-                        />
-                      }
-                      label="Gás por bloco"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.hasWaterIndividual}
-                          onChange={(e) =>
-                            handleChange("hasWaterIndividual", e.target.checked)
-                          }
-                          size="small"
-                        />
-                      }
-                      label="Medição individual de água"
-                    />
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <FormControlLabel
+                        sx={{ height: "40px", width: "205px" }}
+                        control={
+                          <Checkbox
+                            checked={formData.hasBlocks}
+                            onChange={(e) =>
+                              handleChange("hasBlocks", e.target.checked)
+                            }
+                            size="small"
+                          />
+                        }
+                        label="Possui blocos"
+                      />
+                      <FormControlLabel
+                        sx={{ height: "40px", width: "205px" }}
+                        control={
+                          <Checkbox
+                            checked={formData.hasPowerByBlock}
+                            onChange={(e) =>
+                              handleChange("hasPowerByBlock", e.target.checked)
+                            }
+                            size="small"
+                          />
+                        }
+                        label="Energia por bloco"
+                      />
+                    </Box>
+
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <FormControlLabel
+                        sx={{ height: "40px", width: "205px" }}
+                        control={
+                          <Checkbox
+                            checked={formData.hasGasByBlock}
+                            onChange={(e) =>
+                              handleChange("hasGasByBlock", e.target.checked)
+                            }
+                            size="small"
+                          />
+                        }
+                        label="Gás por bloco"
+                      />
+                      <FormControlLabel
+                        sx={{ height: "40px", width: "205px" }}
+                        control={
+                          <Checkbox
+                            checked={formData.hasWaterIndividual}
+                            onChange={(e) =>
+                              handleChange(
+                                "hasWaterIndividual",
+                                e.target.checked,
+                              )
+                            }
+                            size="small"
+                          />
+                        }
+                        label="Medição individual de água"
+                      />
+                    </Box>
                   </Box>
                 </Box>
               </Grid>
@@ -1041,51 +1057,105 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     }
                     sx={{ mb: 1, gap: 0.5 }}
                   >
-                    <FormControlLabel
-                      sx={{ height: "40px" }}
-                      value="FixedAllocation"
-                      control={<Radio size="small" />}
-                      label="Igualitário"
-                    />
-                    <FormControlLabel
-                      sx={{ height: "40px" }}
-                      value="ProportionalAllocation"
-                      control={<Radio size="small" />}
-                      label="Percentual"
-                    />
-                    <FormControlLabel
-                      sx={{ height: "40px" }}
-                      value="FractionalAllocation"
-                      control={<Radio size="small" />}
-                      label="Fracionário"
-                    />
-                  </RadioGroup>
-                  {allocationLoading ? (
-                    <Typography sx={{ color: "#64748b", fontSize: 12, mb: 1 }}>
-                      Carregando tipos de rateio...
-                    </Typography>
-                  ) : null}
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <FormControlLabel
+                        sx={{ height: "40px", width: "205px" }}
+                        value="FixedAllocation"
+                        control={<Radio size="small" />}
+                        label="Igualitário"
+                      />
+                      <FormControlLabel
+                        sx={{ height: "40px", width: "205px" }}
+                        value="ProportionalAllocation"
+                        control={<Radio size="small" />}
+                        label="Percentual"
+                      />
+                    </Box>
 
-                  <TextField
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        height: 40,
-                      },
-                    }}
-                    fullWidth
-                    label="Percentual padrão (%)"
-                    type="number"
-                    value={formData.allocationValuePerc || ""}
-                    onChange={(e) =>
-                      handleChange(
-                        "allocationValuePerc",
-                        parseFloat(e.target.value) || 0,
-                      )
-                    }
-                    error={!!errors.allocationValuePerc}
-                    helperText={errors.allocationValuePerc}
-                    inputProps={{ min: 0, max: 100, step: 0.01 }}
-                  />
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <FormControlLabel
+                        sx={{ height: "40px", width: "93%" }}
+                        value="FractionalAllocation"
+                        control={<Radio size="small" />}
+                        label="Fracionário"
+                      />
+                      <TextField
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            height: 40,
+                            width: "205px",
+                          },
+                        }}
+                        fullWidth
+                        placeholder="Percentual padrão (%)"
+                        type="number"
+                        value={formData.allocationValuePerc || ""}
+                        onChange={(e) =>
+                          handleChange(
+                            "allocationValuePerc",
+                            parseFloat(e.target.value) || 0,
+                          )
+                        }
+                        error={!!errors.allocationValuePerc}
+                        helperText={errors.allocationValuePerc}
+                        inputProps={{ min: 0, max: 100, step: 0.01 }}
+                      />
+                    </Box>
+                  </RadioGroup>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      select
+                      sx={{ width: "420px" }}
+                      value={formData.allocationType}
+                      onChange={(e) =>
+                        handleChange(
+                          "allocationType",
+                          normalizeAllocationTypeValue(
+                            e.target.value as string,
+                          ),
+                        )
+                      }
+                      error={!!errors.allocationType}
+                      helperText={errors.allocationType || allocationError}
+                      size="small"
+                    >
+                      <MenuItem value="" disabled>
+                        <em>Selecione o tipo de rateio</em>
+                      </MenuItem>
+                      {allocationLoading ? (
+                        <MenuItem
+                          sx={{ width: "420px" }}
+                          value={formData.allocationType}
+                          disabled
+                        >
+                          Carregando...
+                        </MenuItem>
+                      ) : allocationTypes.length > 0 ? (
+                        allocationTypes.map((type) => (
+                          <MenuItem
+                            sx={{ width: "420px" }}
+                            key={type.id}
+                            value={type.id}
+                          >
+                            {type.description || type.value}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <>
+                          <MenuItem value="FractionalAllocation">
+                            Rateio fracionário
+                          </MenuItem>
+                          <MenuItem value="FixedAllocation">
+                            Rateio fixo
+                          </MenuItem>
+                          <MenuItem value="ProportionalAllocation">
+                            Rateio proporcional
+                          </MenuItem>
+                        </>
+                      )}
+                    </TextField>
+                  </Grid>
                   {!!errors.allocationType && (
                     <Typography
                       sx={{ color: "#d32f2f", fontSize: 12, mt: 0.5 }}
@@ -1208,7 +1278,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         activeStep={activeStep}
         showBack={activeStep > 0 && activeStep < steps.length}
         onBack={handleBack}
-        width={activeStep === 2 ? "980px" : "650px"}
+        width={activeStep === 2 ? "1000px" : "650px"}
       >
         <div className="condominio-form">{renderStepContent(activeStep)}</div>
         <Box
@@ -1237,17 +1307,13 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               onClick={handleNext}
               disabled={loading}
             >
-              Próximo
+              Avançar
             </Button>
           )}
         </Box>
       </StepWizardCard>
-
     </>
   );
 };
 
 export default CondominioForm;
-
-
-

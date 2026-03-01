@@ -16,8 +16,6 @@ import {
   MeetingRoom,
   Person2Sharp,
   Business,
-  DeleteOutline,
-  EditOutlined,
 } from "@mui/icons-material";
 import {
   unitResidentService,
@@ -366,7 +364,8 @@ const Residentes: React.FC = () => {
                     {organizationName}
                   </Typography>
                 </Box>
-                <Tooltip title="Fechar">
+                <Tooltip title="Clique aqui para Fechar a janela">
+
                   <IconButton
                     onClick={() => navigate("/dashboard")}
                     className="close-button"
@@ -440,7 +439,7 @@ const Residentes: React.FC = () => {
                 </Box>
               </Box>
               <Box sx={{ display: "flex", gap: 1 }}>
-                <Tooltip title="Voltar">
+                    <Tooltip title="Clique aqui para Fechar a janela">
                   <IconButton
                     onClick={() => {
                       setActiveView("condominios");
@@ -521,26 +520,6 @@ const Residentes: React.FC = () => {
                       >
                         Visualizar Residentes
                       </Button>
-                      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          className="action-button-edit"
-                          startIcon={<EditOutlined />}
-                          onClick={() => {}}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          className="action-button-delete"
-                          startIcon={<DeleteOutline />}
-                          onClick={() => {}}
-                        >
-                          Excluir
-                        </Button>
-                      </Box>
                     </Box>
                   ),
                   accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -601,7 +580,7 @@ const Residentes: React.FC = () => {
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="Voltar">
+                    <Tooltip title="Clique aqui para Fechar a janela">
                       <IconButton
                         onClick={() => {
                           setActiveView("unidades");

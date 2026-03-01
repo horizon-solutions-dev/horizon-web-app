@@ -30,6 +30,12 @@ const STEP_CONFIG = {
 
 export default function MultiStepLogin() {
   useEffect(()=> {
+    const expiredMessage = sessionStorage.getItem("authExpiredMessage");
+    if (expiredMessage) {
+      toast.error(expiredMessage);
+      sessionStorage.removeItem("authExpiredMessage");
+    }
+
     // Limpa dados de login anteriores ao montar o componente
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
@@ -398,7 +404,8 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
   const renderStepThree = () => (
     <>
       {!isLoadingCondominiums && condominiums.length === 0 ? (
-        <Tooltip title="Fechar">
+        <Tooltip title="Clique aqui para Fechar a janela">
+
           <IconButton
             className="login-close-button"
             aria-label="Fechar"

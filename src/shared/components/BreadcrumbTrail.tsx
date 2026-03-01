@@ -12,17 +12,35 @@ export default function BreadcrumbTrail({ items }: BreadcrumbTrailProps) {
   );
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, mt: 0.5 }}>
-      {validItems.map((item, index) => (
-        <React.Fragment key={`${item}-${index}`}>
-          {index> 0 && (
-            <ChevronRight sx={{ fontSize: 36, color: "#1976d2", mr: 0.2 }} />
-          )}
-          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px", fontWeight: index === validItems.length - 1 ? 600 : 400}}>
-            {item}
-          </Typography>
-        </React.Fragment>
-      ))}
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+      {validItems.map((item, index) => {
+        const isLast = index === validItems.length - 1;
+
+        return (
+          <React.Fragment key={`${item}-${index}`}>
+            {index > 0 && (
+              <ChevronRight
+                sx={{
+                  fontSize: 14,
+                  color: "text.disabled",
+                  flexShrink: 0,
+                }}
+              />
+            )}
+            <Typography
+              variant="body2"
+              sx={{
+                fontSize: "12px",
+                fontWeight: isLast ? 600 : 400,
+                color: isLast ? "primary.main" : "text.secondary",
+                letterSpacing: isLast ? "0.01em" : "normal",
+              }}
+            >
+              {item}
+            </Typography>
+          </React.Fragment>
+        );
+      })}
     </Box>
   );
 }

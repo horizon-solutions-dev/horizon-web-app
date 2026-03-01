@@ -253,7 +253,8 @@ const CondominioPage: React.FC = () => {
                     {organizationName}
                   </Typography>
                 </Box>
-                <Tooltip title="Fechar">
+                <Tooltip title="Clique aqui para Fechar a janela">
+
                   <IconButton
                     onClick={() => {
                       navigate("/dashboard");

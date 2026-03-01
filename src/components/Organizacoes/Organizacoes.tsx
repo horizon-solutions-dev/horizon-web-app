@@ -224,7 +224,8 @@ const Organizacoes: React.FC = () => {
                   <BreadcrumbTrail items={["Organização", "Condôminios"]} />
                 </Box>
               </Box>
-              <Tooltip title="Fechar">
+              <Tooltip title="Clique aqui para Fechar a janela">
+
                 <IconButton
                   onClick={() => navigate("/dashboard")}
                   className="close-button"

@@ -109,7 +109,6 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
                 },
               }}
               fullWidth
-              label="Morador Responsável"
               value={formData.moradorNome}
               onChange={(e) => handleChange('moradorNome', e.target.value)}
               error={!!errors.moradorNome}
@@ -126,7 +125,6 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
                 },
               }}
               fullWidth
-              label="Placa"
               value={formData.placa}
               onChange={(e) => handleChange('placa', e.target.value.toUpperCase())}
               error={!!errors.placa}
@@ -143,7 +141,6 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
                 },
               }}
               fullWidth
-              label="Marca"
               value={formData.marca}
               onChange={(e) => handleChange('marca', e.target.value)}
               error={!!errors.marca}
@@ -159,7 +156,6 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
                 },
               }}
               fullWidth
-              label="Modelo"
               value={formData.modelo}
               onChange={(e) => handleChange('modelo', e.target.value)}
               error={!!errors.modelo}
@@ -175,7 +171,6 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
                 },
               }}
               fullWidth
-              label="Cor"
               value={formData.cor}
               onChange={(e) => handleChange('cor', e.target.value)}
               error={!!errors.cor}
@@ -191,7 +186,6 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
                 },
               }}
               fullWidth
-              label="Ano"
               type="number"
               value={formData.ano}
               onChange={(e) => handleChange('ano', e.target.value)}

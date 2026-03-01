@@ -296,7 +296,8 @@ const Blocos: React.FC = () => {
                     {organizationName}
                   </Typography>
                 </Box>
-                <Tooltip title="Fechar">
+                <Tooltip title="Clique aqui para Fechar a janela">
+
                   <IconButton
                     onClick={() => navigate("/dashboard")}
                     className="close-button"
@@ -486,7 +487,7 @@ const Blocos: React.FC = () => {
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="Voltar">
+                    <Tooltip title="Clique aqui para Fechar a janela">
                       <IconButton
                         onClick={() => {
                           setActiveView("condominios");

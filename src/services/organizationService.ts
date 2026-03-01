@@ -64,14 +64,8 @@ class OrganizationService {
   }
 
   async validateOrganization(payload: OrganizationRequest) {
-    const token = localStorage.getItem('token');
     try {
-      await axios.post(this.baseUrl, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      await apiClient.post<{ organizationId?: string }>(this.baseUrl, payload);
       return { valid: true, validations: [] as Array<{ field: string; message: string }> };
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 422) {
