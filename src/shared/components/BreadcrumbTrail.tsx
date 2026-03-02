@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import { ChevronRight } from "@mui/icons-material";
+// PlayArrow se aproxima mais do estilo de "ponteiro" preenchido da imagem
+import { LabelImportant } from "@mui/icons-material";
 
 type BreadcrumbTrailProps = {
   items: Array<string | null | undefined>;
@@ -12,18 +13,19 @@ export default function BreadcrumbTrail({ items }: BreadcrumbTrailProps) {
   );
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
       {validItems.map((item, index) => {
         const isLast = index === validItems.length - 1;
 
         return (
           <React.Fragment key={`${item}-${index}`}>
             {index > 0 && (
-              <ChevronRight
+              <LabelImportant
                 sx={{
-                  fontSize: 14,
-                  color: "text.disabled",
+                  fontSize: '12px',
+                  color: "#F28C28",
                   flexShrink: 0,
+                  mx: -0.5 
                 }}
               />
             )}
@@ -32,8 +34,8 @@ export default function BreadcrumbTrail({ items }: BreadcrumbTrailProps) {
               sx={{
                 fontSize: "12px",
                 fontWeight: isLast ? 800 : 400,
-                color: isLast ? "#000" : "#000",
-                letterSpacing: isLast ? "0.01em" : "normal",
+                color: isLast ? "primary.main" : "#454D54", 
+                fontFamily: "sans-serif",
               }}
             >
               {item}

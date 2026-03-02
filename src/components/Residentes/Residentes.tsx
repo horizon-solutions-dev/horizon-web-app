@@ -749,8 +749,8 @@ const Residentes: React.FC = () => {
                               </Box>
                             ),
                             id: resident.condominiumUnitResidentId,
-                            title: `Nome: ${residentName}`,
-                            subtitle: `Tipo: ${residentType} | Unidade: ${residentUnit} | Bloco: ${residentBlock}`,
+                            title: `${residentName}`,
+                            subtitle: `${residentType} | ${residentUnit} | ${residentBlock}`,
                             meta: `Periodo: ${periodStart} - ${periodEnd}`,
                             accentColor:
                               index % 2 === 0 ? "#eef6ee" : "#fdecef",
