@@ -411,6 +411,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
       onBack={handleBack}
       backLabel="Voltar"
       onClose={onClose}
+      disableContent={loading}
     >
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {activeStep === 0 ? (

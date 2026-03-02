@@ -16,6 +16,8 @@ import {
   MeetingRoom,
   Person2Sharp,
   Business,
+  DeleteOutline,
+  EditOutlined,
 } from "@mui/icons-material";
 import {
   unitResidentService,
@@ -30,6 +32,7 @@ import {
   condominiumService,
   type Condominium,
 } from "../../services/condominiumService";
+import { AccountService } from "../../services/accountService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
@@ -70,6 +73,9 @@ const Residentes: React.FC = () => {
   const [, setSelectedBlockName] = useState("");
 
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
+  const [accountNamesByUserId, setAccountNamesByUserId] = useState<
+    Record<string, string>
+  >({});
   const [residentsLoading, setResidentsLoading] = useState(false);
   const [, setResidentsError] = useState<string | null>(null);
   const [residentSearchText, setResidentSearchText] = useState("");
@@ -144,6 +150,34 @@ const Residentes: React.FC = () => {
       setBlocks(response?.items ?? []);
     } catch {
       setBlocks([]);
+    }
+  };
+
+  const loadAccountNames = async (condominiumId: string) => {
+    try {
+      const response = await AccountService.getAccountsByCondominium(
+        condominiumId,
+        1,
+        500,
+      );
+      const accounts = Array.isArray(response)
+        ? response
+        : (response?.data ?? []);
+      const namesByUserId = accounts.reduce(
+        (acc, account) => {
+          const userId = String(account?.userId ?? "");
+          const fullName =
+            `${account?.name ?? ""} ${account?.surname ?? ""}`.trim();
+          if (userId && fullName) {
+            acc[userId] = fullName;
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+      setAccountNamesByUserId(namesByUserId);
+    } catch {
+      setAccountNamesByUserId({});
     }
   };
 
@@ -282,8 +316,13 @@ const Residentes: React.FC = () => {
     resetResidentsContext();
     setActiveView("unidades");
     await loadBlocks(condominium.condominiumId);
+    await loadAccountNames(condominium.condominiumId);
     await loadUnits(condominium.condominiumId, undefined, 1);
   };
+
+  useEffect(() => {
+    loadAccountNames(selectedCondominium?.condominiumId || "");
+  }, [residents]);
 
   const handleSelectUnit = async (unit: CondominiumUnit) => {
     setSelectedUnit(unit);
@@ -318,6 +357,13 @@ const Residentes: React.FC = () => {
     if (value === "2" || value === "Tenant") return "Inquilino";
     return value;
   };
+
+  function handleEdit() {
+    return;
+  }
+  function handleDelete() {
+    return;
+  }
 
   const navigate = useNavigate();
   /*   const getResidentPermissions = (resident: CondominiumUnitResident) => {
@@ -365,7 +411,6 @@ const Residentes: React.FC = () => {
                   </Typography>
                 </Box>
                 <Tooltip title="Clique aqui para Fechar a janela">
-
                   <IconButton
                     onClick={() => navigate("/dashboard")}
                     className="close-button"
@@ -439,7 +484,7 @@ const Residentes: React.FC = () => {
                 </Box>
               </Box>
               <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="Clique aqui para Fechar a janela">
+                <Tooltip title="Clique aqui para Fechar a janela">
                   <IconButton
                     onClick={() => {
                       setActiveView("condominios");
@@ -628,21 +673,89 @@ const Residentes: React.FC = () => {
                       }}
                       items={residents
                         .filter((resident) =>
-                          [resident.userId, resident.condominiumUnitId]
+                          [
+                            resident.userId,
+                            resident.condominiumUnitId,
+                            accountNamesByUserId[resident.userId],
+                          ]
                             .filter(Boolean)
                             .join(" ")
                             .toLowerCase()
                             .includes(residentSearchText.toLowerCase()),
                         )
-                        .map((resident, index) => ({
-                          id: resident.condominiumUnitResidentId,
-                          title: getUnitTypeLabel(
+                        .map((resident, index) => {
+                          const unit = units.find(
+                            (u) =>
+                              u.condominiumUnitId ===
+                              resident.condominiumUnitId,
+                          );
+                          const blockName = blocks.find(
+                            (b) =>
+                              b.condominiumBlockId === unit?.condominiumBlockId,
+                          )?.name;
+                          const residentName =
+                            accountNamesByUserId[resident.userId] ||
+                            resident.userId ||
+                            "-";
+                          const residentType = getUnitTypeLabel(
                             resident.unitType?.toString(),
-                          ),
-                          subtitle: `Unidade: ${units.find((u) => u.condominiumUnitId === resident.condominiumUnitId)?.unitCode || resident.condominiumUnitId}`,
-                          meta: `Periodo: ${moment(resident.startDate).format("DD/MM/YYYY")} - ${resident.endDate ? moment(resident.endDate).format("DD/MM/YYYY") : "Atual"}`,
-                          accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                        }))}
+                          );
+                          const residentUnit =
+                            unit?.unitCode || resident.condominiumUnitId || "-";
+                          const residentBlock =
+                            blockName || unit?.condominiumBlockId || "-";
+                          const periodStart = resident.startDate
+                            ? moment(resident.startDate).format("DD/MM/YYYY")
+                            : "-";
+                          const periodEnd = resident.endDate
+                            ? moment(resident.endDate).format("DD/MM/YYYY")
+                            : "Atual";
+
+                          return {
+                            actions: (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  gap: 1,
+                                  flexWrap: "wrap",
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    gap: 1,
+                                    flexWrap: "wrap",
+                                  }}
+                                >
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    className="action-button-edit"
+                                    startIcon={<EditOutlined />}
+                                    onClick={() => handleEdit()}
+                                  >
+                                    Editar
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    className="action-button-delete"
+                                    startIcon={<DeleteOutline />}
+                                    onClick={() => handleDelete()}
+                                  >
+                                    Excluir
+                                  </Button>
+                                </Box>
+                              </Box>
+                            ),
+                            id: resident.condominiumUnitResidentId,
+                            title: `Nome: ${residentName}`,
+                            subtitle: `Tipo: ${residentType} | Unidade: ${residentUnit} | Bloco: ${residentBlock}`,
+                            meta: `Periodo: ${periodStart} - ${periodEnd}`,
+                            accentColor:
+                              index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                          };
+                        })}
                     />
                   </>
                 )}

@@ -8,8 +8,6 @@ import {
   MenuItem,
   FormControlLabel,
   Checkbox,
-  RadioGroup,
-  Radio,
   CircularProgress,
   Grid,
 } from "@mui/material";
@@ -76,7 +74,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     hasWaterIndividual: false,
     hasPowerByBlock: false,
     hasGasByBlock: false,
-    allocationType: "FractionalAllocation",
+    allocationType: 1,
     allocationValuePerc: 0,
     commit: true,
   };
@@ -406,8 +404,12 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         commit: false,
       };
 
-      const { valid, validations } =
-        await condominiumService.validateCondominium(payload);
+      const { valid, validations } = editingId
+        ? await condominiumService.validateCondominiumEdit(
+            payload,
+            editingCondominium?.condominiumId || "",
+          )
+        : await condominiumService.validateCondominium(payload);
 
       if (!valid && validations.length > 0) {
         const { nextErrors } = mapBackendValidationErrors(
@@ -600,11 +602,18 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       };
 
       // Backend validation still happens, but after local validation
-      const { valid, validations } =
-        await condominiumService.validateCondominium({
-          ...payload,
-          commit: false,
-        });
+      const { valid, validations } = editingId
+        ? await await condominiumService.validateCondominiumEdit(
+            {
+              ...payload,
+              commit: false,
+            },
+            editingCondominium?.condominiumId || "",
+          )
+        : await condominiumService.validateCondominium({
+            ...payload,
+            commit: false,
+          });
 
       if (!valid && validations.length > 0) {
         const fieldMap: Record<string, keyof CondominiumRequest> = {
@@ -937,6 +946,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       alignItems: "center",
                       gap: 1,
                       mb: 0.5,
+                      mt: "8px",
                     }}
                   >
                     <ApartmentOutlined
@@ -948,9 +958,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       Estrutura do Condomínio
                     </Typography>
                   </Box>
-                  <Typography sx={{ color: "#64748b", fontSize: 14, mb: 1.5 }}>
-                    Configure como as unidades são organizadas.
-                  </Typography>
                   <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
 
                   <Box
@@ -1045,12 +1052,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       Configuração de Rateio
                     </Typography>
                   </Box>
-                  <Typography sx={{ color: "#64748b", fontSize: 14, mb: 1.5 }}>
-                    Defina como as despesas serão divididas.
-                  </Typography>
                   <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
 
-                  <RadioGroup
+              {/*     <RadioGroup
                     value={String(formData.allocationType)}
                     onChange={(e) =>
                       handleChange("allocationType", e.target.value)
@@ -1079,29 +1083,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                         control={<Radio size="small" />}
                         label="Fracionário"
                       />
-                      <TextField
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            height: 40,
-                            width: "205px",
-                          },
-                        }}
-                        fullWidth
-                        placeholder="Percentual padrão (%)"
-                        type="number"
-                        value={formData.allocationValuePerc || ""}
-                        onChange={(e) =>
-                          handleChange(
-                            "allocationValuePerc",
-                            parseFloat(e.target.value) || 0,
-                          )
-                        }
-                        error={!!errors.allocationValuePerc}
-                        helperText={errors.allocationValuePerc}
-                        inputProps={{ min: 0, max: 100, step: 0.01 }}
-                      />
-                    </Box>
-                  </RadioGroup>
+                      </Box>
+                      </RadioGroup> */}
+                      
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
@@ -1156,6 +1140,28 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       )}
                     </TextField>
                   </Grid>
+                  <TextField
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            height: 40,
+                            mt:1
+                           // width: "205px",
+                          },
+                        }}
+                        fullWidth
+                        placeholder="Percentual padrão (%)"
+                        type="number"
+                        value={formData.allocationValuePerc || ""}
+                        onChange={(e) =>
+                          handleChange(
+                            "allocationValuePerc",
+                            parseFloat(e.target.value) || 0,
+                          )
+                        }
+                        error={!!errors.allocationValuePerc}
+                        helperText={errors.allocationValuePerc}
+                        inputProps={{ min: 0, max: 100, step: 0.01 }}
+                      />
                   {!!errors.allocationType && (
                     <Typography
                       sx={{ color: "#d32f2f", fontSize: 12, mt: 0.5 }}
@@ -1189,12 +1195,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 <Typography
                   sx={{ fontWeight: 700, fontSize: 18, lineHeight: 1 }}
                 >
-                  Identidade
+                  Imagem Fachada do Condôminio
                 </Typography>
               </Box>
-              <Typography sx={{ color: "#64748b", fontSize: 14, mb: 1 }}>
-                Imagem do condomínio (opcional).
-              </Typography>
               <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1 }} />
 
               <Box
@@ -1279,6 +1282,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         showBack={activeStep > 0 && activeStep < steps.length}
         onBack={handleBack}
         width={activeStep === 2 ? "1000px" : "650px"}
+        disableContent={loading}
       >
         <div className="condominio-form">{renderStepContent(activeStep)}</div>
         <Box

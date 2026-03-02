@@ -46,6 +46,20 @@ class UnitService {
     }
   }
 
+  async validateUnitEdit(unit: CondominiumUnitRequest, id:string) {
+    try {
+      await apiClient.put<{ condominiumUnitId?: string }>(this.baseUrl + '/' + id, unit);
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
+      throw error;
+    }
+  }
   async validateUnit(unit: CondominiumUnitRequest) {
     try {
       await apiClient.post<{ condominiumUnitId?: string }>(this.baseUrl, unit);

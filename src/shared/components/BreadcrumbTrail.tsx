@@ -31,8 +31,8 @@ export default function BreadcrumbTrail({ items }: BreadcrumbTrailProps) {
               variant="body2"
               sx={{
                 fontSize: "12px",
-                fontWeight: isLast ? 600 : 400,
-                color: isLast ? "primary.main" : "text.secondary",
+                fontWeight: isLast ? 800 : 400,
+                color: isLast ? "#000" : "#000",
                 letterSpacing: isLast ? "0.01em" : "normal",
               }}
             >

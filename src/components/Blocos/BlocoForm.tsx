@@ -216,6 +216,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
         activeStep={activeStep}
         showBack={false}
         onClose={onClose}
+        disableContent={loading}
         actions={renderActions()} 
       >
         {renderStepContent()}

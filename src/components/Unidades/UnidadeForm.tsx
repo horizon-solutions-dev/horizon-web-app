@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { AxiosError } from "axios";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -16,6 +17,10 @@ import {
 } from "../../services/unitService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { notify } from "../../shared/utils/toastMessage";
+import {
+  condominiumService,
+  type AllocationTypeEnum,
+} from "../../services/condominiumService";
 
 interface UnidadeFormProps {
   open: boolean;
@@ -42,12 +47,12 @@ type FormErrors = {
   unitType?: string;
   allocationType?: string;
 };
-
+/* 
 const ALLOCATION_OPTIONS = [
   { value: "FractionalAllocation", label: "Fracionado" },
   { value: "FixedAllocation", label: "Fixo" },
   { value: "ProportionalAllocation", label: "Proporcional" },
-];
+]; */
 
 const normalizeUnitType = (value?: string | number) => {
   if (value === 1 || value === "1") return "Owner";
@@ -97,6 +102,32 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     () => blockNamePreset || "Bloco selecionado",
     [blockNamePreset],
   );
+  const [allocationLoading, setAllocationLoading] = useState(false);
+  const [allocationError, setAllocationError] = useState<string | null>(null);
+  const [allocationTypes, setAllocationTypes] = useState<AllocationTypeEnum[]>(
+    [],
+  );
+  const loadAllocationTypes = async () => {
+    setAllocationLoading(true);
+    setAllocationError(null);
+    try {
+      const data = await condominiumService.getAllocationTypes();
+      setAllocationTypes(data ?? []);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar tipos de alocação.";
+      setAllocationError(message);
+      onNotify(message, "error");
+    } finally {
+      setAllocationLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAllocationTypes();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -129,6 +160,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   const handleChange = (field: keyof CondominiumUnitRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
+    console.log(formData);
   };
 
   const validate = () => {
@@ -174,7 +206,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       if (!field) return;
       if (field === "unitCode") nextErrors.unitCode = validation.message;
       if (field === "unitType") nextErrors.unitType = validation.message;
-      if (field === "allocationType") nextErrors.allocationType = validation.message;
+      if (field === "allocationType")
+        nextErrors.allocationType = validation.message;
     });
 
     if (Object.keys(nextErrors).length > 0) {
@@ -197,10 +230,18 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
         commit: true,
       };
 
-      const { valid, validations } = await unitService.validateUnit({
-        ...payload,
-        commit: false,
-      });
+      const { valid, validations } = editingId
+        ? await unitService.validateUnitEdit(
+            {
+              ...payload,
+              commit: false,
+            },
+            editingUnit?.condominiumUnitId || "",
+          )
+        : await unitService.validateUnit({
+            ...payload,
+            commit: false,
+          });
 
       if (!valid && validations.length > 0) {
         if (applyBackendValidationErrors(validations)) {
@@ -214,13 +255,13 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
         notify({
           message: "Unidade atualizada com sucesso.",
           type: "success",
-        })
+        });
       } else {
         await unitService.createUnit(payload);
         notify({
           message: "Unidade criada com sucesso.",
           type: "success",
-        })
+        });
         //onNotify("Unidade criada com sucesso.", "success");
       }
 
@@ -274,6 +315,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       activeStep={0}
       showBack={false}
       onClose={onClose}
+      disableContent={loading}
       actions={
         <Button
           variant="contained"
@@ -294,9 +336,9 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <TextField
           sx={{
-                      "& .MuiOutlinedInput-root": {
-                        height: 46,
-                      },
+            "& .MuiOutlinedInput-root": {
+              height: 46,
+            },
             "& .MuiOutlinedInput-root.Mui-disabled:hover fieldset": {
               borderColor: "#e0e0e0 !important",
             },
@@ -356,7 +398,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
         >
           {renderUnitTypeOptions()}
         </TextField>
-        <TextField
+        {/* <TextField
           sx={{
             "& .MuiOutlinedInput-root": {
               height: 46,
@@ -370,12 +412,12 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           error={Boolean(errors.allocationType)}
           helperText={errors.allocationType}
         >
-          {ALLOCATION_OPTIONS.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
+          {allocationTypes.map((type) => (
+            <MenuItem sx={{ width: "420px" }} key={type.id} value={type.id}>
+              {type.description || type.value}
             </MenuItem>
           ))}
-        </TextField>
+        </TextField> */}
       </Box>
     </StepWizardCard>
   );

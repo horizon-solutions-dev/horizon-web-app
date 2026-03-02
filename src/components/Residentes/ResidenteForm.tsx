@@ -76,7 +76,7 @@ const validateCnpj = (cnpj: string) => {
 
   let size = cnpjClean.length - 2;
   let numbers = cnpjClean.substring(0, size);
-  let digits = cnpjClean.substring(size);
+  const digits = cnpjClean.substring(size);
   let sum = 0;
   let pos = size - 7;
 
@@ -153,7 +153,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     condominiumUnitId: unitIdPreset || "",
     userId: "",
     unitType: "Owner",
-    startDate: "",
+    startDate: new Date().toISOString().split("T")[0],
     endDate: "",
     billingContact: false,
     canVote: false,
@@ -205,14 +205,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
   };
 
-  const getUnitTypeLabel = (value?: string | number) => {
-    if (!value) return "-";
-    if (value === "1" || value === 1 || value === "Owner")
-      return "Proprietario";
-    if (value === "2" || value === 2 || value === "Tenant") return "Inquilino";
-    return String(value);
-  };
-
   const handleChange = (
     field: keyof CondominiumUnitResidentRequest,
     value: string | boolean,
@@ -259,13 +251,13 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         nextErrors.documentNumber = "CNPJ invalido.";
       }
     }
-
+    
     if (!email.trim()) {
       nextErrors.email = "Email obrigatorio.";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       nextErrors.email = "Email invalido.";
     }
-
+    
     if (!phone.trim()) nextErrors.phone = "Celular obrigatorio.";
 
     return nextErrors;
@@ -276,6 +268,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     if (step === 1) return getResidentDataErrors();
     return {};
   };
+  
 
   const residentFieldMap: Record<string, keyof CondominiumUnitResidentRequest> =
     {
@@ -464,6 +457,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         hasGatehouseAccess: formData.hasGatehouseAccess,
         commit: true,
       });
+
 
       if (photoFile) {
         await fileToDataUrl(photoFile);
@@ -751,17 +745,15 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               mb: 0.5,
             }}
           >
-            <RuleSharp/>
+            <RuleSharp />
             <Typography sx={{ fontWeight: 700, fontSize: 18, lineHeight: 1 }}>
               Permissões do Morador
             </Typography>
           </Box>
-          <Typography sx={{ color: "#64748b", fontSize: 14, mb: 1.5 }}>
-            Defina quais permissões serão atribuídas ao morador.
-          </Typography>
           <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
           <Box sx={{ display: "flex", flexDirection: "column" }}>
             <FormControlLabel
+              sx={{ height: "25px" }}
               control={
                 <Checkbox
                   checked={Boolean(formData.billingContact)}
@@ -773,6 +765,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               label="Contato de cobranca"
             />
             <FormControlLabel
+              sx={{ height: "25px" }}
               control={
                 <Checkbox
                   checked={Boolean(formData.canVote)}
@@ -782,6 +775,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               label="Pode votar"
             />
             <FormControlLabel
+              sx={{ height: "25px" }}
               control={
                 <Checkbox
                   checked={Boolean(formData.canMakeReservations)}
@@ -793,6 +787,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               label="Pode reservar"
             />
             <FormControlLabel
+              sx={{ height: "25px" }}
               control={
                 <Checkbox
                   checked={Boolean(formData.hasGatehouseAccess)}
@@ -805,7 +800,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             />
           </Box>
         </Box>
-        <Typography variant="subtitle2" sx={{mt:2}}>Foto do Morador</Typography>
+        <Typography variant="subtitle2" sx={{ mt: 2 }}>
+          Foto do Morador
+        </Typography>
         <Box
           component="label"
           sx={{
@@ -833,15 +830,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             {photoFile ? photoFile.name : "Adicionar foto"}
           </Typography>
         </Box>
-
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <Typography variant="subtitle2">
-            Tipo: {getUnitTypeLabel(formData.unitType)}
-          </Typography>
-          <Typography variant="subtitle2">
-            Início de Residência: {formData.startDate ? moment(formData.startDate).format("DD/MM/YYYY") : "-"}
-          </Typography>
-        </Box>
       </Grid>
     );
   };
@@ -849,7 +837,12 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const renderActions = () => {
     if (activeStep === STEPS.length - 1) {
       return (
-        <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+        <Button
+          sx={{ marginTop: "16px !important" }}
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
           {loading ? <CircularProgress size={20} /> : "Concluir"}
         </Button>
       );
@@ -858,7 +851,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     return (
       <Button
         variant="contained"
-        sx={{ marginTop: 2 }}
+        sx={{ marginTop: "16px !important" }}
         onClick={handleNext}
         disabled={loading}
       >
@@ -883,6 +876,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       }}
       width="500px"
       onClose={onClose}
+      disableContent={loading}
       actions={renderActions()}
     >
       {renderStepContent(activeStep)}

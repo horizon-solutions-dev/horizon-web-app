@@ -19,6 +19,7 @@ interface StepWizardCardProps {
   onClose?: () => void;
   showLogo?: boolean;
   width?: string;
+  disableContent?: boolean;
 }
 
 export default function StepWizardCard({
@@ -34,7 +35,8 @@ export default function StepWizardCard({
   backLabel = "Voltar",
   onClose,
   showLogo = true,
-  width = '650px'
+  width = '650px',
+  disableContent = true,
 }: StepWizardCardProps) {
   return (
     <div className="step-wizard">
@@ -72,7 +74,14 @@ export default function StepWizardCard({
           <div className={subtitleClassName || "step-wizard-subtitle"}>{subtitle}</div>
         ) : null}
 
-        <div className="step-wizard-content">{children}</div>
+        <div className="step-wizard-content">
+          <fieldset
+            disabled={disableContent}
+            style={{ border: "none", margin: 0, padding: 0, minWidth: 0 }}
+          >
+            {children}
+          </fieldset>
+        </div>
 
         {actions ? <div className="step-wizard-actions">{actions}</div> : null}
 
