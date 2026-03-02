@@ -34,6 +34,7 @@ import BlocoForm from "./BlocoForm";
 import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
 import { notify } from "../../shared/utils/toastMessage";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
+import { condominiumImageService } from "../../services/condominiumImageService";
 
 const Blocos: React.FC = () => {
   const navigate = useNavigate();
@@ -73,6 +74,36 @@ const Blocos: React.FC = () => {
     severity: "success" | "error" | "info" | "warning" = "success",
   ) => {
     notify({ message, type: severity });
+  };
+  const [condominiumImages, setCondominiumImages] = useState<
+    Record<string, string>
+  >({});
+  const loadCondominiumImages = async (items: Condominium[]) => {
+    const previews: Record<string, string> = {};
+    await Promise.all(
+      items.map(async (condominium) => {
+        try {
+          const list = await condominiumImageService.getCondominiumImages(
+            condominium.condominiumId,
+            "Cover",
+          );
+          const first = list?.[0];
+          if (!first?.condominiumImageId) return;
+          const detail = await condominiumImageService.getCondominiumImageById(
+            first.condominiumImageId,
+          );
+          if (detail?.contentFile && detail?.contentType) {
+            previews[condominium.condominiumId] =
+              `data:${detail.contentType};base64,${detail.contentFile}`;
+          }
+        } catch (error) {
+          console.error("Erro ao carregar imagem do condomínio:", error);
+          // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
+          // Não loga nada no console para não poluir
+        }
+      }),
+    );
+    setCondominiumImages(previews);
   };
 
   const loadCondominiums = async (pageNumber = 1) => {
@@ -115,6 +146,7 @@ const Blocos: React.FC = () => {
       setCondominiumsPage(response?.paging?.pageNumber ?? pageNumber);
       setCondominiumsTotalPages(computedTotalPages);
       setCondominiums(normalized);
+      await loadCondominiumImages(normalized);
     } catch (error) {
       const message =
         error instanceof Error
@@ -279,7 +311,7 @@ const Blocos: React.FC = () => {
             >
               <Container
                 sx={{
-                  p:'0 !important',
+                  p: "0 !important",
                   maxWidth: "100vw !important",
                   display: "flex",
                   alignItems: "center",
@@ -297,7 +329,6 @@ const Blocos: React.FC = () => {
                   </Typography>
                 </Box>
                 <Tooltip title="Clique aqui para Fechar a janela">
-
                   <IconButton
                     onClick={() => navigate("/dashboard")}
                     className="close-button"
@@ -307,13 +338,8 @@ const Blocos: React.FC = () => {
                   </IconButton>
                 </Tooltip>
               </Container>
-              <Box >
-                <BreadcrumbTrail
-                  items={[
-                    "Organização",
-                    "Condomínios",
-                  ]}
-                />
+              <Box>
+                <BreadcrumbTrail items={["Organização", "Condomínios"]} />
               </Box>
             </Box>
 
@@ -350,6 +376,7 @@ const Blocos: React.FC = () => {
                     )
                     .map((condominium, index) => ({
                       id: condominium.condominiumId,
+                      
                       title: condominium.name,
                       subtitle: (
                         <>
@@ -359,10 +386,11 @@ const Blocos: React.FC = () => {
                               mr: 0.5,
                               verticalAlign: "middle",
                             }}
-                          />
+                            />
                           {condominium.city} - {condominium.state}
                         </>
                       ),
+                      imageUrl: condominiumImages[condominium.condominiumId],
                       actions: (
                         <Button
                           size="small"
@@ -421,6 +449,8 @@ const Blocos: React.FC = () => {
                           {condominium.city} - {condominium.state}
                         </>
                       ),
+                                            imageUrl: condominiumImages[condominium.condominiumId],
+
                       actions: (
                         <Button
                           size="small"

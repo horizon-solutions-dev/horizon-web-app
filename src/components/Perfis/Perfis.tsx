@@ -50,12 +50,12 @@ const Perfis: React.FC = () => {
           title: profile.name,
           subtitle: (
             <Typography variant="body2" color="text.secondary">
-              Codigo: {profile.code}
+            {profile.code}
             </Typography>
           ),
           meta: (
             <Typography variant="caption" color="text.secondary">
-              Id: {profile.profileId}
+              {profile.profileId}
             </Typography>
           ),
           accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",

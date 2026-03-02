@@ -683,33 +683,38 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         }
       }
 
+      const response = editingId
+        ? await condominiumService.updateCondominium(editingId, payload)
+        : await condominiumService.createCondominium(payload);
       if (editingId) {
-        await condominiumService.updateCondominium(editingId, payload);
         notify({
           message: `Condomínio "${formData.name}" atualizado com sucesso!`,
           type: "success",
         });
-      } else {
-        const response = await condominiumService.createCondominium(payload);
+      } else
         notify({
           message: `Condomínio "${formData.name}" criado com sucesso!`,
           type: "success",
         });
 
-        if (coverFile && response?.condominiumId) {
-          try {
-            await condominiumImageService.uploadCondominiumImage({
-              imageType: "Cover",
-              contentFile: coverFile,
-              condominiumId: response.condominiumId,
-            });
-          } catch (error) {
-            const message =
-              error instanceof Error
-                ? error.message
-                : "Erro ao enviar imagem de capa.";
-            onNotify(message, "warning");
-          }
+      if (coverFile && response) {
+        console.log({
+          imageType: "Cover",
+          contentFile: coverFile,
+          condominiumId: response,
+        });
+        try {
+          await condominiumImageService.uploadCondominiumImage({
+            imageType: "Cover",
+            contentFile: coverFile,
+            condominiumId: response,
+          });
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Erro ao enviar imagem de capa.";
+          onNotify(message, "warning");
         }
       }
 
@@ -1054,7 +1059,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   </Box>
                   <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
 
-              {/*     <RadioGroup
+                  {/*     <RadioGroup
                     value={String(formData.allocationType)}
                     onChange={(e) =>
                       handleChange("allocationType", e.target.value)
@@ -1085,7 +1090,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       />
                       </Box>
                       </RadioGroup> */}
-                      
+
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
@@ -1141,27 +1146,27 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     </TextField>
                   </Grid>
                   <TextField
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            height: 40,
-                            mt:1
-                           // width: "205px",
-                          },
-                        }}
-                        fullWidth
-                        placeholder="Percentual padrão (%)"
-                        type="number"
-                        value={formData.allocationValuePerc || ""}
-                        onChange={(e) =>
-                          handleChange(
-                            "allocationValuePerc",
-                            parseFloat(e.target.value) || 0,
-                          )
-                        }
-                        error={!!errors.allocationValuePerc}
-                        helperText={errors.allocationValuePerc}
-                        inputProps={{ min: 0, max: 100, step: 0.01 }}
-                      />
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        height: 40,
+                        mt: 1,
+                        // width: "205px",
+                      },
+                    }}
+                    fullWidth
+                    placeholder="Percentual padrão (%)"
+                    type="number"
+                    value={formData.allocationValuePerc || ""}
+                    onChange={(e) =>
+                      handleChange(
+                        "allocationValuePerc",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
+                    error={!!errors.allocationValuePerc}
+                    helperText={errors.allocationValuePerc}
+                    inputProps={{ min: 0, max: 100, step: 0.01 }}
+                  />
                   {!!errors.allocationType && (
                     <Typography
                       sx={{ color: "#d32f2f", fontSize: 12, mt: 0.5 }}

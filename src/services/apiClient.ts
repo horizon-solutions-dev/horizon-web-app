@@ -14,9 +14,6 @@ export class ApiClient {
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
 
     this.client.interceptors.request.use((config) => {
@@ -24,6 +21,13 @@ export class ApiClient {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+
+      // Adiciona o header 'Content-Type' para requisições que não são FormData,
+      // permitindo que o navegador defina o 'Content-Type' correto para uploads.
+      if (config.headers && !(config.data instanceof FormData)) {
+        config.headers['Content-Type'] = 'application/json';
+      }
+
       return config;
     });
 

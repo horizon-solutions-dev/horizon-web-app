@@ -745,7 +745,10 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               mb: 0.5,
             }}
           >
-            <RuleSharp />
+            <Box sx={{color: 'primary.main'}}>
+
+            <RuleSharp/>
+            </Box>
             <Typography sx={{ fontWeight: 700, fontSize: 18, lineHeight: 1 }}>
               Permissões do Morador
             </Typography>

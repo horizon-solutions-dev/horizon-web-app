@@ -39,6 +39,7 @@ import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import UnidadeForm from "./UnidadeForm";
 import { notify } from "../../shared/utils/toastMessage";
 import { useNavigate } from "react-router-dom";
+import { condominiumImageService } from "../../services/condominiumImageService";
 
 const Unidades: React.FC = () => {
   const [activeView, setActiveView] = useState<"condominios" | "unidades">(
@@ -115,6 +116,7 @@ const Unidades: React.FC = () => {
       setCondominiumsPage(response?.paging?.pageNumber ?? pageNumber);
       setCondominiumsTotalPages(computedTotalPages);
       setCondominiums(normalized);
+      await loadCondominiumImages(normalized);
     } catch (error) {
       const message =
         error instanceof Error
@@ -125,6 +127,37 @@ const Unidades: React.FC = () => {
       setListLoading(false);
     }
   };
+
+    const [condominiumImages, setCondominiumImages] = useState<
+      Record<string, string>
+    >({});
+    const loadCondominiumImages = async (items: Condominium[]) => {
+      const previews: Record<string, string> = {};
+      await Promise.all(
+        items.map(async (condominium) => {
+          try {
+            const list = await condominiumImageService.getCondominiumImages(
+              condominium.condominiumId,
+              "Cover",
+            );
+            const first = list?.[0];
+            if (!first?.condominiumImageId) return;
+            const detail = await condominiumImageService.getCondominiumImageById(
+              first.condominiumImageId,
+            );
+            if (detail?.contentFile && detail?.contentType) {
+              previews[condominium.condominiumId] =
+                `data:${detail.contentType};base64,${detail.contentFile}`;
+            }
+          } catch (error) {
+            console.error("Erro ao carregar imagem do condomínio:", error);
+            // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
+            // Não loga nada no console para não poluir
+          }
+        }),
+      );
+      setCondominiumImages(previews);
+    };
 
   const loadUnits = async (
     blockId?: string,
@@ -405,6 +438,8 @@ const Unidades: React.FC = () => {
                           {condominium.city} - {condominium.state}
                         </>
                       ),
+                                            imageUrl: condominiumImages[condominium.condominiumId],
+
                       actions: (
                         <Button
                           size="small"
@@ -463,6 +498,8 @@ const Unidades: React.FC = () => {
                           {condominium.city} - {condominium.state}
                         </>
                       ),
+                                            imageUrl: condominiumImages[condominium.condominiumId],
+
                       actions: (
                         <Button
                           size="small"
@@ -617,7 +654,7 @@ const Unidades: React.FC = () => {
                                   verticalAlign: "middle",
                                 }}
                               />
-                              Código: {block.code || "-"}
+                              {block.code || "-"}
                             </>
                           ),
                           actions: (
@@ -692,7 +729,7 @@ const Unidades: React.FC = () => {
                                   verticalAlign: "middle",
                                 }}
                               />
-                              Tipo:{" "}
+                              {" "}
                               {unit.unitType?.toString() === "1"
                                 ? "Proprietário"
                                 : "Inquilino"}
@@ -700,7 +737,7 @@ const Unidades: React.FC = () => {
                           ),
                           meta: (
                             <>
-                              Bloco:{" "}
+                              {" "}
                               {blocks.find(
                                 (b) =>
                                   b.condominiumBlockId ===

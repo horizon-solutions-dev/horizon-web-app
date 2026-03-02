@@ -40,6 +40,7 @@ import ResidenteForm from "./ResidenteForm";
 import { useNavigate } from "react-router";
 import moment from "moment";
 import { notify } from "../../shared/utils/toastMessage";
+import { condominiumImageService } from "../../services/condominiumImageService";
 const condoPageSize = 4;
 const unitPageSize = 6;
 const residentPageSize = 6;
@@ -91,6 +92,37 @@ const Residentes: React.FC = () => {
     notify({ message, type: severity });
   };
 
+  const [condominiumImages, setCondominiumImages] = useState<
+    Record<string, string>
+  >({});
+  const loadCondominiumImages = async (items: Condominium[]) => {
+    const previews: Record<string, string> = {};
+    await Promise.all(
+      items.map(async (condominium) => {
+        try {
+          const list = await condominiumImageService.getCondominiumImages(
+            condominium.condominiumId,
+            "Cover",
+          );
+          const first = list?.[0];
+          if (!first?.condominiumImageId) return;
+          const detail = await condominiumImageService.getCondominiumImageById(
+            first.condominiumImageId,
+          );
+          if (detail?.contentFile && detail?.contentType) {
+            previews[condominium.condominiumId] =
+              `data:${detail.contentType};base64,${detail.contentFile}`;
+          }
+        } catch (error) {
+          console.error("Erro ao carregar imagem do condomínio:", error);
+          // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
+          // Não loga nada no console para não poluir
+        }
+      }),
+    );
+    setCondominiumImages(previews);
+  };
+
   const loadCondominiums = async (pageNumber = 1) => {
     setCondoLoading(true);
     setCondoError(null);
@@ -133,6 +165,7 @@ const Residentes: React.FC = () => {
       setCondoPage(response?.paging?.pageNumber ?? pageNumber);
       setCondoTotalPages(computedTotalPages);
       setCondominiums(normalized);
+      await loadCondominiumImages(normalized);
     } catch (error) {
       const message =
         error instanceof Error
@@ -292,6 +325,8 @@ const Residentes: React.FC = () => {
         </Typography>
       ),
       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                            imageUrl: condominiumImages[condominium.condominiumId],
+
       actions: (
         <Button
           size="small"
@@ -541,12 +576,12 @@ const Residentes: React.FC = () => {
                   title: unit.unitCode || "Sem codigo",
                   subtitle: (
                     <Typography variant="body2" color="text.secondary">
-                      Tipo: {getUnitTypeLabel(unit.unitType?.toString())}
+                      {getUnitTypeLabel(unit.unitType?.toString())}
                     </Typography>
                   ),
                   meta: (
                     <Typography variant="caption" color="text.secondary">
-                      Bloco:{" "}
+                      {" "}
                       {blocks.find(
                         (b) => b.condominiumBlockId === unit.condominiumBlockId,
                       )?.name ||
