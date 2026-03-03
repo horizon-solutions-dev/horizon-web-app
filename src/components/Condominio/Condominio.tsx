@@ -34,9 +34,11 @@ import CondominioForm from "./CondominioForm";
 import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
 import { notify } from "../../shared/utils/toastMessage";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
+import { useTranslation } from "react-i18next";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
@@ -253,7 +255,7 @@ const CondominioPage: React.FC = () => {
                     {organizationName}
                   </Typography>
                 </Box>
-                <Tooltip title="Clique aqui para Fechar a janela">
+                <Tooltip title={t("common.closeTooltip")}>
 
                   <IconButton
                     onClick={() => {
@@ -262,14 +264,14 @@ const CondominioPage: React.FC = () => {
                       setEditingCondominium(null);
                     }}
                     className="close-button"
-                    aria-label="Fechar"
+                    aria-label={t("common.close")}
                   >
                     <Close sx={{ fontSize: 20 }} />
                   </IconButton>
                 </Tooltip>
               </Container>
               <Box>
-                <BreadcrumbTrail items={["Organização", "Condomínios"]} />
+                <BreadcrumbTrail items={[t("common.organization"), t("common.condominiums")]} />
               </Box>
             </Box>
 
@@ -277,7 +279,7 @@ const CondominioPage: React.FC = () => {
               {listLoading ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <CircularProgress size={20} />
-                  <Typography variant="body2">Carregando...</Typography>
+                  <Typography variant="body2">{t("common.loading")}</Typography>
                 </Box>
               ) : listError ? (
                 <CardList
@@ -323,9 +325,9 @@ const CondominioPage: React.FC = () => {
                       meta: (
                         <>
                           {condominium.condominiumType === "Commercial" ||
-                          getCondominiumTypeLabel(
-                            condominium.condominiumType,
-                          ) === "Comercial" ? (
+                            getCondominiumTypeLabel(
+                              condominium.condominiumType,
+                            ) === "Comercial" ? (
                             <BusinessOutlined
                               sx={{
                                 fontSize: 14,
@@ -334,8 +336,8 @@ const CondominioPage: React.FC = () => {
                               }}
                             />
                           ) : getCondominiumTypeLabel(
-                              condominium.condominiumType,
-                            ) === "Residencial" ? (
+                            condominium.condominiumType,
+                          ) === "Residencial" ? (
                             <HomeOutlined
                               sx={{
                                 fontSize: 14,
@@ -382,7 +384,7 @@ const CondominioPage: React.FC = () => {
                 />
               ) : condominiums.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  Nenhum condomínio encontrado para esta organização.
+                  {t("condominio.notFound")}
                 </Typography>
               ) : (
                 <CardList
@@ -428,9 +430,9 @@ const CondominioPage: React.FC = () => {
                       meta: (
                         <>
                           {condominium.condominiumType === "Commercial" ||
-                          getCondominiumTypeLabel(
-                            condominium.condominiumType,
-                          ) === "Comercial" ? (
+                            getCondominiumTypeLabel(
+                              condominium.condominiumType,
+                            ) === "Comercial" ? (
                             <BusinessOutlined
                               sx={{
                                 fontSize: 14,
@@ -439,8 +441,8 @@ const CondominioPage: React.FC = () => {
                               }}
                             />
                           ) : getCondominiumTypeLabel(
-                              condominium.condominiumType,
-                            ) === "Residencial" ? (
+                            condominium.condominiumType,
+                          ) === "Residencial" ? (
                             <HomeOutlined
                               sx={{
                                 fontSize: 14,

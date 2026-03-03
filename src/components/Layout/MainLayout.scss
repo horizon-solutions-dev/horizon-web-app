@@ -105,6 +105,28 @@
           background: rgba(245, 87, 108, 0.1);
         }
       }
+
+      &.lang-toggle-btn {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border: 1.5px solid #d1d5db;
+        border-radius: 20px;
+        color: #444;
+        background: #f9fafb;
+        letter-spacing: 0.04em;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #e8f0fe;
+          border-color: #4285f4;
+          color: #1a73e8;
+        }
+
+        .lang-label {
+          line-height: 1;
+        }
+      }
     }
 
     .header-user {

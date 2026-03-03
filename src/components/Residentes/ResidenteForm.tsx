@@ -25,6 +25,7 @@ import { ptBR } from "date-fns/locale";
 import { AuthService } from "../../services/authService";
 import { TokenService } from "../../services/tokenService";
 import { notify } from "../../shared/utils/toastMessage";
+import { useTranslation } from "react-i18next";
 
 interface ResidenteFormProps {
   open: boolean;
@@ -41,8 +42,6 @@ interface ResidenteFormProps {
   blockNamePreset?: string;
   unitCodePreset?: string;
 }
-
-const STEPS = ["Período", "Dados do Morador", "Permissões e Foto"];
 
 type DocumentType = "CPF" | "CNPJ";
 
@@ -149,6 +148,12 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   blockNamePreset,
   unitCodePreset,
 }) => {
+  const { t } = useTranslation();
+  const STEPS = [
+    t("residenteForm.stepPeriod"),
+    t("residenteForm.stepData"),
+    t("residenteForm.stepPermissions"),
+  ];
   const [formData, setFormData] = useState<CondominiumUnitResidentRequest>({
     condominiumUnitId: unitIdPreset || "",
     userId: "",
@@ -222,13 +227,13 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const getPeriodErrors = () => {
     const nextErrors: Record<string, string> = {};
     if (!formData.condominiumUnitId) {
-      nextErrors.condominiumUnitId = "Unidade obrigatoria.";
+      nextErrors.condominiumUnitId = t("residenteForm.unitRequired");
     }
     if (!formData.unitType) {
-      nextErrors.unitType = "Tipo da unidade obrigatorio.";
+      nextErrors.unitType = t("residenteForm.unitTypeRequired");
     }
     if (!formData.startDate) {
-      nextErrors.startDate = "Início de Residência é obrigatorio.";
+      nextErrors.startDate = t("residenteForm.startDateRequired");
     }
     return nextErrors;
   };
@@ -236,29 +241,29 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const getResidentDataErrors = () => {
     const nextErrors: Record<string, string> = {};
 
-    if (!firstName.trim()) nextErrors.firstName = "Nome obrigatorio.";
-    if (!lastName.trim()) nextErrors.lastName = "Sobrenome obrigatorio.";
+    if (!firstName.trim()) nextErrors.firstName = t("residenteForm.firstNameRequired");
+    if (!lastName.trim()) nextErrors.lastName = t("residenteForm.lastNameRequired");
 
     const cleanDoc = documentNumber.replace(/\D/g, "");
     if (!cleanDoc) {
-      nextErrors.documentNumber = "Documento obrigatorio.";
+      nextErrors.documentNumber = t("residenteForm.documentRequired");
     } else if (documentType === "CPF") {
       if (cleanDoc.length !== 11) {
-        nextErrors.documentNumber = "CPF invalido.";
+        nextErrors.documentNumber = t("residenteForm.cpfInvalid");
       }
     } else if (documentType === "CNPJ") {
       if (!validateCnpj(cleanDoc)) {
-        nextErrors.documentNumber = "CNPJ invalido.";
+        nextErrors.documentNumber = t("residenteForm.cnpjInvalid");
       }
     }
-    
+
     if (!email.trim()) {
-      nextErrors.email = "Email obrigatorio.";
+      nextErrors.email = t("residenteForm.emailRequired");
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      nextErrors.email = "Email invalido.";
+      nextErrors.email = t("residenteForm.emailInvalid");
     }
-    
-    if (!phone.trim()) nextErrors.phone = "Celular obrigatorio.";
+
+    if (!phone.trim()) nextErrors.phone = t("residenteForm.phoneRequired");
 
     return nextErrors;
   };
@@ -268,21 +273,21 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     if (step === 1) return getResidentDataErrors();
     return {};
   };
-  
+
 
   const residentFieldMap: Record<string, keyof CondominiumUnitResidentRequest> =
-    {
-      condominiumunitid: "condominiumUnitId",
-      userid: "userId",
-      unittype: "unitType",
-      startdate: "startDate",
-      enddate: "endDate",
-      billingcontact: "billingContact",
-      canvote: "canVote",
-      canmakereservations: "canMakeReservations",
-      hasgatehouseaccess: "hasGatehouseAccess",
-      commit: "commit",
-    };
+  {
+    condominiumunitid: "condominiumUnitId",
+    userid: "userId",
+    unittype: "unitType",
+    startdate: "startDate",
+    enddate: "endDate",
+    billingcontact: "billingContact",
+    canvote: "canVote",
+    canmakereservations: "canMakeReservations",
+    hasgatehouseaccess: "hasGatehouseAccess",
+    commit: "commit",
+  };
 
   const residentStepFields: Array<Array<keyof CondominiumUnitResidentRequest>> =
     [
@@ -394,7 +399,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       }
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro ao validar morador.";
+        error instanceof Error ? error.message : t("residenteForm.validateError");
       onNotify(message, "error");
       return;
     } finally {
@@ -442,7 +447,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       });
 
       if (!account) {
-        throw new Error("Nao foi possivel criar a conta do morador.");
+        throw new Error(t("residenteForm.accountCreateError"));
       }
 
       await unitResidentService.createResident({
@@ -465,7 +470,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
       await onSaved();
       notify({
-        message: "Morador criado com sucesso!",
+        message: t("residenteForm.createSuccess"),
         type: "success",
       });
 
@@ -502,14 +507,14 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           Object.keys(mappedErrors).length > 0
             ? mappedErrors
             : {
-                documentNumber: "Documento ou e-mail já cadastrado.",
-                email: "Documento ou e-mail já cadastrado.",
-              },
+              documentNumber: t("residenteForm.duplicateDocument"),
+              email: t("residenteForm.duplicateDocument"),
+            },
         );
         setActiveStep(1);
       } else {
         const message =
-          error instanceof Error ? error.message : "Erro ao criar morador.";
+          error instanceof Error ? error.message : t("residenteForm.createError");
         notify({
           message,
           type: "error",
@@ -574,15 +579,15 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               helperText={errors.unitType}
               fullWidth
             >
-              <MenuItem value="Owner">Proprietario</MenuItem>
-              <MenuItem value="Tenant">Inquilino</MenuItem>
+              <MenuItem value="Owner">{t("common.owner")}</MenuItem>
+              <MenuItem value="Tenant">{t("common.tenant")}</MenuItem>
             </TextField>
             <LocalizationProvider
               dateAdapter={AdapterDateFns}
               adapterLocale={ptBR}
             >
               <DatePicker
-                label="Início de Residência"
+                label={t("residenteForm.residenceStart")}
                 value={
                   formData.startDate
                     ? new Date(`${formData.startDate}T00:00:00`)
@@ -604,7 +609,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                     fullWidth: true,
                     error: Boolean(errors.startDate),
                     helperText:
-                      errors.startDate || "Selecione a data no calendario",
+                      errors.startDate || t("residenteForm.calendarHelper"),
                   },
                 }}
               />
@@ -626,7 +631,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   },
                 }}
                 fullWidth
-                label={firstName ? "" : "Nome"}
+                label={firstName ? "" : t("residenteForm.firstName")}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 error={Boolean(errors.firstName)}
@@ -642,7 +647,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   },
                 }}
                 fullWidth
-                label={lastName ? "" : "Sobrenome"}
+                label={lastName ? "" : t("residenteForm.lastName")}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 error={Boolean(errors.lastName)}
@@ -659,7 +664,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 }}
                 fullWidth
                 select
-                label="Tipo de Documento"
+                label={t("residenteForm.documentType")}
                 value={documentType}
                 onChange={(e) => {
                   setDocumentType(e.target.value as DocumentType);
@@ -678,7 +683,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   },
                 }}
                 fullWidth
-                label={documentNumber ? "" : "Documento"}
+                label={documentNumber ? "" : t("residenteForm.document")}
                 value={documentNumber}
                 onChange={(e) => handleDocumentChange(e.target.value)}
                 error={Boolean(errors.documentNumber)}
@@ -695,7 +700,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               },
             }}
             fullWidth
-            label={email ? "" : "Email"}
+            label={email ? "" : t("residenteForm.email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             error={Boolean(errors.email)}
@@ -710,7 +715,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               },
             }}
             fullWidth
-            label={phone ? "" : "Celular"}
+            label={phone ? "" : t("residenteForm.phone")}
             value={phone}
             onChange={(e) => setPhone(formatPhone(e.target.value))}
             error={Boolean(errors.phone)}
@@ -745,12 +750,12 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               mb: 0.5,
             }}
           >
-            <Box sx={{color: 'primary.main'}}>
+            <Box sx={{ color: 'primary.main' }}>
 
-            <RuleSharp/>
+              <RuleSharp />
             </Box>
             <Typography sx={{ fontWeight: 700, fontSize: 18, lineHeight: 1 }}>
-              Permissões do Morador
+              {t("residenteForm.permissionsTitle")}
             </Typography>
           </Box>
           <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
@@ -765,7 +770,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   }
                 />
               }
-              label="Contato de cobranca"
+              label={t("residenteForm.billingContact")}
             />
             <FormControlLabel
               sx={{ height: "25px" }}
@@ -775,7 +780,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   onChange={(e) => handleChange("canVote", e.target.checked)}
                 />
               }
-              label="Pode votar"
+              label={t("residenteForm.canVote")}
             />
             <FormControlLabel
               sx={{ height: "25px" }}
@@ -787,7 +792,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   }
                 />
               }
-              label="Pode reservar"
+              label={t("residenteForm.canMakeReservations")}
             />
             <FormControlLabel
               sx={{ height: "25px" }}
@@ -799,12 +804,12 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   }
                 />
               }
-              label="Acesso a portaria"
+              label={t("residenteForm.hasGatehouseAccess")}
             />
           </Box>
         </Box>
         <Typography variant="subtitle2" sx={{ mt: 2 }}>
-          Foto do Morador
+          {t("residenteForm.photoTitle")}
         </Typography>
         <Box
           component="label"
@@ -830,7 +835,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           />
           <FileUploadOutlined sx={{ fontSize: 40, color: "#7ba0d1" }} />
           <Typography sx={{ fontSize: 14 }}>
-            {photoFile ? photoFile.name : "Adicionar foto"}
+            {photoFile ? photoFile.name : t("residenteForm.addPhoto")}
           </Typography>
         </Box>
       </Grid>
@@ -846,7 +851,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? <CircularProgress size={20} /> : "Concluir"}
+          {loading ? <CircularProgress size={20} /> : t("common.finish")}
         </Button>
       );
     }
@@ -858,14 +863,14 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         onClick={handleNext}
         disabled={loading}
       >
-        Avançar
+        {t("common.next")}
       </Button>
     );
   };
 
   return (
     <StepWizardCard
-      title="Registrar Morador"
+      title={t("residenteForm.title")}
       subtitle={STEPS[activeStep]}
       steps={STEPS}
       activeStep={activeStep}

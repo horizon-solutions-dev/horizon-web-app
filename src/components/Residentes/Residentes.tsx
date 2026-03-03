@@ -41,6 +41,7 @@ import { useNavigate } from "react-router";
 import moment from "moment";
 import { notify } from "../../shared/utils/toastMessage";
 import { condominiumImageService } from "../../services/condominiumImageService";
+import { useTranslation } from "react-i18next";
 const condoPageSize = 4;
 const unitPageSize = 6;
 const residentPageSize = 6;
@@ -49,6 +50,7 @@ const Residentes: React.FC = () => {
   const [activeView, setActiveView] = useState<
     "condominios" | "unidades" | "residentes"
   >("condominios");
+  const { t } = useTranslation();
 
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [organizationName, setOrganizationName] = useState("");
@@ -225,10 +227,10 @@ const Residentes: React.FC = () => {
       const response = blockId
         ? await unitService.getUnitsByBlock(blockId, pageNumber, unitPageSize)
         : await unitService.getUnitsByCondominium(
-            condominiumId,
-            pageNumber,
-            unitPageSize,
-          );
+          condominiumId,
+          pageNumber,
+          unitPageSize,
+        );
       const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
@@ -320,13 +322,18 @@ const Residentes: React.FC = () => {
       id: condominium.condominiumId,
       title: condominium.name,
       subtitle: (
-        <Typography variant="body2" color="text.secondary">
+        <>
+          <Business
+            sx={{
+              fontSize: 16,
+              mr: 0.5,
+              verticalAlign: "middle",
+            }}
+          />
           {condominium.city} - {condominium.state}
-        </Typography>
+        </>
       ),
-      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                            imageUrl: condominiumImages[condominium.condominiumId],
-
+      imageUrl: condominiumImages[condominium.condominiumId],
       actions: (
         <Button
           size="small"
@@ -335,9 +342,10 @@ const Residentes: React.FC = () => {
           startIcon={<SettingsOutlined />}
           onClick={() => handleSelectCondominium(condominium)}
         >
-          Visualizar Condomínios
+          {t("common.viewUnits")}
         </Button>
       ),
+      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
     }));
 
   const handleSelectCondominium = async (condominium: Condominium) => {
@@ -388,8 +396,8 @@ const Residentes: React.FC = () => {
 
   const getUnitTypeLabel = (value?: string) => {
     if (!value) return "-";
-    if (value === "1" || value === "Owner") return "Proprietario";
-    if (value === "2" || value === "Tenant") return "Inquilino";
+    if (value === "1" || value === "Owner") return t("common.owner");
+    if (value === "2" || value === "Tenant") return t("common.tenant");
     return value;
   };
 
@@ -445,18 +453,18 @@ const Residentes: React.FC = () => {
                     {organizationName}
                   </Typography>
                 </Box>
-                <Tooltip title="Clique aqui para Fechar a janela">
+                <Tooltip title={t("common.closeTooltip")}>
                   <IconButton
                     onClick={() => navigate("/dashboard")}
                     className="close-button"
-                    aria-label="Fechar"
+                    aria-label={t("common.close")}
                   >
                     <Close sx={{ fontSize: 20 }} />
                   </IconButton>
                 </Tooltip>
               </Container>
               <Box>
-                <BreadcrumbTrail items={["Organização", "Condomínios"]} />
+                <BreadcrumbTrail items={[t("common.organization"), t("common.condominiums")]} />
               </Box>
             </Box>
 
@@ -468,13 +476,13 @@ const Residentes: React.FC = () => {
             ) : (
               <>
                 <CardList
-                  title="Condominios da organizacao"
+                  title={t("residentes.condominiumsList")}
                   showTitle={false}
-                  searchPlaceholder="Buscar condominio..."
+                  searchPlaceholder={t("residentes.searchCondominiumPlaceholder")}
                   onSearchChange={setCondoSearchText}
                   onAddClick={undefined}
                   addButtonPlacement="toolbar"
-                  emptyImageLabel="Sem imagem"
+                  emptyImageLabel={t("common.noImage")}
                   showPagination={true}
                   page={condoPage}
                   totalPages={condoTotalPages}
@@ -507,19 +515,19 @@ const Residentes: React.FC = () => {
                     fontWeight="bold"
                     sx={{ fontSize: "26px" }}
                   >
-                    Residentes
+                    {t("residentes.title")}
                   </Typography>
                   <BreadcrumbTrail
                     items={[
-                      organizationName || "Organização",
-                      selectedCondominium?.name || "Condominio selecionado",
-                      "Unidades",
+                      organizationName || t("common.organization"),
+                      selectedCondominium?.name || t("residentes.selectedCondominium"),
+                      t("common.units"),
                     ]}
                   />
                 </Box>
               </Box>
               <Box sx={{ display: "flex", gap: 1 }}>
-                <Tooltip title="Clique aqui para Fechar a janela">
+                <Tooltip title={t("common.closeTooltip")}>
                   <IconButton
                     onClick={() => {
                       setActiveView("condominios");
@@ -542,14 +550,14 @@ const Residentes: React.FC = () => {
             ) : null}
 
             <CardList
-              title="Unidades do condominio"
+              title={t("residentes.unitsList")}
               showTitle={false}
               showFilters={true}
-              searchPlaceholder="Buscar Unidades..."
+              searchPlaceholder={t("residentes.searchUnitPlaceholder")}
               onSearchChange={setUnitSearchText}
               onAddClick={undefined}
               addButtonPlacement="toolbar"
-              emptyImageLabel="Sem imagem"
+              emptyImageLabel={t("common.noImage")}
               showPagination={true}
               page={unitsPage}
               totalPages={unitsTotalPages}
@@ -573,7 +581,7 @@ const Residentes: React.FC = () => {
                 )
                 .map((unit, index) => ({
                   id: unit.condominiumUnitId,
-                  title: unit.unitCode || "Sem codigo",
+                  title: unit.unitCode || t("residentes.noCode"),
                   subtitle: (
                     <Typography variant="body2" color="text.secondary">
                       {getUnitTypeLabel(unit.unitType?.toString())}
@@ -586,7 +594,7 @@ const Residentes: React.FC = () => {
                         (b) => b.condominiumBlockId === unit.condominiumBlockId,
                       )?.name ||
                         unit.condominiumBlockId ||
-                        "Bloco desconhecido"}
+                        t("residentes.unknownBlock")}
                     </Typography>
                   ),
                   actions: (
@@ -598,7 +606,7 @@ const Residentes: React.FC = () => {
                         startIcon={<Person2Sharp />}
                         onClick={() => handleSelectUnit(unit)}
                       >
-                        Visualizar Residentes
+                        {t("common.viewResidents")}
                       </Button>
                     </Box>
                   ),
@@ -647,20 +655,20 @@ const Residentes: React.FC = () => {
                         fontWeight="bold"
                         sx={{ fontSize: "26px" }}
                       >
-                        Residentes
+                        {t("residentes.title")}
                       </Typography>
                       <BreadcrumbTrail
                         items={[
-                          organizationName || "Organização",
-                          selectedCondominium?.name || "Condominio selecionado",
-                          selectedUnit?.unitCode || "Unidade selecionada",
-                          "Residentes",
+                          organizationName || t("common.organization"),
+                          selectedCondominium?.name || t("residentes.selectedCondominium"),
+                          selectedUnit?.unitCode || t("residentes.selectedUnit"),
+                          t("common.residents"),
                         ]}
                       />
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="Clique aqui para Fechar a janela">
+                    <Tooltip title={t("common.closeTooltip")}>
                       <IconButton
                         onClick={() => {
                           setActiveView("unidades");
@@ -683,19 +691,19 @@ const Residentes: React.FC = () => {
                 {residentsLoading ? (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <CircularProgress size={20} />
-                    <Typography variant="body2">Carregando...</Typography>
+                    <Typography variant="body2">{t("common.loading")}</Typography>
                   </Box>
                 ) : (
                   <>
                     <CardList
-                      title="Residentes"
+                      title={t("residentes.residentsList")}
                       showTitle={false}
-                      searchPlaceholder="Buscar residente..."
+                      searchPlaceholder={t("residentes.searchPlaceholder")}
                       onSearchChange={setResidentSearchText}
                       onAddClick={handleOpenCreate}
-                      addLabel="Novo"
+                      addLabel={t("common.new")}
                       addButtonPlacement="toolbar"
-                      emptyImageLabel="Sem imagem"
+                      emptyImageLabel={t("common.noImage")}
                       showFilters={true}
                       showPagination={true}
                       page={residentsPage}
@@ -744,7 +752,7 @@ const Residentes: React.FC = () => {
                             : "-";
                           const periodEnd = resident.endDate
                             ? moment(resident.endDate).format("DD/MM/YYYY")
-                            : "Atual";
+                            : t("common.current");
 
                           return {
                             actions: (
@@ -769,7 +777,7 @@ const Residentes: React.FC = () => {
                                     startIcon={<EditOutlined />}
                                     onClick={() => handleEdit()}
                                   >
-                                    Editar
+                                    {t("common.edit")}
                                   </Button>
                                   <Button
                                     size="small"
@@ -778,7 +786,7 @@ const Residentes: React.FC = () => {
                                     startIcon={<DeleteOutline />}
                                     onClick={() => handleDelete()}
                                   >
-                                    Excluir
+                                    {t("common.delete")}
                                   </Button>
                                 </Box>
                               </Box>
@@ -786,7 +794,7 @@ const Residentes: React.FC = () => {
                             id: resident.condominiumUnitResidentId,
                             title: `${residentName}`,
                             subtitle: `${residentType} | ${residentUnit} | ${residentBlock}`,
-                            meta: `Periodo: ${periodStart} - ${periodEnd}`,
+                            meta: t("residentes.periodLabel", { start: periodStart, end: periodEnd }),
                             accentColor:
                               index % 2 === 0 ? "#eef6ee" : "#fdecef",
                           };

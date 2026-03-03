@@ -28,6 +28,7 @@ import { organizationService } from "../../services/organizationService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
 import { notify } from "../../shared/utils/toastMessage";
+import { useTranslation } from "react-i18next";
 
 interface CondominioFormProps {
   open: boolean;
@@ -57,6 +58,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   loading,
   setLoading,
 }) => {
+  const { t } = useTranslation();
   const initialFormData: CondominiumRequest = {
     organizationId: localStorage.getItem("organizationId") || "",
     name: "",
@@ -101,7 +103,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     complement: true,
   });
 
-  const steps = ["Informações Básicas", "Endereço", "Configurações e Rateio"];
+  const steps = [
+    t("condominioForm.step0"),
+    t("condominioForm.step1"),
+    t("condominioForm.step2"),
+  ];
 
   const formatCNPJ = (value: string) => {
     const numbers = value.replace(/\D/g, "");
@@ -135,7 +141,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao carregar tipos de alocação.";
+          : t("condominioForm.allocationLoadError");
       setAllocationError(message);
       onNotify(message, "error");
     } finally {
@@ -258,16 +264,16 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const validateStep0 = () => {
     const nextErrors: Record<string, string> = {};
     if (!formData.name.trim()) {
-      nextErrors.name = "Nome do Condomínio é obrigatório.";
+      nextErrors.name = t("condominioForm.nameRequired");
     }
     if (formData.doc.replace(/\D/g, "").length !== 14) {
-      nextErrors.doc = "CNPJ inválido.";
+      nextErrors.doc = t("condominioForm.cnpjInvalid");
     }
     if (!formData.condominiumType) {
-      nextErrors.condominiumType = "Tipo de Condomínio é obrigatório.";
+      nextErrors.condominiumType = t("condominioForm.typeRequired");
     }
     if (!formData.unitCount || formData.unitCount <= 0) {
-      nextErrors.unitCount = "Quantidade de Unidades deve ser maior que 0.";
+      nextErrors.unitCount = t("condominioForm.unitCountRequired");
     }
     return nextErrors;
   };
@@ -275,22 +281,22 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const validateStep1 = () => {
     const nextErrors: Record<string, string> = {};
     if (formData.zipCode.replace(/\D/g, "").length !== 8) {
-      nextErrors.zipCode = "CEP inválido.";
+      nextErrors.zipCode = t("condominioForm.zipInvalid");
     }
     if (!formData.address.trim()) {
-      nextErrors.address = "Logradouro é obrigatório.";
+      nextErrors.address = t("condominioForm.addressRequired");
     }
     if (!formData.addressNumber.trim()) {
-      nextErrors.addressNumber = "Número é obrigatório.";
+      nextErrors.addressNumber = t("condominioForm.addressNumberRequired");
     }
     if (!formData.neighborhood.trim()) {
-      nextErrors.neighborhood = "Bairro é obrigatório.";
+      nextErrors.neighborhood = t("condominioForm.neighborhoodRequired");
     }
     if (!formData.city.trim()) {
-      nextErrors.city = "Cidade é obrigatória.";
+      nextErrors.city = t("condominioForm.cityRequired");
     }
     if (formData.state.trim().length !== 2) {
-      nextErrors.state = "UF inválida.";
+      nextErrors.state = t("condominioForm.stateInvalid");
     }
     return nextErrors;
   };
@@ -298,7 +304,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const validateStep2 = () => {
     const nextErrors: Record<string, string> = {};
     if (!formData.allocationType) {
-      nextErrors.allocationType = "Tipo de rateio é obrigatório.";
+      nextErrors.allocationType = t("condominioForm.allocationTypeRequired");
     }
     return nextErrors;
   };
@@ -406,9 +412,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
       const { valid, validations } = editingId
         ? await condominiumService.validateCondominiumEdit(
-            payload,
-            editingCondominium?.condominiumId || "",
-          )
+          payload,
+          editingCondominium?.condominiumId || "",
+        )
         : await condominiumService.validateCondominium(payload);
 
       if (!valid && validations.length > 0) {
@@ -423,7 +429,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       }
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro ao validar condomínio.";
+        error instanceof Error ? error.message : t("condominioForm.validationError");
       onNotify(message, "error");
       return;
     } finally {
@@ -458,7 +464,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       const data = await response.json();
 
       if (data?.erro) {
-        setCepError("CEP não encontrado. Preencha o endereço manualmente.");
+        setCepError(t("condominioForm.cepNotFound"));
 
         setAddressFieldsDisabled({
           address: false,
@@ -532,7 +538,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       });
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro ao consultar CEP.";
+        error instanceof Error ? error.message : t("condominioForm.cepError");
 
       setCepError(message);
 
@@ -604,16 +610,16 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       // Backend validation still happens, but after local validation
       const { valid, validations } = editingId
         ? await await condominiumService.validateCondominiumEdit(
-            {
-              ...payload,
-              commit: false,
-            },
-            editingCondominium?.condominiumId || "",
-          )
-        : await condominiumService.validateCondominium({
+          {
             ...payload,
             commit: false,
-          });
+          },
+          editingCondominium?.condominiumId || "",
+        )
+        : await condominiumService.validateCondominium({
+          ...payload,
+          commit: false,
+        });
 
       if (!valid && validations.length > 0) {
         const fieldMap: Record<string, keyof CondominiumRequest> = {
@@ -686,16 +692,12 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       const response = editingId
         ? await condominiumService.updateCondominium(editingId, payload)
         : await condominiumService.createCondominium(payload);
-      if (editingId) {
-        notify({
-          message: `Condomínio "${formData.name}" atualizado com sucesso!`,
-          type: "success",
-        });
-      } else
-        notify({
-          message: `Condomínio "${formData.name}" criado com sucesso!`,
-          type: "success",
-        });
+      notify({
+        message: editingId
+          ? t("condominioForm.updateSuccess", { name: formData.name })
+          : t("condominioForm.createSuccess", { name: formData.name }),
+        type: "success",
+      });
 
       if (coverFile && response) {
         console.log({
@@ -713,7 +715,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           const message =
             error instanceof Error
               ? error.message
-              : "Erro ao enviar imagem de capa.";
+              : t("condominioForm.coverUploadError");
           onNotify(message, "warning");
         }
       }
@@ -729,15 +731,15 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       onClose();
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
-        setErrors({ doc: "Já existe um condomínio com este CNPJ." });
+        setErrors({ doc: t("condominioForm.duplicateCnpj") });
         setActiveStep(0);
       } else {
         const message =
           error instanceof Error
             ? error.message
             : editingId
-              ? "Erro ao atualizar condomínio!"
-              : "Erro ao criar condomínio!";
+              ? t("condominioForm.updateError")
+              : t("condominioForm.createError");
         onNotify(message, "error");
       }
     } finally {
@@ -771,7 +773,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 },
               }}
               fullWidth
-              placeholder="Digite o nome do condomínio"
+              placeholder={t("condominioForm.namePlaceholder")}
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
               error={!!errors.name}
@@ -811,7 +813,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             >
               {typesLoading ? (
                 <MenuItem value={formData.condominiumType} disabled>
-                  Carregando...
+                  {t("common.loading")}
                 </MenuItem>
               ) : condominiumTypes.length > 0 ? (
                 condominiumTypes.map((type) => (
@@ -1118,7 +1120,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                           value={formData.allocationType}
                           disabled
                         >
-                          Carregando...
+                          {t("common.loading")}
                         </MenuItem>
                       ) : allocationTypes.length > 0 ? (
                         allocationTypes.map((type) => (
@@ -1279,7 +1281,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   return (
     <>
       <StepWizardCard
-        title={editingId ? "Editar condomínio" : "Criar condomínio"}
+        title={editingId ? t("condominioForm.editTitle") : t("condominioForm.createTitle")}
         subtitle={steps[activeStep]}
         steps={steps}
         onClose={handleCloseWizard}
@@ -1307,7 +1309,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               onClick={handleSubmit}
               disabled={loading}
             >
-              {loading ? <CircularProgress size={20} /> : "Concluir"}
+              {loading ? <CircularProgress size={20} /> : t("common.finish")}
             </Button>
           ) : (
             <Button
@@ -1316,7 +1318,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               onClick={handleNext}
               disabled={loading}
             >
-              Avançar
+              {t("common.next")}
             </Button>
           )}
         </Box>

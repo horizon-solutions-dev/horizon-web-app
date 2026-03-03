@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { AxiosError } from "axios";
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   //  Typography,
@@ -92,15 +93,16 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
-  const steps = ["Dados da unidade"];
+  const { t } = useTranslation();
+  const steps = [t("unidadeForm.stepData")];
 
   const resolvedCondominiumName = useMemo(
-    () => condominiumNamePreset || "Condomínio selecionado",
-    [condominiumNamePreset],
+    () => condominiumNamePreset || t("unidadeForm.selectedCondominium"),
+    [condominiumNamePreset, t],
   );
   const resolvedBlockName = useMemo(
-    () => blockNamePreset || "Bloco selecionado",
-    [blockNamePreset],
+    () => blockNamePreset || t("unidadeForm.selectedBlock"),
+    [blockNamePreset, t],
   );
   const [allocationLoading, setAllocationLoading] = useState(false);
   const [allocationError, setAllocationError] = useState<string | null>(null);
@@ -117,7 +119,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao carregar tipos de alocação.";
+          : t("unidadeForm.allocationLoadError");
       setAllocationError(message);
       onNotify(message, "error");
     } finally {
@@ -173,13 +175,13 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       //onNotify("Bloco inválido. Selecione um bloco para continuar.", "error");
     }
     if (!formData.unitCode.trim()) {
-      nextErrors.unitCode = "Informe o código da unidade.";
+      nextErrors.unitCode = t("unidadeForm.unitCodeRequired");
     }
     if (!formData.unitType) {
-      nextErrors.unitType = "Selecione o tipo da unidade.";
+      nextErrors.unitType = t("unidadeForm.unitTypeRequired");
     }
     if (!formData.allocationType) {
-      nextErrors.allocationType = "Selecione o tipo de alocação.";
+      nextErrors.allocationType = t("unidadeForm.allocationTypeRequired");
     }
 
     setErrors(nextErrors);
@@ -232,16 +234,16 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
 
       const { valid, validations } = editingId
         ? await unitService.validateUnitEdit(
-            {
-              ...payload,
-              commit: false,
-            },
-            editingUnit?.condominiumUnitId || "",
-          )
-        : await unitService.validateUnit({
+          {
             ...payload,
             commit: false,
-          });
+          },
+          editingUnit?.condominiumUnitId || "",
+        )
+        : await unitService.validateUnit({
+          ...payload,
+          commit: false,
+        });
 
       if (!valid && validations.length > 0) {
         if (applyBackendValidationErrors(validations)) {
@@ -251,18 +253,16 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
 
       if (editingId) {
         await unitService.updateUnit(editingId, payload);
-        //onNotify("Unidade atualizada com sucesso.", "success");
         notify({
-          message: "Unidade atualizada com sucesso.",
+          message: t("unidadeForm.updateSuccess"),
           type: "success",
         });
       } else {
         await unitService.createUnit(payload);
         notify({
-          message: "Unidade criada com sucesso.",
+          message: t("unidadeForm.createSuccess"),
           type: "success",
         });
-        //onNotify("Unidade criada com sucesso.", "success");
       }
 
       await onSaved();
@@ -270,11 +270,11 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         setErrors({
-          unitCode: "Já existe uma unidade com este código neste bloco.",
+          unitCode: t("unidadeForm.duplicateUnitCode"),
         });
       } else {
         const message =
-          error instanceof Error ? error.message : "Erro ao salvar unidade.";
+          error instanceof Error ? error.message : t("unidadeForm.saveError");
         onNotify(message, "error");
       }
     } finally {
@@ -286,7 +286,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     if (typesLoading) {
       return (
         <MenuItem value={formData.unitType} disabled>
-          Carregando...
+          {t("common.loading")}
         </MenuItem>
       );
     }
@@ -301,15 +301,15 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
 
     return (
       <>
-        <MenuItem value="Owner">Proprietário</MenuItem>
-        <MenuItem value="Tenant">Inquilino</MenuItem>
+        <MenuItem value="Owner">{t("common.owner")}</MenuItem>
+        <MenuItem value="Tenant">{t("common.tenant")}</MenuItem>
       </>
     );
   };
 
   return (
     <StepWizardCard
-      title={editingId ? "Editar unidade" : "Criar unidade"}
+      title={editingId ? t("unidadeForm.editTitle") : t("unidadeForm.createTitle")}
       subtitle={steps[0]}
       steps={steps}
       activeStep={0}
@@ -325,10 +325,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
         >
           {loading ? (
             <CircularProgress size={20} />
-          ) : editingId ? (
-            "Concluir"
           ) : (
-            "Concluir"
+            t("common.finish")
           )}
         </Button>
       }
@@ -380,7 +378,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           onChange={(e) => handleChange("unitCode", e.target.value)}
           error={Boolean(errors.unitCode)}
           helperText={errors.unitCode}
-          placeholder="Ex: A101"
+          placeholder={t("unidadeForm.unitCodePlaceholder")}
         />
         <TextField
           sx={{

@@ -35,9 +35,11 @@ import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfir
 import { notify } from "../../shared/utils/toastMessage";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { condominiumImageService } from "../../services/condominiumImageService";
+import { useTranslation } from "react-i18next";
 
 const Blocos: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeView, setActiveView] = useState<"condominios" | "blocos">(
     "condominios",
   );
@@ -151,7 +153,7 @@ const Blocos: React.FC = () => {
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao carregar condomínios.";
+          : t("blocos.deleteError");
       setListError(message);
     } finally {
       setListLoading(false);
@@ -258,7 +260,7 @@ const Blocos: React.FC = () => {
       await blockService.deleteBlock(blockToDelete.condominiumBlockId);
 
       handleNotify(
-        `Bloco "${blockToDelete.name}" excluído com sucesso!`,
+        t("blocos.deleteSuccess", { name: blockToDelete.name }),
         "success",
       );
 
@@ -268,7 +270,7 @@ const Blocos: React.FC = () => {
       setBlockToDelete(null);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro ao excluir bloco.";
+        error instanceof Error ? error.message : t("blocos.deleteError");
       handleNotify(message, "error");
     } finally {
       setLoading(false);
@@ -328,18 +330,18 @@ const Blocos: React.FC = () => {
                     {organizationName}
                   </Typography>
                 </Box>
-                <Tooltip title="Clique aqui para Fechar a janela">
+                <Tooltip title={t("common.closeTooltip")}>
                   <IconButton
                     onClick={() => navigate("/dashboard")}
                     className="close-button"
-                    aria-label="Fechar"
+                    aria-label={t("common.close")}
                   >
                     <Close sx={{ fontSize: 20 }} />
                   </IconButton>
                 </Tooltip>
               </Container>
               <Box>
-                <BreadcrumbTrail items={["Organização", "Condomínios"]} />
+                <BreadcrumbTrail items={[t("common.organization"), t("common.condominiums")]} />
               </Box>
             </Box>
 
@@ -347,7 +349,7 @@ const Blocos: React.FC = () => {
               {listLoading ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <CircularProgress size={20} />
-                  <Typography variant="body2">Carregando...</Typography>
+                  <Typography variant="body2">{t("common.loading")}</Typography>
                 </Box>
               ) : listError ? (
                 <CardList
@@ -376,7 +378,7 @@ const Blocos: React.FC = () => {
                     )
                     .map((condominium, index) => ({
                       id: condominium.condominiumId,
-                      
+
                       title: condominium.name,
                       subtitle: (
                         <>
@@ -386,7 +388,7 @@ const Blocos: React.FC = () => {
                               mr: 0.5,
                               verticalAlign: "middle",
                             }}
-                            />
+                          />
                           {condominium.city} - {condominium.state}
                         </>
                       ),
@@ -407,7 +409,7 @@ const Blocos: React.FC = () => {
                 />
               ) : condominiums.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  Nenhum condomínio encontrado para esta organização.
+                  {t("blocos.noCondominiumsFound")}
                 </Typography>
               ) : (
                 <CardList
@@ -449,7 +451,7 @@ const Blocos: React.FC = () => {
                           {condominium.city} - {condominium.state}
                         </>
                       ),
-                                            imageUrl: condominiumImages[condominium.condominiumId],
+                      imageUrl: condominiumImages[condominium.condominiumId],
 
                       actions: (
                         <Button
@@ -459,7 +461,7 @@ const Blocos: React.FC = () => {
                           startIcon={<SettingsOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Visualizar Blocos
+                          {t("common.viewBlocks")}
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -501,23 +503,23 @@ const Blocos: React.FC = () => {
                         fontWeight="bold"
                         sx={{ fontSize: "26px" }}
                       >
-                        Blocos
+                        {t("blocos.title")}
                       </Typography>
                       <BreadcrumbTrail
                         items={[
                           localStorage.getItem("condominium")
                             ? JSON.parse(
-                                localStorage.getItem("condominium") || "{}",
-                              )?.name
+                              localStorage.getItem("condominium") || "{}",
+                            )?.name
                             : {},
-                          selectedCondominium?.name || "Condominio selecionado",
-                          "Blocos",
+                          selectedCondominium?.name || t("blocos.selectedCondominium"),
+                          t("common.blocks"),
                         ]}
                       />
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="Clique aqui para Fechar a janela">
+                    <Tooltip title={t("common.closeTooltip")}>
                       <IconButton
                         onClick={() => {
                           setActiveView("condominios");
@@ -532,7 +534,7 @@ const Blocos: React.FC = () => {
                           void loadCondominiums(condominiumsPage);
                         }}
                         className="close-button"
-                        aria-label="Voltar"
+                        aria-label={t("common.back")}
                       >
                         <Close sx={{ fontSize: 20 }} />
                       </IconButton>
@@ -544,20 +546,20 @@ const Blocos: React.FC = () => {
                   {listLoading ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <CircularProgress size={20} />
-                      <Typography variant="body2">Carregando...</Typography>
+                      <Typography variant="body2">{t("common.loading")}</Typography>
                     </Box>
                   ) : null}
 
                   <CardList
-                    title="Blocos do condomínio"
+                    title={t("blocos.blocksList")}
                     showTitle={false}
                     showFilters={true}
-                    searchPlaceholder="Buscar bloco..."
+                    searchPlaceholder={t("blocos.searchPlaceholder")}
                     onSearchChange={setBlockSearchText}
                     onAddClick={handleOpenCreate}
-                    addLabel="Novo"
+                    addLabel={t("common.new")}
                     addButtonPlacement="toolbar"
-                    emptyImageLabel="Sem imagem"
+                    emptyImageLabel={t("common.noImage")}
                     showPagination={true}
                     page={blocksPage}
                     totalPages={blocksTotalPages}
@@ -575,7 +577,7 @@ const Blocos: React.FC = () => {
                       )
                       .map((block, index) => ({
                         id: block.condominiumBlockId,
-                        title: block.name || "Sem nome",
+                        title: block.name || t("common.noName"),
                         subtitle: (
                           <>
                             <ViewModule
@@ -599,7 +601,7 @@ const Blocos: React.FC = () => {
                               startIcon={<EditOutlined />}
                               onClick={() => handleEdit(block)}
                             >
-                              Editar
+                              {t("common.edit")}
                             </Button>
                             <Button
                               size="small"
@@ -608,7 +610,7 @@ const Blocos: React.FC = () => {
                               startIcon={<DeleteOutline />}
                               onClick={() => handleDelete(block)}
                             >
-                              Excluir
+                              {t("common.delete")}
                             </Button>
                           </Box>
                         ),
@@ -625,15 +627,15 @@ const Blocos: React.FC = () => {
       {/* Modal de confirmação de exclusão */}
       <DeleteConfirmModal
         open={deleteModalOpen}
-        title="Deseja excluir este bloco?"
+        title={t("blocos.deleteTitle")}
         message={
           blockToDelete
-            ? `O bloco "${blockToDelete.name}" será removido permanentemente.`
+            ? t("blocos.deleteMessage", { name: blockToDelete.name })
             : ""
         }
-        imageAlt="Remover bloco"
-        confirmLabel="Excluir"
-        cancelLabel="Cancelar"
+        imageAlt={t("blocos.deleteImageAlt")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         onClose={handleCancelDelete}

@@ -6,11 +6,12 @@ import {
   Button,
   TextField,
   CircularProgress,
- // Alert,
+  // Alert,
 } from "@mui/material";
 import { type CondominiumBlock, type CondominiumBlockRequest, blockService } from "../../services/blockService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { notify } from "../../shared/utils/toastMessage";
+import { useTranslation } from "react-i18next";
 
 interface BlocoFormProps {
   open: boolean;
@@ -36,6 +37,8 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
   setLoading,
   condominiumIdPreset,
 }) => {
+  const { t } = useTranslation();
+
   const initialForm: CondominiumBlockRequest = {
     condominiumId: condominiumIdPreset || "",
     code: "",
@@ -46,7 +49,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const steps = ["Dados do Bloco"];
+  const steps = [t("blocoForm.stepData")];
 
   useEffect(() => {
     if (!open) return;
@@ -86,15 +89,15 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.condominiumId?.trim()) {
-      newErrors.condominiumId = "CondominiumId é obrigatório.";
+      newErrors.condominiumId = t("blocoForm.condominiumIdRequired");
     }
 
     if (!formData.code?.trim()) {
-      newErrors.code = "Código é obrigatório.";
+      newErrors.code = t("blocoForm.codeRequired");
     }
 
     if (!formData.name?.trim()) {
-      newErrors.name = "Nome é obrigatório.";
+      newErrors.name = t("blocoForm.nameRequired");
     }
 
     setErrors(newErrors);
@@ -103,7 +106,6 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      ////onNotify("Por favor, corrija os erros antes de continuar.", "error");
       return;
     }
 
@@ -111,18 +113,16 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
     try {
       if (editingId) {
         await blockService.updateBlock(editingId, formData);
-        //onNotify("Bloco atualizado com sucesso.", "success");
         notify({
-          message: "Bloco atualizado com sucesso.",
+          message: t("blocoForm.updateSuccess"),
           type: "success",
         });
       } else {
         await blockService.createBlock(formData);
         notify({
-          message: "Bloco criado com sucesso.",
+          message: t("blocoForm.createSuccess"),
           type: "success",
         });
-        //onNotify("Bloco criado com sucesso.", "success");
       }
 
       await onSaved();
@@ -137,12 +137,12 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
       onClose();
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
-        setErrors({ code: "Já existe um bloco com este código." });
+        setErrors({ code: t("blocoForm.duplicateCode") });
       } else {
-        const message = error instanceof Error ? error.message : "Erro ao salvar bloco.";
+        const message = error instanceof Error ? error.message : t("blocoForm.saveError");
         onNotify(message, "error");
         notify({
-          message: 'Erro ao salvar bloco.',
+          message: t("blocoForm.saveError"),
           type: "error",
         });
       }
@@ -162,7 +162,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
                   height: 46,
                 },
               }}
-              placeholder="Código"
+              placeholder={t("blocoForm.codePlaceholder")}
               value={formData.code}
               onChange={(e) => handleChange("code", e.target.value)}
               error={!!errors.code}
@@ -170,7 +170,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
               fullWidth
               required
               variant="outlined"
-               
+
             />
             <TextField
               sx={{
@@ -178,7 +178,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
                   height: 46,
                 },
               }}
-              placeholder="Nome"
+              placeholder={t("blocoForm.namePlaceholder")}
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
               error={!!errors.name}
@@ -186,10 +186,10 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
               fullWidth
               required
               variant="outlined"
-               
+
             />
           </Box>
-          
+
         </>
       );
     }
@@ -197,11 +197,11 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
     return null;
   };
 
-  
+
   const renderActions = () => {
     return (
       <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-        {loading ? <CircularProgress size={20} /> : "Concluir"}
+        {loading ? <CircularProgress size={20} /> : t("common.finish")}
       </Button>
     );
   };
@@ -209,7 +209,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
   return (
     <Box className="bloco-container">
       <StepWizardCard
-        title={editingId ? "Editar Bloco" : "Criar Bloco"}
+        title={editingId ? t("blocoForm.editTitle") : t("blocoForm.createTitle")}
         subtitle={steps[activeStep]}
         subtitleClassName="bloco-form-subtitle"
         steps={steps}
@@ -217,7 +217,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
         showBack={false}
         onClose={onClose}
         disableContent={loading}
-        actions={renderActions()} 
+        actions={renderActions()}
       >
         {renderStepContent()}
       </StepWizardCard>

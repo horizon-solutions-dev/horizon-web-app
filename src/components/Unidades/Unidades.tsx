@@ -40,11 +40,13 @@ import UnidadeForm from "./UnidadeForm";
 import { notify } from "../../shared/utils/toastMessage";
 import { useNavigate } from "react-router-dom";
 import { condominiumImageService } from "../../services/condominiumImageService";
+import { useTranslation } from "react-i18next";
 
 const Unidades: React.FC = () => {
   const [activeView, setActiveView] = useState<"condominios" | "unidades">(
     "condominios",
   );
+  const { t } = useTranslation();
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [organizationName, setOrganizationName] = useState("");
   const [listLoading, setListLoading] = useState(false);
@@ -97,7 +99,7 @@ const Unidades: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
-       const nameStorage = localStorage.getItem('condominium');
+          const nameStorage = localStorage.getItem('condominium');
           const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
             organizations?.find(o => o.organizationId === dataParse?.organizationId)?.name || dataParse?.name
@@ -128,36 +130,36 @@ const Unidades: React.FC = () => {
     }
   };
 
-    const [condominiumImages, setCondominiumImages] = useState<
-      Record<string, string>
-    >({});
-    const loadCondominiumImages = async (items: Condominium[]) => {
-      const previews: Record<string, string> = {};
-      await Promise.all(
-        items.map(async (condominium) => {
-          try {
-            const list = await condominiumImageService.getCondominiumImages(
-              condominium.condominiumId,
-              "Cover",
-            );
-            const first = list?.[0];
-            if (!first?.condominiumImageId) return;
-            const detail = await condominiumImageService.getCondominiumImageById(
-              first.condominiumImageId,
-            );
-            if (detail?.contentFile && detail?.contentType) {
-              previews[condominium.condominiumId] =
-                `data:${detail.contentType};base64,${detail.contentFile}`;
-            }
-          } catch (error) {
-            console.error("Erro ao carregar imagem do condomínio:", error);
-            // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
-            // Não loga nada no console para não poluir
+  const [condominiumImages, setCondominiumImages] = useState<
+    Record<string, string>
+  >({});
+  const loadCondominiumImages = async (items: Condominium[]) => {
+    const previews: Record<string, string> = {};
+    await Promise.all(
+      items.map(async (condominium) => {
+        try {
+          const list = await condominiumImageService.getCondominiumImages(
+            condominium.condominiumId,
+            "Cover",
+          );
+          const first = list?.[0];
+          if (!first?.condominiumImageId) return;
+          const detail = await condominiumImageService.getCondominiumImageById(
+            first.condominiumImageId,
+          );
+          if (detail?.contentFile && detail?.contentType) {
+            previews[condominium.condominiumId] =
+              `data:${detail.contentType};base64,${detail.contentFile}`;
           }
-        }),
-      );
-      setCondominiumImages(previews);
-    };
+        } catch (error) {
+          console.error("Erro ao carregar imagem do condomínio:", error);
+          // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
+          // Não loga nada no console para não poluir
+        }
+      }),
+    );
+    setCondominiumImages(previews);
+  };
 
   const loadUnits = async (
     blockId?: string,
@@ -176,10 +178,10 @@ const Unidades: React.FC = () => {
       const response = blockId
         ? await unitService.getUnitsByBlock(blockId, pageNumber, pageSize)
         : await unitService.getUnitsByCondominium(
-            condominiumId,
-            pageNumber,
-            pageSize,
-          );
+          condominiumId,
+          pageNumber,
+          pageSize,
+        );
       const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
@@ -309,10 +311,10 @@ const Unidades: React.FC = () => {
 
   const handleDelete = (unit: CondominiumUnit) => {
     const confirmed = window.confirm(
-      `Deseja excluir a unidade ${unit.unitCode}?`,
+      t("unidades.deleteConfirm", { code: unit.unitCode }),
     );
     if (!confirmed) return;
-    handleNotify("Exclusão ainda não está disponível.", "error");
+    handleNotify(t("unidades.deleteUnavailable"), "error");
   };
 
   const handleOpenCreate = () => {
@@ -337,7 +339,7 @@ const Unidades: React.FC = () => {
         {activeView === "condominios" ? (
           <Paper elevation={3} sx={{ p: 3 }}>
 
-  <Box
+            <Box
               sx={{
                 mb: 2,
                 pb: 1.5,
@@ -349,7 +351,7 @@ const Unidades: React.FC = () => {
             >
               <Container
                 sx={{
-                  p:'0 !important',
+                  p: '0 !important',
                   maxWidth: "100vw !important",
                   display: "flex",
                   alignItems: "center",
@@ -371,7 +373,7 @@ const Unidades: React.FC = () => {
                   <IconButton
                     onClick={() => navigate("/dashboard")}
                     className="close-button"
-                    aria-label="Fechar"
+                    aria-label={t("common.close")}
                   >
                     <Close sx={{ fontSize: 20 }} />
                   </IconButton>
@@ -380,8 +382,8 @@ const Unidades: React.FC = () => {
               <Box >
                 <BreadcrumbTrail
                   items={[
-                    "Organização",
-                    "Condomínios",
+                    t("common.organization"),
+                    t("common.condominiums"),
                   ]}
                 />
               </Box>
@@ -390,23 +392,23 @@ const Unidades: React.FC = () => {
 
 
 
-     
+
 
             <Paper variant="outlined" sx={{ p: 2 }}>
               {listLoading ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <CircularProgress size={20} />
-                  <Typography variant="body2">Carregando...</Typography>
+                  <Typography variant="body2">{t("common.loading")}</Typography>
                 </Box>
               ) : listError ? (
                 <CardList
-                  title="Condomínios da organização"
+                  title={t("unidades.condominiumsList")}
                   showTitle={false}
-                  searchPlaceholder="Buscar condomínio..."
+                  searchPlaceholder={t("unidades.searchCondominiumPlaceholder")}
                   onSearchChange={setSearchText}
                   onAddClick={undefined}
                   addButtonPlacement="toolbar"
-                  emptyImageLabel="Sem imagem"
+                  emptyImageLabel={t("common.noImage")}
                   showFilters={false}
                   showPagination={true}
                   page={condominiumsPage}
@@ -438,7 +440,7 @@ const Unidades: React.FC = () => {
                           {condominium.city} - {condominium.state}
                         </>
                       ),
-                                            imageUrl: condominiumImages[condominium.condominiumId],
+                      imageUrl: condominiumImages[condominium.condominiumId],
 
                       actions: (
                         <Button
@@ -448,7 +450,7 @@ const Unidades: React.FC = () => {
                           startIcon={<SettingsOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Visualizar Unidades 1
+                          {t("common.viewBlocks")}
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -456,7 +458,7 @@ const Unidades: React.FC = () => {
                 />
               ) : condominiums.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  Nenhum condomínio encontrado para esta organização.
+                  {t("unidades.noCondominiumsFound")}
                 </Typography>
               ) : (
                 <CardList
@@ -498,7 +500,7 @@ const Unidades: React.FC = () => {
                           {condominium.city} - {condominium.state}
                         </>
                       ),
-                                            imageUrl: condominiumImages[condominium.condominiumId],
+                      imageUrl: condominiumImages[condominium.condominiumId],
 
                       actions: (
                         <Button
@@ -508,7 +510,7 @@ const Unidades: React.FC = () => {
                           startIcon={<SettingsOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Visualizar Blocos
+                          {t("common.viewBlocks")}
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -570,19 +572,19 @@ const Unidades: React.FC = () => {
                         fontWeight="bold"
                         sx={{ fontSize: "26px" }}
                       >
-                        Unidades
+                        {t("unidades.title")}
                       </Typography>
                       <BreadcrumbTrail
                         items={[
-                          organizationName || "Organização",
-                          selectedCondominium?.name || "Condominio selecionado",
-                          "Blocos"
+                          organizationName || t("common.organization"),
+                          selectedCondominium?.name || t("unidades.selectedCondominium"),
+                          t("common.blocks")
                         ]}
                       />
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="Clique aqui para Fechar a janela">
+                    <Tooltip title={t("common.closeTooltip")}>
                       <IconButton
                         onClick={() => {
                           setActiveView("condominios");
@@ -601,7 +603,7 @@ const Unidades: React.FC = () => {
                           void loadCondominiums(condominiumsPage);
                         }}
                         className="close-button"
-                        aria-label="Voltar"
+                        aria-label={t("common.back")}
                       >
                         <Close sx={{ fontSize: 20 }} />
                       </IconButton>
@@ -613,7 +615,7 @@ const Unidades: React.FC = () => {
                   {listLoading ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <CircularProgress size={20} />
-                      <Typography variant="body2">Carregando...</Typography>
+                      <Typography variant="body2">{t("common.loading")}</Typography>
                     </Box>
                   ) : null}
 
@@ -624,17 +626,17 @@ const Unidades: React.FC = () => {
                         setUnitSearchText("");
                         setBlockPage(1);
                       }}
-                      title="Blocos do condomínio"
+                      title={t("unidades.blocksList")}
                       showTitle={false}
                       showFilters={true}
-                      searchPlaceholder="Buscar blocos..."
+                      searchPlaceholder={t("unidades.searchBlocksPlaceholder")}
                       onSearchChange={(value) => {
                         setBlockSearchText(value);
                         setBlockPage(1);
                       }}
                       onAddClick={undefined}
                       addButtonPlacement="toolbar"
-                      emptyImageLabel="Sem imagem"
+                      emptyImageLabel={t("common.noImage")}
                       showPagination={true}
                       page={blockPage}
                       totalPages={blockTotalPages}
@@ -644,7 +646,7 @@ const Unidades: React.FC = () => {
                       items={paginatedBlocks
                         .map((block, index) => ({
                           id: block.condominiumBlockId,
-                          title: block.name || "Sem nome",
+                          title: block.name || t("common.noName"),
                           subtitle: (
                             <>
                               <ViewModule
@@ -673,7 +675,7 @@ const Unidades: React.FC = () => {
                                 setUnitsPage(1);
                               }}
                             >
-                              Visualizar Unidades
+                              {t("common.viewUnits")}
                             </Button>
                           ),
                           accentColor:
@@ -693,15 +695,15 @@ const Unidades: React.FC = () => {
                         setUnitsPage(1);
                         loadUnits(undefined, 1);
                       }}
-                      title="Unidades do condomínio"
+                      title={t("unidades.unitsList")}
                       showTitle={false}
                       showFilters={true}
-                      searchPlaceholder="Buscar unidades..."
+                      searchPlaceholder={t("unidades.searchPlaceholder")}
                       onSearchChange={setUnitSearchText}
                       onAddClick={handleOpenCreate}
-                      addLabel="Novo"
+                      addLabel={t("common.new")}
                       addButtonPlacement="toolbar"
-                      emptyImageLabel="Sem imagem"
+                      emptyImageLabel={t("common.noImage")}
                       showPagination={true}
                       page={unitsPage}
                       totalPages={unitsTotalPages}
@@ -719,7 +721,7 @@ const Unidades: React.FC = () => {
                         )
                         .map((unit, index) => ({
                           id: unit.condominiumUnitId,
-                          title: unit.unitCode || "Sem código",
+                          title: unit.unitCode || t("common.noCode"),
                           subtitle: (
                             <>
                               <MeetingRoom
@@ -731,8 +733,8 @@ const Unidades: React.FC = () => {
                               />
                               {" "}
                               {unit.unitType?.toString() === "1"
-                                ? "Proprietário"
-                                : "Inquilino"}
+                                ? t("common.owner")
+                                : t("common.tenant")}
                             </>
                           ),
                           meta: (
@@ -744,7 +746,7 @@ const Unidades: React.FC = () => {
                                   unit.condominiumBlockId,
                               )?.name ||
                                 unit.condominiumBlockId ||
-                                "Desconhecido"}
+                                t("common.unknown")}
                             </>
                           ),
                           actions: (
@@ -758,7 +760,7 @@ const Unidades: React.FC = () => {
                                 startIcon={<EditOutlined />}
                                 onClick={() => handleEdit(unit)}
                               >
-                                Editar
+                                {t("common.edit")}
                               </Button>
                               <Button
                                 size="small"
@@ -767,7 +769,7 @@ const Unidades: React.FC = () => {
                                 startIcon={<DeleteOutline />}
                                 onClick={() => handleDelete(unit)}
                               >
-                                Excluir
+                                {t("common.delete")}
                               </Button>
                             </Box>
                           ),
