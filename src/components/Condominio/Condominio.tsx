@@ -60,7 +60,9 @@ const CondominioPage: React.FC = () => {
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [editingCondominium, setEditingCondominium] =
     useState<Condominium | null>(null);
-  const { appStateModal, handleClose } = useAppStateModal();
+  const [imageSelected, setImageSelected] =
+    useState<string | null>(null);
+  const { appStateModal, handleClose, showDelete } = useAppStateModal();
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -129,7 +131,7 @@ const CondominioPage: React.FC = () => {
         try {
           const list = await condominiumImageService.getCondominiumImages(
             condominium.condominiumId,
-            "Cover",
+            "Facade",
           );
           const first = list?.[0];
           if (!first?.condominiumImageId) return;
@@ -180,8 +182,9 @@ const CondominioPage: React.FC = () => {
     return match?.description || match?.value || String(value);
   };
 
-  const handleEdit = (condominium: Condominium) => {
+  const handleEdit = (condominium: Condominium,image:string) => {
     setEditingCondominium(condominium);
+    setImageSelected(image)
     setIsCadastroOpen(true);
   };
 
@@ -211,6 +214,7 @@ const CondominioPage: React.FC = () => {
           <CondominioForm
             open={isCadastroOpen}
             editingCondominium={editingCondominium}
+            imageSelected={imageSelected}
             onClose={handleCloseForm}
             onSaved={handleSaved}
             condominiumTypes={condominiumTypes}
@@ -362,7 +366,7 @@ const CondominioPage: React.FC = () => {
                             variant="outlined"
                             className="action-button-edit"
                             startIcon={<EditOutlined />}
-                            onClick={() => handleEdit(condominium)}
+                            onClick={() => handleEdit(condominium,condominiumImages[condominium.condominiumId])}
                           >
                             Editar
                           </Button>
@@ -373,7 +377,7 @@ const CondominioPage: React.FC = () => {
                             startIcon={<DeleteOutline />}
                             onClick={() => {
                               setEditingCondominium(condominium);
-                              setOpenDelete(true);
+                              showDelete('Deseja realmente excluir este registro?');
                             }}
                           >
                             Excluir
@@ -470,7 +474,7 @@ const CondominioPage: React.FC = () => {
                             variant="outlined"
                             className="action-button-edit"
                             startIcon={<EditOutlined />}
-                            onClick={() => handleEdit(condominium)}
+                            onClick={() => handleEdit(condominium, condominiumImages[condominium.condominiumId])}
                           >
                             Editar
                           </Button>
@@ -481,7 +485,7 @@ const CondominioPage: React.FC = () => {
                             startIcon={<DeleteOutline />}
                             onClick={() => {
                               setEditingCondominium(condominium);
-                              setOpenDelete(true);
+                              showDelete('Deseja realmente excluir este registro?');
                             }}
                           >
                             Excluir

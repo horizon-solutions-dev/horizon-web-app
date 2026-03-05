@@ -136,7 +136,7 @@ const Unidades: React.FC = () => {
         try {
           const list = await condominiumImageService.getCondominiumImages(
             condominium.condominiumId,
-            "Cover",
+            "Facade",
           );
           const first = list?.[0];
           if (!first?.condominiumImageId) return;

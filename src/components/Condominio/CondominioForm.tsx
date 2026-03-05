@@ -35,6 +35,7 @@ interface CondominioFormProps {
   open: boolean;
   editingCondominium: Condominium | null;
   onClose: () => void;
+  imageSelected: null | string;
   onSaved: () => void | Promise<void>;
   condominiumTypes: CondominiumTypeEnum[];
   typesLoading: boolean;
@@ -47,6 +48,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   open,
   editingCondominium,
   onClose,
+  imageSelected,
   onSaved,
   condominiumTypes,
   typesLoading,
@@ -55,7 +57,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   setLoading,
 }) => {
   const { t } = useTranslation();
-  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const { appStateModal, handleClose, showSuccess, showError } =
+    useAppStateModal();
   const [closeAfterModal, setCloseAfterModal] = useState(false);
   const initialFormData: CondominiumRequest = {
     organizationId: localStorage.getItem("organizationId") || "",
@@ -410,9 +413,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
       const { valid, validations } = editingId
         ? await condominiumService.validateCondominiumEdit(
-          payload,
-          editingCondominium?.condominiumId || "",
-        )
+            payload,
+            editingCondominium?.condominiumId || "",
+          )
         : await condominiumService.validateCondominium(payload);
 
       if (!valid && validations.length > 0) {
@@ -427,7 +430,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       }
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : t("condominioForm.validationError");
+        error instanceof Error
+          ? error.message
+          : t("condominioForm.validationError");
       showError(message);
       return;
     } finally {
@@ -604,19 +609,18 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         commit: true,
       };
 
-      // Backend validation still happens, but after local validation
       const { valid, validations } = editingId
         ? await await condominiumService.validateCondominiumEdit(
-          {
+            {
+              ...payload,
+              commit: false,
+            },
+            editingCondominium?.condominiumId || "",
+          )
+        : await condominiumService.validateCondominium({
             ...payload,
             commit: false,
-          },
-          editingCondominium?.condominiumId || "",
-        )
-        : await condominiumService.validateCondominium({
-          ...payload,
-          commit: false,
-        });
+          });
 
       if (!valid && validations.length > 0) {
         const fieldMap: Record<string, keyof CondominiumRequest> = {
@@ -697,13 +701,13 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
       if (coverFile && response) {
         console.log({
-          imageType: "Cover",
+          imageType: "Facade",
           contentFile: coverFile,
           condominiumId: response,
         });
         try {
           await condominiumImageService.uploadCondominiumImage({
-            imageType: "Cover",
+            imageType: "Facade",
             contentFile: coverFile,
             condominiumId: response,
           });
@@ -724,7 +728,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       setCoverFile(null);
       setActiveStep(0);
       setEditingId(null);
-      setCloseAfterModal(true);
+      handleCloseWizard();
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         setErrors({ doc: t("condominioForm.duplicateCnpj") });
@@ -763,6 +767,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     setCepError(null);
     onClose();
   };
+
+  const preview = coverPreview ?? imageSelected ?? undefined;
 
   const renderStepContent = (step: number) => {
     switch (step) {
@@ -940,8 +946,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       case 2:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-            <Grid container spacing={1}>
-              <Grid item xs={8} md={6}>
+            <Grid container spacing={1} flexGrow={3}>
+              <Grid item xs={8} md={8}>
                 <Box
                   sx={{
                     border: "1px solid #e2e8f0",
@@ -972,11 +978,16 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
 
                   <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      gap: 0.25,
+                    }}
                   >
                     <Box sx={{ display: "flex", gap: 1 }}>
                       <FormControlLabel
-                        sx={{ height: "40px", width: "205px" }}
+                        sx={{ height: "40px", width: "270px" }}
                         control={
                           <Checkbox
                             checked={formData.hasBlocks}
@@ -989,7 +1000,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                         label="Possui blocos"
                       />
                       <FormControlLabel
-                        sx={{ height: "40px", width: "205px" }}
+                        sx={{ height: "40px", width: "270px" }}
                         control={
                           <Checkbox
                             checked={formData.hasPowerByBlock}
@@ -1005,7 +1016,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
                     <Box sx={{ display: "flex", gap: 1 }}>
                       <FormControlLabel
-                        sx={{ height: "40px", width: "205px" }}
+                        sx={{ height: "40px", width: "270px" }}
                         control={
                           <Checkbox
                             checked={formData.hasGasByBlock}
@@ -1018,7 +1029,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                         label="Gás por bloco"
                       />
                       <FormControlLabel
-                        sx={{ height: "40px", width: "205px" }}
+                        sx={{ height: "40px", width: "270px" }}
                         control={
                           <Checkbox
                             checked={formData.hasWaterIndividual}
@@ -1038,7 +1049,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 </Box>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid item xs={4} md={4}>
                 <Box
                   sx={{
                     border: "1px solid #e2e8f0",
@@ -1101,7 +1112,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     <TextField
                       fullWidth
                       select
-                      sx={{ width: "420px" }}
+                      sx={{ width: "260px" }}
                       value={formData.allocationType}
                       onChange={(e) =>
                         handleChange(
@@ -1120,7 +1131,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       </MenuItem>
                       {allocationLoading ? (
                         <MenuItem
-                          sx={{ width: "420px" }}
+                          sx={{ width: "260px" }}
                           value={formData.allocationType}
                           disabled
                         >
@@ -1129,7 +1140,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       ) : allocationTypes.length > 0 ? (
                         allocationTypes.map((type) => (
                           <MenuItem
-                            sx={{ width: "420px" }}
+                            sx={{ width: "260px" }}
                             key={type.id}
                             value={type.id}
                           >
@@ -1198,6 +1209,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 p: 2,
                 backgroundColor: "#fff",
               }}
+              flexGrow={2}
             >
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}
@@ -1253,10 +1265,10 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     background: "#f8fafc",
                   }}
                 >
-                  {coverPreview ? (
+                  {preview ? (
                     <Box
                       component="img"
-                      src={coverPreview}
+                      src={preview}
                       alt="Prévia da imagem do condomínio"
                       sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
@@ -1285,7 +1297,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   return (
     <>
       <StepWizardCard
-        title={editingId ? t("condominioForm.editTitle") : t("condominioForm.createTitle")}
+        title={
+          editingId
+            ? t("condominioForm.editTitle")
+            : t("condominioForm.createTitle")
+        }
         subtitle={steps[activeStep]}
         steps={steps}
         onClose={handleCloseWizard}

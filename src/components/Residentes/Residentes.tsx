@@ -88,7 +88,7 @@ const Residentes: React.FC = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { appStateModal, handleClose } = useAppStateModal();
+  const { appStateModal, handleClose, showDelete } = useAppStateModal();
 
   const [condominiumImages, setCondominiumImages] = useState<
     Record<string, string>
@@ -100,7 +100,7 @@ const Residentes: React.FC = () => {
         try {
           const list = await condominiumImageService.getCondominiumImages(
             condominium.condominiumId,
-            "Cover",
+            "Facade",
           );
           const first = list?.[0];
           if (!first?.condominiumImageId) return;
@@ -223,10 +223,10 @@ const Residentes: React.FC = () => {
       const response = blockId
         ? await unitService.getUnitsByBlock(blockId, pageNumber, unitPageSize)
         : await unitService.getUnitsByCondominium(
-          condominiumId,
-          pageNumber,
-          unitPageSize,
-        );
+            condominiumId,
+            pageNumber,
+            unitPageSize,
+          );
       const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
@@ -401,7 +401,7 @@ const Residentes: React.FC = () => {
     return;
   }
   function handleDelete() {
-    return;
+    showDelete("Deseja realmente excluir este registro?");
   }
 
   const navigate = useNavigate();
@@ -460,7 +460,9 @@ const Residentes: React.FC = () => {
                 </Tooltip>
               </Container>
               <Box>
-                <BreadcrumbTrail items={[t("common.organization"), t("common.condominiums")]} />
+                <BreadcrumbTrail
+                  items={[t("common.organization"), t("common.condominiums")]}
+                />
               </Box>
             </Box>
 
@@ -474,7 +476,9 @@ const Residentes: React.FC = () => {
                 <CardList
                   title={t("residentes.condominiumsList")}
                   showTitle={false}
-                  searchPlaceholder={t("residentes.searchCondominiumPlaceholder")}
+                  searchPlaceholder={t(
+                    "residentes.searchCondominiumPlaceholder",
+                  )}
                   onSearchChange={setCondoSearchText}
                   onAddClick={undefined}
                   addButtonPlacement="toolbar"
@@ -516,7 +520,8 @@ const Residentes: React.FC = () => {
                   <BreadcrumbTrail
                     items={[
                       organizationName || t("common.organization"),
-                      selectedCondominium?.name || t("residentes.selectedCondominium"),
+                      selectedCondominium?.name ||
+                        t("residentes.selectedCondominium"),
                       t("common.units"),
                     ]}
                   />
@@ -655,8 +660,10 @@ const Residentes: React.FC = () => {
                       <BreadcrumbTrail
                         items={[
                           organizationName || t("common.organization"),
-                          selectedCondominium?.name || t("residentes.selectedCondominium"),
-                          selectedUnit?.unitCode || t("residentes.selectedUnit"),
+                          selectedCondominium?.name ||
+                            t("residentes.selectedCondominium"),
+                          selectedUnit?.unitCode ||
+                            t("residentes.selectedUnit"),
                           t("common.residents"),
                         ]}
                       />
@@ -686,7 +693,9 @@ const Residentes: React.FC = () => {
                 {residentsLoading ? (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <CircularProgress size={20} />
-                    <Typography variant="body2">{t("common.loading")}</Typography>
+                    <Typography variant="body2">
+                      {t("common.loading")}
+                    </Typography>
                   </Box>
                 ) : (
                   <>
@@ -789,7 +798,10 @@ const Residentes: React.FC = () => {
                             id: resident.condominiumUnitResidentId,
                             title: `${residentName}`,
                             subtitle: `${residentType} | ${residentUnit} | ${residentBlock}`,
-                            meta: t("residentes.periodLabel", { start: periodStart, end: periodEnd }),
+                            meta: t("residentes.periodLabel", {
+                              start: periodStart,
+                              end: periodEnd,
+                            }),
                             accentColor:
                               index % 2 === 0 ? "#eef6ee" : "#fdecef",
                           };

@@ -71,7 +71,8 @@ const Blocos: React.FC = () => {
   const [blockToDelete, setBlockToDelete] = useState<CondominiumBlock | null>(
     null,
   );
-  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const { appStateModal, handleClose, showSuccess, showError, showDelete } =
+    useAppStateModal();
   const [condominiumImages, setCondominiumImages] = useState<
     Record<string, string>
   >({});
@@ -82,7 +83,7 @@ const Blocos: React.FC = () => {
         try {
           const list = await condominiumImageService.getCondominiumImages(
             condominium.condominiumId,
-            "Cover",
+            "Facade",
           );
           const first = list?.[0];
           if (!first?.condominiumImageId) return;
@@ -146,9 +147,7 @@ const Blocos: React.FC = () => {
       await loadCondominiumImages(normalized);
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : t("blocos.deleteError");
+        error instanceof Error ? error.message : t("blocos.deleteError");
       setListError(message);
     } finally {
       setListLoading(false);
@@ -244,7 +243,7 @@ const Blocos: React.FC = () => {
 
   const handleDelete = (block: CondominiumBlock) => {
     setBlockToDelete(block);
-    setDeleteModalOpen(true);
+    showDelete("Deseja realmente excluir este registro?");
   };
 
   const handleConfirmDelete = async () => {
@@ -254,9 +253,7 @@ const Blocos: React.FC = () => {
       setLoading(true);
       await blockService.deleteBlock(blockToDelete.condominiumBlockId);
 
-      showSuccess(
-        t("blocos.deleteSuccess", { name: blockToDelete.name }),
-      );
+      showSuccess(t("blocos.deleteSuccess", { name: blockToDelete.name }));
 
       await loadBlocks(blocksPage);
 
@@ -335,7 +332,9 @@ const Blocos: React.FC = () => {
                 </Tooltip>
               </Container>
               <Box>
-                <BreadcrumbTrail items={[t("common.organization"), t("common.condominiums")]} />
+                <BreadcrumbTrail
+                  items={[t("common.organization"), t("common.condominiums")]}
+                />
               </Box>
             </Box>
 
@@ -502,10 +501,11 @@ const Blocos: React.FC = () => {
                         items={[
                           localStorage.getItem("condominium")
                             ? JSON.parse(
-                              localStorage.getItem("condominium") || "{}",
-                            )?.name
+                                localStorage.getItem("condominium") || "{}",
+                              )?.name
                             : {},
-                          selectedCondominium?.name || t("blocos.selectedCondominium"),
+                          selectedCondominium?.name ||
+                            t("blocos.selectedCondominium"),
                           t("common.blocks"),
                         ]}
                       />
@@ -539,7 +539,9 @@ const Blocos: React.FC = () => {
                   {listLoading ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <CircularProgress size={20} />
-                      <Typography variant="body2">{t("common.loading")}</Typography>
+                      <Typography variant="body2">
+                        {t("common.loading")}
+                      </Typography>
                     </Box>
                   ) : null}
 

@@ -145,7 +145,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   unitCodePreset,
 }) => {
   const { t } = useTranslation();
-  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const { appStateModal, handleClose, showSuccess, showError } =
+    useAppStateModal();
   const [closeAfterModal, setCloseAfterModal] = useState(false);
   const STEPS = [
     t("residenteForm.stepPeriod"),
@@ -173,6 +174,19 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreview(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(coverFile);
+    setCoverPreview(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [coverFile]);
 
   useEffect(() => {
     if (!open) return;
@@ -239,8 +253,10 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const getResidentDataErrors = () => {
     const nextErrors: Record<string, string> = {};
 
-    if (!firstName.trim()) nextErrors.firstName = t("residenteForm.firstNameRequired");
-    if (!lastName.trim()) nextErrors.lastName = t("residenteForm.lastNameRequired");
+    if (!firstName.trim())
+      nextErrors.firstName = t("residenteForm.firstNameRequired");
+    if (!lastName.trim())
+      nextErrors.lastName = t("residenteForm.lastNameRequired");
 
     const cleanDoc = documentNumber.replace(/\D/g, "");
     if (!cleanDoc) {
@@ -272,20 +288,19 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     return {};
   };
 
-
   const residentFieldMap: Record<string, keyof CondominiumUnitResidentRequest> =
-  {
-    condominiumunitid: "condominiumUnitId",
-    userid: "userId",
-    unittype: "unitType",
-    startdate: "startDate",
-    enddate: "endDate",
-    billingcontact: "billingContact",
-    canvote: "canVote",
-    canmakereservations: "canMakeReservations",
-    hasgatehouseaccess: "hasGatehouseAccess",
-    commit: "commit",
-  };
+    {
+      condominiumunitid: "condominiumUnitId",
+      userid: "userId",
+      unittype: "unitType",
+      startdate: "startDate",
+      enddate: "endDate",
+      billingcontact: "billingContact",
+      canvote: "canVote",
+      canmakereservations: "canMakeReservations",
+      hasgatehouseaccess: "hasGatehouseAccess",
+      commit: "commit",
+    };
 
   const residentStepFields: Array<Array<keyof CondominiumUnitResidentRequest>> =
     [
@@ -397,7 +412,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       }
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : t("residenteForm.validateError");
+        error instanceof Error
+          ? error.message
+          : t("residenteForm.validateError");
       showError(message);
       return;
     } finally {
@@ -461,7 +478,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         commit: true,
       });
 
-
       if (photoFile) {
         await fileToDataUrl(photoFile);
       }
@@ -502,14 +518,16 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           Object.keys(mappedErrors).length > 0
             ? mappedErrors
             : {
-              documentNumber: t("residenteForm.duplicateDocument"),
-              email: t("residenteForm.duplicateDocument"),
-            },
+                documentNumber: t("residenteForm.duplicateDocument"),
+                email: t("residenteForm.duplicateDocument"),
+              },
         );
         setActiveStep(1);
       } else {
         const message =
-          error instanceof Error ? error.message : t("residenteForm.createError");
+          error instanceof Error
+            ? error.message
+            : t("residenteForm.createError");
         showError(message);
       }
     } finally {
@@ -750,8 +768,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               mb: 0.5,
             }}
           >
-            <Box sx={{ color: 'primary.main' }}>
-
+            <Box sx={{ color: "primary.main" }}>
               <RuleSharp />
             </Box>
             <Typography sx={{ fontWeight: 700, fontSize: 18, lineHeight: 1 }}>
@@ -831,12 +848,28 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             type="file"
             accept="image/*"
             hidden
-            onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
           />
-          <FileUploadOutlined sx={{ fontSize: 40, color: "#7ba0d1" }} />
-          <Typography sx={{ fontSize: 14 }}>
-            {photoFile ? photoFile.name : t("residenteForm.addPhoto")}
-          </Typography>
+          {!coverPreview && <FileUploadOutlined sx={{ fontSize: 40, color: "#7ba0d1" }} />}
+          {coverPreview ? (
+            <Box
+              component="img"
+              src={coverPreview}
+              alt="Prévia da imagem do condomínio"
+              sx={{ width: "60%", maxHeight: "40%", objectFit: "cover" }}
+            />
+          ) : (
+            <Typography
+              sx={{
+                color: "#94a3b8",
+                fontSize: 12,
+                px: 1,
+                textAlign: "center",
+              }}
+            >
+              Nenhuma imagem selecionada
+            </Typography>
+          )}
         </Box>
       </Grid>
     );
