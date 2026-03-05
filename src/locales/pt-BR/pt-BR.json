@@ -130,6 +130,12 @@
     "residents": "Residentes",
     "profiles": "Perfis",
     "registrations": "Cadastros",
+    "pendingItems": "Itens pendentes",
+    "reservations": "Reservas",
+    "financial": "Financeiro",
+    "gatehouse": "Portaria",
+    "vehicles": "Veículos",
+    "deliveries": "Encomendas",
     "contactUs": "Fale Conosco"
   },
   "blocos": {

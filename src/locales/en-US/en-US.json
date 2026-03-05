@@ -130,6 +130,12 @@
     "residents": "Residents",
     "profiles": "Profiles",
     "registrations": "Registrations",
+    "pendingItems": "Pending items",
+    "reservations": "Reservations",
+    "financial": "Financial",
+    "gatehouse": "Gatehouse",
+    "vehicles": "Vehicles",
+    "deliveries": "Deliveries",
     "contactUs": "Contact Us"
   },
   "blocos": {

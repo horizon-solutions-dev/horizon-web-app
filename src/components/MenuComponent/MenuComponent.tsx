@@ -2,11 +2,11 @@ import { useEffect, useState, type JSX } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   MdDashboard,
-  /*   MdEventAvailable,
-    MdAttachMoney,
-    MdSecurity,
-    MdDirectionsCar,
-    MdLocalShipping, */
+  MdEventAvailable,
+  MdAttachMoney,
+  MdSecurity,
+  MdDirectionsCar,
+  MdLocalShipping,
   MdEmail,
   MdApartment,
   MdSettings,
@@ -60,17 +60,22 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
     { id: "cadastros-residentes", label: t("menu.residents"), icon: <People />, path: RouteNames.CadastrosResidentes },
     { id: "cadastros-perfis", label: t("menu.profiles"), icon: <AssignmentInd />, path: RouteNames.CadastrosPerfis },
     {
-      id: "cadastros",
-      label: t("menu.registrations"),
+      id: "itens-pendentes",
+      label: t("menu.pendingItems"),
       icon: <MdSettings />,
       children: [
+        { id: "pendente-reservas", label: t("menu.reservations"), icon: <MdEventAvailable />, path: RouteNames.ReservasTipo },
+        { id: "pendente-financeiro", label: t("menu.financial"), icon: <MdAttachMoney />, path: RouteNames.FinanceiroBoletos },
+        { id: "pendente-portaria", label: t("menu.gatehouse"), icon: <MdSecurity />, path: RouteNames.PortariaUsuarios },
+        { id: "pendente-veiculos", label: t("menu.vehicles"), icon: <MdDirectionsCar />, path: RouteNames.Veiculos },
+        { id: "pendente-encomendas", label: t("menu.deliveries"), icon: <MdLocalShipping />, path: RouteNames.EncomendasRecebimento },
+        {
+          id: "fale-conosco",
+          label: t("menu.contactUs"),
+          icon: <MdEmail />,
+          path: RouteNames.FaleConosco,
+        },
       ],
-    },
-    {
-      id: "fale-conosco",
-      label: t("menu.contactUs"),
-      icon: <MdEmail />,
-      path: RouteNames.FaleConosco,
     },
   ];
 
