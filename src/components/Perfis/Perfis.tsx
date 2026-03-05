@@ -9,13 +9,15 @@ import {
 } from "@mui/material";
 import CardList from "../../shared/components/CardList";
 import { profileService, type Profile } from "../../services/profileService";
-import { notify } from "../../shared/utils/toastMessage";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 const Perfis: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
+  const { appStateModal, handleClose, showError } = useAppStateModal();
   const loadProfiles = async () => {
     setLoading(true);
     setError(null);
@@ -26,7 +28,7 @@ const Perfis: React.FC = () => {
       const message =
         err instanceof Error ? err.message : "Erro ao carregar perfis.";
       setError(message);
-      notify({ message, type: "error" });
+      showError(message);
     } finally {
       setLoading(false);
     }
@@ -95,6 +97,15 @@ const Perfis: React.FC = () => {
         </Paper>
       </Container>
 
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleClose}
+        onClose={handleClose}
+      />
     </Box>
   );
 };

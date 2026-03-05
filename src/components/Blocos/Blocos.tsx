@@ -32,7 +32,8 @@ import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BlocoForm from "./BlocoForm";
 import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
-import { notify } from "../../shared/utils/toastMessage";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { condominiumImageService } from "../../services/condominiumImageService";
 import { useTranslation } from "react-i18next";
@@ -70,13 +71,7 @@ const Blocos: React.FC = () => {
   const [blockToDelete, setBlockToDelete] = useState<CondominiumBlock | null>(
     null,
   );
-
-  const handleNotify = (
-    message: string,
-    severity: "success" | "error" | "info" | "warning" = "success",
-  ) => {
-    notify({ message, type: severity });
-  };
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
   const [condominiumImages, setCondominiumImages] = useState<
     Record<string, string>
   >({});
@@ -259,9 +254,8 @@ const Blocos: React.FC = () => {
       setLoading(true);
       await blockService.deleteBlock(blockToDelete.condominiumBlockId);
 
-      handleNotify(
+      showSuccess(
         t("blocos.deleteSuccess", { name: blockToDelete.name }),
-        "success",
       );
 
       await loadBlocks(blocksPage);
@@ -271,7 +265,7 @@ const Blocos: React.FC = () => {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("blocos.deleteError");
-      handleNotify(message, "error");
+      showError(message);
     } finally {
       setLoading(false);
     }
@@ -478,7 +472,6 @@ const Blocos: React.FC = () => {
                 editingBlock={editingBlock}
                 onClose={handleCloseForm}
                 onSaved={handleSaved}
-                onNotify={handleNotify}
                 loading={loading}
                 setLoading={setLoading}
                 condominiumIdPreset={selectedCondominium?.condominiumId}
@@ -639,6 +632,16 @@ const Blocos: React.FC = () => {
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         onClose={handleCancelDelete}
+      />
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleClose}
+        onClose={handleClose}
       />
     </Box>
   );

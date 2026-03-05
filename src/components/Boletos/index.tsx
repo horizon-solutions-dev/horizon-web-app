@@ -20,7 +20,8 @@ import BoletoForm from "./BoletoForm";
 import BoletoViewer from "./BoletoViewer";
 import CardList from "../../shared/components/CardList";
 import "./Boletos.scss";
-import { notify } from "../../shared/utils/toastMessage";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 interface Boleto {
   id: number;
@@ -83,6 +84,7 @@ const Boletos: React.FC = () => {
   const [openViewer, setOpenViewer] = useState(false);
   const [selectedBoleto, setSelectedBoleto] = useState<Boleto | null>(null);
   const [page, setPage] = useState(1);
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
   const handleOpenForm = (boleto?: Boleto) => {
     setSelectedBoleto(boleto || null);
     setOpenForm(true);
@@ -110,11 +112,11 @@ const Boletos: React.FC = () => {
           b.id === selectedBoleto.id ? { ...boleto, id: selectedBoleto.id } : b,
         ),
       );
-      notify({ message: "Boleto atualizado com sucesso!", type: "success" });
+      showSuccess("Boleto atualizado com sucesso!");
     } else {
       const newId = Math.max(...boletos.map((b) => b.id), 0) + 1;
       setBoletos([...boletos, { ...boleto, id: newId }]);
-      notify({ message: "Boleto criado com sucesso!", type: "success" });
+      showSuccess("Boleto criado com sucesso!");
     }
     handleCloseForm();
   };
@@ -122,7 +124,7 @@ const Boletos: React.FC = () => {
   const handleDeleteBoleto = (boleto: Boleto) => {
     if (window.confirm(`Deseja realmente excluir o boleto ${boleto.numero}?`)) {
       setBoletos(boletos.filter((b) => b.id !== boleto.id));
-      notify({ message: "Boleto excluido com sucesso!", type: "success" });
+      showSuccess("Boleto deletado com sucesso!");
     }
   };
 
@@ -132,9 +134,9 @@ const Boletos: React.FC = () => {
       link.href = boleto.imagem;
       link.download = `boleto_${boleto.numero}.png`;
       link.click();
-      notify({ message: "Download iniciado!", type: "success" });
+      showSuccess("Download iniciado!");
     } else {
-      notify({ message: "Este boleto nao possui imagem!", type: "error" });
+      showError("Este boleto não possui imagem!");
     }
   };
 
@@ -301,6 +303,16 @@ const Boletos: React.FC = () => {
         onClose={handleCloseViewer}
         boleto={selectedBoleto}
         onDownload={handleDownload}
+      />
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleClose}
+        onClose={handleClose}
       />
     </Box>
   );

@@ -25,7 +25,8 @@ import {
 } from "../../services/organizationService";
 import OrganizacaoForm from "./OrganizacaoForm";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
-import { notify } from "../../shared/utils/toastMessage";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 const pageSize = 4;
 
@@ -59,12 +60,7 @@ const Organizacoes: React.FC = () => {
   >([]);
   const [typesLoading, setTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
-  const handleNotify = (
-    message: string,
-    severity: "success" | "error" | "info" | "warning" = "success",
-  ) => {
-    notify({ message, type: severity });
-  };
+  const { appStateModal, handleClose } = useAppStateModal();
 
   const loadOrganizations = async () => {
     setListLoading(true);
@@ -192,7 +188,6 @@ const Organizacoes: React.FC = () => {
             editingOrganization={editingOrganization}
             onClose={handleCloseForm}
             onSaved={handleSaved}
-            onNotify={handleNotify}
             organizationTypes={organizationTypes}
             typesLoading={typesLoading}
             typesError={typesError}
@@ -302,6 +297,16 @@ const Organizacoes: React.FC = () => {
           </Paper>
         )}
       </Container>
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleClose}
+        onClose={handleClose}
+      />
     </Box>
   );
 };

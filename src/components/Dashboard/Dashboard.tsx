@@ -47,7 +47,7 @@ export default function Dashboard() {
   ];
 
   const pendingItems = [
-    { id: 1, text: 'Aprovar liberacao de acesso - Visitante', priority: 'Alta' },
+    { id: 1, text: 'Aprovar libeção de acesso - Visitante', priority: 'Alta' },
     { id: 2, text: 'Revisar despesas do mes', priority: 'Media' },
     { id: 3, text: 'Enviar notificacao de assembleia', priority: 'Baixa' },
   ];

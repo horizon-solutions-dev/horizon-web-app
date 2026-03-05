@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+﻿/* eslint-disable @typescript-eslint/no-unused-vars */
 import { AxiosError } from "axios";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,22 +16,15 @@ import {
   type CondominiumUnitRequest,
   type UnitTypeEnum,
 } from "../../services/unitService";
+import { AppStateModal } from "../../shared/components/AppStateModal";
 import StepWizardCard from "../../shared/components/StepWizardCard";
-import { notify } from "../../shared/utils/toastMessage";
-import {
-  condominiumService,
-  type AllocationTypeEnum,
-} from "../../services/condominiumService";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 interface UnidadeFormProps {
   open: boolean;
   editingUnit: CondominiumUnit | null;
   onClose: () => void;
   onSaved: () => void | Promise<void>;
-  onNotify: (
-    message: string,
-    severity?: "success" | "error" | "info" | "warning",
-  ) => void;
   unitTypes: UnitTypeEnum[];
   typesLoading: boolean;
   typesError: string | null;
@@ -73,7 +66,6 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   editingUnit,
   onClose,
   onSaved,
-  onNotify,
   unitTypes,
   typesLoading,
   typesError,
@@ -84,6 +76,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   blockId,
   blockNamePreset,
 }) => {
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const [closeAfterModal, setCloseAfterModal] = useState(false);
   const [formData, setFormData] = useState<CondominiumUnitRequest>({
     condominiumId: condominiumIdPreset || "",
     condominiumBlockId: blockId,
@@ -104,32 +98,6 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     () => blockNamePreset || t("unidadeForm.selectedBlock"),
     [blockNamePreset, t],
   );
-  const [allocationLoading, setAllocationLoading] = useState(false);
-  const [allocationError, setAllocationError] = useState<string | null>(null);
-  const [allocationTypes, setAllocationTypes] = useState<AllocationTypeEnum[]>(
-    [],
-  );
-  const loadAllocationTypes = async () => {
-    setAllocationLoading(true);
-    setAllocationError(null);
-    try {
-      const data = await condominiumService.getAllocationTypes();
-      setAllocationTypes(data ?? []);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : t("unidadeForm.allocationLoadError");
-      setAllocationError(message);
-      onNotify(message, "error");
-    } finally {
-      setAllocationLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadAllocationTypes();
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -169,10 +137,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     const nextErrors: FormErrors = {};
 
     if (!formData.condominiumId) {
-      //onNotify("Condomínio inválido. Selecione o condomínio novamente.", "error");
     }
     if (!formData.condominiumBlockId) {
-      //onNotify("Bloco inválido. Selecione um bloco para continuar.", "error");
     }
     if (!formData.unitCode.trim()) {
       nextErrors.unitCode = t("unidadeForm.unitCodeRequired");
@@ -221,7 +187,6 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
 
   const handleSubmit = async () => {
     if (!validate()) {
-      ////onNotify("Preencha os campos obrigatórios.", "error");
       return;
     }
 
@@ -253,20 +218,14 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
 
       if (editingId) {
         await unitService.updateUnit(editingId, payload);
-        notify({
-          message: t("unidadeForm.updateSuccess"),
-          type: "success",
-        });
+        showSuccess(t("unidadeForm.updateSuccess"));
       } else {
         await unitService.createUnit(payload);
-        notify({
-          message: t("unidadeForm.createSuccess"),
-          type: "success",
-        });
+        showSuccess(t("unidadeForm.createSuccess"));
       }
 
       await onSaved();
-      onClose();
+      setCloseAfterModal(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         setErrors({
@@ -275,10 +234,18 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       } else {
         const message =
           error instanceof Error ? error.message : t("unidadeForm.saveError");
-        onNotify(message, "error");
+        showError(message);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    handleClose();
+    if (closeAfterModal) {
+      setCloseAfterModal(false);
+      onClose();
     }
   };
 
@@ -308,30 +275,31 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   };
 
   return (
-    <StepWizardCard
-      title={editingId ? t("unidadeForm.editTitle") : t("unidadeForm.createTitle")}
-      subtitle={steps[0]}
-      steps={steps}
-      activeStep={0}
-      showBack={false}
-      onClose={onClose}
-      disableContent={loading}
-      actions={
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          sx={{ marginTop: "16px" }}
-          disabled={loading}
-        >
-          {loading ? (
-            <CircularProgress size={20} />
-          ) : (
-            t("common.finish")
-          )}
-        </Button>
-      }
-    >
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <>
+      <StepWizardCard
+        title={editingId ? t("unidadeForm.editTitle") : t("unidadeForm.createTitle")}
+        subtitle={steps[0]}
+        steps={steps}
+        activeStep={0}
+        showBack={false}
+        onClose={onClose}
+        disableContent={loading}
+        actions={
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            sx={{ marginTop: "16px" }}
+            disabled={loading}
+          >
+            {loading ? (
+              <CircularProgress size={20} />
+            ) : (
+              t("common.finish")
+            )}
+          </Button>
+        }
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <TextField
           sx={{
             "& .MuiOutlinedInput-root": {
@@ -416,8 +384,19 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
             </MenuItem>
           ))}
         </TextField> */}
-      </Box>
-    </StepWizardCard>
+        </Box>
+      </StepWizardCard>
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleModalClose}
+        onClose={handleModalClose}
+      />
+    </>
   );
 };
 

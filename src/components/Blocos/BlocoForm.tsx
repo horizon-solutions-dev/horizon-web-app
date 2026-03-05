@@ -10,7 +10,8 @@ import {
 } from "@mui/material";
 import { type CondominiumBlock, type CondominiumBlockRequest, blockService } from "../../services/blockService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
-import { notify } from "../../shared/utils/toastMessage";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { useTranslation } from "react-i18next";
 
 interface BlocoFormProps {
@@ -18,10 +19,6 @@ interface BlocoFormProps {
   editingBlock: CondominiumBlock | null;
   onClose: () => void;
   onSaved: () => void | Promise<void>;
-  onNotify: (
-    message: string,
-    severity?: "success" | "error" | "info" | "warning",
-  ) => void;
   loading: boolean;
   setLoading: (loading: boolean) => void;
   condominiumIdPreset?: string;
@@ -32,12 +29,13 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
   editingBlock,
   onClose,
   onSaved,
-  onNotify,
   loading,
   setLoading,
   condominiumIdPreset,
 }) => {
   const { t } = useTranslation();
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const [closeAfterModal, setCloseAfterModal] = useState(false);
 
   const initialForm: CondominiumBlockRequest = {
     condominiumId: condominiumIdPreset || "",
@@ -113,16 +111,10 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
     try {
       if (editingId) {
         await blockService.updateBlock(editingId, formData);
-        notify({
-          message: t("blocoForm.updateSuccess"),
-          type: "success",
-        });
+        showSuccess(t("blocoForm.updateSuccess"));
       } else {
         await blockService.createBlock(formData);
-        notify({
-          message: t("blocoForm.createSuccess"),
-          type: "success",
-        });
+        showSuccess(t("blocoForm.createSuccess"));
       }
 
       await onSaved();
@@ -134,20 +126,24 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
       setEditingId(null);
       setActiveStep(0);
       setErrors({});
-      onClose();
+      setCloseAfterModal(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         setErrors({ code: t("blocoForm.duplicateCode") });
       } else {
         const message = error instanceof Error ? error.message : t("blocoForm.saveError");
-        onNotify(message, "error");
-        notify({
-          message: t("blocoForm.saveError"),
-          type: "error",
-        });
+        showError(message);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    handleClose();
+    if (closeAfterModal) {
+      setCloseAfterModal(false);
+      onClose();
     }
   };
 
@@ -221,6 +217,16 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
       >
         {renderStepContent()}
       </StepWizardCard>
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleModalClose}
+        onClose={handleModalClose}
+      />
     </Box>
   );
 };

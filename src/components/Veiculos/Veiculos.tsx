@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+ï»¿import React, { useState } from 'react';
 import {
   Box,
   Container,
@@ -33,18 +33,18 @@ import {
 import './Veiculos.scss';
 import { initialVeiculos, type Veiculo } from '../../services/mockData';
 import VeiculoForm from './VeiculoForm';
-import { notify } from '../../shared/utils/toastMessage';
+import { AppStateModal } from '../../shared/components/AppStateModal';
+import { useAppStateModal } from '../../shared/utils/useAppStateModal';
 
 const Veiculos: React.FC = () => {
   const [veiculos, setVeiculos] = useState<Veiculo[]>(initialVeiculos);
   const [searchTerm, setSearchTerm] = useState('');
   const [openForm, setOpenForm] = useState(false);
-  //TODO - Implementar editar veiculo
-  //const [selectedVeiculo, setSelectedVeiculo] = useState<Veiculo | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuVeiculo, setMenuVeiculo] = useState<Veiculo | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
 
   const handleOpenForm = (veiculo?: Veiculo) => {
     return veiculo;
@@ -58,34 +58,14 @@ const Veiculos: React.FC = () => {
     setOpenForm(false);
    // setSelectedVeiculo(null);
   };
-//TODO - Implementar salvar veiculo
-/*   const handleSaveVeiculo = (veiculoData: Omit<Veiculo, 'id'>) => {
-    try {
-      if (selectedVeiculo) {
-        setVeiculos(veiculos.map(v => 
-          v.id === selectedVeiculo.id ? { ...veiculoData, id: selectedVeiculo.id } : v
-        ));
-        notify({ message: 'Veículo excluído com sucesso!', type: 'success' });
-      } else {
-        const newId = Math.max(...veiculos.map(v => v.id), 0) + 1;
-        setVeiculos([...veiculos, { ...veiculoData, id: newId }]);
-        notify({ message: 'Veículo excluído com sucesso!', type: 'success' });
-      }
-      handleCloseForm();
-    } catch {
-      notify({ message: 'Erro ao salvar veículo!', type: 'error' });
-    }
-  }; */
 
   const handleDeleteVeiculo = (veiculo: Veiculo) => {
-    if (window.confirm(`Deseja realmente excluir o veÃ­culo ${veiculo.modelo} - ${veiculo.placa}?`)) {
-      try {
-        setVeiculos(veiculos.filter(v => v.id !== veiculo.id));
-        notify({ message: 'Veículo excluído com sucesso!', type: 'success' });
-        handleCloseMenu();
-      } catch {
-        notify({ message: 'Erro ao excluir veículo!', type: 'error' });
-      }
+    try {
+      setVeiculos(veiculos.filter(v => v.id !== veiculo.id));
+      showSuccess(`VeÃ­Â­culo ${veiculo.placa} foi deletado com sucesso!`);
+      handleCloseMenu();
+    } catch {
+      showError('Erro ao excluir veÃ­Â­culo', 'Ocorreu um erro ao deletar o veÃ­Â­culo.');
     }
   };
 
@@ -323,7 +303,18 @@ const Veiculos: React.FC = () => {
         onClose={handleCloseForm}
         onSave={()=>{}}
         veiculo={null}
-      />`r`n</Box>
+      />
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleClose}
+        onClose={handleClose}
+      />
+    </Box>
   );
 };
 

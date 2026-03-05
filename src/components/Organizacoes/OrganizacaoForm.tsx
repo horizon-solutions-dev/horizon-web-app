@@ -1,4 +1,4 @@
-import { AxiosError } from "axios";
+﻿import { AxiosError } from "axios";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -8,7 +8,9 @@ import {
   MenuItem,
   TextField,
 } from "@mui/material";
+import { AppStateModal } from "../../shared/components/AppStateModal";
 import StepWizardCard from "../../shared/components/StepWizardCard";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import {
   organizationService,
   type Organization,
@@ -24,10 +26,6 @@ interface OrganizacaoFormProps {
   editingOrganization: Organization | null;
   onClose: () => void;
   onSaved: () => void | Promise<void>;
-  onNotify: (
-    message: string,
-    severity?: "success" | "error" | "info" | "warning",
-  ) => void;
   organizationTypes: OrganizationTypeEnum[];
   typesLoading: boolean;
   typesError: string | null;
@@ -87,12 +85,13 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   editingOrganization,
   onClose,
   onSaved,
-  onNotify,
   organizationTypes,
   typesLoading,
   loading,
   setLoading,
 }) => {
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const [closeAfterModal, setCloseAfterModal] = useState(false);
   const steps = ["Informações iniciais", "Contato e Endereço"];
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<OrganizationRequest>(initialForm);
@@ -316,7 +315,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
           editingOrganization.organizationId,
           payload,
         );
-        onNotify("Organizacao atualizada com sucesso.", "success");
+        showSuccess("Organização atualizada com sucesso.");
       } else {
         const validationPayload: OrganizationRequest = {
           ...payload,
@@ -378,11 +377,11 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
           profileId: 1,
           owner: true,
         });
-        onNotify("Organizacao criada com sucesso.", "success");
+        showSuccess("Organização criada com sucesso.");
       }
 
       await onSaved();
-      onClose();
+      setCloseAfterModal(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         setErrors({ doc: "Já existe uma organização com este CNPJ." });
@@ -394,14 +393,23 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
             : editingOrganization
               ? "Erro ao atualizar organizacao."
               : "Erro ao criar organizacao.";
-        onNotify(message, "error");
+        showError(message);
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const handleModalClose = () => {
+    handleClose();
+    if (closeAfterModal) {
+      setCloseAfterModal(false);
+      onClose();
+    }
+  };
+
   return (
+    <>
     <StepWizardCard
       title={editingOrganization ? "Editar Organizacao" : "Criar Organizacao"}
       subtitle={steps[activeStep]}
@@ -638,6 +646,17 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
         )}
       </Box>
     </StepWizardCard>
+
+    <AppStateModal
+      open={appStateModal.open}
+      type={appStateModal.type}
+      title={appStateModal.title}
+      message={appStateModal.message}
+      detail={appStateModal.detail}
+      onConfirm={handleModalClose}
+      onClose={handleModalClose}
+    />
+    </>
   );
 };
 

@@ -11,7 +11,8 @@ import {
   StepLabel,
   CircularProgress,
 } from '@mui/material';
-import { notify } from '../../shared/utils/toastMessage';
+import { AppStateModal } from '../../shared/components/AppStateModal';
+import { useAppStateModal } from '../../shared/utils/useAppStateModal';
 
 interface ContactForm {
   name: string;
@@ -36,6 +37,7 @@ export default function FaleConosco() {
   const [formData, setFormData] = useState<ContactForm>(initialForm);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
   const handleChange = (field: keyof ContactForm, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -79,11 +81,11 @@ export default function FaleConosco() {
     setLoading(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 600));
-      notify({ message: 'Mensagem enviada com sucesso!', type: 'success' });
+      showSuccess('Sua mensagem foi enviada com sucesso!');
       setFormData(initialForm);
       setActiveStep(0);
     } catch {
-      notify({ message: 'Erro ao enviar mensagem.', type: 'error' });
+      showError('Erro ao enviar mensagem', 'Ocorreu um erro ao processar sua solicitação.');
     } finally {
       setLoading(false);
     }
@@ -213,6 +215,16 @@ export default function FaleConosco() {
           </Box>
         </Paper>
       </Container>
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleClose}
+        onClose={handleClose}
+      />
     </Box>
   );
 }

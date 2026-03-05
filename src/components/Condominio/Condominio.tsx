@@ -32,9 +32,10 @@ import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import CondominioForm from "./CondominioForm";
 import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
-import { notify } from "../../shared/utils/toastMessage";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { useTranslation } from "react-i18next";
+import { AppStateModal } from "../../shared/components";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
@@ -59,12 +60,7 @@ const CondominioPage: React.FC = () => {
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [editingCondominium, setEditingCondominium] =
     useState<Condominium | null>(null);
-  const handleNotify = (
-    message: string,
-    severity: "success" | "error" | "info" | "warning" = "success",
-  ) => {
-    notify({ message, type: severity });
-  };
+  const { appStateModal, handleClose } = useAppStateModal();
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -217,7 +213,6 @@ const CondominioPage: React.FC = () => {
             editingCondominium={editingCondominium}
             onClose={handleCloseForm}
             onSaved={handleSaved}
-            onNotify={handleNotify}
             condominiumTypes={condominiumTypes}
             typesLoading={typesLoading}
             typesError={typesError}
@@ -271,7 +266,9 @@ const CondominioPage: React.FC = () => {
                 </Tooltip>
               </Container>
               <Box>
-                <BreadcrumbTrail items={[t("common.organization"), t("common.condominiums")]} />
+                <BreadcrumbTrail
+                  items={[t("common.organization"), t("common.condominiums")]}
+                />
               </Box>
             </Box>
 
@@ -283,7 +280,7 @@ const CondominioPage: React.FC = () => {
                 </Box>
               ) : listError ? (
                 <CardList
-                  title="Condominios da organizacao"
+                  title="Condominios da organização"
                   showTitle={false}
                   searchPlaceholder="Buscar condominio..."
                   onSearchChange={setSearchText}
@@ -325,9 +322,9 @@ const CondominioPage: React.FC = () => {
                       meta: (
                         <>
                           {condominium.condominiumType === "Commercial" ||
-                            getCondominiumTypeLabel(
-                              condominium.condominiumType,
-                            ) === "Comercial" ? (
+                          getCondominiumTypeLabel(
+                            condominium.condominiumType,
+                          ) === "Comercial" ? (
                             <BusinessOutlined
                               sx={{
                                 fontSize: 14,
@@ -336,8 +333,8 @@ const CondominioPage: React.FC = () => {
                               }}
                             />
                           ) : getCondominiumTypeLabel(
-                            condominium.condominiumType,
-                          ) === "Residencial" ? (
+                              condominium.condominiumType,
+                            ) === "Residencial" ? (
                             <HomeOutlined
                               sx={{
                                 fontSize: 14,
@@ -374,7 +371,10 @@ const CondominioPage: React.FC = () => {
                             variant="outlined"
                             className="action-button-delete"
                             startIcon={<DeleteOutline />}
-                            onClick={() => setOpenDelete(true)}
+                            onClick={() => {
+                              setEditingCondominium(condominium);
+                              setOpenDelete(true);
+                            }}
                           >
                             Excluir
                           </Button>
@@ -388,9 +388,9 @@ const CondominioPage: React.FC = () => {
                 </Typography>
               ) : (
                 <CardList
-                  title="Condominios da organizacao"
+                  title="Condominios da organização"
                   showTitle={false}
-                  searchPlaceholder="Buscar condominio..."
+                  searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}
                   onAddClick={handleOpenCreate}
                   addLabel="Novo"
@@ -430,9 +430,9 @@ const CondominioPage: React.FC = () => {
                       meta: (
                         <>
                           {condominium.condominiumType === "Commercial" ||
-                            getCondominiumTypeLabel(
-                              condominium.condominiumType,
-                            ) === "Comercial" ? (
+                          getCondominiumTypeLabel(
+                            condominium.condominiumType,
+                          ) === "Comercial" ? (
                             <BusinessOutlined
                               sx={{
                                 fontSize: 14,
@@ -441,8 +441,8 @@ const CondominioPage: React.FC = () => {
                               }}
                             />
                           ) : getCondominiumTypeLabel(
-                            condominium.condominiumType,
-                          ) === "Residencial" ? (
+                              condominium.condominiumType,
+                            ) === "Residencial" ? (
                             <HomeOutlined
                               sx={{
                                 fontSize: 14,
@@ -479,7 +479,10 @@ const CondominioPage: React.FC = () => {
                             variant="outlined"
                             className="action-button-delete"
                             startIcon={<DeleteOutline />}
-                            onClick={() => setOpenDelete(true)}
+                            onClick={() => {
+                              setEditingCondominium(condominium);
+                              setOpenDelete(true);
+                            }}
                           >
                             Excluir
                           </Button>
@@ -502,6 +505,16 @@ const CondominioPage: React.FC = () => {
         }}
         onCancel={() => setOpenDelete(false)}
         onClose={() => setOpenDelete(false)}
+      />
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleClose}
+        onClose={handleClose}
       />
     </Box>
   );

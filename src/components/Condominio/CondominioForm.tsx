@@ -1,4 +1,4 @@
-import { AxiosError } from "axios";
+﻿import { AxiosError } from "axios";
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -25,9 +25,10 @@ import {
 } from "../../services/condominiumService";
 import { condominiumImageService } from "../../services/condominiumImageService";
 import { organizationService } from "../../services/organizationService";
+import { AppStateModal } from "../../shared/components/AppStateModal";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
-import { notify } from "../../shared/utils/toastMessage";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { useTranslation } from "react-i18next";
 
 interface CondominioFormProps {
@@ -35,10 +36,6 @@ interface CondominioFormProps {
   editingCondominium: Condominium | null;
   onClose: () => void;
   onSaved: () => void | Promise<void>;
-  onNotify: (
-    message: string,
-    severity?: "success" | "error" | "info" | "warning",
-  ) => void;
   condominiumTypes: CondominiumTypeEnum[];
   typesLoading: boolean;
   typesError: string | null;
@@ -51,7 +48,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   editingCondominium,
   onClose,
   onSaved,
-  onNotify,
   condominiumTypes,
   typesLoading,
   typesError,
@@ -59,6 +55,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   setLoading,
 }) => {
   const { t } = useTranslation();
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const [closeAfterModal, setCloseAfterModal] = useState(false);
   const initialFormData: CondominiumRequest = {
     organizationId: localStorage.getItem("organizationId") || "",
     name: "",
@@ -143,7 +141,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           ? error.message
           : t("condominioForm.allocationLoadError");
       setAllocationError(message);
-      onNotify(message, "error");
+      showError(message);
     } finally {
       setAllocationLoading(false);
     }
@@ -430,7 +428,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("condominioForm.validationError");
-      onNotify(message, "error");
+      showError(message);
       return;
     } finally {
       setLoading(false);
@@ -585,7 +583,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     }
 
     if (!formData.organizationId.trim()) {
-      //onNotify("OrganizationId não encontrado.", "error");
       return;
     }
 
@@ -692,12 +689,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       const response = editingId
         ? await condominiumService.updateCondominium(editingId, payload)
         : await condominiumService.createCondominium(payload);
-      notify({
-        message: editingId
+      showSuccess(
+        editingId
           ? t("condominioForm.updateSuccess", { name: formData.name })
           : t("condominioForm.createSuccess", { name: formData.name }),
-        type: "success",
-      });
+      );
 
       if (coverFile && response) {
         console.log({
@@ -716,7 +712,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             error instanceof Error
               ? error.message
               : t("condominioForm.coverUploadError");
-          onNotify(message, "warning");
+          showError(message);
         }
       }
 
@@ -728,7 +724,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       setCoverFile(null);
       setActiveStep(0);
       setEditingId(null);
-      onClose();
+      setCloseAfterModal(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         setErrors({ doc: t("condominioForm.duplicateCnpj") });
@@ -740,10 +736,18 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             : editingId
               ? t("condominioForm.updateError")
               : t("condominioForm.createError");
-        onNotify(message, "error");
+        showError(message);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    handleClose();
+    if (closeAfterModal) {
+      setCloseAfterModal(false);
+      onClose();
     }
   };
 
@@ -1323,6 +1327,16 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           )}
         </Box>
       </StepWizardCard>
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleModalClose}
+        onClose={handleModalClose}
+      />
     </>
   );
 };

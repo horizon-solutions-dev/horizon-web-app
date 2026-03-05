@@ -37,7 +37,8 @@ import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import UnidadeForm from "./UnidadeForm";
-import { notify } from "../../shared/utils/toastMessage";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { useNavigate } from "react-router-dom";
 import { condominiumImageService } from "../../services/condominiumImageService";
 import { useTranslation } from "react-i18next";
@@ -73,12 +74,7 @@ const Unidades: React.FC = () => {
   const [blockSearchText, setBlockSearchText] = useState("");
   const [blockPage, setBlockPage] = useState(1);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const handleNotify = (
-    message: string,
-    severity: "success" | "error" | "info" | "warning" = "success",
-  ) => {
-    notify({ message, type: severity });
-  };
+  const { appStateModal, handleClose, showError } = useAppStateModal();
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -314,7 +310,7 @@ const Unidades: React.FC = () => {
       t("unidades.deleteConfirm", { code: unit.unitCode }),
     );
     if (!confirmed) return;
-    handleNotify(t("unidades.deleteUnavailable"), "error");
+    showError(t("unidades.deleteUnavailable"));
   };
 
   const handleOpenCreate = () => {
@@ -527,7 +523,6 @@ const Unidades: React.FC = () => {
                 editingUnit={editingUnit}
                 onClose={handleCloseForm}
                 onSaved={handleSaved}
-                onNotify={handleNotify}
                 unitTypes={unitTypes}
                 typesLoading={typesLoading}
                 typesError={typesError}
@@ -784,6 +779,15 @@ const Unidades: React.FC = () => {
         )}
       </Container>
 
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleClose}
+        onClose={handleClose}
+      />
     </Box>
   );
 };

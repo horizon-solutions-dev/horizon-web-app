@@ -165,7 +165,7 @@
     "searchPlaceholder": "Buscar condomínio...",
     "notFound": "Nenhum condomínio encontrado para esta organização.",
     "loadError": "Erro ao carregar condomínios.",
-    "condominiumsList": "Condominios da organizacao",
+    "condominiumsList": "Condominios da organizacão",
     "selectedCondominiums": "Condomínios"
   },
   "condominioForm": {
@@ -238,7 +238,7 @@
     "loadUnitsError": "Erro ao carregar unidades.",
     "loadResidentsError": "Erro ao carregar residentes.",
     "periodLabel": "Período: {{start}} - {{end}}",
-    "condominiumsList": "Condominios da organizacao",
+    "condominiumsList": "Condominios da organização",
     "unitsList": "Unidades do condominio",
     "residentsList": "Residentes",
     "unknownBlock": "Bloco desconhecido",

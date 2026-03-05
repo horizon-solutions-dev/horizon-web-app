@@ -39,7 +39,8 @@ import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import ResidenteForm from "./ResidenteForm";
 import { useNavigate } from "react-router";
 import moment from "moment";
-import { notify } from "../../shared/utils/toastMessage";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { condominiumImageService } from "../../services/condominiumImageService";
 import { useTranslation } from "react-i18next";
 const condoPageSize = 4;
@@ -87,12 +88,7 @@ const Residentes: React.FC = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const handleNotify = (
-    message: string,
-    severity: "success" | "error" | "info" | "warning" = "success",
-  ) => {
-    notify({ message, type: severity });
-  };
+  const { appStateModal, handleClose } = useAppStateModal();
 
   const [condominiumImages, setCondominiumImages] = useState<
     Record<string, string>
@@ -621,7 +617,6 @@ const Residentes: React.FC = () => {
                 open={isFormOpen}
                 onClose={handleCloseForm}
                 onSaved={handleSaved}
-                onNotify={handleNotify}
                 loading={loading}
                 setLoading={setLoading}
                 unitIdPreset={selectedUnit?.condominiumUnitId}
@@ -807,6 +802,16 @@ const Residentes: React.FC = () => {
           </>
         )}
       </Container>
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleClose}
+        onClose={handleClose}
+      />
     </Box>
   );
 };

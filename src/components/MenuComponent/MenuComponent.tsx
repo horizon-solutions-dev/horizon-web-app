@@ -20,7 +20,7 @@ import "./MenuComponent.scss";
 import RouteNames from "../../routes/routeNames";
 import { AssignmentInd, Home, People, ViewModule } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-
+import Logo from '../../assets/logo.svg'
 interface MenuItem {
   id: string;
   label: string;
@@ -178,7 +178,7 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
     <div className={`menu-component ${collapsed ? "collapsed" : ""}`}>
       <div className="menu-header">
         <img
-          src="/src/assets/logo.svg"
+          src={Logo}
           alt="Horizon Logo"
           className={`menu-logo ${collapsed ? "collapsed" : ""}`}
         />

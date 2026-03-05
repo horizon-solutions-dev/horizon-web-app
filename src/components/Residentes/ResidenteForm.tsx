@@ -16,7 +16,9 @@ import {
   unitResidentService,
   type CondominiumUnitResidentRequest,
 } from "../../services/unitResidentService";
+import { AppStateModal } from "../../shared/components/AppStateModal";
 import StepWizardCard from "../../shared/components/StepWizardCard";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { AccountService } from "../../services/accountService";
 import moment from "moment";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
@@ -24,17 +26,12 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { ptBR } from "date-fns/locale";
 import { AuthService } from "../../services/authService";
 import { TokenService } from "../../services/tokenService";
-import { notify } from "../../shared/utils/toastMessage";
 import { useTranslation } from "react-i18next";
 
 interface ResidenteFormProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void | Promise<void>;
-  onNotify: (
-    message: string,
-    severity?: "success" | "error" | "info" | "warning",
-  ) => void;
   loading: boolean;
   setLoading: (loading: boolean) => void;
   unitIdPreset?: string;
@@ -140,7 +137,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   open,
   onClose,
   onSaved,
-  onNotify,
   loading,
   setLoading,
   unitIdPreset,
@@ -149,6 +145,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   unitCodePreset,
 }) => {
   const { t } = useTranslation();
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const [closeAfterModal, setCloseAfterModal] = useState(false);
   const STEPS = [
     t("residenteForm.stepPeriod"),
     t("residenteForm.stepData"),
@@ -400,7 +398,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("residenteForm.validateError");
-      onNotify(message, "error");
+      showError(message);
       return;
     } finally {
       setLoading(false);
@@ -469,10 +467,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       }
 
       await onSaved();
-      notify({
-        message: t("residenteForm.createSuccess"),
-        type: "success",
-      });
+      showSuccess(t("residenteForm.createSuccess"));
 
       setFormData({
         condominiumUnitId: unitIdPreset || "",
@@ -493,7 +488,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setPhotoFile(null);
       setErrors({});
       setActiveStep(0);
-      onClose();
+      setCloseAfterModal(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         const responseData = error.response?.data as
@@ -515,13 +510,18 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       } else {
         const message =
           error instanceof Error ? error.message : t("residenteForm.createError");
-        notify({
-          message,
-          type: "error",
-        });
+        showError(message);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    handleClose();
+    if (closeAfterModal) {
+      setCloseAfterModal(false);
+      onClose();
     }
   };
 
@@ -869,26 +869,38 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   };
 
   return (
-    <StepWizardCard
-      title={t("residenteForm.title")}
-      subtitle={STEPS[activeStep]}
-      steps={STEPS}
-      activeStep={activeStep}
-      showBack={true}
-      onBack={() => {
-        if (activeStep === 0) {
-          onClose();
-          return;
-        }
-        setActiveStep((prev) => prev - 1);
-      }}
-      width="500px"
-      onClose={onClose}
-      disableContent={loading}
-      actions={renderActions()}
-    >
-      {renderStepContent(activeStep)}
-    </StepWizardCard>
+    <>
+      <StepWizardCard
+        title={t("residenteForm.title")}
+        subtitle={STEPS[activeStep]}
+        steps={STEPS}
+        activeStep={activeStep}
+        showBack={true}
+        onBack={() => {
+          if (activeStep === 0) {
+            onClose();
+            return;
+          }
+          setActiveStep((prev) => prev - 1);
+        }}
+        width="500px"
+        onClose={onClose}
+        disableContent={loading}
+        actions={renderActions()}
+      >
+        {renderStepContent(activeStep)}
+      </StepWizardCard>
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleModalClose}
+        onClose={handleModalClose}
+      />
+    </>
   );
 };
 
