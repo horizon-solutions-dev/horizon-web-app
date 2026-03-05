@@ -15,6 +15,7 @@ import { Close } from "@mui/icons-material";
 import { IconButton, Tooltip } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
 import Logo from '../../assets/logo.svg';
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 interface LoginFormValues {
   email: string;
@@ -32,7 +33,7 @@ export default function MultiStepLogin() {
   useEffect(()=> {
     const expiredMessage = sessionStorage.getItem("authExpiredMessage");
     if (expiredMessage) {
-      toast.error(expiredMessage);
+      showSessionExpired();
       sessionStorage.removeItem("authExpiredMessage");
     }
 
@@ -45,6 +46,8 @@ export default function MultiStepLogin() {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("organizationId");
   },[])
+    const { showSessionExpired } = useAppStateModal();
+  
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
