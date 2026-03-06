@@ -141,6 +141,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
 
   const handleModalClose = () => {
     handleClose();
+    onSaved();
     if (closeAfterModal) {
       setCloseAfterModal(false);
       onClose();

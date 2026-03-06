@@ -90,7 +90,8 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   loading,
   setLoading,
 }) => {
-  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const { appStateModal, handleClose, showSuccess, showError } =
+    useAppStateModal();
   const [closeAfterModal, setCloseAfterModal] = useState(false);
   const steps = ["Informações iniciais", "Contato e Endereço"];
   const [activeStep, setActiveStep] = useState(0);
@@ -99,7 +100,10 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
-  const [locationFieldsDisabled, setLocationFieldsDisabled] = useState({ city: true, state: true });
+  const [locationFieldsDisabled, setLocationFieldsDisabled] = useState({
+    city: true,
+    state: true,
+  });
   const [states, setStates] = useState<Array<{ sigla: string; nome: string }>>(
     [],
   );
@@ -379,9 +383,6 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
         });
         showSuccess("Organização criada com sucesso.");
       }
-
-      await onSaved();
-      setCloseAfterModal(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         setErrors({ doc: "Já existe uma organização com este CNPJ." });
@@ -406,123 +407,123 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
       setCloseAfterModal(false);
       onClose();
     }
+    onSaved();
   };
 
   return (
     <>
-    <StepWizardCard
-      title={editingOrganization ? "Editar Organizacao" : "Criar Organizacao"}
-      subtitle={steps[activeStep]}
-      steps={steps}
-      activeStep={activeStep}
-      showBack={true}
-      onBack={handleBack}
-      backLabel="Voltar"
-      onClose={onClose}
-      disableContent={loading}
-    >
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        {activeStep === 0 ? (
-          <>
-            <TextField
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  height: 46,
-                },
-              }}
-              fullWidth
-              placeholder="Nome Fantasia"
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              error={!!errors.name}
-              helperText={errors.name}
-              inputProps={{ maxLength: 150 }}
-            />
-            <TextField
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  height: 46,
-                },
-              }}
-              fullWidth
-              placeholder="Razao Social"
-              value={formData.legalName}
-              onChange={(e) => handleChange("legalName", e.target.value)}
-              error={!!errors.legalName}
-              helperText={errors.legalName}
-              inputProps={{ maxLength: 200 }}
-            />
-            <TextField
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  height: 46,
-                },
-              }}
-              fullWidth
-              placeholder="00.000.000/0000-00"
-              value={formData.doc}
-              onChange={(e) => handleChange("doc", e.target.value)}
-              error={!!errors.doc}
-              helperText={errors.doc}
-              inputProps={{ maxLength: 18 }}
-            />
-            <TextField
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  height: 46,
-                },
-              }}
-              fullWidth
-              select
-              placeholder="Tipo de Organizacao"
-              value={formData.orgType ?? ""}
-              onChange={(e) => handleChange("orgType", e.target.value)}
-              error={!!errors.orgType}
-              helperText={errors.orgType}
-            >
-              {typesLoading ? (
-                <MenuItem value="" disabled>
-                  Carregando...
-                </MenuItem>
-              ) : (
-                organizationTypes.map((type) => (
-                  <MenuItem key={type.id} value={type.id}>
-                    {type.description || type.value}
+      <StepWizardCard
+        title={editingOrganization ? "Editar Organizacao" : "Criar Organizacao"}
+        subtitle={steps[activeStep]}
+        steps={steps}
+        activeStep={activeStep}
+        showBack={true}
+        onBack={handleBack}
+        backLabel="Voltar"
+        onClose={onClose}
+        disableContent={loading}
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {activeStep === 0 ? (
+            <>
+              <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                fullWidth
+                placeholder="Nome Fantasia"
+                value={formData.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+                error={!!errors.name}
+                helperText={errors.name}
+                inputProps={{ maxLength: 150 }}
+              />
+              <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                fullWidth
+                placeholder="Razao Social"
+                value={formData.legalName}
+                onChange={(e) => handleChange("legalName", e.target.value)}
+                error={!!errors.legalName}
+                helperText={errors.legalName}
+                inputProps={{ maxLength: 200 }}
+              />
+              <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                fullWidth
+                placeholder="00.000.000/0000-00"
+                value={formData.doc}
+                onChange={(e) => handleChange("doc", e.target.value)}
+                error={!!errors.doc}
+                helperText={errors.doc}
+                inputProps={{ maxLength: 18 }}
+              />
+              <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                fullWidth
+                select
+                placeholder="Tipo de Organizacao"
+                value={formData.orgType ?? ""}
+                onChange={(e) => handleChange("orgType", e.target.value)}
+                error={!!errors.orgType}
+                helperText={errors.orgType}
+              >
+                {typesLoading ? (
+                  <MenuItem value="" disabled>
+                    Carregando...
                   </MenuItem>
-                ))
-              )}
-            </TextField>
-          </>
-        ) : (
-          <>
-       
-                <TextField
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      height: 46,
-                    },
-                  }}
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  error={!!errors.email}
-                  helperText={errors.email}
-                  inputProps={{ maxLength: 254 }}
-                />
-                <TextField
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      height: 46,
-                    },
-                  }}
-                  fullWidth
-                  placeholder="Telefone"
-                  value={formData.phone}
-                  onChange={(e) => handleChange("phone", e.target.value)}
-                  error={!!errors.phone}
-                  helperText={errors.phone}
-                  inputProps={{ maxLength: 17 }}
-                />
+                ) : (
+                  organizationTypes.map((type) => (
+                    <MenuItem key={type.id} value={type.id}>
+                      {type.description || type.value}
+                    </MenuItem>
+                  ))
+                )}
+              </TextField>
+            </>
+          ) : (
+            <>
+              <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                placeholder="Email"
+                value={formData.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                error={!!errors.email}
+                helperText={errors.email}
+                inputProps={{ maxLength: 254 }}
+              />
+              <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                fullWidth
+                placeholder="Telefone"
+                value={formData.phone}
+                onChange={(e) => handleChange("phone", e.target.value)}
+                error={!!errors.phone}
+                helperText={errors.phone}
+                inputProps={{ maxLength: 17 }}
+              />
 
               {statesError ? (
                 <Alert severity="warning" sx={{ mb: 1.5 }}>
@@ -608,54 +609,58 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                   {cepError}
                 </Alert>
               ) : null}
-          </>
-        )}
-      </Box>
+            </>
+          )}
+        </Box>
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          mt: 2,
-          pt: 2,
-        }}
-      >
-        {activeStep === 0 ? (
-          <Button
-            variant="contained"
-            onClick={handleNext}
-            disabled={loading}
-            sx={{ textTransform: "none" }}
-          >
-            Avançar
-          </Button>
-        ) : (
-          <Button
-            sx={{ textTransform: "none", backgroundColor: loading ? "#ddd" : '#1976d2' }}
-            variant="contained"
-            onClick={loading ? ()=>{} : handleSubmit}
-          >
-            {loading ? (
-              <CircularProgress size={20} />
-            ) : editingOrganization ? (
-              "Concluir"
-            ) : (
-              "Concluir"
-            )}
-          </Button>
-        )}
-      </Box>
-    </StepWizardCard>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            mt: 2,
+            pt: 2,
+          }}
+        >
+          {activeStep === 0 ? (
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              disabled={loading}
+              sx={{ textTransform: "none" }}
+            >
+              Avançar
+            </Button>
+          ) : (
+            <Button
+              sx={{
+                textTransform: "none",
+                backgroundColor: loading ? "#ddd" : "#1976d2",
+              }}
+              variant="contained"
+              onClick={loading ? () => {} : handleSubmit}
+            >
+              {loading ? (
+                <CircularProgress size={20} />
+              ) : editingOrganization ? (
+                "Concluir"
+              ) : (
+                "Concluir"
+              )}
+            </Button>
+          )}
+        </Box>
+      </StepWizardCard>
 
-    <AppStateModal
-      open={appStateModal.open}
-      type={appStateModal.type}
-      title={appStateModal.title}
-      message={appStateModal.message}
-      detail={appStateModal.detail}
-      onConfirm={handleModalClose}
-      onClose={handleModalClose}
-    />
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleModalClose}
+        onClose={handleModalClose}
+        showCancel={false}
+      />
     </>
   );
 };

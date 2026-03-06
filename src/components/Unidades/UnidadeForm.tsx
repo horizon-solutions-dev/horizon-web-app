@@ -247,6 +247,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       setCloseAfterModal(false);
       onClose();
     }
+    onSaved()
   };
 
   const renderUnitTypeOptions = () => {
@@ -395,6 +396,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
         detail={appStateModal.detail}
         onConfirm={handleModalClose}
         onClose={handleModalClose}
+        showCancel={false}
       />
     </>
   );

@@ -74,7 +74,7 @@ const Unidades: React.FC = () => {
   const [blockSearchText, setBlockSearchText] = useState("");
   const [blockPage, setBlockPage] = useState(1);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const { appStateModal, handleClose, showError, showDelete } = useAppStateModal();
+  const { appStateModal, handleClose, showDelete } = useAppStateModal();
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -786,7 +786,7 @@ const Unidades: React.FC = () => {
         detail={appStateModal.detail}
         onConfirm={handleClose}
         onClose={handleClose}
-        showCancel={false}
+        //showCancel={false}
       />
     </Box>
   );

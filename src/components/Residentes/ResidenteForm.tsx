@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import React, { Suspense, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -131,14 +131,6 @@ const normalizePhoneToE164 = (phone: string) => {
   if (digits.startsWith("55")) return `+${digits}`;
   return `+55${digits}`;
 };
-
-const fileToDataUrl = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(new Error("Erro ao ler foto."));
-    reader.readAsDataURL(file);
-  });
 
 const ResidenteForm: React.FC<ResidenteFormProps> = ({
   open,

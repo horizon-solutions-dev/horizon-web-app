@@ -171,6 +171,7 @@ const Organizacoes: React.FC = () => {
 
   const handleSaved = async () => {
     await loadOrganizations();
+    handleCloseForm();
   };
   const nameStorage = localStorage.getItem("condominium");
   const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
