@@ -750,7 +750,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             <TextField
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  height: 46,
+                  height: "45px !impotant",
                 },
               }}
               select
@@ -769,8 +769,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             >
               <DatePicker
                 sx={{
-                  "& .MuiOutlinedInput-root": {
-                    height: 46,
+                  height: "46px !impotant",
+                  "&.MuiPickersOutlinedInput-root": {
+                    height: "46px !important",
                   },
                 }}
                 label={t("residenteForm.residenceStart")}
@@ -1114,8 +1115,15 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               />
             </>
           ) : (
-            <Box sx={{display:'flex', justifyContent:'center', alignItems:'center', height:'100vh'}}>
-              <CircularProgress  size={50}/>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100vh",
+              }}
+            >
+              <CircularProgress size={50} />
             </Box>
           )}
         </>
