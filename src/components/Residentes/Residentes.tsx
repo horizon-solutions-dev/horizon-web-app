@@ -82,10 +82,6 @@ const Residentes: React.FC = () => {
   const [accountNamesByUserId, setAccountNamesByUserId] = useState<
     Record<string, string>
   >({});
-
-  useEffect(() => {
-console.log('rere', residents)  }, [residents]);
-
   const [accountsByUserId, setAccountsByUserId] = useState<
     Record<string, AccountResponse>
   >({});
@@ -440,7 +436,7 @@ console.log('rere', residents)  }, [residents]);
     setResidentsError(null);
     setResidentSearchText("");
     setResidentsPage(1);
-    setActiveView("residentes");
+    setActiveView("moradores");
     await loadResidents(unit.condominiumUnitId, 1);
   };
 
