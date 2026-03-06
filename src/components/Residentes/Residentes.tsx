@@ -33,6 +33,7 @@ import {
   type Condominium,
 } from "../../services/condominiumService";
 import { AccountService } from "../../services/accountService";
+import type { AccountResponse } from "../../models/api.model";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
@@ -80,6 +81,9 @@ const Residentes: React.FC = () => {
   const [accountNamesByUserId, setAccountNamesByUserId] = useState<
     Record<string, string>
   >({});
+  const [accountsByUserId, setAccountsByUserId] = useState<
+    Record<string, AccountResponse>
+  >({});
   const [residentsLoading, setResidentsLoading] = useState(false);
   const [, setResidentsError] = useState<string | null>(null);
   const [residentSearchText, setResidentSearchText] = useState("");
@@ -87,6 +91,11 @@ const Residentes: React.FC = () => {
   const [residentsTotalPages, setResidentsTotalPages] = useState(1);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingResident, setEditingResident] =
+    useState<CondominiumUnitResident | null>(null);
+  const [editingAccount, setEditingAccount] = useState<AccountResponse | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
   const { appStateModal, handleClose, showDelete } = useAppStateModal();
 
@@ -206,9 +215,21 @@ const Residentes: React.FC = () => {
         },
         {} as Record<string, string>,
       );
+      const detailsByUserId = accounts.reduce(
+        (acc, account) => {
+          const userId = String(account?.userId ?? "");
+          if (userId) {
+            acc[userId] = account;
+          }
+          return acc;
+        },
+        {} as Record<string, AccountResponse>,
+      );
       setAccountNamesByUserId(namesByUserId);
+      setAccountsByUserId(detailsByUserId);
     } catch {
       setAccountNamesByUserId({});
+      setAccountsByUserId({});
     }
   };
 
@@ -378,10 +399,14 @@ const Residentes: React.FC = () => {
       setResidentsError("Selecione uma unidade para cadastrar residentes.");
       return;
     }
+    setEditingResident(null);
+    setEditingAccount(null);
     setIsFormOpen(true);
   };
 
   const handleCloseForm = () => {
+    setEditingResident(null);
+    setEditingAccount(null);
     setIsFormOpen(false);
     loadResidents(selectedUnit?.condominiumUnitId || "", 1);
   };
@@ -397,11 +422,15 @@ const Residentes: React.FC = () => {
     return value;
   };
 
-  function handleEdit() {
-    return;
+  function handleEdit(resident: CondominiumUnitResident) {
+    setEditingResident(resident);
+    setEditingAccount(accountsByUserId[resident.userId] || null);
+    setIsFormOpen(true);
   }
-  function handleDelete() {
-    showDelete("Deseja realmente excluir este registro?");
+  function handleDelete(resident: CondominiumUnitResident) {
+    const residentLabel =
+      accountNamesByUserId[resident.userId] || resident.userId || "-";
+    showDelete(`Deseja realmente excluir o residente "${residentLabel}"?`);
   }
 
   const navigate = useNavigate();
@@ -624,7 +653,8 @@ const Residentes: React.FC = () => {
                 onSaved={handleSaved}
                 loading={loading}
                 setLoading={setLoading}
-                unitIdPreset={selectedUnit?.condominiumUnitId}
+                editResident={editingResident}
+                editAccount={editingAccount}
                 condominiumNamePreset={selectedCondominium?.name}
                 blockNamePreset={
                   blocks.find(
@@ -779,7 +809,7 @@ const Residentes: React.FC = () => {
                                     variant="outlined"
                                     className="action-button-edit"
                                     startIcon={<EditOutlined />}
-                                    onClick={() => handleEdit()}
+                                    onClick={() => handleEdit(resident)}
                                   >
                                     {t("common.edit")}
                                   </Button>
@@ -788,7 +818,7 @@ const Residentes: React.FC = () => {
                                     variant="outlined"
                                     className="action-button-delete"
                                     startIcon={<DeleteOutline />}
-                                    onClick={() => handleDelete()}
+                                    onClick={() => handleDelete(resident)}
                                   >
                                     {t("common.delete")}
                                   </Button>

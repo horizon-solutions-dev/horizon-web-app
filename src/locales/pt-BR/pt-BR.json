@@ -254,6 +254,7 @@
   },
   "residenteForm": {
     "title": "Registrar Morador",
+    "editTitle": "Editar Morador",
     "stepPeriod": "Período",
     "stepData": "Dados do Morador",
     "stepPermissions": "Permissões e Foto",
@@ -285,7 +286,9 @@
     "phoneRequired": "Celular obrigatorio.",
     "duplicateDocument": "Documento ou e-mail já cadastrado.",
     "createSuccess": "Morador criado com sucesso!",
+    "updateSuccess": "Conta do morador atualizada com sucesso!",
     "createError": "Erro ao criar morador.",
+    "updateError": "Erro ao atualizar conta do morador.",
     "accountCreateError": "Nao foi possivel criar a conta do morador.",
     "validateError": "Erro ao validar morador."
   }

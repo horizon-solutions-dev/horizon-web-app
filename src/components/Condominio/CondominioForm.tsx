@@ -1352,6 +1352,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         detail={appStateModal.detail}
         onConfirm={handleModalClose}
         onClose={handleModalClose}
+        showCancel={false}
       />
     </>
   );

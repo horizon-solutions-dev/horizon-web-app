@@ -254,6 +254,7 @@
   },
   "residenteForm": {
     "title": "Register Resident",
+    "editTitle": "Edit Resident",
     "stepPeriod": "Period",
     "stepData": "Resident Data",
     "stepPermissions": "Permissions & Photo",
@@ -285,7 +286,9 @@
     "phoneRequired": "Mobile is required.",
     "duplicateDocument": "Document or email already registered.",
     "createSuccess": "Resident created successfully!",
+    "updateSuccess": "Resident account updated successfully!",
     "createError": "Error creating resident.",
+    "updateError": "Error updating resident account.",
     "accountCreateError": "Could not create resident account.",
     "validateError": "Error validating resident."
   }

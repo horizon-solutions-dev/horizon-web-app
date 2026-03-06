@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -14,6 +14,7 @@ import {
 import { FileUploadOutlined, RuleSharp } from "@mui/icons-material";
 import {
   unitResidentService,
+  type CondominiumUnitResident,
   type CondominiumUnitResidentRequest,
 } from "../../services/unitResidentService";
 import { AppStateModal } from "../../shared/components/AppStateModal";
@@ -27,6 +28,7 @@ import { ptBR } from "date-fns/locale";
 import { AuthService } from "../../services/authService";
 import { TokenService } from "../../services/tokenService";
 import { useTranslation } from "react-i18next";
+import type { AccountResponse, TypesDoc } from "../../models/api.model";
 
 interface ResidenteFormProps {
   open: boolean;
@@ -34,13 +36,14 @@ interface ResidenteFormProps {
   onSaved: () => void | Promise<void>;
   loading: boolean;
   setLoading: (loading: boolean) => void;
-  unitIdPreset?: string;
   condominiumNamePreset?: string;
   blockNamePreset?: string;
   unitCodePreset?: string;
+  editResident?: CondominiumUnitResident | null;
+  editAccount?: AccountResponse | null;
 }
 
-type DocumentType = "CPF" | "CNPJ";
+type DocumentType = 1 | 2 | 3 | 4;
 
 const formatCpf = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -139,10 +142,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   onSaved,
   loading,
   setLoading,
-  unitIdPreset,
   condominiumNamePreset,
   blockNamePreset,
   unitCodePreset,
+  editResident,
+  editAccount,
 }) => {
   const { t } = useTranslation();
   const { appStateModal, handleClose, showSuccess, showError } =
@@ -154,7 +158,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     t("residenteForm.stepPermissions"),
   ];
   const [formData, setFormData] = useState<CondominiumUnitResidentRequest>({
-    condominiumUnitId: unitIdPreset || "",
+    condominiumUnitId: unitCodePreset || "",
     userId: "",
     unitType: "Owner",
     startDate: new Date().toISOString().split("T")[0],
@@ -165,17 +169,20 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     hasGatehouseAccess: false,
   });
 
+  const [account, setAccount] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeStep, setActiveStep] = useState(0);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [documentType, setDocumentType] = useState<DocumentType>("CPF");
+  const [documentType, setDocumentType] = useState<DocumentType>(1);
   const [documentNumber, setDocumentNumber] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const isEditMode = Boolean(editResident);
+
   useEffect(() => {
     if (!coverFile) {
       setCoverPreview(null);
@@ -193,7 +200,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setActiveStep(0);
     setErrors({});
     setFormData({
-      condominiumUnitId: unitIdPreset || "",
+      condominiumUnitId: unitCodePreset || "",
       userId: "",
       unitType: "Owner",
       startDate: new Date().toISOString().split("T")[0],
@@ -205,20 +212,94 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     });
     setFirstName("");
     setLastName("");
-    setDocumentType("CPF");
+    setDocumentType(1);
     setDocumentNumber("");
     setEmail("");
     setPhone("");
     setPhotoFile(null);
-  }, [open, unitIdPreset]);
+  }, [open, unitCodePreset]);
+
+  useEffect(() => {
+    getTypes();
+  }, []);
+
+  const dataUser = async (userId: string) => {
+    const result = await AccountService.accountMe(userId);
+    setDataEdit(result);
+  };
+
+  const [dataEdit, setDataEdit] = useState<AccountResponse>();
+
+  useEffect(() => {
+    if (!open || !isEditMode || !editAccount?.userId) {
+      setDataEdit(undefined);
+      return;
+    }
+    void dataUser(editAccount.userId);
+  }, [open, isEditMode, editAccount?.userId]);
+
+  useEffect(() => {
+    if (!open) return;
+    setActiveStep(isEditMode ? 1 : 0);
+    setErrors({});
+    if (isEditMode && editResident) {
+      setFormData({
+        condominiumUnitId:
+          editResident.condominiumUnitId || unitCodePreset || "",
+        userId: editResident.userId || "",
+        unitType: editResident.unitType || "Owner",
+        startDate: editResident.startDate || "",
+        endDate: editResident.endDate || "",
+        billingContact: Boolean(editResident.billingContact),
+        canVote: Boolean(editResident.canVote),
+        canMakeReservations: Boolean(editResident.canMakeReservations),
+        hasGatehouseAccess: Boolean(editResident.hasGatehouseAccess),
+      });
+      setFirstName(dataEdit?.name || "");
+      setLastName(dataEdit?.surname || "");
+      setDocumentType(dataEdit?.docType || 1);
+      setDocumentNumber(
+        dataEdit?.docType === 1
+          ? formatCpf(dataEdit.doc || "")
+          : dataEdit?.docType === 2
+            ? formatCnpj(dataEdit?.doc || "")
+            : dataEdit?.doc || "",
+      );
+      setEmail(dataEdit?.email || "");
+      setPhone(formatPhone(dataEdit?.phone || ""));
+      setPhotoFile(null);
+      return;
+    }
+
+    setFormData({
+      condominiumUnitId: unitCodePreset || "",
+      userId: "",
+      unitType: "Owner",
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: "",
+      billingContact: false,
+      canVote: false,
+      canMakeReservations: false,
+      hasGatehouseAccess: false,
+    });
+    setFirstName("");
+    setLastName("");
+    setDocumentType(1);
+    setDocumentNumber("");
+    setEmail("");
+    setPhone("");
+    setPhotoFile(null);
+  }, [open, unitCodePreset, isEditMode, editResident, editAccount, dataEdit]);
 
   if (!open) return null;
 
   const handleDocumentChange = (value: string) => {
-    if (documentType === "CPF") {
+    if (documentType === 1) {
       setDocumentNumber(formatCpf(value));
-    } else {
+    } else if (documentType === 2) {
       setDocumentNumber(formatCnpj(value));
+    } else {
+      setDocumentNumber(value);
     }
   };
 
@@ -234,6 +315,13 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         return next;
       });
     }
+  };
+
+  const [typeDoc, setTypeDoc] = useState<TypesDoc[] | null>(null);
+
+  const getTypes = async () => {
+    const result = await AccountService.accountTypes();
+    setTypeDoc(result);
   };
 
   const getPeriodErrors = () => {
@@ -261,11 +349,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     const cleanDoc = documentNumber.replace(/\D/g, "");
     if (!cleanDoc) {
       nextErrors.documentNumber = t("residenteForm.documentRequired");
-    } else if (documentType === "CPF") {
+    } else if (documentType === 1) {
       if (cleanDoc.length !== 11) {
         nextErrors.documentNumber = t("residenteForm.cpfInvalid");
       }
-    } else if (documentType === "CNPJ") {
+    } else if (documentType === 2) {
       if (!validateCnpj(cleanDoc)) {
         nextErrors.documentNumber = t("residenteForm.cnpjInvalid");
       }
@@ -319,7 +407,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
   const buildResidentValidationPayload =
     (): CondominiumUnitResidentRequest => ({
-      condominiumUnitId: formData.condominiumUnitId,
+      condominiumUnitId: localStorage.getItem("moradoresCondominiumId")!,
       userId: userId!,
       unitType: formData.unitType,
       startDate: formData.startDate,
@@ -396,6 +484,15 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
     try {
       setLoading(true);
+      if (activeStep === 1) {
+        const result = await isValidStep();
+        if (!result) {
+          return;
+        }
+        setActiveStep((prev) => prev + 1);
+        return;
+      }
+
       const { valid, validations } = await unitResidentService.validateResident(
         buildResidentValidationPayload(),
       );
@@ -422,6 +519,81 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
 
     setActiveStep((prev) => prev + 1);
+  };
+
+  const isValidStep = async (): Promise<boolean> => {
+    const localErrors = {
+      ...getPeriodErrors(),
+      ...getResidentDataErrors(),
+    };
+
+    if (Object.keys(localErrors).length > 0) {
+      setErrors(localErrors);
+      setActiveStep(localErrors.firstName ? 1 : 0);
+      return false;
+    }
+
+    try {
+      setLoading(true);
+
+      if (isEditMode) {
+        const targetUserId = formData.userId || editResident?.userId;
+        if (!targetUserId) {
+          throw new Error("Usuario do residente nao encontrado para edicao.");
+        }
+
+        const response = await AccountService.updateAccount(targetUserId, {
+          name: firstName.trim(),
+          surname: lastName.trim(),
+          docType: documentType,
+          doc: documentNumber.replace(/\D/g, ""),
+          email: email.trim(),
+          phone: normalizePhoneToE164(phone),
+        });
+
+        setAccount(response);
+      } else {
+        const response = await AccountService.createAccount({
+          name: firstName.trim(),
+          surname: lastName.trim(),
+          docType: documentType,
+          doc: documentNumber.replace(/\D/g, ""),
+          email: email.trim(),
+          phone: normalizePhoneToE164(phone),
+        });
+        setAccount(response);
+      }
+
+      return true;
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 422) {
+        const responseData = error.response?.data as
+          | { validations?: Array<{ field?: string; message: string }> }
+          | undefined;
+        const mappedErrors = mapAccountValidationErrors(
+          responseData?.validations ?? [],
+        );
+
+        setErrors(
+          Object.keys(mappedErrors).length > 0
+            ? mappedErrors
+            : {
+                documentNumber: t("residenteForm.duplicateDocument"),
+                email: t("residenteForm.duplicateDocument"),
+              },
+        );
+        return false;
+      } else {
+        const message =
+          error instanceof Error
+            ? error.message
+            : t("residenteForm.createError");
+        showError(message);
+        return false;
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -452,15 +624,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         }
       }
 
-      const account = await AccountService.createAccount({
-        name: firstName.trim(),
-        surname: lastName.trim(),
-        docType: documentType,
-        doc: documentNumber.replace(/\D/g, ""),
-        email: email.trim(),
-        phone: normalizePhoneToE164(phone),
-      });
-
       if (!account) {
         throw new Error(t("residenteForm.accountCreateError"));
       }
@@ -486,7 +649,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       showSuccess(t("residenteForm.createSuccess"));
 
       setFormData({
-        condominiumUnitId: unitIdPreset || "",
+        condominiumUnitId: unitCodePreset || "",
         userId: "",
         unitType: "Owner",
         startDate: "",
@@ -605,6 +768,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               adapterLocale={ptBR}
             >
               <DatePicker
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 label={t("residenteForm.residenceStart")}
                 value={
                   formData.startDate
@@ -626,8 +794,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                     },
                     fullWidth: true,
                     error: Boolean(errors.startDate),
-                    helperText:
-                      errors.startDate || t("residenteForm.calendarHelper"),
                   },
                 }}
               />
@@ -685,12 +851,18 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 label={t("residenteForm.documentType")}
                 value={documentType}
                 onChange={(e) => {
-                  setDocumentType(e.target.value as DocumentType);
+                  setDocumentType(Number(e.target.value) as DocumentType);
                   setDocumentNumber("");
                 }}
               >
-                <MenuItem value="CPF">CPF</MenuItem>
-                <MenuItem value="CNPJ">CNPJ</MenuItem>
+                {typeDoc !== null &&
+                  typeDoc?.map((i) => {
+                    return (
+                      <MenuItem key={i.id} value={i.id}>
+                        {i.description}
+                      </MenuItem>
+                    );
+                  })}
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -850,7 +1022,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             hidden
             onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
           />
-          {!coverPreview && <FileUploadOutlined sx={{ fontSize: 40, color: "#7ba0d1" }} />}
+          {!coverPreview && (
+            <FileUploadOutlined sx={{ fontSize: 40, color: "#7ba0d1" }} />
+          )}
           {coverPreview ? (
             <Box
               component="img"
@@ -903,36 +1077,85 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
   return (
     <>
-      <StepWizardCard
-        title={t("residenteForm.title")}
-        subtitle={STEPS[activeStep]}
-        steps={STEPS}
-        activeStep={activeStep}
-        showBack={true}
-        onBack={() => {
-          if (activeStep === 0) {
-            onClose();
-            return;
-          }
-          setActiveStep((prev) => prev - 1);
-        }}
-        width="500px"
-        onClose={onClose}
-        disableContent={loading}
-        actions={renderActions()}
-      >
-        {renderStepContent(activeStep)}
-      </StepWizardCard>
+      {isEditMode ? (
+        <>
+          {dataEdit ? (
+            <>
+              <StepWizardCard
+                title={t("residenteForm.title")}
+                subtitle={STEPS[activeStep]}
+                steps={STEPS}
+                activeStep={activeStep}
+                showBack={true}
+                onBack={() => {
+                  if (activeStep === 0) {
+                    onClose();
+                    return;
+                  }
+                  setActiveStep((prev) => prev - 1);
+                }}
+                width="500px"
+                onClose={onClose}
+                disableContent={loading}
+                actions={renderActions()}
+              >
+                {renderStepContent(activeStep)}
+              </StepWizardCard>
 
-      <AppStateModal
-        open={appStateModal.open}
-        type={appStateModal.type}
-        title={appStateModal.title}
-        message={appStateModal.message}
-        detail={appStateModal.detail}
-        onConfirm={handleModalClose}
-        onClose={handleModalClose}
-      />
+              <AppStateModal
+                open={appStateModal.open}
+                type={appStateModal.type}
+                title={appStateModal.title}
+                message={appStateModal.message}
+                detail={appStateModal.detail}
+                onConfirm={handleModalClose}
+                onClose={handleModalClose}
+                showCancel={false}
+              />
+            </>
+          ) : (
+            <Box sx={{display:'flex', justifyContent:'center', alignItems:'center', height:'100vh'}}>
+              <CircularProgress  size={50}/>
+            </Box>
+          )}
+        </>
+      ) : (
+        <>
+          <>
+            <StepWizardCard
+              title={t("residenteForm.title")}
+              subtitle={STEPS[activeStep]}
+              steps={STEPS}
+              activeStep={activeStep}
+              showBack={true}
+              onBack={() => {
+                if (activeStep === 0) {
+                  onClose();
+                  return;
+                }
+                setActiveStep((prev) => prev - 1);
+              }}
+              width="500px"
+              onClose={onClose}
+              disableContent={loading}
+              actions={renderActions()}
+            >
+              {renderStepContent(activeStep)}
+            </StepWizardCard>
+
+            <AppStateModal
+              open={appStateModal.open}
+              type={appStateModal.type}
+              title={appStateModal.title}
+              message={appStateModal.message}
+              detail={appStateModal.detail}
+              onConfirm={handleModalClose}
+              onClose={handleModalClose}
+              showCancel={false}
+            />
+          </>
+        </>
+      )}
     </>
   );
 };

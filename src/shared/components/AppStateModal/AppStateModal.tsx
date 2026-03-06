@@ -90,7 +90,7 @@ export default function AppStateModal({
   detail,
   confirmLabel,
   cancelLabel = "Cancelar",
-  showCancel = false,
+  showCancel = true,
   showClose = true,
   isLoading = false,
   customIcon,
@@ -258,12 +258,23 @@ export default function AppStateModal({
             onClick={handleCancel}
             disabled={isLoading}
             sx={{
-              color: "text.secondary",
-              borderColor: "divider",
               flex: showCancel ? 1 : undefined,
+              backgroundColor: "#F1F3F5",
+              color: "#495057",
+              borderColor: "#DEE2E6",
               "&:hover": {
-                borderColor: "text.secondary",
-                backgroundColor: "action.hover",
+                backgroundColor: "#E9ECEF",
+              },
+              padding: "14px 40px !important",
+              minWidth: " 140px !important",
+              fontSize: "14px !important",
+              fontWeight: "600 !important",
+              borderRadius: "12px !important",
+              height: "auto !important",
+              lineHeight: "normal !important",
+              "&:disabled": {
+                backgroundColor: config.accentColor,
+                opacity: 0.7,
               },
             }}
           >
@@ -277,6 +288,8 @@ export default function AppStateModal({
           disabled={isLoading}
           loading={isLoading}
           sx={{
+            flex: showCancel ? 1 : undefined,
+
             backgroundColor: config.accentColor,
             padding: "14px 40px !important",
             minWidth: " 140px !important",

@@ -9,14 +9,18 @@ import {
   Divider,
 } from "@mui/material";
 import { styled, keyframes } from "@mui/material/styles";
-import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import "flag-icons/css/flag-icons.min.css";
 
 // ─── Language definitions ─────────────────────────────────────────────────────
 
 const LANGUAGES = [
-  { code: "pt-BR", label: "Português (Brasil)", short: "PT", flagClass: "fi fi-br" },
+  {
+    code: "pt-BR",
+    label: "Português (Brasil)",
+    short: "PT",
+    flagClass: "fi fi-br",
+  },
   { code: "en-US", label: "English (US)", short: "EN", flagClass: "fi fi-us" },
 ];
 
@@ -90,7 +94,8 @@ export default function LanguageSelector({ i18n }: LanguageSelectorProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
 
-  const current = LANGUAGES.find((l) => l.code === i18n?.language) ?? LANGUAGES[0];
+  const current =
+    LANGUAGES.find((l) => l.code === i18n?.language) ?? LANGUAGES[0];
 
   const handleSelect = (code: string) => {
     i18n?.changeLanguage(code);
@@ -133,33 +138,12 @@ export default function LanguageSelector({ i18n }: LanguageSelectorProps) {
         >
           <span className={current.flagClass} style={{ borderRadius: 3 }} />
         </Box>
-
-        <Typography
-          sx={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "0.7rem",
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            color: "rgba(255,255,255,0.9)",
-            lineHeight: 1,
-          }}
-        >
-          {current.short}
-        </Typography>
-
-        <KeyboardArrowDownRoundedIcon
-          sx={{
-            fontSize: 16,
-            color: "rgba(255,255,255,0.5)",
-            transition: "transform 0.2s",
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          }}
-        />
       </TriggerBtn>
 
       {/* Dropdown */}
       <Popper
         open={open}
+        // eslint-disable-next-line react-hooks/refs
         anchorEl={anchorRef.current}
         placement="bottom-end"
         transition
@@ -168,7 +152,9 @@ export default function LanguageSelector({ i18n }: LanguageSelectorProps) {
         {({ TransitionProps }) => (
           <Fade {...TransitionProps} timeout={160}>
             <DropdownPaper ref={paperRef} elevation={0}>
-              <Divider sx={{ borderColor: "rgba(255,255,255,0.06)", mb: 0.5 }} />
+              <Divider
+                sx={{ borderColor: "rgba(255,255,255,0.06)", mb: 0.5 }}
+              />
 
               {LANGUAGES.map((lang) => {
                 const isSelected = lang.code === current.code;
@@ -190,7 +176,10 @@ export default function LanguageSelector({ i18n }: LanguageSelectorProps) {
                         fontSize: "1.1rem",
                       }}
                     >
-                      <span className={lang.flagClass} style={{ borderRadius: 3 }} />
+                      <span
+                        className={lang.flagClass}
+                        style={{ borderRadius: 3 }}
+                      />
                     </Box>
 
                     {/* Language name */}
@@ -212,7 +201,9 @@ export default function LanguageSelector({ i18n }: LanguageSelectorProps) {
 
                     {/* Check icon when selected */}
                     {isSelected && (
-                      <CheckRoundedIcon sx={{ fontSize: 15, color: "#63b3ed" }} />
+                      <CheckRoundedIcon
+                        sx={{ fontSize: 15, color: "#63b3ed" }}
+                      />
                     )}
                   </OptionBtn>
                 );

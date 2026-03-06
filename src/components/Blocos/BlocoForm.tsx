@@ -226,6 +226,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
         detail={appStateModal.detail}
         onConfirm={handleModalClose}
         onClose={handleModalClose}
+        showCancel={false}
       />
     </Box>
   );

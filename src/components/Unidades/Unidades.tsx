@@ -787,6 +787,7 @@ const Unidades: React.FC = () => {
         detail={appStateModal.detail}
         onConfirm={handleClose}
         onClose={handleClose}
+        showCancel={false}
       />
     </Box>
   );

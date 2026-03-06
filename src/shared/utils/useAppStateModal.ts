@@ -7,6 +7,7 @@ interface ModalState {
   title: string;
   message: string;
   detail?: string;
+  showCancel?: boolean;
 }
 
 /**
@@ -32,6 +33,7 @@ export const useAppStateModal = () => {
     title: "",
     message: "",
     detail: "",
+    showCancel: true,
   });
 
   const handleClose = useCallback(() => {
@@ -55,16 +57,18 @@ export const useAppStateModal = () => {
       title: "Ocorreu um erro.",
       message,
       detail,
+      
     });
   }, []);
 
-  const showDelete = useCallback((message: string, detail?: string) => {
+  const showDelete = useCallback((message: string, detail?: string, showCancel?: boolean) => {
     setState({
       open: true,
       type: "delete",
       title: "Deletar?",
       message,
-      detail: detail || "Esta acao e permanente e nao podera ser desfeita.",
+      showCancel: showCancel ?? true,
+      detail: detail || "Esta ação é permanente e não poderá ser desfeita.",
     });
   }, []);
 
