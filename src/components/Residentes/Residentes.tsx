@@ -32,6 +32,7 @@ import {
   condominiumService,
   type Condominium,
 } from "../../services/condominiumService";
+import { condominiumUnitImageService } from "../../services/condominiumUnitImageService";
 import { AccountService } from "../../services/accountService";
 import type { AccountResponse } from "../../models/api.model";
 import { organizationService } from "../../services/organizationService";
@@ -50,7 +51,7 @@ const residentPageSize = 6;
 
 const Residentes: React.FC = () => {
   const [activeView, setActiveView] = useState<
-    "condominios" | "unidades" | "residentes"
+    "condominios" | "unidades" | "moradores"
   >("condominios");
   const { t } = useTranslation();
 
@@ -83,6 +84,9 @@ const Residentes: React.FC = () => {
   >({});
   const [accountsByUserId, setAccountsByUserId] = useState<
     Record<string, AccountResponse>
+  >({});
+  const [residentImagesByUserId, setResidentImagesByUserId] = useState<
+    Record<string, string>
   >({});
   const [residentsLoading, setResidentsLoading] = useState(false);
   const [, setResidentsError] = useState<string | null>(null);
@@ -295,12 +299,54 @@ const Residentes: React.FC = () => {
       setResidentsPage(response?.paging?.pageNumber ?? pageNumber);
       setResidentsTotalPages(totalPages);
       setResidents(normalized);
+
+      if (selectedCondominium?.condominiumId) {
+        await loadResidentImages(selectedCondominium.condominiumId, unitId);
+      } else {
+        setResidentImagesByUserId({});
+      }
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro ao carregar residentes.";
+        error instanceof Error ? error.message : "Erro ao carregar moradores.";
       setResidentsError(message);
+      setResidentImagesByUserId({});
     } finally {
       setResidentsLoading(false);
+    }
+  };
+
+  const loadResidentImages = async (condominiumId: string, unitId: string) => {
+    try {
+      const unitImages = await condominiumUnitImageService.getUnitImages(
+        condominiumId,
+        unitId,
+        1
+      );
+
+      const imagesByUserId: Record<string, string> = {};
+
+      await Promise.all(
+        (unitImages ?? []).map(async (image) => {
+          if (!image?.condominiumUnitImageId || !image?.userId) return;
+
+          try {
+            const detail = await condominiumUnitImageService.getUnitImageById(
+              image.condominiumUnitImageId,
+            );
+
+            if (detail?.contentFile && detail?.contentType) {
+              imagesByUserId[image.userId] =
+                `data:${detail.contentType};base64,${detail.contentFile}`;
+            }
+          } catch {
+            // Silencioso: ausência/erro de imagem não deve quebrar a listagem.
+          }
+        }),
+      );
+
+      setResidentImagesByUserId(imagesByUserId);
+    } catch {
+      setResidentImagesByUserId({});
     }
   };
 
@@ -390,13 +436,13 @@ const Residentes: React.FC = () => {
     setResidentsError(null);
     setResidentSearchText("");
     setResidentsPage(1);
-    setActiveView("residentes");
+    setActiveView("moradores");
     await loadResidents(unit.condominiumUnitId, 1);
   };
 
   const handleOpenCreate = () => {
     if (!selectedUnit) {
-      setResidentsError("Selecione uma unidade para cadastrar residentes.");
+      setResidentsError("Selecione uma unidade para cadastrar moradores.");
       return;
     }
     setEditingResident(null);
@@ -430,7 +476,10 @@ const Residentes: React.FC = () => {
   function handleDelete(resident: CondominiumUnitResident) {
     const residentLabel =
       accountNamesByUserId[resident.userId] || resident.userId || "-";
-    showDelete(`Deseja realmente excluir o residente "${residentLabel}"?`);
+    showDelete(
+      "Confirma a exclusao do item?",
+      `Voce escolheu o condominio "${selectedCondominium?.name || "-"}". Item selecionado para apagar: morador "${residentLabel}".`,
+    );
   }
 
   const navigate = useNavigate();
@@ -503,10 +552,10 @@ const Residentes: React.FC = () => {
             ) : (
               <>
                 <CardList
-                  title={t("residentes.condominiumsList")}
+                  title={t("moradores.condominiumsList")}
                   showTitle={false}
                   searchPlaceholder={t(
-                    "residentes.searchCondominiumPlaceholder",
+                    "moradores.searchCondominiumPlaceholder",
                   )}
                   onSearchChange={setCondoSearchText}
                   onAddClick={undefined}
@@ -544,13 +593,13 @@ const Residentes: React.FC = () => {
                     fontWeight="bold"
                     sx={{ fontSize: "26px" }}
                   >
-                    {t("residentes.title")}
+                    {t("moradores.title")}
                   </Typography>
                   <BreadcrumbTrail
                     items={[
                       organizationName || t("common.organization"),
                       selectedCondominium?.name ||
-                        t("residentes.selectedCondominium"),
+                        t("moradores.selectedCondominium"),
                       t("common.units"),
                     ]}
                   />
@@ -580,10 +629,10 @@ const Residentes: React.FC = () => {
             ) : null}
 
             <CardList
-              title={t("residentes.unitsList")}
+              title={t("moradores.unitsList")}
               showTitle={false}
               showFilters={true}
-              searchPlaceholder={t("residentes.searchUnitPlaceholder")}
+              searchPlaceholder={t("moradores.searchUnitPlaceholder")}
               onSearchChange={setUnitSearchText}
               onAddClick={undefined}
               addButtonPlacement="toolbar"
@@ -611,7 +660,7 @@ const Residentes: React.FC = () => {
                 )
                 .map((unit, index) => ({
                   id: unit.condominiumUnitId,
-                  title: unit.unitCode || t("residentes.noCode"),
+                  title: unit.unitCode || t("moradores.noCode"),
                   subtitle: (
                     <Typography variant="body2" color="text.secondary">
                       {getUnitTypeLabel(unit.unitType?.toString())}
@@ -624,7 +673,7 @@ const Residentes: React.FC = () => {
                         (b) => b.condominiumBlockId === unit.condominiumBlockId,
                       )?.name ||
                         unit.condominiumBlockId ||
-                        t("residentes.unknownBlock")}
+                        t("moradores.unknownBlock")}
                     </Typography>
                   ),
                   actions: (
@@ -653,8 +702,12 @@ const Residentes: React.FC = () => {
                 onSaved={handleSaved}
                 loading={loading}
                 setLoading={setLoading}
+                condominiumIdPreset={selectedCondominium?.condominiumId}
                 editResident={editingResident}
                 editAccount={editingAccount}
+                    residentImageUrl={editingResident ? residentImagesByUserId[editingResident.userId] : undefined}
+
+                unitIdPreset={selectedUnit?.condominiumUnitId}
                 condominiumNamePreset={selectedCondominium?.name}
                 blockNamePreset={
                   blocks.find(
@@ -685,15 +738,15 @@ const Residentes: React.FC = () => {
                         fontWeight="bold"
                         sx={{ fontSize: "26px" }}
                       >
-                        {t("residentes.title")}
+                        {t("moradores.title")}
                       </Typography>
                       <BreadcrumbTrail
                         items={[
                           organizationName || t("common.organization"),
                           selectedCondominium?.name ||
-                            t("residentes.selectedCondominium"),
+                            t("moradores.selectedCondominium"),
                           selectedUnit?.unitCode ||
-                            t("residentes.selectedUnit"),
+                            t("moradores.selectedUnit"),
                           t("common.residents"),
                         ]}
                       />
@@ -730,9 +783,9 @@ const Residentes: React.FC = () => {
                 ) : (
                   <>
                     <CardList
-                      title={t("residentes.residentsList")}
+                      title={t("moradores.residentsList")}
                       showTitle={false}
-                      searchPlaceholder={t("residentes.searchPlaceholder")}
+                      searchPlaceholder={t("moradores.searchPlaceholder")}
                       onSearchChange={setResidentSearchText}
                       onAddClick={handleOpenCreate}
                       addLabel={t("common.new")}
@@ -828,10 +881,12 @@ const Residentes: React.FC = () => {
                             id: resident.condominiumUnitResidentId,
                             title: `${residentName}`,
                             subtitle: `${residentType} | ${residentUnit} | ${residentBlock}`,
-                            meta: t("residentes.periodLabel", {
+                            meta: t("moradores.periodLabel", {
                               start: periodStart,
                               end: periodEnd,
                             }),
+                            toolTip: `Tipo: ${residentType} | Unidade: ${residentUnit} | Bloco: ${residentBlock}`,
+                            imageUrl: residentImagesByUserId[resident.userId],
                             accentColor:
                               index % 2 === 0 ? "#eef6ee" : "#fdecef",
                           };

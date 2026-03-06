@@ -73,6 +73,12 @@ export interface CreateAccountRequest {
   doc: string;
   email: string;
   phone: string;
+  condominiumUnitImagePhoto?: {
+    contentFile: File;
+    condominiumId: string;
+    condominiumUnitId: string;
+    userId: string;
+  };
 }
 
 export interface UpdateAccountRequest {

@@ -57,7 +57,7 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
     },
     { id: "cadastros-blocos", label: t("menu.blocks"), icon: <ViewModule />, path: RouteNames.CadastrosBlocos },
     { id: "cadastros-unidades", label: t("menu.units"), icon: <Home />, path: RouteNames.CadastrosUnidades },
-    { id: "cadastros-residentes", label: t("menu.residents"), icon: <People />, path: RouteNames.CadastrosResidentes },
+    { id: "cadastros-moradores", label: t("menu.residents"), icon: <People />, path: RouteNames.CadastrosResidentes },
     { id: "cadastros-perfis", label: t("menu.profiles"), icon: <AssignmentInd />, path: RouteNames.CadastrosPerfis },
     {
       id: "itens-pendentes",

@@ -21,6 +21,7 @@ import { AppStateModal } from "../../shared/components/AppStateModal";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { AccountService } from "../../services/accountService";
+import { condominiumUnitImageService } from "../../services/condominiumUnitImageService";
 import moment from "moment";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -36,11 +37,14 @@ interface ResidenteFormProps {
   onSaved: () => void | Promise<void>;
   loading: boolean;
   setLoading: (loading: boolean) => void;
+  condominiumIdPreset?: string;
   condominiumNamePreset?: string;
   blockNamePreset?: string;
+  unitIdPreset?: string;
   unitCodePreset?: string;
   editResident?: CondominiumUnitResident | null;
   editAccount?: AccountResponse | null;
+  residentImageUrl?: string; // NOVA PROP
 }
 
 type DocumentType = 1 | 2 | 3 | 4;
@@ -142,11 +146,14 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   onSaved,
   loading,
   setLoading,
+  condominiumIdPreset,
   condominiumNamePreset,
   blockNamePreset,
+  unitIdPreset,
   unitCodePreset,
   editResident,
   editAccount,
+  residentImageUrl,
 }) => {
   const { t } = useTranslation();
   const { appStateModal, handleClose, showSuccess, showError } =
@@ -158,7 +165,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     t("residenteForm.stepPermissions"),
   ];
   const [formData, setFormData] = useState<CondominiumUnitResidentRequest>({
-    condominiumUnitId: unitCodePreset || "",
+    condominiumUnitId: unitIdPreset || "",
     userId: "",
     unitType: "Owner",
     startDate: new Date().toISOString().split("T")[0],
@@ -200,7 +207,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setActiveStep(0);
     setErrors({});
     setFormData({
-      condominiumUnitId: unitCodePreset || "",
+      condominiumUnitId: unitIdPreset || "",
       userId: "",
       unitType: "Owner",
       startDate: new Date().toISOString().split("T")[0],
@@ -217,7 +224,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setEmail("");
     setPhone("");
     setPhotoFile(null);
-  }, [open, unitCodePreset]);
+    setCoverFile(null);
+  }, [open, unitCodePreset, unitIdPreset]);
 
   useEffect(() => {
     getTypes();
@@ -227,6 +235,33 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     const result = await AccountService.accountMe(userId);
     setDataEdit(result);
   };
+
+  // Dentro do componente, adicionar no useEffect que configura o modo de edição:
+
+  useEffect(() => {
+    if (!open || !isEditMode || !editAccount?.userId) {
+      setDataEdit(undefined);
+      return;
+    }
+    void dataUser(editAccount.userId);
+
+    // Se tiver uma imagem, carregar a prévia
+    if (residentImageUrl) {
+      // Converter a URL base64 para um objeto File (opcional, mas útil para consistência)
+      fetch(residentImageUrl)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const file = new File([blob], "resident-photo.jpg", {
+            type: blob.type,
+          });
+          setPhotoFile(file);
+          setCoverPreview(residentImageUrl);
+        })
+        .catch((error) => {
+          console.error("Erro ao carregar imagem do morador:", error);
+        });
+    }
+  }, [open, isEditMode, editAccount?.userId, residentImageUrl]);
 
   const [dataEdit, setDataEdit] = useState<AccountResponse>();
 
@@ -272,7 +307,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
 
     setFormData({
-      condominiumUnitId: unitCodePreset || "",
+      condominiumUnitId: unitIdPreset || "",
       userId: "",
       unitType: "Owner",
       startDate: new Date().toISOString().split("T")[0],
@@ -289,7 +324,16 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setEmail("");
     setPhone("");
     setPhotoFile(null);
-  }, [open, unitCodePreset, isEditMode, editResident, editAccount, dataEdit]);
+    setCoverFile(null);
+  }, [
+    open,
+    unitCodePreset,
+    unitIdPreset,
+    isEditMode,
+    editResident,
+    editAccount,
+    dataEdit,
+  ]);
 
   if (!open) return null;
 
@@ -407,7 +451,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
   const buildResidentValidationPayload =
     (): CondominiumUnitResidentRequest => ({
-      condominiumUnitId: localStorage.getItem("moradoresCondominiumId")!,
+      condominiumUnitId: formData.condominiumUnitId,
       userId: userId!,
       unitType: formData.unitType,
       startDate: formData.startDate,
@@ -539,7 +583,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       if (isEditMode) {
         const targetUserId = formData.userId || editResident?.userId;
         if (!targetUserId) {
-          throw new Error("Usuario do residente nao encontrado para edicao.");
+          throw new Error("Usuario do morador nao encontrado para edicao.");
         }
 
         const response = await AccountService.updateAccount(targetUserId, {
@@ -610,6 +654,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
     try {
       setLoading(true);
+
       const { valid, validations } = await unitResidentService.validateResident(
         buildResidentValidationPayload(),
       );
@@ -628,8 +673,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         throw new Error(t("residenteForm.accountCreateError"));
       }
 
-      await unitResidentService.createResident({
-        condominiumUnitId: formData.condominiumUnitId,
+      if(!isEditMode) {
+        await unitResidentService.createResident({
+          condominiumUnitId: formData.condominiumUnitId,
         userId: account,
         unitType: formData.unitType,
         startDate: formData.startDate,
@@ -640,16 +686,46 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         hasGatehouseAccess: formData.hasGatehouseAccess,
         commit: true,
       });
+    }
+      
+      if (isEditMode && editAccount?.userId) {
+        await AccountService.updateAccount(editAccount.userId, {
+          name: firstName.trim(),
+          surname: lastName.trim(),
+          docType: documentType,
+          doc: documentNumber.replace(/\D/g, ""),
+          email: email.trim(),
+          phone: normalizePhoneToE164(phone),
+        });
 
-      if (photoFile) {
-        await fileToDataUrl(photoFile);
+        // Atualizar a imagem se uma nova foi selecionada
+        if (photoFile && condominiumIdPreset && formData.condominiumUnitId) {
+          await condominiumUnitImageService.uploadUnitImage({
+            imageType: 1,
+            contentFile: photoFile,
+            condominiumId: condominiumIdPreset,
+            condominiumUnitId: formData.condominiumUnitId,
+            userId: editAccount.userId,
+          });
+        }
+
+        // Upload resident photo after creation
+        if (photoFile) {
+          await condominiumUnitImageService.uploadUnitImage({
+            imageType: 1,
+            contentFile: photoFile,
+            condominiumId: condominiumIdPreset || "",
+            condominiumUnitId: formData.condominiumUnitId,
+            userId: account,
+          });
+        }
       }
 
       await onSaved();
       showSuccess(t("residenteForm.createSuccess"));
 
       setFormData({
-        condominiumUnitId: unitCodePreset || "",
+        condominiumUnitId: unitIdPreset || "",
         userId: "",
         unitType: "Owner",
         startDate: "",
@@ -665,6 +741,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setEmail("");
       setPhone("");
       setPhotoFile(null);
+      setCoverFile(null);
       setErrors({});
       setActiveStep(0);
       setCloseAfterModal(true);
@@ -1021,7 +1098,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             type="file"
             accept="image/*"
             hidden
-            onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+            onChange={(e) => {
+              const file = e.target.files?.[0] || null;
+              setCoverFile(file);
+              setPhotoFile(file);
+            }}
           />
           {!coverPreview && (
             <FileUploadOutlined sx={{ fontSize: 40, color: "#7ba0d1" }} />

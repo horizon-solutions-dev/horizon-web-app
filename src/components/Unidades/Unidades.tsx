@@ -74,7 +74,7 @@ const Unidades: React.FC = () => {
   const [blockSearchText, setBlockSearchText] = useState("");
   const [blockPage, setBlockPage] = useState(1);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const { appStateModal, handleClose, showError } = useAppStateModal();
+  const { appStateModal, handleClose, showError, showDelete } = useAppStateModal();
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -306,11 +306,10 @@ const Unidades: React.FC = () => {
   };
 
   const handleDelete = (unit: CondominiumUnit) => {
-    const confirmed = window.confirm(
-      t("unidades.deleteConfirm", { code: unit.unitCode }),
+    showDelete(
+      "Confirma a exclusao do item?",
+      `Voce escolheu o condominio "${selectedCondominium?.name || "-"}". Item selecionado para apagar: unidade "${unit.unitCode || "-"}".`,
     );
-    if (!confirmed) return;
-    showError(t("unidades.deleteUnavailable"));
   };
 
   const handleOpenCreate = () => {
@@ -458,7 +457,7 @@ const Unidades: React.FC = () => {
                 </Typography>
               ) : (
                 <CardList
-                  title="Condomínios da organização"
+                  title="Condôminios da organização"
                   showTitle={false}
                   searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}

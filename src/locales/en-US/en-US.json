@@ -232,7 +232,7 @@
     "selectedCondominium": "Selected condominium",
     "selectedBlock": "Selected block"
   },
-  "residentes": {
+  "moradores": {
     "title": "Residents",
     "searchPlaceholder": "Search resident...",
     "searchCondominiumPlaceholder": "Search condominium...",

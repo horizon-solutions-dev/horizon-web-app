@@ -377,7 +377,10 @@ const CondominioPage: React.FC = () => {
                             startIcon={<DeleteOutline />}
                             onClick={() => {
                               setEditingCondominium(condominium);
-                              showDelete('Deseja realmente excluir este registro?');
+                              showDelete(
+                                "Confirma a exclusao do item?",
+                                `Voce escolheu o condominio "${condominium.name}" para apagar.`,
+                              );
                             }}
                           >
                             Excluir
@@ -485,7 +488,10 @@ const CondominioPage: React.FC = () => {
                             startIcon={<DeleteOutline />}
                             onClick={() => {
                               setEditingCondominium(condominium);
-                              showDelete('Deseja realmente excluir este registro?');
+                              showDelete(
+                                "Confirma a exclusao do item?",
+                                `Voce escolheu o condominio "${condominium.name}" para apagar.`,
+                              );
                             }}
                           >
                             Excluir

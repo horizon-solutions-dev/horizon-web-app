@@ -26,7 +26,7 @@ export default function MainLayout() {
      const path = location.pathname;
      const titleMap: { [key: string]: string } = {
        '/dashboard': 'Dashboard',
-       '/condominio': 'Condomínio',
+       '/condominio': 'Condôminio',
        '/reservas/tipo': 'Tipo de Reserva',
        '/reservas/listagem': 'Listagem de Reservas',
        '/reservas/calendario': 'Calendário de Reservas',
@@ -139,7 +139,7 @@ export default function MainLayout() {
 
     [RouteNames.CadastrosBlocos]: { label: "Blocos", },
     [RouteNames.CadastrosUnidades]: { label: "Unidades", },
-    [RouteNames.CadastrosResidentes]: { label: "Residentes", },
+    [RouteNames.CadastrosResidentes]: { label: "Moradores", },
     [RouteNames.CadastrosOrganizacoes]: { label: "Organizações", },
     [RouteNames.CadastrosPerfis]: { label: "Perfis", },
   };

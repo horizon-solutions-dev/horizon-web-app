@@ -972,7 +972,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     <Typography
                       sx={{ fontWeight: 700, fontSize: 18, lineHeight: 1 }}
                     >
-                      Estrutura do Condomínio
+                      Estrutura do Condôminio
                     </Typography>
                   </Box>
                   <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />

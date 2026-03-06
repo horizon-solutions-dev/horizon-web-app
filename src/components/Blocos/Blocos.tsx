@@ -243,7 +243,10 @@ const Blocos: React.FC = () => {
 
   const handleDelete = (block: CondominiumBlock) => {
     setBlockToDelete(block);
-    showDelete("Deseja realmente excluir este registro?");
+    showDelete(
+      "Confirma a exclusao do item?",
+      `Voce escolheu o condominio "${selectedCondominium?.name || "-"}". Item selecionado para apagar: bloco "${block.name}"${block.code ? ` (${block.code})` : ""}.`,
+    );
   };
 
   const handleConfirmDelete = async () => {
@@ -346,7 +349,7 @@ const Blocos: React.FC = () => {
                 </Box>
               ) : listError ? (
                 <CardList
-                  title="Condomínios da organização"
+                  title="Condôminios da organização"
                   showTitle={false}
                   searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}
@@ -406,7 +409,7 @@ const Blocos: React.FC = () => {
                 </Typography>
               ) : (
                 <CardList
-                  title="Condomínios da organização"
+                  title="Condôminios da organização"
                   showTitle={false}
                   searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}

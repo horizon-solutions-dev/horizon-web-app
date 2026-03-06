@@ -34,7 +34,7 @@ class UnitResidentService {
         resident
       );
     } catch (error) {
-      console.error('Erro ao criar residente:', error);
+      console.error('Erro ao criar morador:', error);
       throw error;
     }
   }
@@ -68,7 +68,7 @@ class UnitResidentService {
       
       return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
-      console.error('Erro ao buscar residentes:', error);
+      console.error('Erro ao buscar moradores:', error);
       throw error;
     }
   }
@@ -77,7 +77,7 @@ class UnitResidentService {
     try {
       return await apiClient.get<CondominiumUnitResident>(`${this.baseUrl}/${id}`);
     } catch (error) {
-      console.error('Erro ao buscar residente:', error);
+      console.error('Erro ao buscar morador:', error);
       throw error;
     }
   }

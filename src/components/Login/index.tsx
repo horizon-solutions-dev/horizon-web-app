@@ -15,6 +15,7 @@ import { Close } from "@mui/icons-material";
 import { IconButton, Tooltip } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
 import Logo from '../../assets/logo.svg';
+import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 interface LoginFormValues {
@@ -46,7 +47,7 @@ export default function MultiStepLogin() {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("organizationId");
   },[])
-    const { showSessionExpired } = useAppStateModal();
+    const { appStateModal, handleClose, showSessionExpired } = useAppStateModal();
   
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
@@ -555,6 +556,17 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
           )}
         </div>
       )}
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        onConfirm={handleClose}
+        onClose={handleClose}
+        showCancel={false}
+      />
     </>
   );
 }

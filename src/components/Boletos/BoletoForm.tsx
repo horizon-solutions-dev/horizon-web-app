@@ -210,7 +210,7 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
               onChange={(e) => handleChange('descricao', e.target.value)}
               error={!!errors.descricao}
               helperText={errors.descricao}
-              placeholder="Ex: Condomínio - Janeiro/2026"
+              placeholder="Ex: Condôminio - Janeiro/2026"
             />
           </Grid>
 

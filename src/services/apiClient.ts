@@ -92,7 +92,12 @@ export class ApiClient {
   private async handleUnauthorized(error: AxiosError) {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    if (error.response?.status !== 401) {
+      return Promise.reject(error);
+    }
+
+    if (originalRequest?._retry) {
+      this.endSessionAndRedirect('Sua sessão expirou. Faça login novamente.');
       return Promise.reject(error);
     }
 

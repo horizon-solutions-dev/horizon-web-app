@@ -222,19 +222,37 @@ export default function AppStateModal({
         </Typography>
 
         {/* Detail */}
-        {detail && (
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              display: "block",
-              mt: 1,
-              fontStyle: "italic",
-            }}
-          >
-            {detail}
-          </Typography>
-        )}
+        {detail &&
+          (type === "delete" ? (
+            <Box sx={{ mt: 2, mb: 2 }}>
+              <Box sx={{ height: 1, backgroundColor: "divider", mb: 1.2 }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  display: "block",
+                  fontSize: "0.78rem",
+                  fontWeight: 700,
+                  color: "text.primary",
+                  lineHeight: 1.5,
+                }}
+              >
+                {detail}
+              </Typography>
+              <Box sx={{ height: 1, backgroundColor: "divider", mt: 1.2 }} />
+            </Box>
+          ) : (
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block",
+                mt: 1,
+                fontStyle: "italic",
+              }}
+            >
+              {detail}
+            </Typography>
+          ))}
       </Box>
 
       {/* Actions */}
