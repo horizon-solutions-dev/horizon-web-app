@@ -28,6 +28,9 @@ export interface CondominiumRequest {
 export interface Condominium extends CondominiumRequest {
   condominiumId: string;
   active: boolean;
+  imageType?: string | number;
+  contentType?: string;
+  thumbnailFile?: string;
 }
 
 export interface CondominiumTypeEnum {

@@ -800,7 +800,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               onChange={(e) => handleChange("doc", e.target.value)}
               error={!!errors.doc}
               helperText={errors.doc}
-              placeholder="00.000.000/0000-00"
+              placeholder="Digite o número de CNPJ. Ex: 00.000.000/0000-00"
               inputProps={{ maxLength: 18 }}
             />
             <TextField
@@ -840,6 +840,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               )}
             </TextField>
             <TextField
+            label={ formData.unitCount == 0 ? "Quantidade de unidades" : ""}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   height: 46,
@@ -947,7 +948,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
             <Grid container spacing={1} flexGrow={3}>
-              <Grid item xs={8} md={8}>
+              <Grid item xs={7} md={7}>
                 <Box
                   sx={{
                     border: "1px solid #e2e8f0",
@@ -987,7 +988,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   >
                     <Box sx={{ display: "flex", gap: 1 }}>
                       <FormControlLabel
-                        sx={{ height: "40px", width: "270px" }}
+                        sx={{ height: "40px", width: "225px" }}
                         control={
                           <Checkbox
                             checked={formData.hasBlocks}
@@ -1000,7 +1001,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                         label="Possui blocos"
                       />
                       <FormControlLabel
-                        sx={{ height: "40px", width: "270px" }}
+                        sx={{ height: "40px", width: "225px" }}
                         control={
                           <Checkbox
                             checked={formData.hasPowerByBlock}
@@ -1016,7 +1017,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
                     <Box sx={{ display: "flex", gap: 1 }}>
                       <FormControlLabel
-                        sx={{ height: "40px", width: "270px" }}
+                        sx={{ height: "40px", width: "225px" }}
                         control={
                           <Checkbox
                             checked={formData.hasGasByBlock}
@@ -1029,7 +1030,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                         label="Gás por bloco"
                       />
                       <FormControlLabel
-                        sx={{ height: "40px", width: "270px" }}
+                        sx={{ height: "40px", width: "225px" }}
                         control={
                           <Checkbox
                             checked={formData.hasWaterIndividual}
@@ -1049,7 +1050,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 </Box>
               </Grid>
 
-              <Grid item xs={4} md={4}>
+              <Grid item xs={5} md={5}>
                 <Box
                   sx={{
                     border: "1px solid #e2e8f0",
@@ -1112,7 +1113,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                     <TextField
                       fullWidth
                       select
-                      sx={{ width: "260px" }}
+                      sx={{ width: "340px" }}
                       value={formData.allocationType}
                       onChange={(e) =>
                         handleChange(
@@ -1131,7 +1132,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       </MenuItem>
                       {allocationLoading ? (
                         <MenuItem
-                          sx={{ width: "260px" }}
+                          sx={{ width: "340px" }}
                           value={formData.allocationType}
                           disabled
                         >
@@ -1140,7 +1141,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       ) : allocationTypes.length > 0 ? (
                         allocationTypes.map((type) => (
                           <MenuItem
-                            sx={{ width: "260px" }}
+                            sx={{ width: "340px" }}
                             key={type.id}
                             value={type.id}
                           >
@@ -1232,25 +1233,37 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   gap: 2,
                 }}
               >
-                <Button
-                  variant="outlined"
-                  component="label"
-                  size="small"
-                  sx={{
-                    minWidth: 152,
-                    height: 38,
-                    textTransform: "none",
-                    fontSize: "14px",
-                  }}
-                >
-                  Selecionar imagem
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-                  />
-                </Button>
+   <Button
+  variant="outlined"
+  component="label"
+  size="small"
+  disableRipple
+  sx={{
+    minWidth: 152,
+    height: 38,
+    backgroundColor: "#FFF",
+    textTransform: "none",
+    fontSize: "14px",
+
+    "&:hover": {
+      backgroundColor: "#FFF",
+    },
+    "&:active": {
+      backgroundColor: "#FFF",
+    },
+    "&:focus": {
+      backgroundColor: "#FFF",
+    },
+  }}
+>
+  Selecionar imagem
+  <input
+    type="file"
+    hidden
+    accept="image/*"
+    onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+  />
+</Button>
 
                 <Box
                   sx={{
