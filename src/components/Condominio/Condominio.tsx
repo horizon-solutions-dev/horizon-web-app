@@ -21,6 +21,7 @@ import {
   ApartmentOutlined,
   LocationOnOutlined,
   Close,
+  Apartment,
 } from "@mui/icons-material";
 import {
   condominiumService,
@@ -36,6 +37,7 @@ import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { useTranslation } from "react-i18next";
 import { AppStateModal } from "../../shared/components";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import { MdApartment } from "react-icons/md";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
@@ -245,7 +247,7 @@ const CondominioPage: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -360,7 +362,8 @@ const CondominioPage: React.FC = () => {
                       ),
                       imageUrl: condominiumImages[condominium.condominiumId],
                       actions: (
-                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap",                                    mt:2,
+ }}>
                           <Button
                             size="small"
                             variant="outlined"
@@ -471,7 +474,8 @@ const CondominioPage: React.FC = () => {
                       ),
                       imageUrl: condominiumImages[condominium.condominiumId],
                       actions: (
-                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap",                                    mt:2,
+ }}>
                           <Button
                             size="small"
                             variant="outlined"
@@ -490,7 +494,7 @@ const CondominioPage: React.FC = () => {
                               setEditingCondominium(condominium);
                               showDelete(
                                 "Confirma a exclusao do item?",
-                                `Voce escolheu o condominio "${condominium.name}" para apagar.`,
+                                `Voce escolheu o côndomínio "${condominium.name}" para apagar.`,
                               );
                             }}
                           >

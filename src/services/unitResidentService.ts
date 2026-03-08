@@ -3,10 +3,18 @@ import { apiClient } from './apiClient';
 import type { UnitType } from './unitService';
 import type { PagedResponse } from '../models/pagination.model';
 import { normalizePagedResponse } from '../shared/utils/pagination';
+import type { AccountResponse } from '../models/api.model';
+
+type ResidentDocType = AccountResponse['docType'] | number | string;
 
 export interface CondominiumUnitResidentRequest {
   condominiumUnitId: string;
   userId: string;
+  fullname: string;
+  docType: ResidentDocType;
+  doc: string;
+  email: string;
+  phone: string;
   unitType?: UnitType;
   startDate?: string;
   endDate?: string;
@@ -19,6 +27,9 @@ export interface CondominiumUnitResidentRequest {
 
 export interface CondominiumUnitResident extends CondominiumUnitResidentRequest {
   condominiumUnitResidentId: string;
+  contentType?: string;
+  thumbnailFile?: string;
+  active?: boolean;
 }
 
 export type CondominiumUnitResidentPagedResponse = PagedResponse<CondominiumUnitResident>;

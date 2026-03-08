@@ -476,7 +476,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                 }}
                 fullWidth
                 select
-                placeholder="Tipo de Organizacao"
+                label={formData.orgType?  "" : "Tipo de Organizacao"}
                 value={formData.orgType ?? ""}
                 onChange={(e) => handleChange("orgType", e.target.value)}
                 error={!!errors.orgType}

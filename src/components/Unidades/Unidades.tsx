@@ -11,7 +11,6 @@ import {
   Tooltip,
 } from "@mui/material";
 import {
-  Business,
   DeleteOutline,
   EditOutlined,
   Close,
@@ -19,6 +18,7 @@ import {
   ViewModule,
   Apartment,
   SettingsOutlined,
+  Home,
 } from "@mui/icons-material";
 import {
   unitService,
@@ -327,6 +327,20 @@ const Unidades: React.FC = () => {
   };
 
   const navigate = useNavigate()
+  const selectedBlock = blocks.find(
+    (block) => block.condominiumBlockId === selectedBlockId,
+  );
+  const unitsBreadcrumbItems = selectedBlockId
+    ? [
+      selectedCondominium?.name || t("unidades.selectedCondominium"),
+      t("common.blocks"),
+      selectedBlock?.name || selectedBlock?.code || t("common.unknown"),
+      t("common.units"),
+    ]
+    : [
+      selectedCondominium?.name || t("unidades.selectedCondominium"),
+      t("common.blocks"),
+    ];
 
   return (
     <Box className="unidade-container">
@@ -354,7 +368,7 @@ const Unidades: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Home sx={{ fontSize: 36, color: "#1976d2" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -569,11 +583,7 @@ const Unidades: React.FC = () => {
                         {t("unidades.title")}
                       </Typography>
                       <BreadcrumbTrail
-                        items={[
-                          organizationName || t("common.organization"),
-                          selectedCondominium?.name || t("unidades.selectedCondominium"),
-                          t("common.blocks")
-                        ]}
+                        items={unitsBreadcrumbItems}
                       />
                     </Box>
                   </Box>
@@ -628,6 +638,7 @@ const Unidades: React.FC = () => {
                         setBlockSearchText(value);
                         setBlockPage(1);
                       }}
+                      haveImage={false}
                       onAddClick={undefined}
                       addButtonPlacement="toolbar"
                       emptyImageLabel={t("common.noImage")}
@@ -700,6 +711,7 @@ const Unidades: React.FC = () => {
                       emptyImageLabel={t("common.noImage")}
                       showPagination={true}
                       page={unitsPage}
+                      haveImage={false}
                       totalPages={unitsTotalPages}
                       onPageChange={(page) => {
                         setUnitsPage(page);
@@ -745,7 +757,8 @@ const Unidades: React.FC = () => {
                           ),
                           actions: (
                             <Box
-                              sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}
+                              sx={{ display: "flex", gap: 1, flexWrap: "wrap",                                    mt:2,
+ }}
                             >
                               <Button
                                 size="small"

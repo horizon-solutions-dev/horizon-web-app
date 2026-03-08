@@ -315,7 +315,7 @@ const Blocos: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -552,6 +552,7 @@ const Blocos: React.FC = () => {
                     title={t("blocos.blocksList")}
                     showTitle={false}
                     showFilters={true}
+                    haveImage={false}
                     searchPlaceholder={t("blocos.searchPlaceholder")}
                     onSearchChange={setBlockSearchText}
                     onAddClick={handleOpenCreate}
@@ -590,7 +591,8 @@ const Blocos: React.FC = () => {
                         ),
                         actions: (
                           <Box
-                            sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}
+                            sx={{ display: "flex", gap: 1, flexWrap: "wrap",                                    mt:2,
+ }}
                           >
                             <Button
                               size="small"

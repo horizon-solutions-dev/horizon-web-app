@@ -13,11 +13,16 @@ import {
 import {
   Close,
   SettingsOutlined,
-  MeetingRoom,
   Person2Sharp,
   Business,
   DeleteOutline,
   EditOutlined,
+  Groups2Outlined,
+  BadgeOutlined,
+  EmailOutlined,
+  PhoneOutlined,
+  ApartmentOutlined,
+  People,
 } from "@mui/icons-material";
 import {
   unitResidentService,
@@ -32,15 +37,11 @@ import {
   condominiumService,
   type Condominium,
 } from "../../services/condominiumService";
-import { condominiumUnitImageService } from "../../services/condominiumUnitImageService";
-import { AccountService } from "../../services/accountService";
-import type { AccountResponse } from "../../models/api.model";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import ResidenteForm from "./ResidenteForm";
 import { useNavigate } from "react-router";
-import moment from "moment";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { condominiumImageService } from "../../services/condominiumImageService";
@@ -79,15 +80,6 @@ const Residentes: React.FC = () => {
   const [, setSelectedBlockName] = useState("");
 
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
-  const [accountNamesByUserId, setAccountNamesByUserId] = useState<
-    Record<string, string>
-  >({});
-  const [accountsByUserId, setAccountsByUserId] = useState<
-    Record<string, AccountResponse>
-  >({});
-  const [residentImagesByUserId, setResidentImagesByUserId] = useState<
-    Record<string, string>
-  >({});
   const [residentsLoading, setResidentsLoading] = useState(false);
   const [, setResidentsError] = useState<string | null>(null);
   const [residentSearchText, setResidentSearchText] = useState("");
@@ -97,9 +89,6 @@ const Residentes: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingResident, setEditingResident] =
     useState<CondominiumUnitResident | null>(null);
-  const [editingAccount, setEditingAccount] = useState<AccountResponse | null>(
-    null,
-  );
   const [loading, setLoading] = useState(false);
   const { appStateModal, handleClose, showDelete } = useAppStateModal();
 
@@ -197,46 +186,6 @@ const Residentes: React.FC = () => {
     }
   };
 
-  const loadAccountNames = async (condominiumId: string) => {
-    try {
-      const response = await AccountService.getAccountsByCondominium(
-        condominiumId,
-        1,
-        500,
-      );
-      const accounts = Array.isArray(response)
-        ? response
-        : (response?.data ?? []);
-      const namesByUserId = accounts.reduce(
-        (acc, account) => {
-          const userId = String(account?.userId ?? "");
-          const fullName =
-            `${account?.name ?? ""} ${account?.surname ?? ""}`.trim();
-          if (userId && fullName) {
-            acc[userId] = fullName;
-          }
-          return acc;
-        },
-        {} as Record<string, string>,
-      );
-      const detailsByUserId = accounts.reduce(
-        (acc, account) => {
-          const userId = String(account?.userId ?? "");
-          if (userId) {
-            acc[userId] = account;
-          }
-          return acc;
-        },
-        {} as Record<string, AccountResponse>,
-      );
-      setAccountNamesByUserId(namesByUserId);
-      setAccountsByUserId(detailsByUserId);
-    } catch {
-      setAccountNamesByUserId({});
-      setAccountsByUserId({});
-    }
-  };
-
   const loadUnits = async (
     condominiumId: string,
     blockId?: string,
@@ -299,54 +248,12 @@ const Residentes: React.FC = () => {
       setResidentsPage(response?.paging?.pageNumber ?? pageNumber);
       setResidentsTotalPages(totalPages);
       setResidents(normalized);
-
-      if (selectedCondominium?.condominiumId) {
-        await loadResidentImages(selectedCondominium.condominiumId, unitId);
-      } else {
-        setResidentImagesByUserId({});
-      }
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar moradores.";
       setResidentsError(message);
-      setResidentImagesByUserId({});
     } finally {
       setResidentsLoading(false);
-    }
-  };
-
-  const loadResidentImages = async (condominiumId: string, unitId: string) => {
-    try {
-      const unitImages = await condominiumUnitImageService.getUnitImages(
-        condominiumId,
-        unitId,
-        1
-      );
-
-      const imagesByUserId: Record<string, string> = {};
-
-      await Promise.all(
-        (unitImages ?? []).map(async (image) => {
-          if (!image?.condominiumUnitImageId || !image?.userId) return;
-
-          try {
-            const detail = await condominiumUnitImageService.getUnitImageById(
-              image.condominiumUnitImageId,
-            );
-
-            if (detail?.contentFile && detail?.contentType) {
-              imagesByUserId[image.userId] =
-                `data:${detail.contentType};base64,${detail.contentFile}`;
-            }
-          } catch {
-            // Silencioso: ausência/erro de imagem não deve quebrar a listagem.
-          }
-        }),
-      );
-
-      setResidentImagesByUserId(imagesByUserId);
-    } catch {
-      setResidentImagesByUserId({});
     }
   };
 
@@ -422,13 +329,8 @@ const Residentes: React.FC = () => {
     resetResidentsContext();
     setActiveView("unidades");
     await loadBlocks(condominium.condominiumId);
-    await loadAccountNames(condominium.condominiumId);
     await loadUnits(condominium.condominiumId, undefined, 1);
   };
-
-  useEffect(() => {
-    loadAccountNames(selectedCondominium?.condominiumId || "");
-  }, [residents]);
 
   const handleSelectUnit = async (unit: CondominiumUnit) => {
     setSelectedUnit(unit);
@@ -446,13 +348,11 @@ const Residentes: React.FC = () => {
       return;
     }
     setEditingResident(null);
-    setEditingAccount(null);
     setIsFormOpen(true);
   };
 
   const handleCloseForm = () => {
     setEditingResident(null);
-    setEditingAccount(null);
     setIsFormOpen(false);
     loadResidents(selectedUnit?.condominiumUnitId || "", 1);
   };
@@ -468,14 +368,39 @@ const Residentes: React.FC = () => {
     return value;
   };
 
+  const getDocTypeLabel = (value?: string | number) => {
+    if (value === 1 || value === "1") return "CPF";
+    if (value === 2 || value === "2") return "CNPJ";
+    if (value === 3 || value === "3") return "PASS";
+    return "DOC";
+  };
+
+  const formatResidentPhone = (phone?: string) => {
+    if (!phone) return "-";
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length === 13 && digits.startsWith("55")) {
+      return `(${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(9)}`;
+    }
+    if (digits.length === 11) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+    }
+    return phone;
+  };
+
+  const getResidentImageUrl = (resident: CondominiumUnitResident) => {
+    if (!resident.thumbnailFile || !resident.contentType) return undefined;
+    console.log(
+      `data:${resident.contentType};base64,${resident.thumbnailFile}`,
+    );
+    return `data:${resident.contentType};base64,${resident.thumbnailFile}`;
+  };
+
   function handleEdit(resident: CondominiumUnitResident) {
     setEditingResident(resident);
-    setEditingAccount(accountsByUserId[resident.userId] || null);
     setIsFormOpen(true);
   }
   function handleDelete(resident: CondominiumUnitResident) {
-    const residentLabel =
-      accountNamesByUserId[resident.userId] || resident.userId || "-";
+    const residentLabel = resident.fullname || resident.userId || "-";
     showDelete(
       "Confirma a exclusao do item?",
       `Voce escolheu o condominio "${selectedCondominium?.name || "-"}". Item selecionado para apagar: morador "${residentLabel}".`,
@@ -494,7 +419,7 @@ const Residentes: React.FC = () => {
     }; */
 
   return (
-    <Box className="page-container" sx={{ py: 4 }}>
+    <Box className="page-container">
       <Container maxWidth="lg">
         {activeView === "condominios" ? (
           <Paper elevation={3} sx={{ p: 3 }}>
@@ -518,7 +443,7 @@ const Residentes: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <People sx={{ fontSize: 36, color: "#1976d2" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -586,7 +511,7 @@ const Residentes: React.FC = () => {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
+                <Groups2Outlined sx={{ fontSize: 36, color: "#1976d2" }} />
                 <Box>
                   <Typography
                     variant="h5"
@@ -629,6 +554,7 @@ const Residentes: React.FC = () => {
             ) : null}
 
             <CardList
+              haveImage={false}
               title={t("moradores.unitsList")}
               showTitle={false}
               showFilters={true}
@@ -704,9 +630,12 @@ const Residentes: React.FC = () => {
                 setLoading={setLoading}
                 condominiumIdPreset={selectedCondominium?.condominiumId}
                 editResident={editingResident}
-                editAccount={editingAccount}
-                    residentImageUrl={editingResident ? residentImagesByUserId[editingResident.userId] : undefined}
-
+                editUserId={editingResident?.userId}
+                residentImageUrl={
+                  editingResident
+                    ? getResidentImageUrl(editingResident)
+                    : undefined
+                }
                 unitIdPreset={selectedUnit?.condominiumUnitId}
                 condominiumNamePreset={selectedCondominium?.name}
                 blockNamePreset={
@@ -731,7 +660,7 @@ const Residentes: React.FC = () => {
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
+                    <Groups2Outlined sx={{ fontSize: 36, color: "#1976d2" }} />
                     <Box>
                       <Typography
                         variant="h5"
@@ -745,8 +674,7 @@ const Residentes: React.FC = () => {
                           organizationName || t("common.organization"),
                           selectedCondominium?.name ||
                             t("moradores.selectedCondominium"),
-                          selectedUnit?.unitCode ||
-                            t("moradores.selectedUnit"),
+                          selectedUnit?.unitCode || t("moradores.selectedUnit"),
                           t("common.residents"),
                         ]}
                       />
@@ -793,6 +721,10 @@ const Residentes: React.FC = () => {
                       emptyImageLabel={t("common.noImage")}
                       showFilters={true}
                       showPagination={true}
+                      cardMaxHeight="none"
+                      imageWidth={145}
+                      imageHeight={125}
+                      actionsMarginTop={0.5}
                       page={residentsPage}
                       totalPages={residentsTotalPages}
                       onPageChange={(page) => {
@@ -804,9 +736,12 @@ const Residentes: React.FC = () => {
                       items={residents
                         .filter((resident) =>
                           [
+                            resident.fullname,
+                            resident.doc,
+                            resident.email,
+                            resident.phone,
                             resident.userId,
                             resident.condominiumUnitId,
-                            accountNamesByUserId[resident.userId],
                           ]
                             .filter(Boolean)
                             .join(" ")
@@ -823,10 +758,7 @@ const Residentes: React.FC = () => {
                             (b) =>
                               b.condominiumBlockId === unit?.condominiumBlockId,
                           )?.name;
-                          const residentName =
-                            accountNamesByUserId[resident.userId] ||
-                            resident.userId ||
-                            "-";
+                          const residentName = resident?.fullname || "-";
                           const residentType = getUnitTypeLabel(
                             resident.unitType?.toString(),
                           );
@@ -834,12 +766,6 @@ const Residentes: React.FC = () => {
                             unit?.unitCode || resident.condominiumUnitId || "-";
                           const residentBlock =
                             blockName || unit?.condominiumBlockId || "-";
-                          const periodStart = resident.startDate
-                            ? moment(resident.startDate).format("DD/MM/YYYY")
-                            : "-";
-                          const periodEnd = resident.endDate
-                            ? moment(resident.endDate).format("DD/MM/YYYY")
-                            : t("common.current");
 
                           return {
                             actions: (
@@ -852,6 +778,7 @@ const Residentes: React.FC = () => {
                               >
                                 <Box
                                   sx={{
+                                    mt: 2,
                                     display: "flex",
                                     gap: 1,
                                     flexWrap: "wrap",
@@ -880,13 +807,100 @@ const Residentes: React.FC = () => {
                             ),
                             id: resident.condominiumUnitResidentId,
                             title: `${residentName}`,
-                            subtitle: `${residentType} | ${residentUnit} | ${residentBlock}`,
-                            meta: t("moradores.periodLabel", {
-                              start: periodStart,
-                              end: periodEnd,
-                            }),
+                            subtitle: (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 0.35,
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.7,
+                                  }}
+                                >
+                                  <BadgeOutlined
+                                    sx={{
+                                      fontSize: 16,
+                                      color: "text.secondary",
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {getDocTypeLabel(resident.docType)}:{" "}
+                                    {resident.doc || "-"}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.7,
+                                  }}
+                                >
+                                  <EmailOutlined
+                                    sx={{
+                                      fontSize: 16,
+                                      color: "text.secondary",
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {resident.email || "-"}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.7,
+                                  }}
+                                >
+                                  <PhoneOutlined
+                                    sx={{
+                                      fontSize: 16,
+                                      color: "text.secondary",
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {formatResidentPhone(resident.phone)}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.7,
+                                  }}
+                                >
+                                  <ApartmentOutlined
+                                    sx={{
+                                      fontSize: 16,
+                                      color: "text.secondary",
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {residentType} | {residentUnit} |{" "}
+                                    {residentBlock}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            ),
                             toolTip: `Tipo: ${residentType} | Unidade: ${residentUnit} | Bloco: ${residentBlock}`,
-                            imageUrl: residentImagesByUserId[resident.userId],
+                            imageUrl: getResidentImageUrl(resident),
                             accentColor:
                               index % 2 === 0 ? "#eef6ee" : "#fdecef",
                           };

@@ -1270,7 +1270,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       component="img"
                       src={preview}
                       alt="Prévia da imagem do condomínio"
-                      sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      sx={{ height: "200px", objectFit: "cover" }}
                     />
                   ) : (
                     <Typography

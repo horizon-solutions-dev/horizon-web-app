@@ -43,7 +43,7 @@ interface ResidenteFormProps {
   unitIdPreset?: string;
   unitCodePreset?: string;
   editResident?: CondominiumUnitResident | null;
-  editAccount?: AccountResponse | null;
+  editUserId?: string;
   residentImageUrl?: string; // NOVA PROP
 }
 
@@ -144,7 +144,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   unitIdPreset,
   unitCodePreset,
   editResident,
-  editAccount,
+  editUserId,
   residentImageUrl,
 }) => {
   const { t } = useTranslation();
@@ -159,6 +159,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const [formData, setFormData] = useState<CondominiumUnitResidentRequest>({
     condominiumUnitId: unitIdPreset || "",
     userId: "",
+    fullname: "",
+    docType: 1,
+    doc: "",
+    email: "",
+    phone: "",
     unitType: "Owner",
     startDate: new Date().toISOString().split("T")[0],
     endDate: "",
@@ -168,7 +173,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     hasGatehouseAccess: false,
   });
 
-  const [account, setAccount] = useState<string>("");
+  const [createdUserId, setCreatedUserId] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeStep, setActiveStep] = useState(0);
   const [firstName, setFirstName] = useState("");
@@ -201,6 +206,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setFormData({
       condominiumUnitId: unitIdPreset || "",
       userId: "",
+      fullname: "",
+      docType: 1,
+      doc: "",
+      email: "",
+      phone: "",
       unitType: "Owner",
       startDate: new Date().toISOString().split("T")[0],
       endDate: "",
@@ -215,6 +225,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setDocumentNumber("");
     setEmail("");
     setPhone("");
+    setCreatedUserId("");
     setPhotoFile(null);
     setCoverFile(null);
   }, [open, unitCodePreset, unitIdPreset]);
@@ -231,11 +242,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   // Dentro do componente, adicionar no useEffect que configura o modo de edição:
 
   useEffect(() => {
-    if (!open || !isEditMode || !editAccount?.userId) {
+    if (!open || !isEditMode || !editUserId) {
       setDataEdit(undefined);
       return;
     }
-    void dataUser(editAccount.userId);
+    void dataUser(editUserId);
 
     // Se tiver uma imagem, carregar a prévia
     if (residentImageUrl) {
@@ -253,17 +264,17 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           console.error("Erro ao carregar imagem do morador:", error);
         });
     }
-  }, [open, isEditMode, editAccount?.userId, residentImageUrl]);
+  }, [open, isEditMode, editUserId, residentImageUrl]);
 
   const [dataEdit, setDataEdit] = useState<AccountResponse>();
 
   useEffect(() => {
-    if (!open || !isEditMode || !editAccount?.userId) {
+    if (!open || !isEditMode || !editUserId) {
       setDataEdit(undefined);
       return;
     }
-    void dataUser(editAccount.userId);
-  }, [open, isEditMode, editAccount?.userId]);
+    void dataUser(editUserId);
+  }, [open, isEditMode, editUserId]);
 
   useEffect(() => {
     if (!open) return;
@@ -274,6 +285,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         condominiumUnitId:
           editResident.condominiumUnitId || unitCodePreset || "",
         userId: editResident.userId || "",
+        fullname: editResident.fullname || "",
+        docType: editResident.docType || 1,
+        doc: editResident.doc || "",
+        email: editResident.email || "",
+        phone: editResident.phone || "",
         unitType: editResident.unitType || "Owner",
         startDate: editResident.startDate || "",
         endDate: editResident.endDate || "",
@@ -301,6 +317,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setFormData({
       condominiumUnitId: unitIdPreset || "",
       userId: "",
+      fullname: "",
+      docType: 1,
+      doc: "",
+      email: "",
+      phone: "",
       unitType: "Owner",
       startDate: new Date().toISOString().split("T")[0],
       endDate: "",
@@ -317,15 +338,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setPhone("");
     setPhotoFile(null);
     setCoverFile(null);
-  }, [
-    open,
-    unitCodePreset,
-    unitIdPreset,
-    isEditMode,
-    editResident,
-    editAccount,
-    dataEdit,
-  ]);
+  }, [open, unitCodePreset, unitIdPreset, isEditMode, editResident, dataEdit]);
 
   if (!open) return null;
 
@@ -441,10 +454,19 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const token = AuthService.getToken();
   const userId = TokenService.getUserId(token);
 
-  const buildResidentValidationPayload =
-    (): CondominiumUnitResidentRequest => ({
+  const buildResidentValidationPayload = (): CondominiumUnitResidentRequest => {
+    const residentUserId = isEditMode
+      ? formData.userId || editResident?.userId || userId || ""
+      : createdUserId || userId || "";
+
+    return {
       condominiumUnitId: formData.condominiumUnitId,
-      userId: userId!,
+      userId: residentUserId,
+      fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
+      docType: documentType,
+      doc: documentNumber.replace(/\D/g, ""),
+      email: email.trim(),
+      phone: normalizePhoneToE164(phone),
       unitType: formData.unitType,
       startDate: formData.startDate,
       endDate: formData.endDate || formData.startDate,
@@ -453,7 +475,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       canMakeReservations: formData.canMakeReservations,
       hasGatehouseAccess: formData.hasGatehouseAccess,
       commit: false,
-    });
+    };
+  };
 
   const mapBackendValidationErrors = (
     validations: Array<{ field: string; message: string }>,
@@ -518,6 +541,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       return;
     }
 
+    if (activeStep === 0) {
+      setActiveStep(1);
+      return;
+    }
+
     try {
       setLoading(true);
       if (activeStep === 1) {
@@ -527,21 +555,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         }
         setActiveStep((prev) => prev + 1);
         return;
-      }
-
-      const { valid, validations } = await unitResidentService.validateResident(
-        buildResidentValidationPayload(),
-      );
-
-      if (!valid && validations.length > 0) {
-        const { nextErrors } = mapBackendValidationErrors(
-          validations,
-          activeStep,
-        );
-        if (Object.keys(nextErrors).length > 0) {
-          setErrors(nextErrors);
-          return;
-        }
       }
     } catch (error) {
       const message =
@@ -587,7 +600,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           phone: normalizePhoneToE164(phone),
         });
 
-        setAccount(response);
+        setCreatedUserId(response);
       } else {
         const response = await AccountService.createAccount({
           name: firstName.trim(),
@@ -597,7 +610,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           email: email.trim(),
           phone: normalizePhoneToE164(phone),
         });
-        setAccount(response);
+        setCreatedUserId(response);
       }
 
       return true;
@@ -661,55 +674,71 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         }
       }
 
-      if (!account) {
+      const targetUserId = isEditMode
+        ? formData.userId || editResident?.userId
+        : createdUserId;
+
+      if (!targetUserId) {
         throw new Error(t("residenteForm.accountCreateError"));
       }
 
-      if(!isEditMode) {
+      if (!isEditMode) {
         await unitResidentService.createResident({
           condominiumUnitId: formData.condominiumUnitId,
-        userId: account,
-        unitType: formData.unitType,
-        startDate: formData.startDate,
-        endDate: formData.startDate,
-        billingContact: formData.billingContact,
-        canVote: formData.canVote,
-        canMakeReservations: formData.canMakeReservations,
-        hasGatehouseAccess: formData.hasGatehouseAccess,
-        commit: true,
-      });
-    }
-      
-      if (isEditMode && editAccount?.userId) {
-        await AccountService.updateAccount(editAccount.userId, {
-          name: firstName.trim(),
-          surname: lastName.trim(),
+          userId: targetUserId,
+          fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
           docType: documentType,
           doc: documentNumber.replace(/\D/g, ""),
           email: email.trim(),
           phone: normalizePhoneToE164(phone),
+          unitType: formData.unitType,
+          startDate: formData.startDate,
+          endDate: formData.startDate,
+          billingContact: formData.billingContact,
+          canVote: formData.canVote,
+          canMakeReservations: formData.canMakeReservations,
+          hasGatehouseAccess: formData.hasGatehouseAccess,
+          commit: true,
         });
+        console.log("criou morador");
+      }
 
-        // Atualizar a imagem se uma nova foi selecionada
-        if (photoFile && condominiumIdPreset && formData.condominiumUnitId) {
-          await condominiumUnitImageService.uploadUnitImage({
-            imageType: 1,
-            contentFile: photoFile,
-            condominiumId: condominiumIdPreset,
-            condominiumUnitId: formData.condominiumUnitId,
-            userId: editAccount.userId,
+      if (targetUserId) {
+        if (isEditMode) {
+          await AccountService.updateAccount(targetUserId, {
+            name: firstName.trim(),
+            surname: lastName.trim(),
+            docType: documentType,
+            doc: documentNumber.replace(/\D/g, ""),
+            email: email.trim(),
+            phone: normalizePhoneToE164(phone),
           });
-        }
 
-        // Upload resident photo after creation
-        if (photoFile) {
-          await condominiumUnitImageService.uploadUnitImage({
-            imageType: 1,
-            contentFile: photoFile,
-            condominiumId: condominiumIdPreset || "",
-            condominiumUnitId: formData.condominiumUnitId,
-            userId: account,
-          });
+          // Atualizar a imagem se uma nova foi selecionada
+          if (photoFile && condominiumIdPreset && formData.condominiumUnitId) {
+            await condominiumUnitImageService.uploadUnitImage({
+              imageType: 1,
+              contentFile: photoFile,
+              condominiumId: condominiumIdPreset,
+              condominiumUnitId: formData.condominiumUnitId,
+              userId: targetUserId,
+            });
+          }
+        } else {
+          // Upload resident photo after creation
+          if (photoFile) {
+            await condominiumUnitImageService.uploadUnitImage({
+              imageType: 1,
+              contentFile: photoFile,
+              condominiumId:
+                condominiumIdPreset ||
+                JSON.stringify(localStorage.getItem("condominiumId")),
+              condominiumUnitId:
+                formData.condominiumUnitId ||
+                JSON.stringify(localStorage.getItem("moradoresCondominiumId")),
+              userId: targetUserId,
+            });
+          }
         }
       }
 
@@ -719,6 +748,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setFormData({
         condominiumUnitId: unitIdPreset || "",
         userId: "",
+        fullname: "",
+        docType: 1,
+        doc: "",
+        email: "",
+        phone: "",
         unitType: "Owner",
         startDate: "",
         endDate: "",
@@ -732,6 +766,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setDocumentNumber("");
       setEmail("");
       setPhone("");
+      setCreatedUserId("");
       setPhotoFile(null);
       setCoverFile(null);
       setErrors({});
@@ -823,6 +858,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 },
               }}
               select
+              label={formData.unitType ? "" : "Tipo de unidade"}
               value={formData.unitType || ""}
               onChange={(e) => handleChange("unitType", e.target.value)}
               error={Boolean(errors.unitType)}
@@ -1104,7 +1140,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               component="img"
               src={coverPreview}
               alt="Prévia da imagem do condomínio"
-              sx={{ width: "60%", maxHeight: "40%", objectFit: "cover" }}
+              sx={{ height: "200px", objectFit: "cover" }}
             />
           ) : (
             <Typography
@@ -1168,7 +1204,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   }
                   setActiveStep((prev) => prev - 1);
                 }}
-                width="500px"
+                width="710px"
                 onClose={onClose}
                 disableContent={loading}
                 actions={renderActions()}
@@ -1216,7 +1252,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 }
                 setActiveStep((prev) => prev - 1);
               }}
-              width="500px"
+              width="710px"
               onClose={onClose}
               disableContent={loading}
               actions={renderActions()}

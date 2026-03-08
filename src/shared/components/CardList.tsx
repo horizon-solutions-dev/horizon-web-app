@@ -51,6 +51,11 @@ interface CardListProps {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   showPagination?: boolean;
+  cardMaxHeight?: number | string;
+  imageWidth?: number;
+  haveImage?: boolean;
+  imageHeight?: number;
+  actionsMarginTop?: number;
 }
 
 export default function CardList({
@@ -71,6 +76,11 @@ export default function CardList({
   showFilters = true,
   addButtonPlacement = "header",
   emptyImageLabel = "Sem imagem",
+  cardMaxHeight = 135,
+  imageWidth = 120,
+  imageHeight = 80,
+  actionsMarginTop = 1,
+  haveImage = true,
 }: CardListProps) {
   return (
     <Fragment>
@@ -234,7 +244,7 @@ export default function CardList({
                   alignItems: "center",
                   justifyContent: "space-between",
                   gap: 2,
-                  maxHeight: 135,
+                  maxHeight: cardMaxHeight,
                 }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -246,23 +256,33 @@ export default function CardList({
                     {item.title}
                   </Typography>
                   {item.subtitle ? (
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {item.subtitle}
-                    </Typography>
+                    typeof item.subtitle === "string" ? (
+                      <Typography variant="body2" color="text.secondary" noWrap>
+                        {item.subtitle}
+                      </Typography>
+                    ) : (
+                      <Box>{item.subtitle}</Box>
+                    )
                   ) : null}
                   {item.meta ? (
-                    <Typography variant="caption" color="text.secondary">
-                      {item.meta}
-                    </Typography>
+                    typeof item.meta === "string" ? (
+                      <Typography variant="caption" color="text.secondary">
+                        {item.meta}
+                      </Typography>
+                    ) : (
+                      <Box>{item.meta}</Box>
+                    )
                   ) : null}
                   {item.actions ? (
-                    <Box sx={{ mt: 1 }}>{item.actions}</Box>
+                    <Box sx={{ mt: actionsMarginTop }}>{item.actions}</Box>
                   ) : null}
                 </Box>
+                {
+                  haveImage && (
                 <Box
                   sx={{
-                    width: 120,
-                    height: 80,
+                    width: imageWidth,
+                    height: imageHeight,
                     borderRadius: 2,
                     background: "#fff",
                     display: "flex",
@@ -292,6 +312,8 @@ export default function CardList({
                     </Tooltip>
                   )}
                 </Box>
+                  )
+                }
               </Paper>
             </Grid>
           ))

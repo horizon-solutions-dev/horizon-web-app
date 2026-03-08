@@ -12,6 +12,7 @@ import {
 import {
   Business,
   Close,
+  DeleteOutline,
   EditOutlined,
   PlaceOutlined,
 } from "@mui/icons-material";
@@ -27,6 +28,7 @@ import OrganizacaoForm from "./OrganizacaoForm";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import { MdBusiness } from "react-icons/md";
 
 const pageSize = 4;
 
@@ -60,7 +62,8 @@ const Organizacoes: React.FC = () => {
   >([]);
   const [typesLoading, setTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
-  const { appStateModal, handleClose } = useAppStateModal();
+  const { appStateModal, handleClose,showDelete } = useAppStateModal();
+  const [isDelete, setIsDelete] = useState(false);
 
   const loadOrganizations = async () => {
     setListLoading(true);
@@ -181,7 +184,7 @@ const Organizacoes: React.FC = () => {
   const organizationName = orgName || "Organizações";
 
   return (
-    <Box className="page-container" sx={{ py: 4 }}>
+    <Box className="page-container">
       <Container maxWidth="xl">
         {isCadastroOpen ? (
           <OrganizacaoForm
@@ -217,11 +220,10 @@ const Organizacoes: React.FC = () => {
                   >
                     {organizationName}
                   </Typography>
-                  <BreadcrumbTrail items={["Organização", "Condôminios"]} />
+                  <BreadcrumbTrail items={["Organização", "Organizações"]} />
                 </Box>
               </Box>
               <Tooltip title="Clique aqui para Fechar a janela">
-
                 <IconButton
                   onClick={() => navigate("/dashboard")}
                   className="close-button"
@@ -241,6 +243,7 @@ const Organizacoes: React.FC = () => {
               ) : (
                 <>
                   <CardList
+                    haveImage={false}
                     title="Organizações"
                     showTitle={false}
                     searchPlaceholder="Buscar organizacao..."
@@ -276,18 +279,43 @@ const Organizacoes: React.FC = () => {
                         accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                         meta: getOrgTypeLabel(organization.orgType),
                         actions: (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            className="action-button-edit"
-                            startIcon={<EditOutlined />}
-                            onClick={() => {
-                              handleEdit(organization);
-                              console.log("Clicou em editar:", organization);
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 1,
+                              flexWrap: "wrap",
+                              mt: 2,
                             }}
                           >
-                            Editar
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              className="action-button-edit"
+                              startIcon={<EditOutlined />}
+                              onClick={() => {
+                                handleEdit(organization);
+                                console.log("Clicou em editar:", organization);
+                              }}
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                            size="small"
+                            variant="outlined"
+                            className="action-button-delete"
+                            startIcon={<DeleteOutline />}
+                            onClick={() => {
+                              setIsDelete(true);
+                              setEditingOrganization(organization);
+                              showDelete(
+                                "Confirma a exclusao do item?",
+                                `Voce escolheu a organização "${orgName}" para apagar.`,
+                              );
+                            }}
+                          >
+                            Excluir
                           </Button>
+                          </Box>
                         ),
                       }),
                     )}
@@ -305,9 +333,9 @@ const Organizacoes: React.FC = () => {
         title={appStateModal.title}
         message={appStateModal.message}
         detail={appStateModal.detail}
-        onConfirm={handleClose}
-        onClose={handleClose}
-        showCancel={false}
+        onConfirm={()=>{handleClose(); setIsDelete(false)}}
+        onClose={()=>{handleClose(); setIsDelete(false)}}
+        showCancel={isDelete ? true : false}
       />
     </Box>
   );
