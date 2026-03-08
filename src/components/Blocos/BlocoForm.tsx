@@ -225,6 +225,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
         title={appStateModal.title}
         message={appStateModal.message}
         detail={appStateModal.detail}
+        item={appStateModal.item}
         onConfirm={handleModalClose}
         onClose={handleModalClose}
         showCancel={false}

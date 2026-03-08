@@ -10,6 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import {
+  Article,
   Business,
   Close,
   DeleteOutline,
@@ -28,7 +29,6 @@ import OrganizacaoForm from "./OrganizacaoForm";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
-import { MdBusiness } from "react-icons/md";
 
 const pageSize = 4;
 
@@ -62,7 +62,7 @@ const Organizacoes: React.FC = () => {
   >([]);
   const [typesLoading, setTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
-  const { appStateModal, handleClose,showDelete } = useAppStateModal();
+  const { appStateModal, handleClose, showDelete } = useAppStateModal();
   const [isDelete, setIsDelete] = useState(false);
 
   const loadOrganizations = async () => {
@@ -172,6 +172,17 @@ const Organizacoes: React.FC = () => {
     setEditingOrganization(null);
   };
 
+  const formatCNPJ = (cnpj: string) => {
+    if (!cnpj) return "";
+
+    const cleaned = cnpj.replace(/\D/g, "");
+
+    return cleaned.replace(
+      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/,
+      "$1.$2.$3/$4-$5",
+    );
+  };
+
   const handleSaved = async () => {
     await loadOrganizations();
     handleCloseForm();
@@ -263,21 +274,50 @@ const Organizacoes: React.FC = () => {
                       (organization, index) => ({
                         id: organization.organizationId,
                         title: organization.name || "Sem nome",
-                        subtitle: (
-                          <>
-                            <PlaceOutlined
-                              sx={{
-                                fontSize: 14,
-                                mr: 0.5,
-                                verticalAlign: "middle",
-                              }}
-                            />
-                            {organization.city || "-"} -{" "}
-                            {organization.state || "-"}
-                          </>
-                        ),
-                        accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                         meta: getOrgTypeLabel(organization.orgType),
+                        subtitle: (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 0.35,
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <PlaceOutlined
+                                sx={{
+                                  fontSize: 14,
+                                  mr: 0.5,
+                                  verticalAlign: "middle",
+                                }}
+                              />
+                              {organization.city || "-"} -{" "}
+                              {organization.state || "-"}
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.7,
+                              }}
+                            >
+                              <Article sx={{ fontSize: 14 }} />
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {formatCNPJ(organization.doc)}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        ),
+
+                        accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                         actions: (
                           <Box
                             sx={{
@@ -300,21 +340,21 @@ const Organizacoes: React.FC = () => {
                               Editar
                             </Button>
                             <Button
-                            size="small"
-                            variant="outlined"
-                            className="action-button-delete"
-                            startIcon={<DeleteOutline />}
-                            onClick={() => {
-                              setIsDelete(true);
-                              setEditingOrganization(organization);
-                              showDelete(
-                                "Confirma a exclusao do item?",
-                                `Voce escolheu a organização "${orgName}" para apagar.`,
-                              );
-                            }}
-                          >
-                            Excluir
-                          </Button>
+                              size="small"
+                              variant="outlined"
+                              className="action-button-delete"
+                              startIcon={<DeleteOutline />}
+                              onClick={() => {
+                                setIsDelete(true);
+                                setEditingOrganization(organization);
+                                showDelete(
+                                  "Confirma a exclusao do item?",
+                                  `${orgName}`,
+                                );
+                              }}
+                            >
+                              Excluir
+                            </Button>
                           </Box>
                         ),
                       }),
@@ -333,8 +373,15 @@ const Organizacoes: React.FC = () => {
         title={appStateModal.title}
         message={appStateModal.message}
         detail={appStateModal.detail}
-        onConfirm={()=>{handleClose(); setIsDelete(false)}}
-        onClose={()=>{handleClose(); setIsDelete(false)}}
+        item={appStateModal.item}
+        onConfirm={() => {
+          handleClose();
+          setIsDelete(false);
+        }}
+        onClose={() => {
+          handleClose();
+          setIsDelete(false);
+        }}
         showCancel={isDelete ? true : false}
       />
     </Box>

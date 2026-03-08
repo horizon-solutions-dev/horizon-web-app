@@ -14,10 +14,6 @@ import {
 import {
   DeleteOutline,
   EditOutlined,
-  HomeOutlined,
-  BusinessOutlined,
-  ApartmentOutlined,
-  LocationOnOutlined,
   Close,
   Apartment,
   LocationOn,
@@ -35,6 +31,7 @@ import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { useTranslation } from "react-i18next";
 import { AppStateModal } from "../../shared/components";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import axios from "axios";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
@@ -103,8 +100,19 @@ const CondominioPage: React.FC = () => {
       setTotalPages(computedTotalPages);
       setCondominiums(normalized);
     } catch (error) {
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
       const message =
-        error instanceof Error ? error.message : "Erro ao carregar condom�nios.";
+        error instanceof Error ? error.message : "Erro ao carregar condominios.";
+      const isNotFound = status === 404 || /not found|nada encontrado/i.test(message);
+
+      if (isNotFound) {
+        setCondominiums([]);
+        setListPage(1);
+        setTotalPages(1);
+        setListError(null);
+        return;
+      }
+
       setListError(message);
     } finally {
       setListLoading(false);
@@ -121,7 +129,7 @@ const CondominioPage: React.FC = () => {
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao carregar tipos de condom�nio.";
+          : "Erro ao carregar tipos de côndomínio.";
       setTypesError(message);
     } finally {
       setTypesLoading(false);
@@ -140,16 +148,6 @@ const CondominioPage: React.FC = () => {
     return match?.description || match?.value || String(value);
   };
 
-  const getCondominiumTypeIcon = (condominiumType: string | number) => {
-    const label = getCondominiumTypeLabel(condominiumType);
-    if (condominiumType === "Commercial" || label === "Comercial") {
-      return <BusinessOutlined sx={{ fontSize: 14 }} />;
-    }
-    if (label === "Residencial") {
-      return <HomeOutlined sx={{ fontSize: 14 }} />;
-    }
-    return <ApartmentOutlined sx={{ fontSize: 14 }} />;
-  };
 
   const getCondominiumImageUrl = (condominium: Condominium) => {
     if (!condominium.thumbnailFile || !condominium.contentType) return undefined;
@@ -244,7 +242,7 @@ const CondominioPage: React.FC = () => {
               setEditingCondominium(condominium);
               showDelete(
                 "Confirma a exclusao do item?",
-                `Voce escolheu o condom�nio "${condominium.name}" para apagar.`,
+                `${condominium.name}`,
               );
             }}
           >
@@ -329,38 +327,37 @@ const CondominioPage: React.FC = () => {
                   <CircularProgress size={20} />
                   <Typography variant="body2">{t("common.loading")}</Typography>
                 </Box>
-              ) : listError ? (
-                <Typography variant="body2" color="error.main">
-                  {listError}
-                </Typography>
-              ) : condominiums.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  {t("condominio.notFound")}
-                </Typography>
               ) : (
-                <CardList
-                  title={t("condominio.condominiumsList")}
-                  showTitle={false}
-                  searchPlaceholder={t("condominio.searchPlaceholder")}
-                  onSearchChange={setSearchText}
-                  onAddClick={handleOpenCreate}
-                  addLabel={t("common.new")}
-                  addButtonPlacement="toolbar"
-                  emptyImageLabel={t("common.noImage")}
-                  showFilters={true}
-                  showPagination={true}
-                  cardMaxHeight="none"
-                  imageWidth={145}
-                  imageHeight={90}
-                  actionsMarginTop={0.5}
-                  page={listPage}
-                  totalPages={totalPages}
-                  onPageChange={(page) => {
-                    setListPage(page);
-                    loadCondominiums(page);
-                  }}
-                  items={condominiumItems}
-                />
+                <>
+                  {listError ? (
+                    <Typography variant="body2" color="error.main" sx={{ mb: 1 }}>
+                      {listError}
+                    </Typography>
+                  ) : null}
+                  <CardList
+                    title={t("condominio.condominiumsList")}
+                    showTitle={false}
+                    searchPlaceholder={t("condominio.searchPlaceholder")}
+                    onSearchChange={setSearchText}
+                    onAddClick={handleOpenCreate}
+                    addLabel={t("common.new")}
+                    addButtonPlacement="toolbar"
+                    emptyImageLabel={t("common.noImage")}
+                    showFilters={true}
+                    showPagination={true}
+                    cardMaxHeight="none"
+                    imageWidth={145}
+                    imageHeight={90}
+                    actionsMarginTop={0.5}
+                    page={listPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => {
+                      setListPage(page);
+                      loadCondominiums(page);
+                    }}
+                    items={condominiumItems}
+                  />
+                </>
               )}
             </Paper>
           </Paper>
@@ -373,6 +370,7 @@ const CondominioPage: React.FC = () => {
         title={appStateModal.title}
         message={appStateModal.message}
         detail={appStateModal.detail}
+        item={appStateModal.item}
         onConfirm={handleClose}
         onClose={handleClose}
       />

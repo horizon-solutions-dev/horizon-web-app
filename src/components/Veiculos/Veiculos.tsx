@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
@@ -311,6 +311,7 @@ const Veiculos: React.FC = () => {
         title={appStateModal.title}
         message={appStateModal.message}
         detail={appStateModal.detail}
+        item={appStateModal.item}
         onConfirm={handleClose}
         onClose={handleClose}
       />
@@ -319,6 +320,7 @@ const Veiculos: React.FC = () => {
 };
 
 export default Veiculos;
+
 
 
 

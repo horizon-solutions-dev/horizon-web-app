@@ -311,6 +311,7 @@ const Boletos: React.FC = () => {
         title={appStateModal.title}
         message={appStateModal.message}
         detail={appStateModal.detail}
+        item={appStateModal.item}
         onConfirm={handleClose}
         onClose={handleClose}
       />

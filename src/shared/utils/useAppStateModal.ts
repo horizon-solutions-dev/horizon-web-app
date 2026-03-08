@@ -8,6 +8,7 @@ interface ModalState {
   message: string;
   detail?: string;
   showCancel?: boolean;
+  item?: string;
 }
 
 /**
@@ -47,6 +48,7 @@ export const useAppStateModal = () => {
       title: "Ação concluída com sucesso!",
       message,
       detail,
+      item: "",
     });
   }, []);
 
@@ -57,18 +59,22 @@ export const useAppStateModal = () => {
       title: "Ocorreu um erro.",
       message,
       detail,
-      
+      item: "",
     });
   }, []);
 
-  const showDelete = useCallback((message: string, detail?: string, showCancel?: boolean) => {
+  const showDelete = useCallback(
+    (message: string, item?: string, showCancel?: boolean, detail?: string) => {
     setState({
       open: true,
       type: "delete",
       title: "Deletar?",
       message,
+      item: item ?? "",
       showCancel: showCancel ?? true,
-      detail: detail || "Esta ação é permanente e não poderá ser desfeita.",
+      detail:
+        detail ||
+        "O item sairá da lista, mas suas informações continuarão registradas no sistema.",
     });
   }, []);
 
@@ -79,6 +85,7 @@ export const useAppStateModal = () => {
       title: "Sua sessao expirou.",
       message: "Por favor, faca login novamente para continuar usando o sistema.",
       detail: "Sua sessao expirou por inatividade.",
+      item: "",
     });
   }, []);
 
@@ -89,6 +96,7 @@ export const useAppStateModal = () => {
       title: state.title,
       message: state.message,
       detail: state.detail,
+      item: state.item,
     },
     handleClose,
     showSuccess,
@@ -97,4 +105,3 @@ export const useAppStateModal = () => {
     showSessionExpired,
   };
 };
-

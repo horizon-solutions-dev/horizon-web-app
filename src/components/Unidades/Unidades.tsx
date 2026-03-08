@@ -308,7 +308,7 @@ const Unidades: React.FC = () => {
   const handleDelete = (unit: CondominiumUnit) => {
     showDelete(
       "Confirma a exclusao do item?",
-      `Voce escolheu o condominio "${selectedCondominium?.name || "-"}". Item selecionado para apagar: unidade "${unit.unitCode || "-"}".`,
+      `${unit.unitCode || "-"}`,
     );
   };
 
@@ -324,6 +324,7 @@ const Unidades: React.FC = () => {
 
   const handleSaved = async () => {
     await loadUnits(selectedBlockId || undefined, unitsPage);
+    handleCloseForm();
   };
 
   const navigate = useNavigate()
@@ -797,6 +798,7 @@ const Unidades: React.FC = () => {
         title={appStateModal.title}
         message={appStateModal.message}
         detail={appStateModal.detail}
+        item={appStateModal.item}
         onConfirm={handleClose}
         onClose={handleClose}
         //showCancel={false}
@@ -806,5 +808,6 @@ const Unidades: React.FC = () => {
 };
 
 export default Unidades;
+
 
 

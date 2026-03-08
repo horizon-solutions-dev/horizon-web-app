@@ -403,7 +403,7 @@ const Residentes: React.FC = () => {
     const residentLabel = resident.fullname || resident.userId || "-";
     showDelete(
       "Confirma a exclusao do item?",
-      `Voce escolheu o condominio "${selectedCondominium?.name || "-"}". Item selecionado para apagar: morador "${residentLabel}".`,
+      `${residentLabel}`,
     );
   }
 
@@ -920,6 +920,7 @@ const Residentes: React.FC = () => {
         title={appStateModal.title}
         message={appStateModal.message}
         detail={appStateModal.detail}
+        item={appStateModal.item}
         onConfirm={handleClose}
         onClose={handleClose}
       />

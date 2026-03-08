@@ -12,7 +12,6 @@ import {
   Tooltip,
 } from "@mui/material";
 import {
-  Business,
   DeleteOutline,
   EditOutlined,
   Close,
@@ -245,7 +244,7 @@ const Blocos: React.FC = () => {
     setBlockToDelete(block);
     showDelete(
       "Confirma a exclusao do item?",
-      `Voce escolheu o condominio "${selectedCondominium?.name || "-"}". Item selecionado para apagar: bloco "${block.name}"${block.code ? ` (${block.code})` : ""}.`,
+      `${block?.name || "-"}`,
     );
   };
 
@@ -288,6 +287,8 @@ const Blocos: React.FC = () => {
 
   const handleSaved = async () => {
     await loadBlocks(blocksPage);
+    setIsCadastroOpen(false);
+    setEditingBlock(null);
   };
 
   return (
@@ -647,6 +648,7 @@ const Blocos: React.FC = () => {
         title={appStateModal.title}
         message={appStateModal.message}
         detail={appStateModal.detail}
+        item={appStateModal.item}
         onConfirm={handleClose}
         onClose={handleClose}
       />
@@ -655,3 +657,4 @@ const Blocos: React.FC = () => {
 };
 
 export default Blocos;
+

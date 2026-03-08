@@ -7,7 +7,7 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import { Close, DeleteForeverOutlined, WarningAmberRounded } from "@mui/icons-material";
+import { Close, DeleteForeverOutlined, InfoOutlined } from "@mui/icons-material";
 import "./DeleteConfirmModal.scss";
 
 export interface DeleteConfirmModalProps {
@@ -45,12 +45,18 @@ export default function DeleteConfirmModal({
   const [submitting, setSubmitting] = useState(false);
 
   const resolvedTitle = useMemo(
-    () => title || `Excluir ${entityLabel}?`,
+    () => title || `Deletar ${entityLabel}?`,
     [title, entityLabel],
   );
   const resolvedMessage = useMemo(
-    () => message || "Essa ação é permanente e não poderá ser desfeita.",
+    () => message || "Confirma a exclusao do item?",
     [message],
+  );
+  const resolvedDetail = useMemo(
+    () =>
+      detail ||
+      "O item sairá da lista, mas suas informações continuarão registradas no sistema.",
+    [detail],
   );
 
   const handleClose = () => {
@@ -101,12 +107,17 @@ export default function DeleteConfirmModal({
           <Box className="delete-modal__badge">
             <DeleteForeverOutlined />
           </Box>
-          <WarningAmberRounded className="delete-modal__warn" />
         </Box>
 
         <Typography className="delete-modal__title">{resolvedTitle}</Typography>
         <Typography className="delete-modal__message">{resolvedMessage}</Typography>
-        {detail ? <Typography className="delete-modal__detail">{detail}</Typography> : null}
+
+        {resolvedDetail ? (
+          <Box className="delete-modal__detail">
+            <InfoOutlined />
+            <Typography component="span">{resolvedDetail}</Typography>
+          </Box>
+        ) : null}
 
         <Box className="delete-modal__actions">
           <Button

@@ -76,7 +76,7 @@ export default function CardList({
   showFilters = true,
   addButtonPlacement = "header",
   emptyImageLabel = "Sem imagem",
-  cardMaxHeight = 135,
+  cardMaxHeight = 165,
   imageWidth = 120,
   imageHeight = 80,
   actionsMarginTop = 1,

@@ -36,6 +36,7 @@ export interface AppStateModalProps {
   onConfirm: () => void | Promise<void>;
   onCancel?: () => void;
   onClose?: () => void;
+  item?: string;
 }
 
 const getModalConfig = (type: AppStateModalType) => {
@@ -61,7 +62,7 @@ const getModalConfig = (type: AppStateModalType) => {
       color: "#d32f2f",
       bgColor: "#ffebee",
       accentColor: "#f44336",
-      defaultConfirmLabel: "Delete",
+      defaultConfirmLabel: "Deletar",
     },
     "session-expired": {
       icon: <Info />,
@@ -97,8 +98,10 @@ export default function AppStateModal({
   onConfirm,
   onCancel,
   onClose,
+  item,
 }: AppStateModalProps) {
   const config = getModalConfig(type);
+  const isDelete = type === "delete";
   const finalConfirmLabel = confirmLabel || config.defaultConfirmLabel;
 
   const handleConfirm = async () => {
@@ -123,9 +126,11 @@ export default function AppStateModal({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: "12px",
-          boxShadow: `0 8px 32px rgba(0, 0, 0, 0.15)`,
-          border: `.5px solid ${config.color}`,
+          borderRadius: isDelete ? "26px" : "12px",
+          boxShadow: isDelete
+            ? "0 20px 50px rgba(15, 23, 42, 0.25)"
+            : "0 8px 32px rgba(0, 0, 0, 0.15)",
+          border: isDelete ? "1px solid #e5e7eb" : `.5px solid ${config.color}`,
         },
       }}
     >
@@ -133,9 +138,9 @@ export default function AppStateModal({
         sx={{
           position: "relative",
           textAlign: "center",
-          pt: 4,
-          pb: 3,
-          px: 3,
+          pt: isDelete ? 3 : 4,
+          pb: isDelete ? 2.5 : 3,
+          px: isDelete ? 4 : 3,
           //   background: `linear-gradient(135deg, ${config.bgColor} 0%, white 100%)`,
         }}
       >
@@ -145,11 +150,15 @@ export default function AppStateModal({
             disabled={isLoading}
             sx={{
               position: "absolute",
-              right: 12,
-              top: 12,
-              color: "text.secondary",
+              right: 14,
+              top: 14,
+              color: isDelete ? "#6b7280" : "text.secondary",
+              backgroundColor: isDelete ? "#eeeff2" : "transparent",
+              width: isDelete ? 40 : "auto",
+              height: isDelete ? 40 : "auto",
               "&:hover": {
-                color: "error.main",
+                color: isDelete ? "#374151" : "error.main",
+                backgroundColor: isDelete ? "#e5e7eb" : "transparent",
               },
             }}
           >
@@ -162,13 +171,15 @@ export default function AppStateModal({
           sx={{
             fontSize: "64px",
             color: config.color,
-            mb: 2,
+            mb: isDelete ? 1.25 : 2,
             display: "flex",
             justifyContent: "center",
             "& svg": {
-              fontSize: "64px",
-              animation:
-                type === "success"
+              fontSize: isDelete ? "74px" : "64px",
+              color: isDelete ? "#ef2b2d" : config.color,
+              animation: isDelete
+                ? "none"
+                : type === "success"
                   ? "scaleIn 0.5s ease-out"
                   : "slideUp 0.5s ease-out",
             },
@@ -201,9 +212,11 @@ export default function AppStateModal({
         <Typography
           variant="h5"
           sx={{
-            fontWeight: 600,
+            fontWeight: isDelete ? 700 : 600,
             color: "text.primary",
+            fontSize: isDelete ? "1.8rem" : undefined,
             mb: 1,
+            lineHeight: isDelete ? 1.1 : undefined,
           }}
         >
           {title}
@@ -214,31 +227,51 @@ export default function AppStateModal({
           variant="body2"
           sx={{
             color: "text.secondary",
-            mb: detail ? 1 : 0,
+            mb: detail ? (isDelete ? 2 : 1) : 0,
+            fontSize: isDelete ? "1.05rem" : undefined,
             lineHeight: 1.6,
           }}
         >
           {message}
         </Typography>
+        {isDelete && item ? (
+          <Typography
+            variant="body1"
+            sx={{
+              color: "text.primary",
+              fontWeight: 700,
+              fontSize: "1.15rem",
+              mb: detail ? 2 : 0,
+            }}
+          >
+            {item}
+          </Typography>
+        ) : null}
 
         {/* Detail */}
         {detail &&
           (type === "delete" ? (
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <Box sx={{ height: 1, backgroundColor: "divider", mb: 1.2 }} />
+            <Box
+              sx={{
+                mt: 1,
+                mb: 2,
+                p: 1.5,
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 1,
+                backgroundColor: "#f6f3e8",
+                color: "#5f6368",
+                textAlign: "left",
+              }}
+            >
+              <Info sx={{ color: "#1f73d8", fontSize: 22, mt: "2px" }} />
               <Typography
-                variant="caption"
-                sx={{
-                  display: "block",
-                  fontSize: "0.78rem",
-                  fontWeight: 700,
-                  color: "text.primary",
-                  lineHeight: 1.5,
-                }}
+                variant="body2"
+                sx={{ fontSize: "0.95rem", lineHeight: 1.4 }}
               >
                 {detail}
               </Typography>
-              <Box sx={{ height: 1, backgroundColor: "divider", mt: 1.2 }} />
             </Box>
           ) : (
             <Typography
@@ -258,9 +291,9 @@ export default function AppStateModal({
       {/* Actions */}
       <DialogActions
         sx={{
-          pt: 2,
-          pb: 2,
-          px: 3,
+          pt: isDelete ? 1 : 2,
+          pb: isDelete ? 3 : 2,
+          px: isDelete ? 4 : 3,
           gap: 1,
           flexDirection: showCancel ? "row" : "column",
           "& button": {
@@ -277,17 +310,17 @@ export default function AppStateModal({
             disabled={isLoading}
             sx={{
               flex: showCancel ? 1 : undefined,
-              backgroundColor: "#F1F3F5",
-              color: "#495057",
-              borderColor: "#DEE2E6",
+              backgroundColor: isDelete ? "#edeef1" : "#F1F3F5",
+              color: isDelete ? "#323841" : "#495057",
+              borderColor: isDelete ? "#e3e5ea" : "#DEE2E6",
               "&:hover": {
-                backgroundColor: "#E9ECEF",
+                backgroundColor: isDelete ? "#e4e6eb" : "#E9ECEF",
               },
               padding: "14px 40px !important",
-              minWidth: " 140px !important",
+              minWidth: "140px !important",
               fontSize: "14px !important",
-              fontWeight: "600 !important",
-              borderRadius: "12px !important",
+              fontWeight: "700 !important",
+              borderRadius: isDelete ? "16px !important" : "12px !important",
               height: "auto !important",
               lineHeight: "normal !important",
               "&:disabled": {
@@ -307,19 +340,24 @@ export default function AppStateModal({
           loading={isLoading}
           sx={{
             flex: showCancel ? 1 : undefined,
-
-            backgroundColor: config.accentColor,
+            background: isDelete
+              ? "linear-gradient(135deg, #ff2f2f 0%, #ef2626 100%)"
+              : config.accentColor,
             padding: "14px 40px !important",
-            minWidth: " 140px !important",
+            minWidth: "140px !important",
             fontSize: "14px !important",
-            fontWeight: "600 !important",
-            borderRadius: "12px !important",
+            fontWeight: "700 !important",
+            borderRadius: isDelete ? "16px !important" : "12px !important",
             height: "auto !important",
             lineHeight: "normal !important",
             color: "white",
             "&:hover": {
-              backgroundColor: config.color,
-              boxShadow: `0 4px 12px ${config.color}40`,
+              background: isDelete
+                ? "linear-gradient(135deg, #f92929 0%, #e91f1f 100%)"
+                : config.color,
+              boxShadow: isDelete
+                ? "0 8px 18px rgba(239, 38, 38, 0.32)"
+                : `0 4px 12px ${config.color}40`,
             },
             "&:disabled": {
               backgroundColor: config.accentColor,

@@ -1,4 +1,4 @@
-﻿import { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -1363,6 +1363,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         title={appStateModal.title}
         message={appStateModal.message}
         detail={appStateModal.detail}
+        item={appStateModal.item}
         onConfirm={handleModalClose}
         onClose={handleModalClose}
         showCancel={false}

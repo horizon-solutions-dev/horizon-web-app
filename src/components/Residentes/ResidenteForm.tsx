@@ -1218,6 +1218,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 title={appStateModal.title}
                 message={appStateModal.message}
                 detail={appStateModal.detail}
+        item={appStateModal.item}
                 onConfirm={handleModalClose}
                 onClose={handleModalClose}
                 showCancel={false}
@@ -1266,6 +1267,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               title={appStateModal.title}
               message={appStateModal.message}
               detail={appStateModal.detail}
+        item={appStateModal.item}
               onConfirm={handleModalClose}
               onClose={handleModalClose}
               showCancel={false}
@@ -1278,3 +1280,4 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 };
 
 export default ResidenteForm;
+

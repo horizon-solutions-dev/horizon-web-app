@@ -33,26 +33,17 @@ const slideDown = keyframes`
 
 // ─── Styled components ────────────────────────────────────────────────────────
 
-const TriggerBtn = styled(ButtonBase)<{ open?: number }>(({ open }) => ({
+const TriggerBtn = styled(ButtonBase)<{ open?: number }>(() => ({
   display: "flex",
   alignItems: "center",
   gap: 7,
   height: 36,
   padding: "0 10px",
-  borderRadius: 8,
-  border: open
-    ? "1.5px solid rgba(99,179,237,0.55)"
-    : "1.5px solid rgba(255,255,255,0.11)",
-  background: open ? "rgba(99,179,237,0.08)" : "rgba(255,255,255,0.04)",
   backdropFilter: "blur(10px)",
-  boxShadow: open
-    ? "0 0 0 3px rgba(99,179,237,0.12)"
-    : "0 1px 4px rgba(0,0,0,0.25)",
+
   transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
   "&:hover": {
-    background: "rgba(99,179,237,0.08)",
-    border: "1.5px solid rgba(99,179,237,0.4)",
-    boxShadow: "0 0 0 3px rgba(99,179,237,0.10)",
+
   },
 }));
 
@@ -61,7 +52,6 @@ const DropdownPaper = styled(Paper)(() => ({
   padding: "5px 0",
   borderRadius: 10,
   background: "rgba(14, 22, 40, 0.97)",
-  border: "1.5px solid rgba(99,179,237,0.18)",
   boxShadow: "0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)",
   backdropFilter: "blur(20px)",
   minWidth: 200,
@@ -118,7 +108,7 @@ export default function LanguageSelector({ i18n }: LanguageSelectorProps) {
   }, [open]);
 
   return (
-    <Box sx={{ position: "relative", display: "inline-block" }}>
+    <Box sx={{ position: "relative", display: "inline-block", border: 'none' }}>
       {/* Trigger button */}
       <TriggerBtn
         ref={anchorRef}
@@ -129,6 +119,7 @@ export default function LanguageSelector({ i18n }: LanguageSelectorProps) {
         {/* Flag using flag-icons */}
         <Box
           sx={{
+             borderColor: 'red !important' ,
             borderRadius: "3px",
             overflow: "hidden",
             boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
