@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./Unidades.scss";
 import {
   Box,
@@ -6,46 +6,66 @@ import {
   Paper,
   Typography,
   Button,
-  Snackbar,
-  Alert,
   CircularProgress,
   IconButton,
   Tooltip,
 } from "@mui/material";
 import {
-  Business,
   DeleteOutline,
   EditOutlined,
   Close,
   MeetingRoom,
-  Apartment,
-  SettingsOutlined,
-  ChevronRight,
+  ViewModule,
+  Home,
+  LocationOn,
+  Article,
+  SearchOutlined,
+  Person,
 } from "@mui/icons-material";
 import {
   unitService,
   type CondominiumUnit,
   type UnitTypeEnum,
 } from "../../services/unitService";
-import { blockService, type CondominiumBlock } from "../../services/blockService";
-import { condominiumService, type Condominium } from "../../services/condominiumService";
+import {
+  blockService,
+  type CondominiumBlock,
+} from "../../services/blockService";
+import {
+  condominiumService,
+  type Condominium,
+  type CondominiumTypeEnum,
+} from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
+import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import UnidadeForm from "./UnidadeForm";
-
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import { useNavigate } from "react-router-dom";
+import { condominiumImageService } from "../../services/condominiumImageService";
+import { useTranslation } from "react-i18next";
+import { formatCNPJ } from "../../shared/utils/funcoes";
+import Allocation from "../../assets/allocation.png";
 const Unidades: React.FC = () => {
-  const [activeView, setActiveView] = useState<"condominios" | "unidades">("condominios");
+  const [activeView, setActiveView] = useState<"condominios" | "unidades">(
+    "condominios",
+  );
+  const { t } = useTranslation();
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [organizationName, setOrganizationName] = useState("");
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [listPage, setListPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [condominiumsPage, setCondominiumsPage] = useState(1);
+  const [condominiumsTotalPages, setCondominiumsTotalPages] = useState(1);
+  const [unitsPage, setUnitsPage] = useState(1);
+  const [unitsTotalPages, setUnitsTotalPages] = useState(1);
   const pageSize = 4;
 
   const [condominiumIdQuery, setCondominiumIdQuery] = useState("");
-  const [selectedCondominium, setSelectedCondominium] = useState<Condominium | null>(null);
+  const [selectedCondominium, setSelectedCondominium] =
+    useState<Condominium | null>(null);
   const [units, setUnits] = useState<CondominiumUnit[]>([]);
   const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [unitTypes, setUnitTypes] = useState<UnitTypeEnum[]>([]);
@@ -55,18 +75,10 @@ const Unidades: React.FC = () => {
   const [editingUnit, setEditingUnit] = useState<CondominiumUnit | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [unitSearchText, setUnitSearchText] = useState("");
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "info" | "warning",
-  });
-
-  const handleNotify = (
-    message: string,
-    severity: "success" | "error" | "info" | "warning" = "success",
-  ) => {
-    setSnackbar({ open: true, message, severity });
-  };
+  const [blockSearchText, setBlockSearchText] = useState("");
+  const [blockPage, setBlockPage] = useState(1);
+  const [selectedBlockId, setSelectedBlockId] = useState("");
+  const { appStateModal, handleClose, showDelete } = useAppStateModal();
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -87,8 +99,12 @@ const Unidades: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
+          const nameStorage = localStorage.getItem("condominium");
+          const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
-            organizations?.[0]?.name || organizations?.[0]?.legalName;
+            organizations?.find(
+              (o) => o.organizationId === dataParse?.organizationId,
+            )?.name || dataParse?.name;
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore organization name errors
@@ -101,9 +117,10 @@ const Unidades: React.FC = () => {
           1,
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
-      setListPage(response?.paging?.pageNumber ?? pageNumber);
-      setTotalPages(computedTotalPages);
+      setCondominiumsPage(response?.paging?.pageNumber ?? pageNumber);
+      setCondominiumsTotalPages(computedTotalPages);
       setCondominiums(normalized);
+      await loadCondominiumImages(normalized);
     } catch (error) {
       const message =
         error instanceof Error
@@ -115,8 +132,44 @@ const Unidades: React.FC = () => {
     }
   };
 
-  const loadUnits = async (pageNumber = 1) => {
-    if (!condominiumIdQuery.trim()) {
+  const [condominiumImages, setCondominiumImages] = useState<
+    Record<string, string>
+  >({});
+  const loadCondominiumImages = async (items: Condominium[]) => {
+    const previews: Record<string, string> = {};
+    await Promise.all(
+      items.map(async (condominium) => {
+        try {
+          const list = await condominiumImageService.getCondominiumImages(
+            condominium.condominiumId,
+            "Facade",
+          );
+          const first = list?.[0];
+          if (!first?.condominiumImageId) return;
+          const detail = await condominiumImageService.getCondominiumImageById(
+            first.condominiumImageId,
+          );
+          if (detail?.contentFile && detail?.contentType) {
+            previews[condominium.condominiumId] =
+              `data:${detail.contentType};base64,${detail.contentFile}`;
+          }
+        } catch (error) {
+          console.error("Erro ao carregar imagem do condomínio:", error);
+          // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
+          // Não loga nada no console para não poluir
+        }
+      }),
+    );
+    setCondominiumImages(previews);
+  };
+
+  const loadUnits = async (
+    blockId?: string,
+    pageNumber = 1,
+    condominiumIdOverride?: string,
+  ) => {
+    const condominiumId = (condominiumIdOverride ?? condominiumIdQuery).trim();
+    if (!condominiumId) {
       setListError("Informe o CondominiumId para carregar as unidades.");
       return;
     }
@@ -124,22 +177,37 @@ const Unidades: React.FC = () => {
     setListLoading(true);
     setListError(null);
     try {
-      const data = await unitService.getUnitsByCondominium(
-        condominiumIdQuery.trim(),
-        pageNumber,
-        pageSize,
-      );
-      const normalized = data?.data ?? [];
+      const response = blockId
+        ? await unitService.getUnitsByBlock(blockId, pageNumber, pageSize)
+        : await unitService.getUnitsByCondominium(
+            condominiumId,
+            pageNumber,
+            pageSize,
+          );
+      const normalized = response?.items ?? [];
       const computedTotalPages =
-        data?.totalPages ??
-        Math.max(1, Math.ceil((data?.total ?? normalized.length) / pageSize));
-      setListPage(data?.pageNumber ?? pageNumber);
-      setTotalPages(computedTotalPages);
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
+        );
+      setUnitsPage(response?.paging?.pageNumber ?? pageNumber);
+      setUnitsTotalPages(computedTotalPages);
       setUnits(normalized);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar unidades.";
-      setListError(message);
+      const isNotFoundMessage = /nada encontrado|not found/i.test(message);
+      setUnits([]);
+      setUnitsPage(pageNumber);
+      if (isNotFoundMessage) {
+        setListError(null);
+        setUnitsTotalPages(1);
+        setUnits([]);
+        setUnitsPage(1);
+      } else {
+        setListError(message);
+      }
     } finally {
       setListLoading(false);
     }
@@ -147,8 +215,8 @@ const Unidades: React.FC = () => {
 
   const loadBlocks = async (condominiumId: string) => {
     try {
-      const data = await blockService.getBlocks(condominiumId);
-      setBlocks(data?.data ?? []);
+      const response = await blockService.getBlocks(condominiumId);
+      setBlocks(response?.items ?? []);
     } catch (error) {
       console.error("Erro ao carregar blocos:", error);
       setBlocks([]);
@@ -175,7 +243,61 @@ const Unidades: React.FC = () => {
   useEffect(() => {
     loadCondominiums(1);
     loadUnitTypes();
+    loadCondominiumTypes();
   }, []);
+
+  const [condominiumTypes, setCondominiumTypes] = useState<
+    CondominiumTypeEnum[]
+  >([]);
+
+  const getCondominiumImageUrl = (condominium: Condominium) => {
+    if (!condominium.thumbnailFile || !condominium.contentType)
+      return undefined;
+    return `data:${condominium.contentType};base64,${condominium.thumbnailFile}`;
+  };
+
+  const getCondominiumTypeLabel = (value: string | number) => {
+    const match = condominiumTypes.find(
+      (type) => type.id === value || type.value === value,
+    );
+    return match?.description || match?.value || String(value);
+  };
+
+  const loadCondominiumTypes = async () => {
+    const data = await condominiumService.getCondominiumTypes();
+    setCondominiumTypes(data ?? []);
+  };
+
+  const blockPageSize = 6;
+  const filteredBlocks = useMemo(
+    () =>
+      blocks.filter((block) =>
+        [block.name, block.code]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(blockSearchText.toLowerCase()),
+      ),
+    [blocks, blockSearchText],
+  );
+  const blockTotalPages = Math.max(
+    1,
+    Math.ceil(filteredBlocks.length / blockPageSize),
+  );
+  const paginatedBlocks = useMemo(
+    () =>
+      filteredBlocks.slice(
+        (blockPage - 1) * blockPageSize,
+        blockPage * blockPageSize,
+      ),
+    [filteredBlocks, blockPage],
+  );
+
+  useEffect(() => {
+    if (blockPage > blockTotalPages) {
+      setBlockPage(1);
+    }
+  }, [blockPage, blockTotalPages]);
 
   const handleSelectCondominium = async (condominium: Condominium) => {
     setSelectedCondominium(condominium);
@@ -185,6 +307,11 @@ const Unidades: React.FC = () => {
     setEditingUnit(null);
     setIsCadastroOpen(false);
     setUnitSearchText("");
+    setBlockSearchText("");
+    setBlockPage(1);
+    setUnitsPage(1);
+    setUnitsTotalPages(1);
+    setSelectedBlockId("");
     setActiveView("unidades");
 
     // Carregar blocos e unidades automaticamente
@@ -192,18 +319,7 @@ const Unidades: React.FC = () => {
     setListError(null);
     try {
       await loadBlocks(condominium.condominiumId);
-      const data = await unitService.getUnitsByCondominium(
-        condominium.condominiumId,
-        1,
-        pageSize,
-      );
-      const normalized = data?.data ?? [];
-      const computedTotalPages =
-        data?.totalPages ??
-        Math.max(1, Math.ceil((data?.total ?? normalized.length) / pageSize));
-      setListPage(1);
-      setTotalPages(computedTotalPages);
-      setUnits(normalized);
+      await loadUnits(undefined, 1, condominium.condominiumId);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar unidades.";
@@ -219,11 +335,7 @@ const Unidades: React.FC = () => {
   };
 
   const handleDelete = (unit: CondominiumUnit) => {
-    const confirmed = window.confirm(
-      `Deseja excluir a unidade ${unit.unitCode}?`,
-    );
-    if (!confirmed) return;
-    handleNotify("Exclusão ainda não está disponível.", "error");
+    showDelete("Confirma a exclusao do item?", `${unit.unitCode || "-"}`);
   };
 
   const handleOpenCreate = () => {
@@ -237,8 +349,25 @@ const Unidades: React.FC = () => {
   };
 
   const handleSaved = async () => {
-    await loadUnits(listPage);
+    await loadUnits(selectedBlockId || undefined, unitsPage);
+    handleCloseForm();
   };
+
+  const navigate = useNavigate();
+  const selectedBlock = blocks.find(
+    (block) => block.condominiumBlockId === selectedBlockId,
+  );
+  const unitsBreadcrumbItems = selectedBlockId
+    ? [
+        selectedCondominium?.name || t("unidades.selectedCondominium"),
+        t("common.blocks"),
+        selectedBlock?.name || selectedBlock?.code || t("common.unknown"),
+        t("common.units"),
+      ]
+    : [
+        selectedCondominium?.name || t("unidades.selectedCondominium"),
+        t("common.blocks"),
+      ];
 
   return (
     <Box className="unidade-container">
@@ -251,53 +380,67 @@ const Unidades: React.FC = () => {
                 pb: 1.5,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                flexDirection: "column",
                 borderBottom: "2px solid #f0f0f0",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
-                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
-                  {organizationName}
-                </Typography>
+              <Container
+                sx={{
+                  p: "0 !important",
+                  maxWidth: "100vw !important",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Home sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    {organizationName}
+                  </Typography>
+                </Box>
+                <Tooltip title="Clique aqui para Fechar a janela">
+                  <IconButton
+                    onClick={() => navigate("/dashboard")}
+                    className="close-button"
+                    aria-label={t("common.close")}
+                  >
+                    <Close sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
+              </Container>
+              <Box>
+                <BreadcrumbTrail
+                  items={[t("common.organization"), t("common.condominiums")]}
+                />
               </Box>
-              <Tooltip title="Fechar">
-                <IconButton
-                  onClick={() => window.history.back()}
-                  className="close-button"
-                  aria-label="Fechar"
-                >
-                  <Close sx={{ fontSize: 20 }} />
-                </IconButton>
-              </Tooltip>
             </Box>
 
             <Paper variant="outlined" sx={{ p: 2 }}>
               {listLoading ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <CircularProgress size={20} />
-                  <Typography variant="body2">Carregando...</Typography>
+                  <Typography variant="body2">{t("common.loading")}</Typography>
                 </Box>
               ) : listError ? (
-                <Alert severity="error">{listError}</Alert>
-              ) : condominiums.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  Nenhum condomínio encontrado para esta organização.
-                </Typography>
-              ) : (
                 <CardList
-                  title="Condomínios da organização"
+                  title={t("unidades.condominiumsList")}
                   showTitle={false}
-                  searchPlaceholder="Buscar condomínio..."
+                  searchPlaceholder={t("unidades.searchCondominiumPlaceholder")}
                   onSearchChange={setSearchText}
                   onAddClick={undefined}
                   addButtonPlacement="toolbar"
-                  emptyImageLabel="Sem imagem"
+                  emptyImageLabel={t("common.noImage")}
                   showFilters={false}
-                  page={listPage}
-                  totalPages={totalPages}
+                  showPagination={true}
+                  page={condominiumsPage}
+                  totalPages={condominiumsTotalPages}
                   onPageChange={(page) => {
-                    setListPage(page);
+                    setCondominiumsPage(page);
                     loadCondominiums(page);
                   }}
                   items={condominiums
@@ -313,19 +456,130 @@ const Unidades: React.FC = () => {
                       title: condominium.name,
                       subtitle: (
                         <>
-                          <Apartment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
                           {condominium.city} - {condominium.state}
                         </>
                       ),
+                      imageUrl: condominiumImages[condominium.condominiumId],
+
                       actions: (
                         <Button
                           size="small"
                           variant="outlined"
                           className="action-button-manage"
-                          startIcon={<SettingsOutlined />}
+                          startIcon={<SearchOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Gerenciar Unidades
+                          {t("common.viewBlocks")}
+                        </Button>
+                      ),
+                      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                    }))}
+                />
+              ) : condominiums.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  {t("unidades.noCondominiumsFound")}
+                </Typography>
+              ) : (
+                <CardList
+                  title="Condôminios da organização"
+                  showTitle={false}
+                  searchPlaceholder="Buscar condomínio..."
+                  onSearchChange={setSearchText}
+                  onAddClick={undefined}
+                  addButtonPlacement="toolbar"
+                  emptyImageLabel="Sem imagem"
+                  showFilters={false}
+                  showPagination={true}
+                  page={condominiumsPage}
+                  totalPages={condominiumsTotalPages}
+                  onPageChange={(page) => {
+                    setCondominiumsPage(page);
+                    loadCondominiums(page);
+                  }}
+                  items={condominiums
+                    .filter((condominium) =>
+                      [condominium.name, condominium.city, condominium.state]
+                        .filter(Boolean)
+                        .join(" ")
+                        .toLowerCase()
+                        .includes(searchText.toLowerCase()),
+                    )
+                    .map((condominium, index) => ({
+                      id: condominium.condominiumId,
+                      title: condominium.name,
+                      subtitle: (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.35,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Article sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {formatCNPJ(condominium.doc) || "-"}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <LocationOn sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {condominium.city} - {condominium.state}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {getCondominiumTypeLabel(
+                                condominium.condominiumType,
+                              )}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {
+                                condominiumTypes.find(
+                                  (f) => f?.id == condominium?.allocationType,
+                                )?.description
+                              }
+                            </Typography>
+                          </Box>
+                        </Box>
+                      ),
+                      imageUrl: getCondominiumImageUrl(condominium),
+
+                      actions: (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          className="action-button-manage"
+                          startIcon={<SearchOutlined />}
+                          onClick={() => handleSelectCondominium(condominium)}
+                        >
+                          {t("common.viewBlocks")}
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -342,13 +596,29 @@ const Unidades: React.FC = () => {
                 editingUnit={editingUnit}
                 onClose={handleCloseForm}
                 onSaved={handleSaved}
-                onNotify={handleNotify}
                 unitTypes={unitTypes}
                 typesLoading={typesLoading}
                 typesError={typesError}
                 loading={loading}
+                blockId={
+                  selectedBlockId || editingUnit?.condominiumBlockId || ""
+                }
+                blockNamePreset={
+                  blocks.find(
+                    (block) =>
+                      block.condominiumBlockId ===
+                      (selectedBlockId || editingUnit?.condominiumBlockId),
+                  )?.name ||
+                  blocks.find(
+                    (block) =>
+                      block.condominiumBlockId ===
+                      (selectedBlockId || editingUnit?.condominiumBlockId),
+                  )?.code ||
+                  ""
+                }
                 setLoading={setLoading}
                 condominiumIdPreset={selectedCondominium?.condominiumId}
+                condominiumNamePreset={selectedCondominium?.name || ""}
               />
             ) : (
               <Paper elevation={3} sx={{ p: 3 }}>
@@ -365,19 +635,18 @@ const Unidades: React.FC = () => {
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                     <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
                     <Box>
-                      <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
-                        Unidades
+                      <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        sx={{ fontSize: "26px" }}
+                      >
+                        {t("unidades.title")}
                       </Typography>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, mt: 0.5 }}>
-                        <ChevronRight sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }} />
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
-                          {selectedCondominium?.name || "Condomínio selecionado"}
-                        </Typography>
-                      </Box>
+                      <BreadcrumbTrail items={unitsBreadcrumbItems} />
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="Voltar">
+                    <Tooltip title={t("common.closeTooltip")}>
                       <IconButton
                         onClick={() => {
                           setActiveView("condominios");
@@ -387,10 +656,16 @@ const Unidades: React.FC = () => {
                           setEditingUnit(null);
                           setIsCadastroOpen(false);
                           setUnitSearchText("");
+                          setBlockSearchText("");
+                          setBlockPage(1);
+                          setSelectedBlockId("");
                           setListError(null);
+                          setUnitsPage(1);
+                          setUnitsTotalPages(1);
+                          void loadCondominiums(condominiumsPage);
                         }}
                         className="close-button"
-                        aria-label="Voltar"
+                        aria-label={t("common.back")}
                       >
                         <Close sx={{ fontSize: 20 }} />
                       </IconButton>
@@ -402,81 +677,184 @@ const Unidades: React.FC = () => {
                   {listLoading ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <CircularProgress size={20} />
-                      <Typography variant="body2">Carregando...</Typography>
+                      <Typography variant="body2">
+                        {t("common.loading")}
+                      </Typography>
                     </Box>
-                  ) : listError ? (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                      {listError}
-                    </Alert>
                   ) : null}
 
-                  <CardList
-                    title="Unidades do condomínio"
-                    showTitle={false}
-                    showFilters={true}
-                    searchPlaceholder="Buscar unidade..."
-                    onSearchChange={setUnitSearchText}
-                    onAddClick={handleOpenCreate}
-                    addLabel="Novo"
-                    addButtonPlacement="toolbar"
-                    emptyImageLabel="Sem imagem"
-                    page={listPage}
-                    totalPages={totalPages}
-                    onPageChange={(page) => {
-                      setListPage(page);
-                      loadUnits(page);
-                    }}
-                    items={units
-                      .filter((unit) =>
-                        [unit.unitCode, unit.unitType]
-                          .filter(Boolean)
-                          .join(" ")
-                          .toLowerCase()
-                          .includes(unitSearchText.toLowerCase()),
-                      )
-                      .map((unit, index) => ({
-                        id: unit.condominiumUnitId,
-                        title: unit.unitCode || "Sem código",
+                  {!selectedBlockId && (
+                    <CardList
+                      onClose={() => {
+                        setSelectedBlockId("");
+                        setUnitSearchText("");
+                        setBlockPage(1);
+                      }}
+                      title={t("unidades.blocksList")}
+                      showTitle={false}
+                      showFilters={true}
+                      searchPlaceholder={t("unidades.searchBlocksPlaceholder")}
+                      onSearchChange={(value) => {
+                        setBlockSearchText(value);
+                        setBlockPage(1);
+                      }}
+                      haveImage={false}
+                      onAddClick={undefined}
+                      addButtonPlacement="toolbar"
+                      emptyImageLabel={t("common.noImage")}
+                      showPagination={true}
+                      page={blockPage}
+                      totalPages={blockTotalPages}
+                      onPageChange={(page) => {
+                        setBlockPage(page);
+                      }}
+                      items={paginatedBlocks.map((block, index) => ({
+                        id: block.condominiumBlockId,
+                        title: block.name || t("common.noName"),
                         subtitle: (
                           <>
-                            <MeetingRoom sx={{ fontSize: 14, mr: 0.5, verticalAlign: "middle" }} />
-                            Tipo: {unit.unitType?.toString() === "1" ? "Proprietário" : "Inquilino"}
-                          </>
-                        ),
-                        meta: (
-                          <>
-                            Bloco:{" "}
-                            {blocks.find((b) => b.condominiumBlockId === unit.condominiumBlockId)
-                              ?.name ||
-                              unit.condominiumBlockId ||
-                              "Desconhecido"}
+                            <ViewModule
+                              sx={{
+                                fontSize: 14,
+                                mr: 0.5,
+                                verticalAlign: "middle",
+                              }}
+                            />
+                            {block.code || "-"}
                           </>
                         ),
                         actions: (
-                          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              className="action-button-edit"
-                              startIcon={<EditOutlined />}
-                              onClick={() => handleEdit(unit)}
-                            >
-                              Editar
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              className="action-button-delete"
-                              startIcon={<DeleteOutline />}
-                              onClick={() => handleDelete(unit)}
-                            >
-                              Excluir
-                            </Button>
-                          </Box>
+                          <Button
+                            startIcon={<SearchOutlined />}
+                            size="small"
+                            variant="outlined"
+                            className="action-button-manage"
+                            onClick={() => {
+                              setSelectedBlockId(block.condominiumBlockId);
+                              setUnitSearchText("");
+                              setUnitsPage(1);
+                              loadUnits(block.condominiumBlockId, 1);
+                              setEditingUnit(null);
+                              setIsCadastroOpen(false);
+                              setUnitsPage(1);
+                            }}
+                          >
+                            {t("common.viewUnits")}
+                          </Button>
                         ),
-                        accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                        accentColor:
+                          selectedBlockId === block.condominiumBlockId
+                            ? "#dff1ff"
+                            : index % 2 === 0
+                              ? "#eef6ee"
+                              : "#fdecef",
                       }))}
-                  />
+                    />
+                  )}
+
+                  {selectedBlockId && (
+                    <CardList
+                      onClose={() => {
+                        setSelectedBlockId("");
+                        setUnitsPage(1);
+                        loadUnits(undefined, 1);
+                      }}
+                      title={t("unidades.unitsList")}
+                      showTitle={false}
+                      showFilters={true}
+                      searchPlaceholder={t("unidades.searchPlaceholder")}
+                      onSearchChange={setUnitSearchText}
+                      onAddClick={handleOpenCreate}
+                      addLabel={t("common.new")}
+                      addButtonPlacement="toolbar"
+                      emptyImageLabel={t("common.noImage")}
+                      showPagination={true}
+                      page={unitsPage}
+                      haveImage={false}
+                      totalPages={unitsTotalPages}
+                      onPageChange={(page) => {
+                        setUnitsPage(page);
+                        loadUnits(selectedBlockId || undefined, page);
+                      }}
+                      items={units
+                        .filter((unit) =>
+                          [unit.unitCode, unit.unitType]
+                            .filter(Boolean)
+                            .join(" ")
+                            .toLowerCase()
+                            .includes(unitSearchText.toLowerCase()),
+                        )
+                        .map((unit, index) => ({
+                          id: unit.condominiumUnitId,
+                          title: unit.unitCode || t("common.noCode"),
+                          subtitle: (
+                            <>
+                              <Person
+                                sx={{
+                                  fontSize: 14,
+                                  mr: 0.5,
+                                  verticalAlign: "middle",
+                                }}
+                              />{" "}
+                              {unit.unitType?.toString() === "1"
+                                ? t("common.owner")
+                                : t("common.tenant")}
+                            </>
+                          ),
+                          meta: (
+                            <>
+                              <Box
+                                component="img"
+                                src={Allocation}
+                                sx={{
+                                  width: 16,
+                                  height: 16,
+                                  mr: 0.5,
+                                  verticalAlign: "middle",
+                                }}
+                              />{" "}
+                              {blocks.find(
+                                (b) =>
+                                  b.condominiumBlockId ===
+                                  unit.condominiumBlockId,
+                              )?.name ||
+                                unit.condominiumBlockId ||
+                                t("common.unknown")}
+                            </>
+                          ),
+                          actions: (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 1,
+                                flexWrap: "wrap",
+                                mt: 2,
+                              }}
+                            >
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                className="action-button-edit"
+                                startIcon={<EditOutlined />}
+                                onClick={() => handleEdit(unit)}
+                              >
+                                {t("common.edit")}
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                className="action-button-delete"
+                                startIcon={<DeleteOutline />}
+                                onClick={() => handleDelete(unit)}
+                              >
+                                {t("common.delete")}
+                              </Button>
+                            </Box>
+                          ),
+                          accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                        }))}
+                    />
+                  )}
                 </Paper>
               </Paper>
             )}
@@ -484,19 +862,17 @@ const Unidades: React.FC = () => {
         )}
       </Container>
 
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        item={appStateModal.item}
+        onConfirm={handleClose}
+        onClose={handleClose}
+        //showCancel={false}
+      />
     </Box>
   );
 };

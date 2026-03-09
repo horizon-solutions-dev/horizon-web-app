@@ -28,6 +28,9 @@ export interface CondominiumRequest {
 export interface Condominium extends CondominiumRequest {
   condominiumId: string;
   active: boolean;
+  imageType?: string | number;
+  contentType?: string;
+  thumbnailFile?: string;
 }
 
 export interface CondominiumTypeEnum {
@@ -47,21 +50,29 @@ export type CondominiumPagedResponse = PagedResponse<Condominium>;
 class CondominiumService {
   private baseUrl = 'https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/condominiums';
 
-  async createCondominium(condominium: CondominiumRequest) {
-    const data = await apiClient.post<{ condominiumId: string }>(this.baseUrl, condominium);
+  async createCondominium(condominium: CondominiumRequest): Promise<string>{
+    const data = await apiClient.post<string >(this.baseUrl, condominium);
     console.log('Condominium created with ID:', data);
     return data;
   }
 
   async validateCondominium(condominium: CondominiumRequest) {
-    const token = localStorage.getItem('token');
     try {
-      await axios.post(this.baseUrl, condominium, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      await apiClient.post<{ condominiumId?: string }>(this.baseUrl, condominium);
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
+      throw error;
+    }
+  }
+  async validateCondominiumEdit(condominium: CondominiumRequest, id:string) {
+    try {
+      await apiClient.put<{ condominiumId?: string }>(`${this.baseUrl}/${id}`, condominium);
       return { valid: true, validations: [] as Array<{ field: string; message: string }> };
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 422) {
@@ -103,9 +114,9 @@ class CondominiumService {
     }
   }
 
-  async updateCondominium(id: string, condominium: CondominiumRequest) {
+  async updateCondominium(id: string, condominium: CondominiumRequest): Promise<string> {
     try {
-      return await apiClient.put<{ condominiumId: string }>(`${this.baseUrl}/${id}`, condominium);
+      return await apiClient.put<string>(`${this.baseUrl}/${id}`, condominium);
     } catch (error) {
       console.error('Erro ao atualizar Condominio:', error);
       throw error;

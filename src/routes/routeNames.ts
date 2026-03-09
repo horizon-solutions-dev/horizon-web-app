@@ -35,13 +35,11 @@ const CondominioRoutes = {
   
   // Condominio
   Condominio: "/condominio",
-  // Moradores
-  Moradores: "/moradores",
 
   // Cadastros
   CadastrosBlocos: "/cadastros/blocos",
   CadastrosUnidades: "/cadastros/unidades",
-  CadastrosResidentes: "/cadastros/residentes",
+  CadastrosResidentes: "/cadastros/moradores",
   CadastrosOrganizacoes: "/cadastros/organizacoes",
   CadastrosPerfis: "/cadastros/perfis",
   

@@ -1,26 +1,36 @@
 import React, { useEffect, useState } from "react";
+import "./Residentes.scss";
 import {
   Box,
   Container,
   Paper,
   Typography,
   Button,
-  TextField,
-  Snackbar,
-  Alert,
   CircularProgress,
-  MenuItem,
   IconButton,
+  Tooltip,
 } from "@mui/material";
-import { ArrowBack, PeopleOutlined } from "@mui/icons-material";
+import {
+  Close,
+  DeleteOutline,
+  EditOutlined,
+  Groups2Outlined,
+  BadgeOutlined,
+  EmailOutlined,
+  PhoneOutlined,
+  People,
+  LocationOn,
+  Article,
+  SearchOutlined,
+  MeetingRoom,
+  ViewModule,
+  Person,
+} from "@mui/icons-material";
 import {
   unitResidentService,
   type CondominiumUnitResident,
 } from "../../services/unitResidentService";
-import {
-  unitService,
-  type CondominiumUnit,
-} from "../../services/unitService";
+import { unitService, type CondominiumUnit } from "../../services/unitService";
 import {
   blockService,
   type CondominiumBlock,
@@ -28,23 +38,33 @@ import {
 import {
   condominiumService,
   type Condominium,
+  type CondominiumTypeEnum,
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
+import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import ResidenteForm from "./ResidenteForm";
+import { useNavigate } from "react-router";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import { useTranslation } from "react-i18next";
+import { formatCNPJ, formatDoc } from "../../shared/utils/funcoes";
+import Allocation from "../../assets/allocation.png";
 
 const condoPageSize = 4;
 const unitPageSize = 6;
 const residentPageSize = 6;
 
 const Residentes: React.FC = () => {
-  const [activeView, setActiveView] =
-    useState<"condominios" | "unidades" | "residentes">("condominios");
+  const [activeView, setActiveView] = useState<
+    "condominios" | "unidades" | "moradores"
+  >("condominios");
+  const { t } = useTranslation();
 
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [organizationName, setOrganizationName] = useState("");
   const [condoLoading, setCondoLoading] = useState(false);
-  const [condoError, setCondoError] = useState<string | null>(null);
+  const [, setCondoError] = useState<string | null>(null);
   const [condoSearchText, setCondoSearchText] = useState("");
   const [condoPage, setCondoPage] = useState(1);
   const [condoTotalPages, setCondoTotalPages] = useState(1);
@@ -52,49 +72,62 @@ const Residentes: React.FC = () => {
     useState<Condominium | null>(null);
 
   const [units, setUnits] = useState<CondominiumUnit[]>([]);
-  const [blocks, setBlocks] = useState<{
-    data: CondominiumBlock[];
-    success: boolean;
-  }>({ data: [], success: false });
+  const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
   const [unitsLoading, setUnitsLoading] = useState(false);
-  const [unitsError, setUnitsError] = useState<string | null>(null);
+  const [, setUnitsError] = useState<string | null>(null);
   const [unitSearchText, setUnitSearchText] = useState("");
   const [unitsPage, setUnitsPage] = useState(1);
   const [unitsTotalPages, setUnitsTotalPages] = useState(1);
-  const [selectedUnit, setSelectedUnit] =
-    useState<CondominiumUnit | null>(null);
-  const [selectedBlockNameState, setSelectedBlockName] = useState("");
+  const [selectedUnit, setSelectedUnit] = useState<CondominiumUnit | null>(
+    null,
+  );
+  const [selectTypeUnit, setSelectTypeUnit] = useState<
+    1 | 2 | "1" | "2" | string | undefined
+  >("");
+  const [, setSelectedBlockName] = useState("");
 
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
   const [residentsLoading, setResidentsLoading] = useState(false);
-  const [residentsError, setResidentsError] = useState<string | null>(null);
+  const [, setResidentsError] = useState<string | null>(null);
   const [residentSearchText, setResidentSearchText] = useState("");
   const [residentsPage, setResidentsPage] = useState(1);
   const [residentsTotalPages, setResidentsTotalPages] = useState(1);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingResident, setEditingResident] =
+    useState<CondominiumUnitResident | null>(null);
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "info" | "warning",
-  });
+  const { appStateModal, handleClose, showDelete } = useAppStateModal();
 
-  const handleNotify = (
-    message: string,
-    severity: "success" | "error" | "info" | "warning" = "success",
-  ) => {
-    setSnackbar({ open: true, message, severity });
+  const [condominiumTypes, setCondominiumTypes] = useState<
+    CondominiumTypeEnum[]
+  >([]);
+
+  const getCondominiumImageUrl = (condominium: Condominium) => {
+    if (!condominium.thumbnailFile || !condominium.contentType)
+      return undefined;
+    return `data:${condominium.contentType};base64,${condominium.thumbnailFile}`;
   };
 
+  const getCondominiumTypeLabel = (value: string | number) => {
+    const match = condominiumTypes.find(
+      (type) => type.id === value || type.value === value,
+    );
+    return match?.description || match?.value || String(value);
+  };
+  const loadCondominiumTypes = async () => {
+    const data = await condominiumService.getCondominiumTypes();
+    setCondominiumTypes(data ?? []);
+  };
   const loadCondominiums = async (pageNumber = 1) => {
     setCondoLoading(true);
     setCondoError(null);
     try {
       let organizationId = localStorage.getItem("organizationId") || "";
       if (!organizationId) {
-        organizationId = (await organizationService.getMyOrganizationId()) || "";
+        organizationId =
+          (await organizationService.getMyOrganizationId()) || "";
         localStorage.setItem("organizationId", organizationId);
       }
 
@@ -106,7 +139,12 @@ const Residentes: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
-          const orgName = organizations?.[0]?.name || organizations?.[0]?.legalName;
+          const nameStorage = localStorage.getItem("condominium");
+          const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
+          const orgName =
+            organizations?.find(
+              (o) => o.organizationId === dataParse?.organizationId,
+            )?.name || dataParse?.name;
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore
@@ -117,14 +155,18 @@ const Residentes: React.FC = () => {
         response?.paging?.totalPages ??
         Math.max(
           1,
-          Math.ceil((response?.paging?.total ?? normalized.length) / condoPageSize),
+          Math.ceil(
+            (response?.paging?.total ?? normalized.length) / condoPageSize,
+          ),
         );
       setCondoPage(response?.paging?.pageNumber ?? pageNumber);
       setCondoTotalPages(computedTotalPages);
       setCondominiums(normalized);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro ao carregar condominios.";
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar condominios.";
       setCondoError(message);
     } finally {
       setCondoLoading(false);
@@ -133,28 +175,38 @@ const Residentes: React.FC = () => {
 
   const loadBlocks = async (condominiumId: string) => {
     try {
-      const data = await blockService.getBlocks(condominiumId);
-      if (data.success) {
-        setBlocks(data);
-      } else {
-        setBlocks({ data: [], success: false });
-      }
+      const response = await blockService.getBlocks(condominiumId);
+      setBlocks(response?.items ?? []);
     } catch {
-      setBlocks({ data: [], success: false });
+      setBlocks([]);
     }
   };
 
-  const loadUnits = async (condominiumId: string, blockId?: string, pageNumber = 1) => {
+  const loadUnits = async (
+    condominiumId: string,
+    blockId?: string,
+    pageNumber = 1,
+  ) => {
     setUnitsLoading(true);
     setUnitsError(null);
     try {
-      const data = blockId
+      const response = blockId
         ? await unitService.getUnitsByBlock(blockId, pageNumber, unitPageSize)
-        : await unitService.getUnitsByCondominium(condominiumId, pageNumber, unitPageSize);
-      const normalized = data?.data ?? [];
+        : await unitService.getUnitsByCondominium(
+            condominiumId,
+            pageNumber,
+            unitPageSize,
+          );
+      const normalized = response?.items ?? [];
       const computedTotalPages =
-        data?.totalPages ?? Math.max(1, Math.ceil((data?.total ?? normalized.length) / unitPageSize));
-      setUnitsPage(data?.pageNumber ?? pageNumber);
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil(
+            (response?.paging?.total ?? normalized.length) / unitPageSize,
+          ),
+        );
+      setUnitsPage(response?.paging?.pageNumber ?? pageNumber);
       setUnitsTotalPages(computedTotalPages);
       setUnits(normalized);
     } catch (error) {
@@ -174,19 +226,27 @@ const Residentes: React.FC = () => {
     setResidentsLoading(true);
     setResidentsError(null);
     try {
-      const data = await unitResidentService.getResidents(
+      const response = await unitResidentService.getResidents(
         unitId,
         pageNumber,
         residentPageSize,
       );
-      const normalized = data ?? [];
-      const totalPages = Math.max(1, Math.ceil(normalized.length / residentPageSize));
-      setResidentsPage(pageNumber);
+      const normalized = response?.items ?? [];
+      const totalPages =
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil(
+            (response?.paging?.total ?? normalized.length) / residentPageSize,
+          ),
+        );
+
+      setResidentsPage(response?.paging?.pageNumber ?? pageNumber);
       setResidentsTotalPages(totalPages);
       setResidents(normalized);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro ao carregar residentes.";
+        error instanceof Error ? error.message : "Erro ao carregar moradores.";
       setResidentsError(message);
     } finally {
       setResidentsLoading(false);
@@ -195,7 +255,113 @@ const Residentes: React.FC = () => {
 
   useEffect(() => {
     loadCondominiums(1);
+    loadCondominiumTypes();
   }, []);
+
+  const resetResidentsContext = () => {
+    setSelectedUnit(null);
+    setResidents([]);
+    setResidentsError(null);
+    setResidentSearchText("");
+    setResidentsPage(1);
+  };
+
+  const resetUnitsContext = () => {
+    setUnits([]);
+    setBlocks([]);
+    setSelectedBlockId("");
+    setSelectedBlockName("");
+    setUnitsError(null);
+    setUnitSearchText("");
+    setUnitsPage(1);
+    resetResidentsContext();
+  };
+
+  const condominiumItems = condominiums
+    .filter((condominium) =>
+      [condominium.name, condominium.city, condominium.state]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(condoSearchText.toLowerCase()),
+    )
+    .map((condominium, index) => ({
+      id: condominium.condominiumId,
+      title: condominium.name,
+      subtitle: (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 0.35,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.7,
+            }}
+          >
+            <Article sx={{ fontSize: 14 }} />
+            <Typography variant="body2" color="text.secondary">
+              {formatCNPJ(condominium.doc) || "-"}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.7,
+            }}
+          >
+            <LocationOn sx={{ fontSize: 14 }} />
+            <Typography variant="body2" color="text.secondary">
+              {condominium.city} - {condominium.state}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.7,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {getCondominiumTypeLabel(condominium?.condominiumType)}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.7,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {
+                condominiumTypes.find(
+                  (f) => f?.id == condominium?.allocationType,
+                )?.description
+              }
+            </Typography>
+          </Box>
+        </Box>
+      ),
+      imageUrl: getCondominiumImageUrl(condominium),
+      actions: (
+        <Button
+          size="small"
+          variant="outlined"
+          className="action-button-manage"
+          startIcon={<SearchOutlined />}
+          onClick={() => handleSelectCondominium(condominium)}
+        >
+          {t("common.viewUnits")}
+        </Button>
+      ),
+      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+    }));
 
   const handleSelectCondominium = async (condominium: Condominium) => {
     setSelectedCondominium(condominium);
@@ -205,10 +371,7 @@ const Residentes: React.FC = () => {
     setUnitsError(null);
     setUnitSearchText("");
     setUnitsPage(1);
-    setSelectedUnit(null);
-    setResidents([]);
-    setResidentsError(null);
-    setResidentSearchText("");
+    resetResidentsContext();
     setActiveView("unidades");
     await loadBlocks(condominium.condominiumId);
     await loadUnits(condominium.condominiumId, undefined, 1);
@@ -220,52 +383,132 @@ const Residentes: React.FC = () => {
     setResidentsError(null);
     setResidentSearchText("");
     setResidentsPage(1);
-    setActiveView("residentes");
+    setActiveView("moradores");
     await loadResidents(unit.condominiumUnitId, 1);
   };
 
   const handleOpenCreate = () => {
     if (!selectedUnit) {
-      setResidentsError("Selecione uma unidade para cadastrar residentes.");
+      setResidentsError("Selecione uma unidade para cadastrar moradores.");
       return;
     }
+    setEditingResident(null);
     setIsFormOpen(true);
   };
 
   const handleCloseForm = () => {
+    setEditingResident(null);
     setIsFormOpen(false);
+    loadResidents(selectedUnit?.condominiumUnitId || "", 1);
   };
 
   const handleSaved = async () => {
-    await loadResidents('1');
+    await loadResidents(selectedUnit?.condominiumUnitId || "", 1);
   };
 
   const getUnitTypeLabel = (value?: string) => {
     if (!value) return "-";
-    if (value === "1" || value === "Owner") return "Proprietario";
-    if (value === "2" || value === "Tenant") return "Inquilino";
+    if (value === "1" || value === "Owner") return t("common.owner");
+    if (value === "2" || value === "Tenant") return t("common.tenant");
     return value;
   };
 
-/*   const getResidentPermissions = (resident: CondominiumUnitResident) => {
-    const labels = [
-      resident.billingContact ? "Cobranca" : null,
-      resident.canVote ? "Voto" : null,
-      resident.canMakeReservations ? "Reservas" : null,
-      resident.hasGatehouseAccess ? "Portaria" : null,
-    ].filter(Boolean);
-    return labels.length > 0 ? `Permissoes: ${labels.join(" • ")}` : "Sem permissoes";
-  }; */
+  const getDocTypeLabel = (value?: string | number) => {
+    if (value === 1 || value === "1") return "CPF";
+    if (value === 2 || value === "2") return "CNPJ";
+    if (value === 3 || value === "3") return "PASS";
+    return "DOC";
+  };
 
+  const formatResidentPhone = (phone?: string) => {
+    if (!phone) return "-";
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length === 13 && digits.startsWith("55")) {
+      return `(${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(9)}`;
+    }
+    if (digits.length === 11) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+    }
+    return phone;
+  };
+
+  const getResidentImageUrl = (resident: CondominiumUnitResident) => {
+    if (!resident.thumbnailFile || !resident.contentType) return undefined;
+    console.log(
+      `data:${resident.contentType};base64,${resident.thumbnailFile}`,
+    );
+    return `data:${resident.contentType};base64,${resident.thumbnailFile}`;
+  };
+
+  function handleEdit(resident: CondominiumUnitResident) {
+    setEditingResident(resident);
+    setIsFormOpen(true);
+  }
+  function handleDelete(resident: CondominiumUnitResident) {
+    const residentLabel = resident.fullname || resident.userId || "-";
+    showDelete("Confirma a exclusao do item?", `${residentLabel}`);
+  }
+
+  const navigate = useNavigate();
+  /*   const getResidentPermissions = (resident: CondominiumUnitResident) => {
+      const labels = [
+        resident.billingContact ? "Cobranca" : null,
+        resident.canVote ? "Voto" : null,
+        resident.canMakeReservations ? "Reservas" : null,
+        resident.hasGatehouseAccess ? "Portaria" : null,
+      ].filter(Boolean);
+      return labels.length > 0 ? `Permissoes: ${labels.join(" • ")}` : "Sem permissoes";
+    }; */
 
   return (
-    <Box className="page-container" sx={{ py: 4 }}>
+    <Box className="page-container">
       <Container maxWidth="lg">
         {activeView === "condominios" ? (
           <Paper elevation={3} sx={{ p: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-              <PeopleOutlined sx={{ fontSize: 32, color: "#1976d2" }} />
-              <Typography variant="h4">{organizationName || "Residentes"}</Typography>
+            <Box
+              sx={{
+                mb: 2,
+                pb: 1.5,
+                display: "flex",
+                alignItems: "center",
+                flexDirection: "column",
+                borderBottom: "2px solid #f0f0f0",
+              }}
+            >
+              <Container
+                sx={{
+                  p: "0 !important",
+                  maxWidth: "100vw !important",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <People sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    {organizationName}
+                  </Typography>
+                </Box>
+                <Tooltip title={t("common.closeTooltip")}>
+                  <IconButton
+                    onClick={() => navigate("/dashboard")}
+                    className="close-button"
+                    aria-label={t("common.close")}
+                  >
+                    <Close sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
+              </Container>
+              <Box>
+                <BreadcrumbTrail
+                  items={[t("common.organization"), t("common.condominiums")]}
+                />
+              </Box>
             </Box>
 
             {condoLoading ? (
@@ -273,78 +516,75 @@ const Residentes: React.FC = () => {
                 <CircularProgress size={20} />
                 <Typography variant="body2">Carregando...</Typography>
               </Box>
-            ) : condoError ? (
-              <Alert severity="error">{condoError}</Alert>
             ) : (
-              <CardList
-                title="Condominios da organizacao"
-                showTitle={false}
-                searchPlaceholder="Buscar condominio..."
-                onSearchChange={setCondoSearchText}
-                onAddClick={undefined}
-                addButtonPlacement="toolbar"
-                emptyImageLabel="Sem imagem"
-                page={condoPage}
-                totalPages={condoTotalPages}
-                onPageChange={(page) => {
-                  setCondoPage(page);
-                  loadCondominiums(page);
-                }}
-                items={condominiums
-                  .filter((condominium) =>
-                    [condominium.name, condominium.city, condominium.state]
-                      .filter(Boolean)
-                      .join(" ")
-                      .toLowerCase()
-                      .includes(condoSearchText.toLowerCase()),
-                  )
-                  .map((condominium, index) => ({
-                    id: condominium.condominiumId,
-                    title: condominium.name,
-                    subtitle: (
-                      <Typography variant="body2" color="text.secondary">
-                        {condominium.city} - {condominium.state}
-                      </Typography>
-                    ),
-                    accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                    actions: (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        className="action-button-manage"
-                        onClick={() => handleSelectCondominium(condominium)}
-                      >
-                        Ver unidades
-                      </Button>
-                    ),
-                  }))}
-              />
+              <>
+                <CardList
+                  title={t("moradores.condominiumsList")}
+                  showTitle={false}
+                  searchPlaceholder={t(
+                    "moradores.searchCondominiumPlaceholder",
+                  )}
+                  onSearchChange={setCondoSearchText}
+                  onAddClick={undefined}
+                  addButtonPlacement="toolbar"
+                  emptyImageLabel={t("common.noImage")}
+                  showPagination={true}
+                  page={condoPage}
+                  totalPages={condoTotalPages}
+                  onPageChange={(page) => {
+                    setCondoPage(page);
+                    loadCondominiums(page);
+                  }}
+                  items={condominiumItems}
+                />
+              </>
             )}
           </Paper>
         ) : activeView === "unidades" ? (
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-              <IconButton
-                onClick={() => {
-                  setActiveView("condominios");
-                  setSelectedCondominium(null);
-                  setUnits([]);
-                  setBlocks({ data: [], success: false });
-                  setSelectedBlockId("");
-                  setSelectedBlockName("");
-                  setSelectedUnit(null);
-                  setResidents([]);
-                  setUnitsError(null);
-                  setResidentsError(null);
-                }}
-              >
-                <ArrowBack />
-              </IconButton>
-              <Box>
-                <Typography variant="h5">Unidades</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {selectedCondominium?.name || "Condominio selecionado"}
-                </Typography>
+            <Box
+              sx={{
+                mb: 2,
+                pb: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "2px solid #f0f0f0",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Groups2Outlined sx={{ fontSize: 36, color: "#1976d2" }} />
+                <Box>
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    {t("moradores.title")}
+                  </Typography>
+                  <BreadcrumbTrail
+                    items={[
+                      organizationName || t("common.organization"),
+                      selectedCondominium?.name ||
+                        t("moradores.selectedCondominium"),
+                      t("common.units"),
+                    ]}
+                  />
+                </Box>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Tooltip title={t("common.closeTooltip")}>
+                  <IconButton
+                    onClick={() => {
+                      setActiveView("condominios");
+                      setSelectedCondominium(null);
+                      resetUnitsContext();
+                      void loadCondominiums(condoPage);
+                    }}
+                  >
+                    <Close sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Box>
 
@@ -353,56 +593,29 @@ const Residentes: React.FC = () => {
                 <CircularProgress size={20} />
                 <Typography variant="body2">Carregando...</Typography>
               </Box>
-            ) : unitsError ? (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {unitsError}
-              </Alert>
             ) : null}
 
-            <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
-              <TextField
-                label="Filtrar por bloco"
-                select
-                value={selectedBlockId}
-                onChange={async (e) => {
-                  const value = e.target.value;
-                  setSelectedBlockId(value);
-                  const blockName =
-                    blocks.data.find((block) => block.condominiumBlockId === value)?.name ||
-                    "";
-                  setSelectedBlockName(blockName);
-                  setUnitSearchText("");
-                  setUnitsPage(1);
-                  if (selectedCondominium) {
-                    await loadUnits(selectedCondominium.condominiumId, value || undefined, 1);
-                  }
-                }}
-                fullWidth
-              >
-                <MenuItem value="">Todos os blocos</MenuItem>
-                {blocks.data.map((block) => (
-                  <MenuItem key={block.condominiumBlockId} value={block.condominiumBlockId}>
-                    {block.name || block.code || block.condominiumBlockId}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
-
             <CardList
-              title="Unidades do condominio"
+              haveImage={false}
+              title={t("moradores.unitsList")}
               showTitle={false}
-              showFilters={false}
-              searchPlaceholder="Buscar unidade..."
+              showFilters={true}
+              searchPlaceholder={t("moradores.searchUnitPlaceholder")}
               onSearchChange={setUnitSearchText}
               onAddClick={undefined}
               addButtonPlacement="toolbar"
-              emptyImageLabel="Sem imagem"
+              emptyImageLabel={t("common.noImage")}
+              showPagination={true}
               page={unitsPage}
               totalPages={unitsTotalPages}
               onPageChange={(page) => {
                 setUnitsPage(page);
                 if (selectedCondominium) {
-                  loadUnits(selectedCondominium.condominiumId, selectedBlockId || undefined, page);
+                  loadUnits(
+                    selectedCondominium.condominiumId,
+                    selectedBlockId || undefined,
+                    page,
+                  );
                 }
               }}
               items={units
@@ -415,25 +628,54 @@ const Residentes: React.FC = () => {
                 )
                 .map((unit, index) => ({
                   id: unit.condominiumUnitId,
-                  title: unit.unitCode || "Sem codigo",
+                  title: unit.unitCode || t("moradores.noCode"),
                   subtitle: (
                     <Typography variant="body2" color="text.secondary">
-                      Tipo: {getUnitTypeLabel(unit.unitType?.toString())}
+                      <Person
+                        sx={{
+                          fontSize: 14,
+                          mr: 0.5,
+                          verticalAlign: "middle",
+                        }}
+                      />
+                      {""}
+                      {getUnitTypeLabel(unit.unitType?.toString())}
                     </Typography>
                   ),
                   meta: (
                     <Typography variant="caption" color="text.secondary">
-                      Bloco:{" "}
-                      {blocks.data.find((b) => b.condominiumBlockId === unit.condominiumBlockId)
-                        ?.name ||
+                      <Box
+                        component="img"
+                        src={Allocation}
+                        sx={{
+                          width: 16,
+                          height: 16,
+                          mr: 0.5,
+                          verticalAlign: "middle",
+                        }}
+                      />{" "}
+                      {blocks.find(
+                        (b) => b.condominiumBlockId === unit.condominiumBlockId,
+                      )?.name ||
                         unit.condominiumBlockId ||
-                        "Bloco desconhecido"}
+                        t("moradores.unknownBlock")}
                     </Typography>
                   ),
                   actions: (
-                    <Button size="small" variant="outlined" onClick={() => handleSelectUnit(unit)}>
-                      Ver residentes
-                    </Button>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        className="action-button-manage"
+                        startIcon={<SearchOutlined />}
+                        onClick={() => {
+                          handleSelectUnit(unit);
+                          setSelectTypeUnit(unit.unitType);
+                        }}
+                      >
+                        {t("common.viewResidents")}
+                      </Button>
+                    </Box>
                   ),
                   accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                 }))}
@@ -443,87 +685,291 @@ const Residentes: React.FC = () => {
           <>
             {isFormOpen ? (
               <ResidenteForm
+                unit={selectTypeUnit}
                 open={isFormOpen}
                 onClose={handleCloseForm}
                 onSaved={handleSaved}
-                onNotify={handleNotify}
                 loading={loading}
                 setLoading={setLoading}
+                condominiumIdPreset={selectedCondominium?.condominiumId}
+                editResident={editingResident}
+                editUserId={editingResident?.userId}
+                residentImageUrl={
+                  editingResident
+                    ? getResidentImageUrl(editingResident)
+                    : undefined
+                }
                 unitIdPreset={selectedUnit?.condominiumUnitId}
+                condominiumNamePreset={selectedCondominium?.name}
+                blockNamePreset={
+                  blocks.find(
+                    (b) =>
+                      b.condominiumBlockId === selectedUnit?.condominiumBlockId,
+                  )?.name || selectedUnit?.condominiumBlockId
+                }
+                unitCodePreset={selectedUnit?.unitCode}
               />
             ) : null}
             {!isFormOpen ? (
               <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                  <IconButton
-                    onClick={() => {
-                      setActiveView("unidades");
-                      setSelectedUnit(null);
-                      setResidents([]);
-                      setResidentSearchText("");
-                      setResidentsError(null);
-                    }}
-                  >
-                    <ArrowBack />
-                  </IconButton>
-                  <Box>
-                    <Typography variant="h5">Residentes</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedCondominium?.name || "Condominio"} •{" "}
-                      {selectedUnit?.unitCode ||
-                        selectedUnit?.condominiumUnitId ||
-                        "Unidade"}
-                      {selectedBlockNameState ? ` • Bloco ${selectedBlockNameState}` : ""}
-                    </Typography>
+                <Box
+                  sx={{
+                    mb: 2,
+                    pb: 1.5,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    borderBottom: "2px solid #f0f0f0",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <Groups2Outlined sx={{ fontSize: 36, color: "#1976d2" }} />
+                    <Box>
+                      <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        sx={{ fontSize: "26px" }}
+                      >
+                        {t("moradores.title")}
+                      </Typography>
+                      <BreadcrumbTrail
+                        items={[
+                          organizationName || t("common.organization"),
+                          selectedCondominium?.name ||
+                            t("moradores.selectedCondominium"),
+                          selectedUnit?.unitCode || t("moradores.selectedUnit"),
+                          t("common.residents"),
+                        ]}
+                      />
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Tooltip title={t("common.closeTooltip")}>
+                      <IconButton
+                        onClick={() => {
+                          setActiveView("unidades");
+                          resetResidentsContext();
+                          if (selectedCondominium) {
+                            void loadUnits(
+                              selectedCondominium.condominiumId,
+                              selectedBlockId || undefined,
+                              unitsPage,
+                            );
+                          }
+                        }}
+                      >
+                        <Close sx={{ fontSize: 20 }} />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                 </Box>
-
-                {residentsError ? (
-                  <Alert severity="error" sx={{ mb: 2 }}>
-                    {residentsError}
-                  </Alert>
-                ) : null}
 
                 {residentsLoading ? (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <CircularProgress size={20} />
-                    <Typography variant="body2">Carregando...</Typography>
+                    <Typography variant="body2">
+                      {t("common.loading")}
+                    </Typography>
                   </Box>
                 ) : (
-                  <CardList
-                    title="Residentes"
-                    showTitle={false}
-                    searchPlaceholder="Buscar residente..."
-                    onSearchChange={setResidentSearchText}
-                    onAddClick={handleOpenCreate}
-                    addLabel="Novo"
-                    addButtonPlacement="toolbar"
-                    emptyImageLabel="Sem imagem"
-                    showFilters={false}
-                    page={residentsPage}
-                    totalPages={residentsTotalPages}
-                    onPageChange={(page) => {
-                      setResidentsPage(page);
-                      if (selectedUnit) {
-                        loadResidents(selectedUnit.condominiumUnitId, page);
-                      }
-                    }}
-                    items={residents
-                      .filter((resident) =>
-                        [resident.userId, resident.condominiumUnitId]
-                          .filter(Boolean)
-                          .join(" ")
-                          .toLowerCase()
-                          .includes(residentSearchText.toLowerCase()),
-                      )
-                      .map((resident, index) => ({
-                        id: resident.condominiumUnitResidentId,
-                        title: resident.userId,
-                        subtitle: `Unidade: ${resident.condominiumUnitId}`,
-                        meta: `Periodo: ${resident.startDate || "-"} -> ${resident.endDate || "-"}`,
-                        accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                      }))}
-                  />
+                  <>
+                    <CardList
+                      title={t("moradores.residentsList")}
+                      showTitle={false}
+                      searchPlaceholder={t("moradores.searchPlaceholder")}
+                      onSearchChange={setResidentSearchText}
+                      onAddClick={handleOpenCreate}
+                      addLabel={t("common.new")}
+                      addButtonPlacement="toolbar"
+                      emptyImageLabel={t("common.noImage")}
+                      showFilters={true}
+                      showPagination={true}
+                      cardMaxHeight="none"
+                      imageWidth={145}
+                      imageHeight={125}
+                      actionsMarginTop={0.5}
+                      page={residentsPage}
+                      totalPages={residentsTotalPages}
+                      onPageChange={(page) => {
+                        setResidentsPage(page);
+                        if (selectedUnit) {
+                          loadResidents(selectedUnit.condominiumUnitId, page);
+                        }
+                      }}
+                      items={residents
+                        .filter((resident) =>
+                          [
+                            resident.fullname,
+                            resident.doc,
+                            resident.email,
+                            resident.phone,
+                            resident.userId,
+                            resident.condominiumUnitId,
+                          ]
+                            .filter(Boolean)
+                            .join(" ")
+                            .toLowerCase()
+                            .includes(residentSearchText.toLowerCase()),
+                        )
+                        .map((resident, index) => {
+                          const unit = units.find(
+                            (u) =>
+                              u.condominiumUnitId ===
+                              resident.condominiumUnitId,
+                          );
+                          const blockName = blocks.find(
+                            (b) =>
+                              b.condominiumBlockId === unit?.condominiumBlockId,
+                          )?.name;
+                          const residentName = resident?.fullname || "-";
+                          const residentType = getUnitTypeLabel(
+                            resident.unitType?.toString(),
+                          );
+                          const residentUnit =
+                            unit?.unitCode || resident.condominiumUnitId || "-";
+                          const residentBlock =
+                            blockName || unit?.condominiumBlockId || "-";
+
+                          return {
+                            actions: (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  gap: 1,
+                                  flexWrap: "wrap",
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    mt: 2,
+                                    display: "flex",
+                                    gap: 1,
+                                    flexWrap: "wrap",
+                                  }}
+                                >
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    className="action-button-edit"
+                                    startIcon={<EditOutlined />}
+                                    onClick={() => handleEdit(resident)}
+                                  >
+                                    {t("common.edit")}
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    className="action-button-delete"
+                                    startIcon={<DeleteOutline />}
+                                    onClick={() => handleDelete(resident)}
+                                  >
+                                    {t("common.delete")}
+                                  </Button>
+                                </Box>
+                              </Box>
+                            ),
+                            id: resident.condominiumUnitResidentId,
+                            title: `${residentName}`,
+                            subtitle: (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 0.35,
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.7,
+                                  }}
+                                >
+                                  <BadgeOutlined
+                                    sx={{
+                                      fontSize: 16,
+                                      color: "text.secondary",
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {getDocTypeLabel(resident.docType)}:{" "}
+                                    {formatDoc(resident.doc, resident.docType)}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.7,
+                                  }}
+                                >
+                                  <EmailOutlined
+                                    sx={{
+                                      fontSize: 16,
+                                      color: "text.secondary",
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {resident.email || "-"}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.7,
+                                  }}
+                                >
+                                  <PhoneOutlined
+                                    sx={{
+                                      fontSize: 16,
+                                      color: "text.secondary",
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {formatResidentPhone(resident.phone)}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.7,
+                                  }}
+                                >
+                                  <Person
+                                    sx={{
+                                      fontSize: 16,
+                                      color: "text.secondary",
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {residentType} | <MeetingRoom sx={{fontSize:14}}/>{" "}{residentUnit} |{" "}
+                                    <ViewModule sx={{fontSize:14}}/>{" "}{residentBlock}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            ),
+                            toolTip: `Tipo: ${residentType} | Unidade: ${residentUnit} | Bloco: ${residentBlock}`,
+                            imageUrl: getResidentImageUrl(resident),
+                            accentColor:
+                              index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                          };
+                        })}
+                    />
+                  </>
                 )}
               </Paper>
             ) : null}
@@ -531,18 +977,16 @@ const Residentes: React.FC = () => {
         )}
       </Container>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        item={appStateModal.item}
+        onConfirm={handleClose}
+        onClose={handleClose}
+      />
     </Box>
   );
 };

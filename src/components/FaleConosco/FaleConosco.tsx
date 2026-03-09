@@ -9,10 +9,10 @@ import {
   Stepper,
   Step,
   StepLabel,
-  Snackbar,
-  Alert,
   CircularProgress,
 } from '@mui/material';
+import { AppStateModal } from '../../shared/components/AppStateModal';
+import { useAppStateModal } from '../../shared/utils/useAppStateModal';
 
 interface ContactForm {
   name: string;
@@ -37,12 +37,7 @@ export default function FaleConosco() {
   const [formData, setFormData] = useState<ContactForm>(initialForm);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error',
-  });
-
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
   const handleChange = (field: keyof ContactForm, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -86,19 +81,11 @@ export default function FaleConosco() {
     setLoading(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 600));
-      setSnackbar({
-        open: true,
-        message: 'Mensagem enviada com sucesso!',
-        severity: 'success',
-      });
+      showSuccess('Sua mensagem foi enviada com sucesso!');
       setFormData(initialForm);
       setActiveStep(0);
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Erro ao enviar mensagem.',
-        severity: 'error',
-      });
+      showError('Erro ao enviar mensagem', 'Ocorreu um erro ao processar sua solicitação.');
     } finally {
       setLoading(false);
     }
@@ -126,7 +113,12 @@ export default function FaleConosco() {
           {activeStep === 0 ? (
             <Box sx={{ display: 'grid', gap: 2 }}>
               <TextField
-                label="Nome completo"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                placeholder="Nome completo"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 error={!!errors.name}
@@ -134,7 +126,12 @@ export default function FaleConosco() {
                 fullWidth
               />
               <TextField
-                label="Email"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                placeholder="Email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
                 error={!!errors.email}
@@ -142,7 +139,12 @@ export default function FaleConosco() {
                 fullWidth
               />
               <TextField
-                label="Telefone"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                placeholder="Telefone"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
                 fullWidth
@@ -153,7 +155,12 @@ export default function FaleConosco() {
           {activeStep === 1 ? (
             <Box sx={{ display: 'grid', gap: 2 }}>
               <TextField
-                label="Assunto"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                placeholder="Assunto"
                 value={formData.subject}
                 onChange={(e) => handleChange('subject', e.target.value)}
                 error={!!errors.subject}
@@ -161,7 +168,12 @@ export default function FaleConosco() {
                 fullWidth
               />
               <TextField
-                label="Mensagem"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
+                placeholder="Mensagem"
                 value={formData.message}
                 onChange={(e) => handleChange('message', e.target.value)}
                 error={!!errors.message}
@@ -197,25 +209,23 @@ export default function FaleConosco() {
               </Button>
             ) : (
               <Button variant="contained" onClick={handleNext}>
-                Proximo
+                Avançar
               </Button>
             )}
           </Box>
         </Paper>
       </Container>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        item={appStateModal.item}
+        onConfirm={handleClose}
+        onClose={handleClose}
+      />
     </Box>
   );
 }

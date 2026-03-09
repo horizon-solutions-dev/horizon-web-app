@@ -76,7 +76,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
       surname: "",
       email: "",
       phone: "",
-      docType: "CPF",
+      docType: 1,
       doc: "",
       password: "",
       confirmPassword: "",
@@ -93,7 +93,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
           surname: values.surname,
           email: values.email,
           phone: values.phone,
-          docType: values.docType as "CPF" | "CNPJ" | "PASS",
+          docType: values.docType as unknown as 1 | 2 | 3 | 4,
           doc: values.doc.replace(/\D/g, ""),
         };
 
@@ -142,7 +142,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
 
   const handleDocumentChange = (value: string) => {
     let cleaned = value.replace(/\D/g, "");
-    const maxLength = formik.values.docType === "CNPJ" ? 14 : formik.values.docType === "CPF" ? 11 : 20;
+    const maxLength = formik.values.docType === 1 ? 14 : formik.values.docType === 2 ? 11 : 20;
     
     if (cleaned.length > maxLength) {
       cleaned = cleaned.slice(0, maxLength);
@@ -287,7 +287,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
                   value={formik.values.doc}
                   onChange={(e) => handleDocumentChange(e.target.value)}
                   onBlur={formik.handleBlur}
-                  placeholder={formik.values.docType === "CNPJ" ? "00.000.000/0000-00" : "000.000.000-00"}
+                  placeholder={formik.values.docType === 1 ? "00.000.000/0000-00" : "000.000.000-00"}
                   className={`input-field ${
                     formik.touched.doc && formik.errors.doc ? "input-error" : ""
                   }`}

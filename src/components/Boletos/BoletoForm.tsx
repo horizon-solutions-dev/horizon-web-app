@@ -180,15 +180,16 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
       <DialogContent dividers className="form-content">
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Typography variant="subtitle2" className="section-title">
-              Informações do Boleto
-            </Typography>
           </Grid>
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Número do Boleto"
               value={formData.numero}
               onChange={(e) => handleChange('numero', e.target.value)}
               error={!!errors.numero}
@@ -199,20 +200,28 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Descrição"
               value={formData.descricao}
               onChange={(e) => handleChange('descricao', e.target.value)}
               error={!!errors.descricao}
               helperText={errors.descricao}
-              placeholder="Ex: Condomínio - Janeiro/2026"
+              placeholder="Ex: Condôminio - Janeiro/2026"
             />
           </Grid>
 
           <Grid item xs={12} md={4}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Valor"
               type="number"
               value={formData.valor}
               onChange={(e) => handleChange('valor', e.target.value)}
@@ -226,8 +235,12 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={4}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Vencimento"
               type="date"
               value={formData.vencimento}
               onChange={(e) => handleChange('vencimento', e.target.value)}
@@ -239,9 +252,13 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={4}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
               select
-              label="Status"
               value={formData.status}
               onChange={(e) => handleChange('status', e.target.value)}
             >
@@ -253,8 +270,12 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Beneficiário"
               value={formData.beneficiario}
               onChange={(e) => handleChange('beneficiario', e.target.value)}
               error={!!errors.beneficiario}
@@ -265,8 +286,12 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Pagador"
               value={formData.pagador}
               onChange={(e) => handleChange('pagador', e.target.value)}
               error={!!errors.pagador}
@@ -277,8 +302,12 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
 
           <Grid item xs={12}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Data de Emissão"
               type="date"
               value={formData.dataEmissao}
               onChange={(e) => handleChange('dataEmissao', e.target.value)}
@@ -287,9 +316,6 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
           </Grid>
 
           <Grid item xs={12}>
-            <Typography variant="subtitle2" className="section-title">
-              Imagem do Boleto
-            </Typography>
           </Grid>
 
           <Grid item xs={12}>

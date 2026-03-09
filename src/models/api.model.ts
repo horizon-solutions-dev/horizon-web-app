@@ -15,6 +15,12 @@ export interface LoginResponse {
   message: string;
 }
 
+export interface TypesDoc {
+  id: number;
+  value: string;
+  description: string;
+}
+
 export interface RefreshTokenRequest {
   token: string;
   refreshToken: string;
@@ -63,16 +69,22 @@ export interface ResetPasswordResponse {
 export interface CreateAccountRequest {
   name: string;
   surname: string;
-  docType: 'CPF' | 'CNPJ' | 'PASS';
+  docType: 1 | 2 | 3 | 4;
   doc: string;
   email: string;
   phone: string;
+  condominiumUnitImagePhoto?: {
+    contentFile: File;
+    condominiumId: string;
+    condominiumUnitId: string;
+    userId: string;
+  };
 }
 
 export interface UpdateAccountRequest {
   name: string;
   surname: string;
-  docType: 'CPF' | 'CNPJ' | 'PASS';
+  docType: 1 | 2 | 3 | 4;
   doc: string;
   email: string;
   phone: string;
@@ -87,7 +99,7 @@ export interface AccountResponse {
   userId: string;
   name: string;
   surname: string;
-  docType: 'CPF' | 'CNPJ' | 'PASS';
+  docType: 1 | 2 | 3 | 4;
   doc: string;
   email: string;
   phone: string;

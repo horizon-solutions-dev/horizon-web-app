@@ -10,8 +10,6 @@ import {
   InputAdornment,
   Menu,
   MenuItem,
-  Snackbar,
-  Alert,
   Table,
   TableBody,
   TableCell,
@@ -35,22 +33,18 @@ import {
 import './Veiculos.scss';
 import { initialVeiculos, type Veiculo } from '../../services/mockData';
 import VeiculoForm from './VeiculoForm';
+import { AppStateModal } from '../../shared/components/AppStateModal';
+import { useAppStateModal } from '../../shared/utils/useAppStateModal';
 
 const Veiculos: React.FC = () => {
   const [veiculos, setVeiculos] = useState<Veiculo[]>(initialVeiculos);
   const [searchTerm, setSearchTerm] = useState('');
   const [openForm, setOpenForm] = useState(false);
-  //TODO - Implementar editar veiculo
-  //const [selectedVeiculo, setSelectedVeiculo] = useState<Veiculo | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuVeiculo, setMenuVeiculo] = useState<Veiculo | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [snackbar, setSnackbar] = useState({ 
-    open: false, 
-    message: '', 
-    severity: 'success' as 'success' | 'error' 
-  });
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
 
   const handleOpenForm = (veiculo?: Veiculo) => {
     return veiculo;
@@ -64,56 +58,14 @@ const Veiculos: React.FC = () => {
     setOpenForm(false);
    // setSelectedVeiculo(null);
   };
-//TODO - Implementar salvar veiculo
-/*   const handleSaveVeiculo = (veiculoData: Omit<Veiculo, 'id'>) => {
-    try {
-      if (selectedVeiculo) {
-        setVeiculos(veiculos.map(v => 
-          v.id === selectedVeiculo.id ? { ...veiculoData, id: selectedVeiculo.id } : v
-        ));
-        setSnackbar({ 
-          open: true, 
-          message: 'Veículo atualizado com sucesso!', 
-          severity: 'success' 
-        });
-      } else {
-        const newId = Math.max(...veiculos.map(v => v.id), 0) + 1;
-        setVeiculos([...veiculos, { ...veiculoData, id: newId }]);
-        setSnackbar({ 
-          open: true, 
-          message: 'Veículo cadastrado com sucesso!', 
-          severity: 'success' 
-        });
-      }
-      handleCloseForm();
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Erro ao salvar veículo!',
-        severity: 'error'
-      });
-    }
-  }; */
 
   const handleDeleteVeiculo = (veiculo: Veiculo) => {
-    if (window.confirm(`Deseja realmente excluir o veículo ${veiculo.modelo} - ${veiculo.placa}?`)) {
-      try {
-        setVeiculos(veiculos.filter(v => v.id !== veiculo.id));
-        setSnackbar({ 
-          open: true, 
-          message: 'Veículo excluído com sucesso!', 
-          severity: 'success' 
-        });
-        handleCloseMenu();
-      } catch {
-        setSnackbar(
-          {
-            open: true,
-            message: 'Erro ao excluir veículo!',
-            severity: 'error'
-          }
-        );
-      }
+    try {
+      setVeiculos(veiculos.filter(v => v.id !== veiculo.id));
+      showSuccess(`Veí­culo ${veiculo.placa} foi deletado com sucesso!`);
+      handleCloseMenu();
+    } catch {
+      showError('Erro ao excluir veí­culo', 'Ocorreu um erro ao deletar o veí­culo.');
     }
   };
 
@@ -169,9 +121,13 @@ const Veiculos: React.FC = () => {
           <Box className="veiculos-content">
             <Box className="toolbar">
               <TextField
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 46,
+                  },
+                }}
                 placeholder="Buscar por placa, modelo, marca ou morador..."
                 variant="outlined"
-                size="small"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-field"
@@ -349,20 +305,22 @@ const Veiculos: React.FC = () => {
         veiculo={null}
       />
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert 
-          severity={snackbar.severity} 
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        item={appStateModal.item}
+        onConfirm={handleClose}
+        onClose={handleClose}
+      />
     </Box>
   );
 };
 
 export default Veiculos;
+
+
+
+

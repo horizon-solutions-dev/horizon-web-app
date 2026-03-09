@@ -15,7 +15,7 @@ interface SuccessNoticeModalProps {
 
 export default function SuccessNoticeModal({
   open,
-  title = "Operacao concluida",
+  title = "Operação concluída",
   message = "Os dados foram salvos com sucesso.",
   imageSrc,
   imageAlt,

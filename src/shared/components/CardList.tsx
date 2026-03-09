@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment } from "react";
 import {
   Box,
   Paper,
@@ -10,8 +10,16 @@ import {
   Pagination,
   PaginationItem,
   InputAdornment,
-} from '@mui/material';
-import { Add, Search, Tune, ArrowBack, ArrowForward, Close } from '@mui/icons-material';
+  Tooltip,
+} from "@mui/material";
+import {
+  Add,
+  Search,
+  Tune,
+  ArrowBack,
+  ArrowForward,
+  Close,
+} from "@mui/icons-material";
 
 export interface CardListItem {
   id: string;
@@ -21,6 +29,7 @@ export interface CardListItem {
   imageUrl?: string;
   actions?: React.ReactNode;
   accentColor?: string;
+  toolTip?: string;
 }
 
 interface CardListProps {
@@ -36,12 +45,17 @@ interface CardListProps {
   addLabel?: string;
   showTitle?: boolean;
   showFilters?: boolean;
-  addButtonPlacement?: 'header' | 'toolbar';
+  addButtonPlacement?: "header" | "toolbar";
   emptyImageLabel?: string;
   page?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
   showPagination?: boolean;
+  cardMaxHeight?: number | string;
+  imageWidth?: number;
+  haveImage?: boolean;
+  imageHeight?: number;
+  actionsMarginTop?: number;
 }
 
 export default function CardList({
@@ -49,9 +63,9 @@ export default function CardList({
   headerIcon,
   breadcrumb,
   onClose,
-  closeLabel = 'Fechar',
+  closeLabel = "Fechar",
   items,
-  searchPlaceholder = 'Buscar...',
+  searchPlaceholder = "Buscar...",
   onSearchChange,
   onAddClick,
   page = 1,
@@ -60,16 +74,30 @@ export default function CardList({
   showPagination = true,
   showTitle = true,
   showFilters = true,
-  addButtonPlacement = 'header',
-  emptyImageLabel = 'Sem imagem',
+  addButtonPlacement = "header",
+  emptyImageLabel = "Sem imagem",
+  cardMaxHeight = 195,
+  imageWidth = 120,
+  imageHeight = 80,
+  actionsMarginTop = 1,
+  haveImage = true,
 }: CardListProps) {
   return (
     <Fragment>
       {showTitle ? (
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            mb: 3,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             {headerIcon ? (
-              <Box sx={{ color: '#1976d2', display: 'flex', alignItems: 'center' }}>
+              <Box
+                sx={{ color: "#1976d2", display: "flex", alignItems: "center" }}
+              >
                 {headerIcon}
               </Box>
             ) : null}
@@ -78,13 +106,16 @@ export default function CardList({
                 {title}
               </Typography>
               {breadcrumb ? (
-                <Typography variant="caption" sx={{ color: '#d32f2f', fontWeight: 600 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#d32f2f", fontWeight: 600 }}
+                >
                   {breadcrumb}
                 </Typography>
               ) : null}
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {onClose ? (
               <Button
                 color="error"
@@ -96,15 +127,19 @@ export default function CardList({
                 {closeLabel}
               </Button>
             ) : null}
-            {onAddClick && addButtonPlacement === 'header' ? (
+            {onAddClick && addButtonPlacement === "header" ? (
               <IconButton
                 onClick={onAddClick}
                 sx={{
                   width: 40,
                   height: 40,
-                  background: 'linear-gradient(135deg, #7f5bff 0%, #6c63ff 100%)',
-                  color: '#fff',
-                  '&:hover': { background: 'linear-gradient(135deg, #6c63ff 0%, #5a52e6 100%)' },
+                  background:
+                    "linear-gradient(135deg, #7f5bff 0%, #6c63ff 100%)",
+                  color: "#fff",
+                  "&:hover": {
+                    background:
+                      "linear-gradient(135deg, #6c63ff 0%, #5a52e6 100%)",
+                  },
                 }}
               >
                 <Add />
@@ -114,7 +149,7 @@ export default function CardList({
         </Box>
       ) : null}
 
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+      <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
         <TextField
           fullWidth
           placeholder={searchPlaceholder}
@@ -122,58 +157,58 @@ export default function CardList({
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <Search sx={{ color: 'text.secondary' }} />
+                <Search sx={{ color: "text.secondary" }} />
               </InputAdornment>
             ),
           }}
           sx={{
-            flex: 1,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              backgroundColor: '#fff',
+            "& .MuiOutlinedInput-root": {
+              height: 46,
             },
           }}
         />
         {showFilters && (
-          <IconButton
-            sx={{
-              width: 40,
-              height: 40,
-              border: '2px solid #e0e0e0',
-              borderRadius: 2,
-              color: '#666',
-              flexShrink: 0,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                borderColor: '#1976d2',
-                color: '#1976d2',
-                backgroundColor: 'rgba(25, 118, 210, 0.04)',
-              },
-            }}
-          >
-            <Tune />
-          </IconButton>
+          <Tooltip title="Clique aqui para Abrir a janela de Configurações">
+            <IconButton
+              sx={{
+                width: 40,
+                height: 40,
+                border: "2px solid #e0e0e0",
+                borderRadius: 2,
+                color: "#666",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  borderColor: "#1976d2",
+                  color: "#1976d2",
+                  backgroundColor: "rgba(25, 118, 210, 0.04)",
+                },
+              }}
+            >
+              <Tune />
+            </IconButton>
+          </Tooltip>
         )}
-        {onAddClick && addButtonPlacement === 'toolbar' && (
-          <IconButton
-            onClick={onAddClick}
-            sx={{
-              width: 40,
-              height: 40,
-              border: '2px solid #e0e0e0',
-              borderRadius: 2,
-              color: '#666',
-              flexShrink: 0,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                borderColor: '#d32f2f',
-                color: '#d32f2f',
-                backgroundColor: 'rgba(211, 47, 47, 0.04)',
-              },
-            }}
-          >
-            <Add />
-          </IconButton>
+        {onAddClick && addButtonPlacement === "toolbar" && (
+          <Tooltip title="Clique aqui para Criar um novo Item">
+            <IconButton
+              onClick={onAddClick}
+              sx={{
+                width: 40,
+                height: 40,
+                border: "2px solid #e0e0e0",
+                borderRadius: 2,
+                color: "#666",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  borderColor: "#d32f2f",
+                  color: "#d32f2f",
+                  backgroundColor: "rgba(211, 47, 47, 0.04)",
+                },
+              }}
+            >
+              <Add />
+            </IconButton>
+          </Tooltip>
         )}
       </Box>
 
@@ -182,11 +217,15 @@ export default function CardList({
           <Grid item xs={12}>
             <Box
               sx={{
+                height: "300px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 p: 3,
                 borderRadius: 2,
-                border: '1px dashed #d0d7de',
-                textAlign: 'center',
-                color: 'text.secondary',
+                border: "1px dashed #d0d7de",
+                textAlign: "center",
+                color: "text.secondary",
               }}
             >
               Nenhum item encontrado.
@@ -200,54 +239,81 @@ export default function CardList({
                 sx={{
                   p: 2,
                   borderRadius: 3,
-                  background: item.accentColor || '#f6f7fb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
+                  background: item.accentColor || "#f6f7fb",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                   gap: 2,
+                  maxHeight: cardMaxHeight,
                 }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }} noWrap>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb:'12px' }}
+                    noWrap
+                  >
                     {item.title}
                   </Typography>
                   {item.subtitle ? (
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {item.subtitle}
-                    </Typography>
+                    typeof item.subtitle === "string" ? (
+                      <Typography variant="body2" color="text.secondary" noWrap>
+                        {item.subtitle}
+                      </Typography>
+                    ) : (
+                      <Box>{item.subtitle}</Box>
+                    )
                   ) : null}
                   {item.meta ? (
-                    <Typography variant="caption" color="text.secondary">
-                      {item.meta}
-                    </Typography>
+                    typeof item.meta === "string" ? (
+                      <Typography variant="caption" color="text.secondary">
+                        {item.meta}
+                      </Typography>
+                    ) : (
+                      <Box>{item.meta}</Box>
+                    )
                   ) : null}
-                  {item.actions ? <Box sx={{ mt: 1 }}>{item.actions}</Box> : null}
+                  {item.actions ? (
+                    <Box sx={{ mt: actionsMarginTop }}>{item.actions}</Box>
+                  ) : null}
                 </Box>
+                {
+                  haveImage && (
                 <Box
                   sx={{
-                    width: 120,
-                    height: 80,
+                    width: imageWidth,
+                    height: imageHeight,
                     borderRadius: 2,
-                    background: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    flexShrink: 0,
+                    background: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden",
                   }}
                 >
                   {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                    <Tooltip title={item?.toolTip} placement="top">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </Tooltip>
                   ) : (
+                                        <Tooltip title={item?.toolTip} placement="top">
+
                     <Typography variant="caption" color="text.secondary">
                       {emptyImageLabel}
                     </Typography>
+                    </Tooltip>
                   )}
                 </Box>
+                  )
+                }
               </Paper>
             </Grid>
           ))
@@ -255,7 +321,7 @@ export default function CardList({
       </Grid>
 
       {showPagination ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
           <Pagination
             page={page}
             count={Math.max(1, totalPages)}

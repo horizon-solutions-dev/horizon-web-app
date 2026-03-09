@@ -1,9 +1,20 @@
+import axios from 'axios';
 import { apiClient } from './apiClient';
 import type { UnitType } from './unitService';
+import type { PagedResponse } from '../models/pagination.model';
+import { normalizePagedResponse } from '../shared/utils/pagination';
+import type { AccountResponse } from '../models/api.model';
+
+type ResidentDocType = AccountResponse['docType'] | number | string;
 
 export interface CondominiumUnitResidentRequest {
   condominiumUnitId: string;
   userId: string;
+  fullname: string;
+  docType: ResidentDocType;
+  doc: string;
+  email: string;
+  phone: string;
   unitType?: UnitType;
   startDate?: string;
   endDate?: string;
@@ -16,7 +27,12 @@ export interface CondominiumUnitResidentRequest {
 
 export interface CondominiumUnitResident extends CondominiumUnitResidentRequest {
   condominiumUnitResidentId: string;
+  contentType?: string;
+  thumbnailFile?: string;
+  active?: boolean;
 }
+
+export type CondominiumUnitResidentPagedResponse = PagedResponse<CondominiumUnitResident>;
 
 class UnitResidentService {
   private baseUrl =
@@ -29,7 +45,22 @@ class UnitResidentService {
         resident
       );
     } catch (error) {
-      console.error('Erro ao criar residente:', error);
+      console.error('Erro ao criar morador:', error);
+      throw error;
+    }
+  }
+
+  async validateResident(resident: CondominiumUnitResidentRequest) {
+    try {
+      await apiClient.post<{ condominiumUnitResidentId?: string }>(this.baseUrl, resident);
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
       throw error;
     }
   }
@@ -42,11 +73,13 @@ class UnitResidentService {
         ...(pageSize !== undefined && { PageSize: pageSize.toString() }),
       });
 
-      return await apiClient.get<CondominiumUnitResident[]>(
+      const response = await apiClient.get<CondominiumUnitResident[] | CondominiumUnitResidentPagedResponse>(
         `${this.baseUrl}?${params}`
       );
+      
+      return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
-      console.error('Erro ao buscar residentes:', error);
+      console.error('Erro ao buscar moradores:', error);
       throw error;
     }
   }
@@ -55,7 +88,7 @@ class UnitResidentService {
     try {
       return await apiClient.get<CondominiumUnitResident>(`${this.baseUrl}/${id}`);
     } catch (error) {
-      console.error('Erro ao buscar residente:', error);
+      console.error('Erro ao buscar morador:', error);
       throw error;
     }
   }

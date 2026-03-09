@@ -4,7 +4,7 @@ export type ImageType =
   | 'AccessControl' 
   | 'Banner' 
   | 'ConventionDocument' 
-  | 'Cover' 
+  | 'Facade' 
   | 'Coworking' 
   | 'Damage' 
   | 'Elevator' 

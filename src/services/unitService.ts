@@ -1,31 +1,31 @@
+import axios from 'axios';
 import { apiClient } from './apiClient';
+import type { PagedResponse } from '../models/pagination.model';
+import { normalizePagedResponse } from '../shared/utils/pagination';
 
-export type UnitType = 'Owner' | 'Tenant' | string;
+export type UnitType = 'Owner' | 'Tenant' | string | '1' | '2' | number;
 
 export interface CondominiumUnitRequest {
   condominiumId: string;
   condominiumBlockId: string;
   unitCode: string;
-  unitType?: UnitType;
+  unitType: 'Owner' | 'Tenant' | string | '1' | '2' | number; // 'Owner' | 'Tenant' | string;
+  allocationType?: 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string | number; // 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string;
+  commit?: boolean;
 }
 export interface CondominiumUnitResponse {
   condominiumId: string;
   condominiumBlockId: string;
   unitCode: string;
-  unitType?: '1' | '2' | string;
+  unitType?: 1 | 2 | '1' | '2' | string;
+  allocationType?: 1 | 2 | 3 | '1' | '2' | '3' | string;
 }
 
 export interface CondominiumUnit extends CondominiumUnitResponse {
   condominiumUnitId: string;
 }
 
-export interface CondominiumUnitPagedResponse {
-  data: CondominiumUnit[];
-  total: number;
-  pageNumber: number;
-  pageSize: number;
-  totalPages?: number;
-}
+export type CondominiumUnitPagedResponse = PagedResponse<CondominiumUnit>;
 
 export interface UnitTypeEnum {
   id: number;
@@ -42,6 +42,35 @@ class UnitService {
       return await apiClient.post<{ condominiumUnitId: string }>(this.baseUrl, unit);
     } catch (error) {
       console.error('Erro ao criar unidade:', error);
+      throw error;
+    }
+  }
+
+  async validateUnitEdit(unit: CondominiumUnitRequest, id:string) {
+    try {
+      await apiClient.put<{ condominiumUnitId?: string }>(this.baseUrl + '/' + id, unit);
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
+      throw error;
+    }
+  }
+  async validateUnit(unit: CondominiumUnitRequest) {
+    try {
+      await apiClient.post<{ condominiumUnitId?: string }>(this.baseUrl, unit);
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
       throw error;
     }
   }
@@ -72,30 +101,14 @@ class UnitService {
         ...(pageSize !== undefined && { PageSize: pageSize.toString() }),
       });
 
-      const response = await apiClient.get<CondominiumUnitPagedResponse>(
+      const response = await apiClient.get<CondominiumUnit[] | CondominiumUnitPagedResponse>(
         `${this.baseUrl}/by-block?${params}`
       );
 
-      if (Array.isArray(response)) {
-        return {
-          data: response,
-          total: response.length,
-          pageNumber: pageNumber ?? 1,
-          pageSize: pageSize || response.length || 1,
-          totalPages: 1,
-        } satisfies CondominiumUnitPagedResponse;
-      }
-
-      return {};
+      return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
       console.error('Erro ao buscar unidades por bloco:', error);
-      return{
-        data: [] as CondominiumUnit[],
-        total: 0,
-        pageNumber: 1,
-        pageSize: 0,
-        totalPages: 0,
-      }
+      throw error;
     }
   }
 
@@ -111,17 +124,7 @@ class UnitService {
         `${this.baseUrl}/by-condominium?${params}`
       );
 
-      if (Array.isArray(response)) {
-        return {
-          data: response,
-          total: response.length,
-          pageNumber: pageNumber ?? 1,
-          pageSize: pageSize || response.length || 1,
-          totalPages: 1,
-        } satisfies CondominiumUnitPagedResponse;
-      }
-
-      return response;
+      return normalizePagedResponse(response, pageNumber, pageSize);
     } catch (error) {
       console.error('Erro ao buscar unidades por condominio:', error);
       throw error;
