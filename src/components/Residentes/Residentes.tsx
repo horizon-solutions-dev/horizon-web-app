@@ -18,7 +18,6 @@ import {
   BadgeOutlined,
   EmailOutlined,
   PhoneOutlined,
-  ApartmentOutlined,
   People,
   LocationOn,
   Article,
