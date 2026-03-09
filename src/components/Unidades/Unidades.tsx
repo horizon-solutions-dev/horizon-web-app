@@ -19,6 +19,8 @@ import {
   Apartment,
   SettingsOutlined,
   Home,
+  LocationOn,
+  Article,
 } from "@mui/icons-material";
 import {
   unitService,
@@ -32,6 +34,7 @@ import {
 import {
   condominiumService,
   type Condominium,
+  type CondominiumTypeEnum,
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
@@ -42,7 +45,8 @@ import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { useNavigate } from "react-router-dom";
 import { condominiumImageService } from "../../services/condominiumImageService";
 import { useTranslation } from "react-i18next";
-
+import { formatCNPJ } from "../../shared/utils/funcoes";
+import Allocation from "../../assets/allocation.png";
 const Unidades: React.FC = () => {
   const [activeView, setActiveView] = useState<"condominios" | "unidades">(
     "condominios",
@@ -95,10 +99,12 @@ const Unidades: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
-          const nameStorage = localStorage.getItem('condominium');
+          const nameStorage = localStorage.getItem("condominium");
           const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
-            organizations?.find(o => o.organizationId === dataParse?.organizationId)?.name || dataParse?.name
+            organizations?.find(
+              (o) => o.organizationId === dataParse?.organizationId,
+            )?.name || dataParse?.name;
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore organization name errors
@@ -174,10 +180,10 @@ const Unidades: React.FC = () => {
       const response = blockId
         ? await unitService.getUnitsByBlock(blockId, pageNumber, pageSize)
         : await unitService.getUnitsByCondominium(
-          condominiumId,
-          pageNumber,
-          pageSize,
-        );
+            condominiumId,
+            pageNumber,
+            pageSize,
+          );
       const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
@@ -237,7 +243,30 @@ const Unidades: React.FC = () => {
   useEffect(() => {
     loadCondominiums(1);
     loadUnitTypes();
+    loadCondominiumTypes();
   }, []);
+
+  const [condominiumTypes, setCondominiumTypes] = useState<
+    CondominiumTypeEnum[]
+  >([]);
+
+  const getCondominiumImageUrl = (condominium: Condominium) => {
+    if (!condominium.thumbnailFile || !condominium.contentType)
+      return undefined;
+    return `data:${condominium.contentType};base64,${condominium.thumbnailFile}`;
+  };
+
+  const getCondominiumTypeLabel = (value: string | number) => {
+    const match = condominiumTypes.find(
+      (type) => type.id === value || type.value === value,
+    );
+    return match?.description || match?.value || String(value);
+  };
+
+  const loadCondominiumTypes = async () => {
+    const data = await condominiumService.getCondominiumTypes();
+    setCondominiumTypes(data ?? []);
+  };
 
   const blockPageSize = 6;
   const filteredBlocks = useMemo(
@@ -306,10 +335,7 @@ const Unidades: React.FC = () => {
   };
 
   const handleDelete = (unit: CondominiumUnit) => {
-    showDelete(
-      "Confirma a exclusao do item?",
-      `${unit.unitCode || "-"}`,
-    );
+    showDelete("Confirma a exclusao do item?", `${unit.unitCode || "-"}`);
   };
 
   const handleOpenCreate = () => {
@@ -327,28 +353,27 @@ const Unidades: React.FC = () => {
     handleCloseForm();
   };
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const selectedBlock = blocks.find(
     (block) => block.condominiumBlockId === selectedBlockId,
   );
   const unitsBreadcrumbItems = selectedBlockId
     ? [
-      selectedCondominium?.name || t("unidades.selectedCondominium"),
-      t("common.blocks"),
-      selectedBlock?.name || selectedBlock?.code || t("common.unknown"),
-      t("common.units"),
-    ]
+        selectedCondominium?.name || t("unidades.selectedCondominium"),
+        t("common.blocks"),
+        selectedBlock?.name || selectedBlock?.code || t("common.unknown"),
+        t("common.units"),
+      ]
     : [
-      selectedCondominium?.name || t("unidades.selectedCondominium"),
-      t("common.blocks"),
-    ];
+        selectedCondominium?.name || t("unidades.selectedCondominium"),
+        t("common.blocks"),
+      ];
 
   return (
     <Box className="unidade-container">
       <Container maxWidth="xl">
         {activeView === "condominios" ? (
           <Paper elevation={3} sx={{ p: 3 }}>
-
             <Box
               sx={{
                 mb: 2,
@@ -361,7 +386,7 @@ const Unidades: React.FC = () => {
             >
               <Container
                 sx={{
-                  p: '0 !important',
+                  p: "0 !important",
                   maxWidth: "100vw !important",
                   display: "flex",
                   alignItems: "center",
@@ -379,7 +404,6 @@ const Unidades: React.FC = () => {
                   </Typography>
                 </Box>
                 <Tooltip title="Clique aqui para Fechar a janela">
-
                   <IconButton
                     onClick={() => navigate("/dashboard")}
                     className="close-button"
@@ -389,20 +413,12 @@ const Unidades: React.FC = () => {
                   </IconButton>
                 </Tooltip>
               </Container>
-              <Box >
+              <Box>
                 <BreadcrumbTrail
-                  items={[
-                    t("common.organization"),
-                    t("common.condominiums"),
-                  ]}
+                  items={[t("common.organization"), t("common.condominiums")]}
                 />
               </Box>
             </Box>
-
-
-
-
-
 
             <Paper variant="outlined" sx={{ p: 2 }}>
               {listLoading ? (
@@ -440,13 +456,6 @@ const Unidades: React.FC = () => {
                       title: condominium.name,
                       subtitle: (
                         <>
-                          <Apartment
-                            sx={{
-                              fontSize: 16,
-                              mr: 0.5,
-                              verticalAlign: "middle",
-                            }}
-                          />
                           {condominium.city} - {condominium.state}
                         </>
                       ),
@@ -499,18 +508,68 @@ const Unidades: React.FC = () => {
                       id: condominium.condominiumId,
                       title: condominium.name,
                       subtitle: (
-                        <>
-                          <Apartment
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.35,
+                          }}
+                        >
+                          <Box
                             sx={{
-                              fontSize: 16,
-                              mr: 0.5,
-                              verticalAlign: "middle",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
                             }}
-                          />
-                          {condominium.city} - {condominium.state}
-                        </>
+                          >
+                            <Article sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {formatCNPJ(condominium.doc) || "-"}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <LocationOn sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {condominium.city} - {condominium.state}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {getCondominiumTypeLabel(
+                                condominium.condominiumType,
+                              )}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {
+                                condominiumTypes.find(
+                                  (f) => f?.id == condominium?.allocationType,
+                                )?.description
+                              }
+                            </Typography>
+                          </Box>
+                        </Box>
                       ),
-                      imageUrl: condominiumImages[condominium.condominiumId],
+                      imageUrl: getCondominiumImageUrl(condominium),
 
                       actions: (
                         <Button
@@ -583,9 +642,7 @@ const Unidades: React.FC = () => {
                       >
                         {t("unidades.title")}
                       </Typography>
-                      <BreadcrumbTrail
-                        items={unitsBreadcrumbItems}
-                      />
+                      <BreadcrumbTrail items={unitsBreadcrumbItems} />
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
@@ -620,7 +677,9 @@ const Unidades: React.FC = () => {
                   {listLoading ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <CircularProgress size={20} />
-                      <Typography variant="body2">{t("common.loading")}</Typography>
+                      <Typography variant="body2">
+                        {t("common.loading")}
+                      </Typography>
                     </Box>
                   ) : null}
 
@@ -649,48 +708,47 @@ const Unidades: React.FC = () => {
                       onPageChange={(page) => {
                         setBlockPage(page);
                       }}
-                      items={paginatedBlocks
-                        .map((block, index) => ({
-                          id: block.condominiumBlockId,
-                          title: block.name || t("common.noName"),
-                          subtitle: (
-                            <>
-                              <ViewModule
-                                sx={{
-                                  fontSize: 14,
-                                  mr: 0.5,
-                                  verticalAlign: "middle",
-                                }}
-                              />
-                              {block.code || "-"}
-                            </>
-                          ),
-                          actions: (
-                            <Button
-                              startIcon={<SettingsOutlined />}
-                              size="small"
-                              variant="outlined"
-                              className="action-button-manage"
-                              onClick={() => {
-                                setSelectedBlockId(block.condominiumBlockId);
-                                setUnitSearchText("");
-                                setUnitsPage(1);
-                                loadUnits(block.condominiumBlockId, 1);
-                                setEditingUnit(null);
-                                setIsCadastroOpen(false);
-                                setUnitsPage(1);
+                      items={paginatedBlocks.map((block, index) => ({
+                        id: block.condominiumBlockId,
+                        title: block.name || t("common.noName"),
+                        subtitle: (
+                          <>
+                            <ViewModule
+                              sx={{
+                                fontSize: 14,
+                                mr: 0.5,
+                                verticalAlign: "middle",
                               }}
-                            >
-                              {t("common.viewUnits")}
-                            </Button>
-                          ),
-                          accentColor:
-                            selectedBlockId === block.condominiumBlockId
-                              ? "#dff1ff"
-                              : index % 2 === 0
-                                ? "#eef6ee"
-                                : "#fdecef",
-                        }))}
+                            />
+                            {block.code || "-"}
+                          </>
+                        ),
+                        actions: (
+                          <Button
+                            startIcon={<SettingsOutlined />}
+                            size="small"
+                            variant="outlined"
+                            className="action-button-manage"
+                            onClick={() => {
+                              setSelectedBlockId(block.condominiumBlockId);
+                              setUnitSearchText("");
+                              setUnitsPage(1);
+                              loadUnits(block.condominiumBlockId, 1);
+                              setEditingUnit(null);
+                              setIsCadastroOpen(false);
+                              setUnitsPage(1);
+                            }}
+                          >
+                            {t("common.viewUnits")}
+                          </Button>
+                        ),
+                        accentColor:
+                          selectedBlockId === block.condominiumBlockId
+                            ? "#dff1ff"
+                            : index % 2 === 0
+                              ? "#eef6ee"
+                              : "#fdecef",
+                      }))}
                     />
                   )}
 
@@ -737,8 +795,7 @@ const Unidades: React.FC = () => {
                                   mr: 0.5,
                                   verticalAlign: "middle",
                                 }}
-                              />
-                              {" "}
+                              />{" "}
                               {unit.unitType?.toString() === "1"
                                 ? t("common.owner")
                                 : t("common.tenant")}
@@ -746,7 +803,16 @@ const Unidades: React.FC = () => {
                           ),
                           meta: (
                             <>
-                              {" "}
+                              <Box
+                                component="img"
+                                src={Allocation}
+                                sx={{
+                                  width: 16,
+                                  height: 16,
+                                  mr: 0.5,
+                                  verticalAlign: "middle",
+                                }}
+                              />{" "}
                               {blocks.find(
                                 (b) =>
                                   b.condominiumBlockId ===
@@ -758,8 +824,12 @@ const Unidades: React.FC = () => {
                           ),
                           actions: (
                             <Box
-                              sx={{ display: "flex", gap: 1, flexWrap: "wrap",                                    mt:2,
- }}
+                              sx={{
+                                display: "flex",
+                                gap: 1,
+                                flexWrap: "wrap",
+                                mt: 2,
+                              }}
                             >
                               <Button
                                 size="small"
@@ -808,6 +878,3 @@ const Unidades: React.FC = () => {
 };
 
 export default Unidades;
-
-
-

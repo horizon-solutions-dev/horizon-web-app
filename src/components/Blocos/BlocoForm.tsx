@@ -116,8 +116,6 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
         await blockService.createBlock(formData);
         showSuccess(t("blocoForm.createSuccess"));
       }
-
-      await onSaved();
       setFormData({
         condominiumId: condominiumIdPreset || "",
         code: "",

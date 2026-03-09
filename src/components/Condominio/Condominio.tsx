@@ -32,6 +32,7 @@ import { useTranslation } from "react-i18next";
 import { AppStateModal } from "../../shared/components";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import axios from "axios";
+import { formatCNPJ } from "../../shared/utils/funcoes";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
@@ -55,6 +56,19 @@ const CondominioPage: React.FC = () => {
     useState<Condominium | null>(null);
   const [imageSelected, setImageSelected] = useState<string | null>(null);
   const { appStateModal, handleClose, showDelete } = useAppStateModal();
+  useEffect(() => {
+    if (!organizationName) atualizarNome();
+  }, [organizationName]);
+
+  async function atualizarNome() {
+    const organizations = await organizationService.getMyOrganization();
+    const nameStorage = localStorage.getItem("condominium");
+    const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
+    const orgName = organizations?.find(
+      (o) => o.organizationId === dataParse?.organizationId,
+    )?.name;
+    if (orgName) setOrganizationName(orgName);
+  }
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -78,10 +92,9 @@ const CondominioPage: React.FC = () => {
           const organizations = await organizationService.getMyOrganization();
           const nameStorage = localStorage.getItem("condominium");
           const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
-          const orgName =
-            organizations?.find(
-              (o) => o.organizationId === dataParse?.organizationId,
-            )?.name || dataParse?.name;
+          const orgName = organizations?.find(
+            (o) => o.organizationId === dataParse?.organizationId,
+          )?.name;
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore
@@ -100,10 +113,15 @@ const CondominioPage: React.FC = () => {
       setTotalPages(computedTotalPages);
       setCondominiums(normalized);
     } catch (error) {
-      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
       const message =
-        error instanceof Error ? error.message : "Erro ao carregar condominios.";
-      const isNotFound = status === 404 || /not found|nada encontrado/i.test(message);
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar condominios.";
+      const isNotFound =
+        status === 404 || /not found|nada encontrado/i.test(message);
 
       if (isNotFound) {
         setCondominiums([]);
@@ -148,9 +166,9 @@ const CondominioPage: React.FC = () => {
     return match?.description || match?.value || String(value);
   };
 
-
   const getCondominiumImageUrl = (condominium: Condominium) => {
-    if (!condominium.thumbnailFile || !condominium.contentType) return undefined;
+    if (!condominium.thumbnailFile || !condominium.contentType)
+      return undefined;
     return `data:${condominium.contentType};base64,${condominium.thumbnailFile}`;
   };
 
@@ -198,11 +216,11 @@ const CondominioPage: React.FC = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
             <Article sx={{ fontSize: 14 }} />
             <Typography variant="body2" color="text.secondary">
-              {condominium.doc || "-"}
+              {formatCNPJ(condominium.doc) || "-"}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
-            <LocationOn sx={{fontSize: 14}}/>
+            <LocationOn sx={{ fontSize: 14 }} />
             <Typography variant="body2" color="text.secondary">
               {condominium.city} - {condominium.state}
             </Typography>
@@ -214,7 +232,11 @@ const CondominioPage: React.FC = () => {
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
             <Typography variant="body2" color="text.secondary">
-              {condominiumTypes.find(f => f?.id == condominium?.allocationType)?.description}
+              {
+                condominiumTypes.find(
+                  (f) => f?.id == condominium?.allocationType,
+                )?.description
+              }
             </Typography>
           </Box>
         </Box>
@@ -240,10 +262,7 @@ const CondominioPage: React.FC = () => {
             startIcon={<DeleteOutline />}
             onClick={() => {
               setEditingCondominium(condominium);
-              showDelete(
-                "Confirma a exclusao do item?",
-                `${condominium.name}`,
-              );
+              showDelete("Confirma a exclusao do item?", `${condominium.name}`);
             }}
           >
             Excluir
@@ -330,7 +349,11 @@ const CondominioPage: React.FC = () => {
               ) : (
                 <>
                   {listError ? (
-                    <Typography variant="body2" color="error.main" sx={{ mb: 1 }}>
+                    <Typography
+                      variant="body2"
+                      color="error.main"
+                      sx={{ mb: 1 }}
+                    >
                       {listError}
                     </Typography>
                   ) : null}

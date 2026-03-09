@@ -18,6 +18,8 @@ import {
   ViewModule,
   Apartment,
   SettingsOutlined,
+  Article,
+  LocationOn,
 } from "@mui/icons-material";
 import {
   blockService,
@@ -26,6 +28,7 @@ import {
 import {
   condominiumService,
   type Condominium,
+  type CondominiumTypeEnum,
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
@@ -34,8 +37,8 @@ import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfir
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
-import { condominiumImageService } from "../../services/condominiumImageService";
 import { useTranslation } from "react-i18next";
+import { formatCNPJ } from "../../shared/utils/funcoes";
 
 const Blocos: React.FC = () => {
   const navigate = useNavigate();
@@ -72,36 +75,6 @@ const Blocos: React.FC = () => {
   );
   const { appStateModal, handleClose, showSuccess, showError, showDelete } =
     useAppStateModal();
-  const [condominiumImages, setCondominiumImages] = useState<
-    Record<string, string>
-  >({});
-  const loadCondominiumImages = async (items: Condominium[]) => {
-    const previews: Record<string, string> = {};
-    await Promise.all(
-      items.map(async (condominium) => {
-        try {
-          const list = await condominiumImageService.getCondominiumImages(
-            condominium.condominiumId,
-            "Facade",
-          );
-          const first = list?.[0];
-          if (!first?.condominiumImageId) return;
-          const detail = await condominiumImageService.getCondominiumImageById(
-            first.condominiumImageId,
-          );
-          if (detail?.contentFile && detail?.contentType) {
-            previews[condominium.condominiumId] =
-              `data:${detail.contentType};base64,${detail.contentFile}`;
-          }
-        } catch (error) {
-          console.error("Erro ao carregar imagem do condomínio:", error);
-          // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
-          // Não loga nada no console para não poluir
-        }
-      }),
-    );
-    setCondominiumImages(previews);
-  };
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -143,7 +116,6 @@ const Blocos: React.FC = () => {
       setCondominiumsPage(response?.paging?.pageNumber ?? pageNumber);
       setCondominiumsTotalPages(computedTotalPages);
       setCondominiums(normalized);
-      await loadCondominiumImages(normalized);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("blocos.deleteError");
@@ -155,6 +127,7 @@ const Blocos: React.FC = () => {
 
   useEffect(() => {
     loadCondominiums(1);
+    loadCondominiumTypes();
   }, []);
 
   const loadBlocks = async (pageNumber = 1) => {
@@ -242,11 +215,9 @@ const Blocos: React.FC = () => {
 
   const handleDelete = (block: CondominiumBlock) => {
     setBlockToDelete(block);
-    showDelete(
-      "Confirma a exclusao do item?",
-      `${block?.name || "-"}`,
-    );
+    showDelete("Confirma a exclusao do item?", `${block?.name || "-"}`);
   };
+  const [confirm, setConfirm] = useState(false);
 
   const handleConfirmDelete = async () => {
     if (!blockToDelete) return;
@@ -256,11 +227,12 @@ const Blocos: React.FC = () => {
       await blockService.deleteBlock(blockToDelete.condominiumBlockId);
 
       showSuccess(t("blocos.deleteSuccess", { name: blockToDelete.name }));
-
-      await loadBlocks(blocksPage);
-
-      setDeleteModalOpen(false);
-      setBlockToDelete(null);
+      if(confirm) {
+        await loadBlocks(blocksPage);
+        
+        setDeleteModalOpen(false);
+        setBlockToDelete(null);
+      }
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("blocos.deleteError");
@@ -289,6 +261,28 @@ const Blocos: React.FC = () => {
     await loadBlocks(blocksPage);
     setIsCadastroOpen(false);
     setEditingBlock(null);
+  };
+
+    const [condominiumTypes, setCondominiumTypes] = useState<
+    CondominiumTypeEnum[]
+  >([]);
+
+  const getCondominiumImageUrl = (condominium: Condominium) => {
+    if (!condominium.thumbnailFile || !condominium.contentType)
+      return undefined;
+    return `data:${condominium.contentType};base64,${condominium.thumbnailFile}`;
+  };
+
+  const getCondominiumTypeLabel = (value: string | number) => {
+    const match = condominiumTypes.find(
+      (type) => type.id === value || type.value === value,
+    );
+    return match?.description || match?.value || String(value);
+  };
+
+  const loadCondominiumTypes = async () => {
+      const data = await condominiumService.getCondominiumTypes();
+      setCondominiumTypes(data ?? []);
   };
 
   return (
@@ -375,21 +369,70 @@ const Blocos: React.FC = () => {
                     )
                     .map((condominium, index) => ({
                       id: condominium.condominiumId,
-
                       title: condominium.name,
                       subtitle: (
-                        <>
-                          <Apartment
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.35,
+                          }}
+                        >
+                          <Box
                             sx={{
-                              fontSize: 16,
-                              mr: 0.5,
-                              verticalAlign: "middle",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
                             }}
-                          />
-                          {condominium.city} - {condominium.state}
-                        </>
+                          >
+                            <Article sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {formatCNPJ(condominium.doc) || "-"}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <LocationOn sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {condominium.city} - {condominium.state}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {getCondominiumTypeLabel(
+                                condominium.condominiumType,
+                              )}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {
+                                condominiumTypes.find(
+                                  (f) => f?.id == condominium?.allocationType,
+                                )?.description
+                              }
+                            </Typography>
+                          </Box>
+                        </Box>
                       ),
-                      imageUrl: condominiumImages[condominium.condominiumId],
+                   //   imageUrl: getCondominiumImageUrl(condominium),
                       actions: (
                         <Button
                           size="small"
@@ -398,7 +441,7 @@ const Blocos: React.FC = () => {
                           startIcon={<SettingsOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Visualizar Blocos
+                          Visualizars Blocos
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -437,18 +480,68 @@ const Blocos: React.FC = () => {
                       id: condominium.condominiumId,
                       title: condominium.name,
                       subtitle: (
-                        <>
-                          <Apartment
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.35,
+                          }}
+                        >
+                          <Box
                             sx={{
-                              fontSize: 16,
-                              mr: 0.5,
-                              verticalAlign: "middle",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
                             }}
-                          />
-                          {condominium.city} - {condominium.state}
-                        </>
+                          >
+                            <Article sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {formatCNPJ(condominium.doc) || "-"}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <LocationOn sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {condominium.city} - {condominium.state}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {getCondominiumTypeLabel(
+                                condominium.condominiumType,
+                              )}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {
+                                condominiumTypes.find(
+                                  (f) => f?.id == condominium?.allocationType,
+                                )?.description
+                              }
+                            </Typography>
+                          </Box>
+                        </Box>
                       ),
-                      imageUrl: condominiumImages[condominium.condominiumId],
+                      imageUrl: getCondominiumImageUrl(condominium),
 
                       actions: (
                         <Button
@@ -592,8 +685,12 @@ const Blocos: React.FC = () => {
                         ),
                         actions: (
                           <Box
-                            sx={{ display: "flex", gap: 1, flexWrap: "wrap",                                    mt:2,
- }}
+                            sx={{
+                              display: "flex",
+                              gap: 1,
+                              flexWrap: "wrap",
+                              mt: 2,
+                            }}
                           >
                             <Button
                               size="small"
@@ -649,12 +746,11 @@ const Blocos: React.FC = () => {
         message={appStateModal.message}
         detail={appStateModal.detail}
         item={appStateModal.item}
-        onConfirm={handleClose}
-        onClose={handleClose}
+        onConfirm={()=>{handleClose();setConfirm(true)}}
+        onClose={()=>{handleClose();setConfirm(true)}}
       />
     </Box>
   );
 };
 
 export default Blocos;
-

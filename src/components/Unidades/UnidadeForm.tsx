@@ -76,7 +76,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   blockId,
   blockNamePreset,
 }) => {
-  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const { appStateModal, handleClose, showSuccess, showError } =
+    useAppStateModal();
   const [closeAfterModal, setCloseAfterModal] = useState(false);
   const [formData, setFormData] = useState<CondominiumUnitRequest>({
     condominiumId: condominiumIdPreset || "",
@@ -136,10 +137,6 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   const validate = () => {
     const nextErrors: FormErrors = {};
 
-    if (!formData.condominiumId) {
-    }
-    if (!formData.condominiumBlockId) {
-    }
     if (!formData.unitCode.trim()) {
       nextErrors.unitCode = t("unidadeForm.unitCodeRequired");
     }
@@ -199,16 +196,16 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
 
       const { valid, validations } = editingId
         ? await unitService.validateUnitEdit(
-          {
+            {
+              ...payload,
+              commit: false,
+            },
+            editingUnit?.condominiumUnitId || "",
+          )
+        : await unitService.validateUnit({
             ...payload,
             commit: false,
-          },
-          editingUnit?.condominiumUnitId || "",
-        )
-        : await unitService.validateUnit({
-          ...payload,
-          commit: false,
-        });
+          });
 
       if (!valid && validations.length > 0) {
         if (applyBackendValidationErrors(validations)) {
@@ -224,7 +221,6 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
         showSuccess(t("unidadeForm.createSuccess"));
       }
 
-      await onSaved();
       setCloseAfterModal(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
@@ -241,13 +237,15 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     }
   };
 
-  const handleModalClose = () => {
+  const handleModalClose = async () => {
     handleClose();
+    await onSaved();
+
     if (closeAfterModal) {
       setCloseAfterModal(false);
       onClose();
     }
-    onSaved()
+    onSaved();
   };
 
   const renderUnitTypeOptions = () => {
@@ -278,7 +276,9 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   return (
     <>
       <StepWizardCard
-        title={editingId ? t("unidadeForm.editTitle") : t("unidadeForm.createTitle")}
+        title={
+          editingId ? t("unidadeForm.editTitle") : t("unidadeForm.createTitle")
+        }
         subtitle={steps[0]}
         steps={steps}
         activeStep={0}
@@ -292,80 +292,76 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
             sx={{ marginTop: "16px" }}
             disabled={loading}
           >
-            {loading ? (
-              <CircularProgress size={20} />
-            ) : (
-              t("common.finish")
-            )}
+            {loading ? <CircularProgress size={20} /> : t("common.finish")}
           </Button>
         }
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <TextField
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              height: 46,
-            },
-            "& .MuiOutlinedInput-root.Mui-disabled:hover fieldset": {
-              borderColor: "#e0e0e0 !important",
-            },
-            "& .MuiOutlinedInput-root.Mui-disabled fieldset": {
-              borderColor: "#e0e0e0 !important",
-            },
-          }}
-          value={resolvedCondominiumName}
-          fullWidth
-          disabled
-        />
-        <TextField
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              height: 46,
-              display: "flex",
-            },
-            "& .MuiOutlinedInput-root.Mui-disabled:hover fieldset": {
-              borderColor: "#e0e0e0 !important",
-            },
-            "& .MuiOutlinedInput-root.Mui-disabled fieldset": {
-              borderColor: "#e0e0e0 !important",
-            },
-          }}
-          value={resolvedBlockName}
-          fullWidth
-          disabled
-        />
+          <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+              },
+              "& .MuiOutlinedInput-root.Mui-disabled:hover fieldset": {
+                borderColor: "#e0e0e0 !important",
+              },
+              "& .MuiOutlinedInput-root.Mui-disabled fieldset": {
+                borderColor: "#e0e0e0 !important",
+              },
+            }}
+            value={resolvedCondominiumName}
+            fullWidth
+            disabled
+          />
+          <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+                display: "flex",
+              },
+              "& .MuiOutlinedInput-root.Mui-disabled:hover fieldset": {
+                borderColor: "#e0e0e0 !important",
+              },
+              "& .MuiOutlinedInput-root.Mui-disabled fieldset": {
+                borderColor: "#e0e0e0 !important",
+              },
+            }}
+            value={resolvedBlockName}
+            fullWidth
+            disabled
+          />
 
-        <TextField
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              height: 46,
-              display: "flex",
-            },
-          }}
-          fullWidth
-          value={formData.unitCode}
-          onChange={(e) => handleChange("unitCode", e.target.value)}
-          error={Boolean(errors.unitCode)}
-          helperText={errors.unitCode}
-          placeholder={t("unidadeForm.unitCodePlaceholder")}
-        />
-        <TextField
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              height: 46,
-              display: "flex",
-            },
-          }}
-          select
-          value={formData.unitType || ""}
-          onChange={(e) => handleChange("unitType", e.target.value)}
-          fullWidth
-          error={Boolean(errors.unitType)}
-          helperText={errors.unitType || typesError || ""}
-        >
-          {renderUnitTypeOptions()}
-        </TextField>
-        {/* <TextField
+          <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+                display: "flex",
+              },
+            }}
+            fullWidth
+            value={formData.unitCode}
+            onChange={(e) => handleChange("unitCode", e.target.value)}
+            error={Boolean(errors.unitCode)}
+            helperText={errors.unitCode}
+            placeholder={t("unidadeForm.unitCodePlaceholder")}
+          />
+          <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+                display: "flex",
+              },
+            }}
+            select
+            value={formData.unitType || ""}
+            onChange={(e) => handleChange("unitType", e.target.value)}
+            fullWidth
+            error={Boolean(errors.unitType)}
+            helperText={errors.unitType || typesError || ""}
+          >
+            {renderUnitTypeOptions()}
+          </TextField>
+          {/* <TextField
           sx={{
             "& .MuiOutlinedInput-root": {
               height: 46,

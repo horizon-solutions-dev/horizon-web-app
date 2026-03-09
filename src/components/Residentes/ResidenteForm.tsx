@@ -30,6 +30,7 @@ import { AuthService } from "../../services/authService";
 import { TokenService } from "../../services/tokenService";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, TypesDoc } from "../../models/api.model";
+import { formatDoc } from "../../shared/utils/funcoes";
 
 interface ResidenteFormProps {
   open: boolean;
@@ -45,6 +46,7 @@ interface ResidenteFormProps {
   editResident?: CondominiumUnitResident | null;
   editUserId?: string;
   residentImageUrl?: string; // NOVA PROP
+  unit?: 1 | 2 | "1" | "2" | string | undefined;
 }
 
 type DocumentType = 1 | 2 | 3 | 4;
@@ -146,6 +148,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   editResident,
   editUserId,
   residentImageUrl,
+  unit,
 }) => {
   const { t } = useTranslation();
   const { appStateModal, handleClose, showSuccess, showError } =
@@ -273,12 +276,18 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setDataEdit(undefined);
       return;
     }
+    console.log("aqui");
+    console.log(editResident, {
+      open: open,
+      isEditMode: isEditMode,
+      editUserId: editUserId,
+    });
     void dataUser(editUserId);
   }, [open, isEditMode, editUserId]);
 
   useEffect(() => {
     if (!open) return;
-    setActiveStep(isEditMode ? 1 : 0);
+    setActiveStep(0);
     setErrors({});
     if (isEditMode && editResident) {
       setFormData({
@@ -302,11 +311,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setLastName(dataEdit?.surname || "");
       setDocumentType(dataEdit?.docType || 1);
       setDocumentNumber(
-        dataEdit?.docType === 1
-          ? formatCpf(dataEdit.doc || "")
-          : dataEdit?.docType === 2
-            ? formatCnpj(dataEdit?.doc || "")
-            : dataEdit?.doc || "",
+        formatDoc(dataEdit?.doc || "", dataEdit?.docType)
       );
       setEmail(dataEdit?.email || "");
       setPhone(formatPhone(dataEdit?.phone || ""));
@@ -339,7 +344,20 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setPhotoFile(null);
     setCoverFile(null);
   }, [open, unitCodePreset, unitIdPreset, isEditMode, editResident, dataEdit]);
-
+  const handleChange = (
+    field: keyof CondominiumUnitResidentRequest,
+    value: string | boolean,
+  ) => {
+    console.log(field, value);
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
   if (!open) return null;
 
   const handleDocumentChange = (value: string) => {
@@ -349,20 +367,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setDocumentNumber(formatCnpj(value));
     } else {
       setDocumentNumber(value);
-    }
-  };
-
-  const handleChange = (
-    field: keyof CondominiumUnitResidentRequest,
-    value: string | boolean,
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
     }
   };
 
@@ -542,7 +546,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
 
     if (activeStep === 0) {
-      setActiveStep(1);
+      setActiveStep((prev) => prev + 1);
       return;
     }
 
@@ -742,7 +746,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         }
       }
 
-      await onSaved();
       showSuccess(t("residenteForm.createSuccess"));
 
       setFormData({
@@ -802,8 +805,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
   };
 
-  const handleModalClose = () => {
+  const handleModalClose = async () => {
     handleClose();
+    await onSaved();
     if (closeAfterModal) {
       setCloseAfterModal(false);
       onClose();
@@ -858,9 +862,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 },
               }}
               select
+              disabled
               label={formData.unitType ? "" : "Tipo de unidade"}
-              value={formData.unitType || ""}
-              onChange={(e) => handleChange("unitType", e.target.value)}
+              value={unit == 1 ? "Owner" : "Tenant"}
               error={Boolean(errors.unitType)}
               helperText={errors.unitType}
               fullWidth
@@ -879,11 +883,14 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                     height: "46px !important",
                   },
                 }}
+                disabled={isEditMode}
                 label={t("residenteForm.residenceStart")}
                 value={
-                  formData.startDate
-                    ? new Date(`${formData.startDate}T00:00:00`)
-                    : null
+                  isEditMode
+                    ? new Date(`${editResident?.startDate}`)
+                    : formData.startDate
+                      ? new Date(`${formData.startDate}T00:00:00`)
+                      : null
                 }
                 onChange={(newValue) =>
                   handleChange(
@@ -1106,54 +1113,87 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         <Typography variant="subtitle2" sx={{ mt: 2 }}>
           {t("residenteForm.photoTitle")}
         </Typography>
+        <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1 }} />
+
         <Box
-          component="label"
           sx={{
-            border: "1px dashed #c8cfdb",
-            borderRadius: "10px",
-            minHeight: "120px",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-            gap: 1,
-            cursor: "pointer",
+            flexDirection: { xs: "column", md: "row" },
+            alignItems: { xs: "flex-start", md: "center" },
+            justifyContent: "space-between",
+            gap: 2,
           }}
-          htmlFor="morador-photo-input"
         >
-          <input
-            id="morador-photo-input"
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => {
-              const file = e.target.files?.[0] || null;
-              setCoverFile(file);
-              setPhotoFile(file);
+          <Button
+            variant="outlined"
+            component="label"
+            size="small"
+            disableRipple
+            sx={{
+              minWidth: 152,
+              height: 38,
+              backgroundColor: "#FFF",
+              textTransform: "none",
+              fontSize: "14px",
+
+              "&:hover": {
+                backgroundColor: "#FFF",
+              },
+              "&:active": {
+                backgroundColor: "#FFF",
+              },
+              "&:focus": {
+                backgroundColor: "#FFF",
+              },
             }}
-          />
-          {!coverPreview && (
-            <FileUploadOutlined sx={{ fontSize: 40, color: "#7ba0d1" }} />
-          )}
-          {coverPreview ? (
-            <Box
-              component="img"
-              src={coverPreview}
-              alt="Prévia da imagem do condomínio"
-              sx={{ height: "200px", objectFit: "cover" }}
-            />
-          ) : (
-            <Typography
-              sx={{
-                color: "#94a3b8",
-                fontSize: 12,
-                px: 1,
-                textAlign: "center",
+          >
+            Selecionar imagem
+            <input
+              id="morador-photo-input"
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setCoverFile(file);
+                setPhotoFile(file);
               }}
-            >
-              Nenhuma imagem selecionada
-            </Typography>
-          )}
+            />
+          </Button>
+
+          <Box
+            sx={{
+              width: { xs: "100%", md: 240 },
+              height: 110,
+              borderRadius: "10px",
+              border: "1px dashed #cbd5e1",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              background: "#f8fafc",
+            }}
+          >
+            {coverPreview ? (
+              <Box
+                component="img"
+                src={coverPreview}
+                alt="Prévia da imagem do condomínio"
+                sx={{ height: "200px", objectFit: "cover" }}
+              />
+            ) : (
+              <Typography
+                sx={{
+                  color: "#94a3b8",
+                  fontSize: 12,
+                  px: 1,
+                  textAlign: "center",
+                }}
+              >
+                Nenhuma imagem selecionada
+              </Typography>
+            )}
+          </Box>
         </Box>
       </Grid>
     );
@@ -1218,7 +1258,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 title={appStateModal.title}
                 message={appStateModal.message}
                 detail={appStateModal.detail}
-        item={appStateModal.item}
+                item={appStateModal.item}
                 onConfirm={handleModalClose}
                 onClose={handleModalClose}
                 showCancel={false}
@@ -1267,7 +1307,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               title={appStateModal.title}
               message={appStateModal.message}
               detail={appStateModal.detail}
-        item={appStateModal.item}
+              item={appStateModal.item}
               onConfirm={handleModalClose}
               onClose={handleModalClose}
               showCancel={false}
@@ -1280,4 +1320,3 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 };
 
 export default ResidenteForm;
-

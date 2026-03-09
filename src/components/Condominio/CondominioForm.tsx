@@ -720,7 +720,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         }
       }
 
-      await onSaved();
       setFormData({
         ...initialFormData,
         organizationId: localStorage.getItem("organizationId") || "",
@@ -747,8 +746,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     }
   };
 
-  const handleModalClose = () => {
+  const handleModalClose = async () => {
     handleClose();
+    await onSaved();
     if (closeAfterModal) {
       setCloseAfterModal(false);
       onClose();
@@ -840,7 +840,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               )}
             </TextField>
             <TextField
-            label={ formData.unitCount == 0 ? "Quantidade de unidades" : ""}
+              label={formData.unitCount == 0 ? "Quantidade de unidades" : ""}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   height: 46,
@@ -1233,37 +1233,37 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   gap: 2,
                 }}
               >
-   <Button
-  variant="outlined"
-  component="label"
-  size="small"
-  disableRipple
-  sx={{
-    minWidth: 152,
-    height: 38,
-    backgroundColor: "#FFF",
-    textTransform: "none",
-    fontSize: "14px",
+                <Button
+                  variant="outlined"
+                  component="label"
+                  size="small"
+                  disableRipple
+                  sx={{
+                    minWidth: 152,
+                    height: 38,
+                    backgroundColor: "#FFF",
+                    textTransform: "none",
+                    fontSize: "14px",
 
-    "&:hover": {
-      backgroundColor: "#FFF",
-    },
-    "&:active": {
-      backgroundColor: "#FFF",
-    },
-    "&:focus": {
-      backgroundColor: "#FFF",
-    },
-  }}
->
-  Selecionar imagem
-  <input
-    type="file"
-    hidden
-    accept="image/*"
-    onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-  />
-</Button>
+                    "&:hover": {
+                      backgroundColor: "#FFF",
+                    },
+                    "&:active": {
+                      backgroundColor: "#FFF",
+                    },
+                    "&:focus": {
+                      backgroundColor: "#FFF",
+                    },
+                  }}
+                >
+                  Selecionar imagem
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                  />
+                </Button>
 
                 <Box
                   sx={{

@@ -14,7 +14,6 @@ import {
   Close,
   SettingsOutlined,
   Person2Sharp,
-  Business,
   DeleteOutline,
   EditOutlined,
   Groups2Outlined,
@@ -23,12 +22,14 @@ import {
   PhoneOutlined,
   ApartmentOutlined,
   People,
+  LocationOn,
+  Article,
 } from "@mui/icons-material";
 import {
   unitResidentService,
   type CondominiumUnitResident,
 } from "../../services/unitResidentService";
-import { unitService, type CondominiumUnit } from "../../services/unitService";
+import { unitService, type CondominiumUnit, type UnitType } from "../../services/unitService";
 import {
   blockService,
   type CondominiumBlock,
@@ -36,6 +37,7 @@ import {
 import {
   condominiumService,
   type Condominium,
+  type CondominiumTypeEnum,
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
@@ -44,8 +46,8 @@ import ResidenteForm from "./ResidenteForm";
 import { useNavigate } from "react-router";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
-import { condominiumImageService } from "../../services/condominiumImageService";
 import { useTranslation } from "react-i18next";
+import { formatCNPJ, formatDoc } from "../../shared/utils/funcoes";
 const condoPageSize = 4;
 const unitPageSize = 6;
 const residentPageSize = 6;
@@ -77,6 +79,7 @@ const Residentes: React.FC = () => {
   const [selectedUnit, setSelectedUnit] = useState<CondominiumUnit | null>(
     null,
   );
+  const [selectTypeUnit, setSelectTypeUnit] = useState<1 | 2 | '1' | '2' | string | undefined>("");
   const [, setSelectedBlockName] = useState("");
 
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
@@ -92,37 +95,26 @@ const Residentes: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { appStateModal, handleClose, showDelete } = useAppStateModal();
 
-  const [condominiumImages, setCondominiumImages] = useState<
-    Record<string, string>
-  >({});
-  const loadCondominiumImages = async (items: Condominium[]) => {
-    const previews: Record<string, string> = {};
-    await Promise.all(
-      items.map(async (condominium) => {
-        try {
-          const list = await condominiumImageService.getCondominiumImages(
-            condominium.condominiumId,
-            "Facade",
-          );
-          const first = list?.[0];
-          if (!first?.condominiumImageId) return;
-          const detail = await condominiumImageService.getCondominiumImageById(
-            first.condominiumImageId,
-          );
-          if (detail?.contentFile && detail?.contentType) {
-            previews[condominium.condominiumId] =
-              `data:${detail.contentType};base64,${detail.contentFile}`;
-          }
-        } catch (error) {
-          console.error("Erro ao carregar imagem do condomínio:", error);
-          // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
-          // Não loga nada no console para não poluir
-        }
-      }),
-    );
-    setCondominiumImages(previews);
+  const [condominiumTypes, setCondominiumTypes] = useState<
+    CondominiumTypeEnum[]
+  >([]);
+
+  const getCondominiumImageUrl = (condominium: Condominium) => {
+    if (!condominium.thumbnailFile || !condominium.contentType)
+      return undefined;
+    return `data:${condominium.contentType};base64,${condominium.thumbnailFile}`;
   };
 
+  const getCondominiumTypeLabel = (value: string | number) => {
+    const match = condominiumTypes.find(
+      (type) => type.id === value || type.value === value,
+    );
+    return match?.description || match?.value || String(value);
+  };
+  const loadCondominiumTypes = async () => {
+    const data = await condominiumService.getCondominiumTypes();
+    setCondominiumTypes(data ?? []);
+  };
   const loadCondominiums = async (pageNumber = 1) => {
     setCondoLoading(true);
     setCondoError(null);
@@ -165,7 +157,6 @@ const Residentes: React.FC = () => {
       setCondoPage(response?.paging?.pageNumber ?? pageNumber);
       setCondoTotalPages(computedTotalPages);
       setCondominiums(normalized);
-      await loadCondominiumImages(normalized);
     } catch (error) {
       const message =
         error instanceof Error
@@ -259,6 +250,7 @@ const Residentes: React.FC = () => {
 
   useEffect(() => {
     loadCondominiums(1);
+    loadCondominiumTypes();
   }, []);
 
   const resetResidentsContext = () => {
@@ -292,18 +284,66 @@ const Residentes: React.FC = () => {
       id: condominium.condominiumId,
       title: condominium.name,
       subtitle: (
-        <>
-          <Business
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 0.35,
+          }}
+        >
+          <Box
             sx={{
-              fontSize: 16,
-              mr: 0.5,
-              verticalAlign: "middle",
+              display: "flex",
+              alignItems: "center",
+              gap: 0.7,
             }}
-          />
-          {condominium.city} - {condominium.state}
-        </>
+          >
+            <Article sx={{ fontSize: 14 }} />
+            <Typography variant="body2" color="text.secondary">
+              {formatCNPJ(condominium.doc) || "-"}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.7,
+            }}
+          >
+            <LocationOn sx={{ fontSize: 14 }} />
+            <Typography variant="body2" color="text.secondary">
+              {condominium.city} - {condominium.state}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.7,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {getCondominiumTypeLabel(condominium?.condominiumType)}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.7,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {
+                condominiumTypes.find(
+                  (f) => f?.id == condominium?.allocationType,
+                )?.description
+              }
+            </Typography>
+          </Box>
+        </Box>
       ),
-      imageUrl: condominiumImages[condominium.condominiumId],
+      imageUrl: getCondominiumImageUrl(condominium),
       actions: (
         <Button
           size="small"
@@ -395,16 +435,14 @@ const Residentes: React.FC = () => {
     return `data:${resident.contentType};base64,${resident.thumbnailFile}`;
   };
 
+
   function handleEdit(resident: CondominiumUnitResident) {
     setEditingResident(resident);
     setIsFormOpen(true);
   }
   function handleDelete(resident: CondominiumUnitResident) {
     const residentLabel = resident.fullname || resident.userId || "-";
-    showDelete(
-      "Confirma a exclusao do item?",
-      `${residentLabel}`,
-    );
+    showDelete("Confirma a exclusao do item?", `${residentLabel}`);
   }
 
   const navigate = useNavigate();
@@ -609,7 +647,7 @@ const Residentes: React.FC = () => {
                         variant="outlined"
                         className="action-button-manage"
                         startIcon={<Person2Sharp />}
-                        onClick={() => handleSelectUnit(unit)}
+                        onClick={() => {handleSelectUnit(unit);setSelectTypeUnit(unit.unitType)}}
                       >
                         {t("common.viewResidents")}
                       </Button>
@@ -623,6 +661,7 @@ const Residentes: React.FC = () => {
           <>
             {isFormOpen ? (
               <ResidenteForm
+                unit={selectTypeUnit}
                 open={isFormOpen}
                 onClose={handleCloseForm}
                 onSaved={handleSaved}
@@ -833,7 +872,7 @@ const Residentes: React.FC = () => {
                                     color="text.secondary"
                                   >
                                     {getDocTypeLabel(resident.docType)}:{" "}
-                                    {resident.doc || "-"}
+                                    {formatDoc(resident.doc, resident.docType)}
                                   </Typography>
                                 </Box>
                                 <Box

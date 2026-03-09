@@ -76,7 +76,7 @@ export default function CardList({
   showFilters = true,
   addButtonPlacement = "header",
   emptyImageLabel = "Sem imagem",
-  cardMaxHeight = 165,
+  cardMaxHeight = 195,
   imageWidth = 120,
   imageHeight = 80,
   actionsMarginTop = 1,
@@ -250,7 +250,7 @@ export default function CardList({
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography
                     variant="subtitle1"
-                    sx={{ fontWeight: 600 }}
+                    sx={{ fontWeight: 600, mb:'12px' }}
                     noWrap
                   >
                     {item.title}
