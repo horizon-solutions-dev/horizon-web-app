@@ -16,10 +16,9 @@ import {
   EditOutlined,
   Close,
   ViewModule,
-  Apartment,
-  SettingsOutlined,
   Article,
   LocationOn,
+  SearchOutlined,
 } from "@mui/icons-material";
 import {
   blockService,
@@ -438,7 +437,7 @@ const Blocos: React.FC = () => {
                           size="small"
                           variant="outlined"
                           className="action-button-manage"
-                          startIcon={<SettingsOutlined />}
+                          startIcon={<SearchOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
                           Visualizars Blocos
@@ -548,7 +547,7 @@ const Blocos: React.FC = () => {
                           size="small"
                           variant="outlined"
                           className="action-button-manage"
-                          startIcon={<SettingsOutlined />}
+                          startIcon={<SearchOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
                           {t("common.viewBlocks")}

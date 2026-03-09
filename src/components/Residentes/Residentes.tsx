@@ -12,8 +12,6 @@ import {
 } from "@mui/material";
 import {
   Close,
-  SettingsOutlined,
-  Person2Sharp,
   DeleteOutline,
   EditOutlined,
   Groups2Outlined,
@@ -24,12 +22,13 @@ import {
   People,
   LocationOn,
   Article,
+  SearchOutlined,
 } from "@mui/icons-material";
 import {
   unitResidentService,
   type CondominiumUnitResident,
 } from "../../services/unitResidentService";
-import { unitService, type CondominiumUnit, type UnitType } from "../../services/unitService";
+import { unitService, type CondominiumUnit } from "../../services/unitService";
 import {
   blockService,
   type CondominiumBlock,
@@ -349,7 +348,7 @@ const Residentes: React.FC = () => {
           size="small"
           variant="outlined"
           className="action-button-manage"
-          startIcon={<SettingsOutlined />}
+          startIcon={<SearchOutlined />}
           onClick={() => handleSelectCondominium(condominium)}
         >
           {t("common.viewUnits")}
@@ -646,7 +645,7 @@ const Residentes: React.FC = () => {
                         size="small"
                         variant="outlined"
                         className="action-button-manage"
-                        startIcon={<Person2Sharp />}
+                        startIcon={<SearchOutlined />}
                         onClick={() => {handleSelectUnit(unit);setSelectTypeUnit(unit.unitType)}}
                       >
                         {t("common.viewResidents")}

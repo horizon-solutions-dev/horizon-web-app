@@ -16,11 +16,10 @@ import {
   Close,
   MeetingRoom,
   ViewModule,
-  Apartment,
-  SettingsOutlined,
   Home,
   LocationOn,
   Article,
+  SearchOutlined,
 } from "@mui/icons-material";
 import {
   unitService,
@@ -466,7 +465,7 @@ const Unidades: React.FC = () => {
                           size="small"
                           variant="outlined"
                           className="action-button-manage"
-                          startIcon={<SettingsOutlined />}
+                          startIcon={<SearchOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
                           {t("common.viewBlocks")}
@@ -576,7 +575,7 @@ const Unidades: React.FC = () => {
                           size="small"
                           variant="outlined"
                           className="action-button-manage"
-                          startIcon={<SettingsOutlined />}
+                          startIcon={<SearchOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
                           {t("common.viewBlocks")}
@@ -725,7 +724,7 @@ const Unidades: React.FC = () => {
                         ),
                         actions: (
                           <Button
-                            startIcon={<SettingsOutlined />}
+                            startIcon={<SearchOutlined />}
                             size="small"
                             variant="outlined"
                             className="action-button-manage"

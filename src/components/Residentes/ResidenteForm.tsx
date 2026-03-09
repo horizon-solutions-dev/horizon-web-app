@@ -11,7 +11,7 @@ import {
   CircularProgress,
   Grid,
 } from "@mui/material";
-import { FileUploadOutlined, RuleSharp } from "@mui/icons-material";
+import { RuleSharp } from "@mui/icons-material";
 import {
   unitResidentService,
   type CondominiumUnitResident,
