@@ -23,6 +23,9 @@ import {
   LocationOn,
   Article,
   SearchOutlined,
+  MeetingRoom,
+  ViewModule,
+  Person,
 } from "@mui/icons-material";
 import {
   unitResidentService,
@@ -47,6 +50,8 @@ import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { useTranslation } from "react-i18next";
 import { formatCNPJ, formatDoc } from "../../shared/utils/funcoes";
+import Allocation from "../../assets/allocation.png";
+
 const condoPageSize = 4;
 const unitPageSize = 6;
 const residentPageSize = 6;
@@ -78,7 +83,9 @@ const Residentes: React.FC = () => {
   const [selectedUnit, setSelectedUnit] = useState<CondominiumUnit | null>(
     null,
   );
-  const [selectTypeUnit, setSelectTypeUnit] = useState<1 | 2 | '1' | '2' | string | undefined>("");
+  const [selectTypeUnit, setSelectTypeUnit] = useState<
+    1 | 2 | "1" | "2" | string | undefined
+  >("");
   const [, setSelectedBlockName] = useState("");
 
   const [residents, setResidents] = useState<CondominiumUnitResident[]>([]);
@@ -434,7 +441,6 @@ const Residentes: React.FC = () => {
     return `data:${resident.contentType};base64,${resident.thumbnailFile}`;
   };
 
-
   function handleEdit(resident: CondominiumUnitResident) {
     setEditingResident(resident);
     setIsFormOpen(true);
@@ -626,12 +632,29 @@ const Residentes: React.FC = () => {
                   title: unit.unitCode || t("moradores.noCode"),
                   subtitle: (
                     <Typography variant="body2" color="text.secondary">
+                      <Person
+                        sx={{
+                          fontSize: 14,
+                          mr: 0.5,
+                          verticalAlign: "middle",
+                        }}
+                      />
+                      {""}
                       {getUnitTypeLabel(unit.unitType?.toString())}
                     </Typography>
                   ),
                   meta: (
                     <Typography variant="caption" color="text.secondary">
-                      {" "}
+                      <Box
+                        component="img"
+                        src={Allocation}
+                        sx={{
+                          width: 16,
+                          height: 16,
+                          mr: 0.5,
+                          verticalAlign: "middle",
+                        }}
+                      />{" "}
                       {blocks.find(
                         (b) => b.condominiumBlockId === unit.condominiumBlockId,
                       )?.name ||
@@ -646,7 +669,10 @@ const Residentes: React.FC = () => {
                         variant="outlined"
                         className="action-button-manage"
                         startIcon={<SearchOutlined />}
-                        onClick={() => {handleSelectUnit(unit);setSelectTypeUnit(unit.unitType)}}
+                        onClick={() => {
+                          handleSelectUnit(unit);
+                          setSelectTypeUnit(unit.unitType);
+                        }}
                       >
                         {t("common.viewResidents")}
                       </Button>
@@ -921,7 +947,7 @@ const Residentes: React.FC = () => {
                                     gap: 0.7,
                                   }}
                                 >
-                                  <ApartmentOutlined
+                                  <Person
                                     sx={{
                                       fontSize: 16,
                                       color: "text.secondary",
@@ -931,8 +957,8 @@ const Residentes: React.FC = () => {
                                     variant="body2"
                                     color="text.secondary"
                                   >
-                                    {residentType} | {residentUnit} |{" "}
-                                    {residentBlock}
+                                    {residentType} | <MeetingRoom sx={{fontSize:14}}/>{" "}{residentUnit} |{" "}
+                                    <ViewModule sx={{fontSize:14}}/>{" "}{residentBlock}
                                   </Typography>
                                 </Box>
                               </Box>

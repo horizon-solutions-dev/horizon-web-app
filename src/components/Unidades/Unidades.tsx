@@ -20,6 +20,7 @@ import {
   LocationOn,
   Article,
   SearchOutlined,
+  Person,
 } from "@mui/icons-material";
 import {
   unitService,
@@ -788,7 +789,7 @@ const Unidades: React.FC = () => {
                           title: unit.unitCode || t("common.noCode"),
                           subtitle: (
                             <>
-                              <MeetingRoom
+                              <Person
                                 sx={{
                                   fontSize: 14,
                                   mr: 0.5,
