@@ -22,7 +22,7 @@ export class ApiClient {
         config.headers.Authorization = `Bearer ${token}`;
       }
 
-      // Adiciona o header 'Content-Type' para requisições que não são FormData,
+      // Adiciona o header 'Content-Type' para requisicoes que nao sao FormData,
       // permitindo que o navegador defina o 'Content-Type' correto para uploads.
       if (config.headers && !(config.data instanceof FormData)) {
         config.headers['Content-Type'] = 'application/json';
@@ -57,8 +57,33 @@ export class ApiClient {
     return response.data;
   }
 
+  private extractErrorMessage(error: AxiosError): string {
+    const responseData = error.response?.data;
+
+    if (responseData && typeof responseData === 'object' && 'message' in responseData) {
+      const message = responseData.message;
+      if (typeof message === 'string' && message.trim()) {
+        return message;
+      }
+    }
+
+    return error.message;
+  }
+
+  private createHandledError(error: AxiosError): Error {
+    return new Error(this.extractErrorMessage(error));
+  }
+
+  private isAuthRequest(url?: string): boolean {
+    if (!url) {
+      return false;
+    }
+
+    return url.includes('/api/v1/auth/login') || url.includes('/api/v1/auth/refresh-token');
+  }
+
   private processQueue(error: any, token: string | null = null) {
-    ApiClient.failedQueue.forEach(prom => {
+    ApiClient.failedQueue.forEach((prom) => {
       if (error) {
         prom.reject(error);
       } else {
@@ -93,20 +118,25 @@ export class ApiClient {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
     if (error.response?.status !== 401) {
-      return Promise.reject(error);
+      return Promise.reject(this.createHandledError(error));
+    }
+
+    if (this.isAuthRequest(originalRequest?.url)) {
+      return Promise.reject(this.createHandledError(error));
     }
 
     if (originalRequest?._retry) {
-      this.endSessionAndRedirect('Sua sessão expirou. Faça login novamente.');
-      return Promise.reject(error);
+      this.endSessionAndRedirect('Sua sessao expirou. Faca login novamente.');
+      return Promise.reject(this.createHandledError(error));
     }
 
     if (ApiClient.isRefreshing) {
       return new Promise((resolve, reject) => {
         ApiClient.failedQueue.push({ resolve, reject });
-      }).then(token => {
-        if(originalRequest.headers)
-        originalRequest.headers['Authorization'] = 'Bearer ' + token;
+      }).then((token) => {
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+        }
         return this.client(originalRequest);
       });
     }
@@ -117,8 +147,7 @@ export class ApiClient {
     const refreshToken = localStorage.getItem('refreshToken');
     if (!refreshToken) {
       ApiClient.isRefreshing = false;
-      this.endSessionAndRedirect('Sua sessão expirou. Faça login novamente.');
-      return Promise.reject(error);
+      return Promise.reject(this.createHandledError(error));
     }
 
     try {
@@ -129,13 +158,13 @@ export class ApiClient {
       if (originalRequest.headers) {
         originalRequest.headers.Authorization = `Bearer ${response.token}`;
       }
-      
+
       this.processQueue(null, response.token);
       return this.client(originalRequest);
     } catch (refreshError) {
       this.processQueue(refreshError, null);
-      this.endSessionAndRedirect('Sua sessão expirou. Faça login novamente.');
-      return Promise.reject(refreshError);
+      this.endSessionAndRedirect('Sua sessao expirou. Faca login novamente.');
+      return Promise.reject(refreshError instanceof Error ? refreshError : this.createHandledError(error));
     } finally {
       ApiClient.isRefreshing = false;
     }
@@ -155,4 +184,3 @@ export class ApiClient {
 }
 
 export const apiClient = new ApiClient();
-
