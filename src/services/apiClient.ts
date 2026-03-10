@@ -70,8 +70,9 @@ export class ApiClient {
     return error.message;
   }
 
-  private createHandledError(error: AxiosError): Error {
-    return new Error(this.extractErrorMessage(error));
+  private enrichAxiosError(error: AxiosError): AxiosError {
+    error.message = this.extractErrorMessage(error);
+    return error;
   }
 
   private isAuthRequest(url?: string): boolean {
@@ -118,16 +119,16 @@ export class ApiClient {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
     if (error.response?.status !== 401) {
-      return Promise.reject(this.createHandledError(error));
+      return Promise.reject(this.enrichAxiosError(error));
     }
 
     if (this.isAuthRequest(originalRequest?.url)) {
-      return Promise.reject(this.createHandledError(error));
+      return Promise.reject(this.enrichAxiosError(error));
     }
 
     if (originalRequest?._retry) {
       this.endSessionAndRedirect('Sua sessao expirou. Faca login novamente.');
-      return Promise.reject(this.createHandledError(error));
+      return Promise.reject(this.enrichAxiosError(error));
     }
 
     if (ApiClient.isRefreshing) {
@@ -147,7 +148,7 @@ export class ApiClient {
     const refreshToken = localStorage.getItem('refreshToken');
     if (!refreshToken) {
       ApiClient.isRefreshing = false;
-      return Promise.reject(this.createHandledError(error));
+      return Promise.reject(this.enrichAxiosError(error));
     }
 
     try {
@@ -164,7 +165,7 @@ export class ApiClient {
     } catch (refreshError) {
       this.processQueue(refreshError, null);
       this.endSessionAndRedirect('Sua sessao expirou. Faca login novamente.');
-      return Promise.reject(refreshError instanceof Error ? refreshError : this.createHandledError(error));
+      return Promise.reject(refreshError instanceof Error ? refreshError : this.enrichAxiosError(error));
     } finally {
       ApiClient.isRefreshing = false;
     }
