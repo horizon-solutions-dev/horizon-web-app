@@ -53,10 +53,6 @@ const router = createBrowserRouter([
 		path: "/",
 		element: <PublicRoute><LoginFlow /></PublicRoute>,
 	},
-	{
-		path: RouteNames.Login,
-		element: <PublicRoute><LoginFlow /></PublicRoute>,
-	},
 	
 	// Protected routes with MainLayout
 	{

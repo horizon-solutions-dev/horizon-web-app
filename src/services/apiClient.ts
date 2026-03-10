@@ -86,7 +86,7 @@ export class ApiClient {
     ApiClient.isSessionEnding = true;
     this.clearSessionStorage();
     sessionStorage.setItem(AUTH_EXPIRED_MESSAGE_KEY, message);
-    window.location.replace('/login');
+    window.location.replace('/');
   }
 
   private async handleUnauthorized(error: AxiosError) {
