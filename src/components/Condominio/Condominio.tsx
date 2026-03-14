@@ -7,43 +7,40 @@ import {
   Paper,
   Typography,
   Button,
-  Snackbar,
-  Alert,
   CircularProgress,
   IconButton,
   Tooltip,
 } from "@mui/material";
-
 import {
-  Business,
   DeleteOutline,
   EditOutlined,
-  HomeOutlined,
-  BusinessOutlined,
-  ApartmentOutlined,
-  LocationOnOutlined,
   Close,
+  Apartment,
+  LocationOn,
+  Article,
 } from "@mui/icons-material";
 import {
   condominiumService,
   type Condominium,
   type CondominiumTypeEnum,
 } from "../../services/condominiumService";
-import { condominiumImageService } from "../../services/condominiumImageService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import CondominioForm from "./CondominioForm";
-import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
+import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
+import { useTranslation } from "react-i18next";
+import { AppStateModal } from "../../shared/components";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import axios from "axios";
+import { formatCNPJ } from "../../shared/utils/funcoes";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
-  const [condominiumImages, setCondominiumImages] = useState<
-    Record<string, string>
-  >({});
   const [searchText, setSearchText] = useState("");
   const [organizationName, setOrganizationName] = useState("");
   const [listPage, setListPage] = useState(1);
@@ -55,21 +52,23 @@ const CondominioPage: React.FC = () => {
   const [typesLoading, setTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
-  const [editingCondominium, setEditingCondominium] = useState<
-    Condominium | null
-  >(null);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "info" | "warning",
-  });
+  const [editingCondominium, setEditingCondominium] =
+    useState<Condominium | null>(null);
+  const [imageSelected, setImageSelected] = useState<string | null>(null);
+  const { appStateModal, handleClose, showDelete } = useAppStateModal();
+  useEffect(() => {
+    if (!organizationName) atualizarNome();
+  }, [organizationName]);
 
-  const handleNotify = (
-    message: string,
-    severity: "success" | "error" | "info" | "warning" = "success",
-  ) => {
-    setSnackbar({ open: true, message, severity });
-  };
+  async function atualizarNome() {
+    const organizations = await organizationService.getMyOrganization();
+    const nameStorage = localStorage.getItem("condominium");
+    const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
+    const orgName = organizations?.find(
+      (o) => o.organizationId === dataParse?.organizationId,
+    )?.name;
+    if (orgName) setOrganizationName(orgName);
+  }
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -87,18 +86,22 @@ const CondominioPage: React.FC = () => {
         pageNumber,
         pageSize,
       );
+
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
-          const orgName =
-            organizations?.[0]?.name || organizations?.[0]?.legalName;
+          const nameStorage = localStorage.getItem("condominium");
+          const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
+          const orgName = organizations?.find(
+            (o) => o.organizationId === dataParse?.organizationId,
+          )?.name;
           if (orgName) setOrganizationName(orgName);
-        } catch (error) {
-          console.error("Erro ao carregar nome da organização:", error);
-          // Silencioso - não é crítico
+        } catch {
+          // ignore
         }
       }
- const normalized = response?.items ?? [];
+
+      const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
         response?.paging?.totalPages ??
@@ -107,48 +110,33 @@ const CondominioPage: React.FC = () => {
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
-      setListPage(response?.paging?.pageNumber ?? pageNumber);
+
       setListPage(response?.paging?.pageNumber ?? pageNumber);
       setTotalPages(computedTotalPages);
       setCondominiums(normalized);
-      await loadCondominiumImages(normalized);
     } catch (error) {
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao carregar condomínios.";
+          : "Erro ao carregar condominios.";
+      const isNotFound =
+        status === 404 || /not found|nada encontrado/i.test(message);
+
+      if (isNotFound) {
+        setCondominiums([]);
+        setListPage(1);
+        setTotalPages(1);
+        setListError(null);
+        return;
+      }
+
       setListError(message);
     } finally {
       setListLoading(false);
     }
-  };
-
-  const loadCondominiumImages = async (items: Condominium[]) => {
-    const previews: Record<string, string> = {};
-    await Promise.all(
-      items.map(async (condominium) => {
-        try {
-          const list = await condominiumImageService.getCondominiumImages(
-            condominium.condominiumId,
-            "Cover",
-          );
-          const first = list?.[0];
-          if (!first?.condominiumImageId) return;
-          const detail = await condominiumImageService.getCondominiumImageById(
-            first.condominiumImageId,
-          );
-          if (detail?.contentFile && detail?.contentType) {
-            previews[condominium.condominiumId] =
-              `data:${detail.contentType};base64,${detail.contentFile}`;
-          }
-        } catch (error) {
-          console.error("Erro ao carregar imagem do condomínio:", error);
-          // SILENCIOSO - Erro 404 de imagem é esperado quando não há imagem
-          // Não loga nada no console para não poluir
-        }
-      }),
-    );
-    setCondominiumImages(previews);
   };
 
   const loadCondominiumTypes = async () => {
@@ -161,7 +149,7 @@ const CondominioPage: React.FC = () => {
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao carregar tipos de condomínio.";
+          : "Erro ao carregar tipos de côndomínio.";
       setTypesError(message);
     } finally {
       setTypesLoading(false);
@@ -173,7 +161,7 @@ const CondominioPage: React.FC = () => {
     loadCondominiumTypes();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const [openDelete, setOpenDelete] = useState(false);
+
   const getCondominiumTypeLabel = (value: string | number) => {
     const match = condominiumTypes.find(
       (type) => type.id === value || type.value === value,
@@ -181,30 +169,111 @@ const CondominioPage: React.FC = () => {
     return match?.description || match?.value || String(value);
   };
 
-  const handleEdit = (condominium: Condominium) => {
-    setEditingCondominium(condominium);
-    setIsCadastroOpen(true);
+  const getCondominiumImageUrl = (condominium: Condominium) => {
+    if (!condominium.thumbnailFile || !condominium.contentType)
+      return undefined;
+    return `data:${condominium.contentType};base64,${condominium.thumbnailFile}`;
   };
 
-  const handleDelete = (condominium: Condominium) => {
-    
-    console.log("Deletar condomínio:", condominium);
-    setOpenDelete(false);
+  const handleEdit = (condominium: Condominium, image: string) => {
+    setEditingCondominium(condominium);
+    setImageSelected(image);
+    setIsCadastroOpen(true);
   };
 
   const handleOpenCreate = () => {
     setEditingCondominium(null);
+    setImageSelected(null);
     setIsCadastroOpen(true);
   };
 
   const handleCloseForm = () => {
     setIsCadastroOpen(false);
     setEditingCondominium(null);
+    setImageSelected(null);
   };
 
   const handleSaved = async () => {
     await loadCondominiums(listPage);
   };
+
+  const condominiumItems = condominiums
+    .filter((condominium) =>
+      [
+        condominium.name,
+        condominium.doc,
+        condominium.city,
+        condominium.state,
+        getCondominiumTypeLabel(condominium.condominiumType),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(searchText.toLowerCase()),
+    )
+    .map((condominium, index) => ({
+      id: condominium.condominiumId,
+      title: condominium.name,
+      subtitle: (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.35 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+            <Article sx={{ fontSize: 14 }} />
+            <Typography variant="body2" color="text.secondary">
+              {formatCNPJ(condominium.doc) || "-"}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+            <LocationOn sx={{ fontSize: 14 }} />
+            <Typography variant="body2" color="text.secondary">
+              {condominium.city} - {condominium.state}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+            <Typography variant="body2" color="text.secondary">
+              {getCondominiumTypeLabel(condominium.condominiumType)}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+            <Typography variant="body2" color="text.secondary">
+              {
+                condominiumTypes.find(
+                  (f) => f?.id == condominium?.allocationType,
+                )?.description
+              }
+            </Typography>
+          </Box>
+        </Box>
+      ),
+      imageUrl: getCondominiumImageUrl(condominium),
+      actions: (
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 3 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            className="action-button-edit"
+            startIcon={<EditOutlined />}
+            onClick={() =>
+              handleEdit(condominium, getCondominiumImageUrl(condominium) || "")
+            }
+          >
+            Editar
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            className="action-button-delete"
+            startIcon={<DeleteOutline />}
+            onClick={() => {
+              setEditingCondominium(condominium);
+              showDelete("Confirma a exclusao do item?", `${condominium.name}`);
+            }}
+          >
+            Excluir
+          </Button>
+        </Box>
+      ),
+      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+    }));
 
   return (
     <Box className="condominio-container">
@@ -213,9 +282,9 @@ const CondominioPage: React.FC = () => {
           <CondominioForm
             open={isCadastroOpen}
             editingCondominium={editingCondominium}
+            imageSelected={imageSelected}
             onClose={handleCloseForm}
             onSaved={handleSaved}
-            onNotify={handleNotify}
             condominiumTypes={condominiumTypes}
             typesLoading={typesLoading}
             typesError={typesError}
@@ -230,174 +299,107 @@ const CondominioPage: React.FC = () => {
                 pb: 1.5,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                flexDirection: "column",
                 borderBottom: "2px solid #f0f0f0",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
-                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
-                  {organizationName}
-                </Typography>
+              <Container
+                sx={{
+                  p: "0 !important",
+                  maxWidth: "100vw !important",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    {organizationName}
+                  </Typography>
+                </Box>
+                <Tooltip title={t("common.closeTooltip")}>
+                  <IconButton
+                    onClick={() => {
+                      navigate("/dashboard");
+                      setIsCadastroOpen(false);
+                      setEditingCondominium(null);
+                    }}
+                    className="close-button"
+                    aria-label={t("common.close")}
+                  >
+                    <Close sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
+              </Container>
+              <Box>
+                <BreadcrumbTrail
+                  items={[t("common.organization"), t("common.condominiums")]}
+                />
               </Box>
-              <Tooltip title="Fechar">
-                <IconButton
-                  onClick={() => {
-                    navigate("/dashboard");
-                    setIsCadastroOpen(false);
-                    setEditingCondominium(null);
-                  }}
-                  className="close-button"
-                  aria-label="Fechar"
-                >
-                  <Close sx={{ fontSize: 20 }} />
-                </IconButton>
-              </Tooltip>
             </Box>
 
             <Paper variant="outlined" sx={{ p: 2 }}>
               {listLoading ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <CircularProgress size={20} />
-                  <Typography variant="body2">Carregando...</Typography>
+                  <Typography variant="body2">{t("common.loading")}</Typography>
                 </Box>
-              ) : listError ? (
-                <Alert severity="error">{listError}</Alert>
-              ) : condominiums.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  Nenhum condomínio encontrado para esta organização.
-                </Typography>
               ) : (
-                <CardList
-                  title="Condominios da organizacao"
-                  showTitle={false}
-                  searchPlaceholder="Buscar condominio..."
-                  onSearchChange={setSearchText}
-                  onAddClick={handleOpenCreate}
-                  addLabel="Novo"
-                  addButtonPlacement="toolbar"
-                  emptyImageLabel="Sem imagem"
-                  showFilters={true}
-                  page={listPage}
-                  totalPages={totalPages}
-                  onPageChange={(page) => {
-                    setListPage(page);
-                    loadCondominiums(page);
-                  }}
-                  items={condominiums
-                    .filter((condominium,) =>
-                      [condominium.name, condominium.city, condominium.state]
-                        .filter(Boolean)
-                        .join(" ")
-                        .toLowerCase()
-                        .includes(searchText.toLowerCase()),
-                    )
-                    .map((condominium, index) => ({
-                      id: condominium.condominiumId,
-                      title: condominium.name,
-                      subtitle: (
-                        <>
-                          <LocationOnOutlined
-                            sx={{
-                              fontSize: 14,
-                              mr: 0.5,
-                              verticalAlign: "middle",
-                            }}
-                          />
-                          {condominium.city} - {condominium.state}
-                        </>
-                      ),
-                      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-                      meta: (
-                        <>
-                          {condominium.condominiumType === "Commercial" ||
-                          getCondominiumTypeLabel(
-                            condominium.condominiumType,
-                          ) === "Comercial" ? (
-                            <BusinessOutlined
-                              sx={{
-                                fontSize: 14,
-                                mr: 0.5,
-                                verticalAlign: "middle",
-                              }}
-                            />
-                          ) : getCondominiumTypeLabel(
-                              condominium.condominiumType,
-                            ) === "Residencial" ? (
-                            <HomeOutlined
-                              sx={{
-                                fontSize: 14,
-                                mr: 0.5,
-                                verticalAlign: "middle",
-                              }}
-                            />
-                          ) : (
-                            <ApartmentOutlined
-                              sx={{
-                                fontSize: 14,
-                                mr: 0.5,
-                                verticalAlign: "middle",
-                              }}
-                            />
-                          )}
-                          {getCondominiumTypeLabel(condominium.condominiumType)}
-                        </>
-                      ),
-                      imageUrl: condominiumImages[condominium.condominiumId],
-                      actions: (
-                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            className="action-button-edit"
-                            startIcon={<EditOutlined />}
-                            onClick={() => handleEdit(condominium)}
-                          >
-                            Editar
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            className="action-button-delete"
-                            startIcon={<DeleteOutline />}
-                            onClick={() => setOpenDelete(true)}
-                          >
-                            Excluir
-                          </Button>
-                        </Box>
-                      ),
-                    }))}
-                />
+                <>
+                  {listError ? (
+                    <Typography
+                      variant="body2"
+                      color="error.main"
+                      sx={{ mb: 1 }}
+                    >
+                      {listError}
+                    </Typography>
+                  ) : null}
+                  <CardList
+                    title={t("condominio.condominiumsList")}
+                    showTitle={false}
+                    searchPlaceholder={t("condominio.searchPlaceholder")}
+                    onSearchChange={setSearchText}
+                    onAddClick={handleOpenCreate}
+                    addLabel={t("common.new")}
+                    addButtonPlacement="toolbar"
+                    emptyImageLabel={t("common.noImage")}
+                    showFilters={true}
+                    showPagination={true}
+                    cardMaxHeight="none"
+                    imageWidth={145}
+                    imageHeight={90}
+                    actionsMarginTop={0.5}
+                    page={listPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => {
+                      setListPage(page);
+                      loadCondominiums(page);
+                    }}
+                    items={condominiumItems}
+                  />
+                </>
               )}
             </Paper>
           </Paper>
         )}
       </Container>
 
-      <DeleteConfirmModal
-        open={openDelete}
-        onConfirm={() => {
-          if (editingCondominium) {
-            handleDelete(editingCondominium);
-          }
-        }}
-        onCancel={() => setOpenDelete(false)}
-        onClose={() => setOpenDelete(false)}
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        item={appStateModal.item}
+        onConfirm={handleClose}
+        onClose={handleClose}
       />
-
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

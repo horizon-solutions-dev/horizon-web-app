@@ -47,20 +47,8 @@
       &.MuiInputLabel-sizeSmall {
         transform: translate(14px, 11px) scale(1) !important;
 
-        &.MuiInputLabel-shrink {
-          transform: translate(14px, -6px) scale(0.75) !important;
-        }
       }
 
-      &.MuiInputLabel-shrink {
-        background: white !important;
-        padding: 0 6px !important;
-      }
-
-      &.Mui-focused {
-        font-weight: 600 !important;
-        color: #1976d2 !important;
-      }
 
       &.Mui-error {
         color: #ef4444 !important;
@@ -75,6 +63,112 @@
       &.Mui-error {
         color: #ef4444 !important;
         font-weight: 500 !important;
+      }
+    }
+  }
+
+    .MuiPagination-root {
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: 16px !important;
+    padding-top: 16px !important;
+    border-top: 2px solid #f0f2f5 !important;
+
+    .MuiPaginationItem-root {
+      min-width: 36px !important;
+      height: 36px !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      font-size: 13px !important;
+
+      &.Mui-selected {
+        background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+        color: white !important;
+        box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3) !important;
+      }
+
+      &:not(.Mui-selected) {
+        color: #666 !important;
+        background: white !important;
+        border: 2px solid #e0e4e8 !important;
+
+        &:hover {
+          background: rgba(25, 118, 210, 0.05) !important;
+          border-color: #1976d2 !important;
+          color: #1976d2 !important;
+        }
+      }
+    }
+
+    
+  }
+
+   .action-button-edit {
+    min-width: 80px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    background: white !important;
+    color: #10b981 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    text-transform: none !important;
+    padding: 0 12px !important;
+    border: 2px solid #10b981 !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15) !important;
+    transition: all 0.2s ease !important;
+
+    @media (max-width: 768px) {
+      flex: 1 !important;
+    }
+
+    .MuiSvgIcon-root {
+      color: #10b981 !important;
+      font-size: 16px !important;
+    }
+
+    &:hover {
+      background: rgba(16, 185, 129, 0.1) !important;
+      border-color: #059669 !important;
+      color: #059669 !important;
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25) !important;
+
+      .MuiSvgIcon-root {
+        color: #059669 !important;
+      }
+    }
+  }
+
+  .action-button-delete {
+    min-width: 80px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    background: white !important;
+    color: #ef4444 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    text-transform: none !important;
+    padding: 0 12px !important;
+    border: 2px solid #ef4444 !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15) !important;
+    transition: all 0.2s ease !important;
+
+    @media (max-width: 768px) {
+      flex: 1 !important;
+    }
+
+    .MuiSvgIcon-root {
+      color: #ef4444 !important;
+      font-size: 16px !important;
+    }
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1) !important;
+      border-color: #dc2626 !important;
+      color: #dc2626 !important;
+      box-shadow: 0 3px 10px rgba(239, 68, 68, 0.25) !important;
+
+      .MuiSvgIcon-root {
+        color: #dc2626 !important;
       }
     }
   }

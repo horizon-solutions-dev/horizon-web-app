@@ -11,8 +11,12 @@ import { AuthService } from "../../services/authService";
 import { organizationService, type OrganizationMeResponse } from "../../services/organizationService";
 import { IoIosArrowBack } from "react-icons/io";
 import { MdCheckCircle } from "react-icons/md";
+import { Close } from "@mui/icons-material";
+import { IconButton, Tooltip } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
-
+import Logo from '../../assets/logo.svg';
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 interface LoginFormValues {
   email: string;
@@ -28,6 +32,12 @@ const STEP_CONFIG = {
 
 export default function MultiStepLogin() {
   useEffect(()=> {
+    const expiredMessage = sessionStorage.getItem("authExpiredMessage");
+    if (expiredMessage) {
+      showSessionExpired();
+      sessionStorage.removeItem("authExpiredMessage");
+    }
+
     // Limpa dados de login anteriores ao montar o componente
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
@@ -37,6 +47,8 @@ export default function MultiStepLogin() {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("organizationId");
   },[])
+    const { appStateModal, handleClose, showSessionExpired } = useAppStateModal();
+  
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -145,6 +157,8 @@ export default function MultiStepLogin() {
   };
 
   const handleFinalLogin = () => {
+    console.log(formik.values.condominium)
+    localStorage.setItem('dataCondominium', JSON.stringify(formik.values.condominium));
     formik.validateForm().then((errors) => {
       if (Object.keys(errors).length === 0) {
         formik.handleSubmit();
@@ -160,6 +174,22 @@ export default function MultiStepLogin() {
         setPasswordError(null);
       }
     }
+  };
+
+  const handleCloseNoOrganization = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("condominiumId");
+    localStorage.removeItem("condominium");
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("organizationId");
+    setCondominiums([]);
+    formik.setFieldValue("email", "");
+    setPasswordError(null);
+    setIsLoadingCondominiums(false);
+    formik.setFieldValue("password", "");
+    formik.setFieldValue("condominium", null);
+    setStep(1);
   };
 
   const handleKeyPress = (
@@ -245,7 +275,7 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
     >
       <div className="logo-section">
         <div className="logo">
-          <img src="/src/assets/logo.svg" alt="Logo" />
+          <img src={Logo} alt="Logo" />
         </div>
       </div>
 
@@ -316,7 +346,7 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
       </button>
       <div className="logo-section">
         <div className="logo">
-          <img src="/src/assets/logo.svg" alt="Logo" />
+          <img src={Logo} alt="Logo" />
         </div>
       </div>
 
@@ -377,9 +407,22 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
 
   const renderStepThree = () => (
     <>
+      {!isLoadingCondominiums && condominiums.length === 0 ? (
+        <Tooltip title="Clique aqui para Fechar a janela">
+
+          <IconButton
+            className="login-close-button"
+            aria-label="Fechar"
+            onClick={handleCloseNoOrganization}
+          >
+            <Close />
+          </IconButton>
+        </Tooltip>
+      ) : null}
+
       <div className="logo-section">
         <div className="logo">
-          <img src="/src/assets/logo.svg" alt="Logo" />
+          <img src={Logo} alt="Logo" />
         </div>
       </div>
 
@@ -513,6 +556,18 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
           )}
         </div>
       )}
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        item={appStateModal.item}
+        onConfirm={handleClose}
+        onClose={handleClose}
+        showCancel={false}
+      />
     </>
   );
 }

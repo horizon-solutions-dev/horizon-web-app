@@ -7,11 +7,14 @@ import "./MainLayout.scss";
 import NotificationsModal, { type Notification } from "../NotificationsModal/NotificationsModal";
 import { useAuth } from "../../contexts/useAuth";
 import RouteNames from "../../routes/routeNames";
+import { useTranslation } from "react-i18next";
+import LanguageToggle from "../LanguageSeletor/LanguageSeletor";
 
 export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, user } = useAuth();
+  const { i18n } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -19,29 +22,29 @@ export default function MainLayout() {
   // Nome do morador - depois pode vir de um contexto/API
 
   // Mapear rotas para títulos
- /*  const getPageTitle = () => {
-    const path = location.pathname;
-    const titleMap: { [key: string]: string } = {
-      '/dashboard': 'Dashboard',
-      '/condominio': 'Condomínio',
-      '/reservas/tipo': 'Tipo de Reserva',
-      '/reservas/listagem': 'Listagem de Reservas',
-      '/reservas/calendario': 'Calendário de Reservas',
-      '/reservas/disponibilidade': 'Disponibilidade',
-      '/financeiro/boletos': 'Boletos',
-      '/financeiro/balancetes': 'Balancetes',
-      '/financeiro/despesas': 'Despesas',
-      '/portaria/usuarios': 'Usuários da Portaria',
-      '/portaria/liberacao': 'Liberação de Acesso',
-      '/portaria/relatorios': 'Relatórios da Portaria',
-      '/moradores': 'Moradores',
-      '/veiculos': 'Veículos',
-      '/fale-conosco': 'Fale Conosco',
-      '/encomendas/recebimento': 'Recebimento de Encomendas',
-      '/encomendas/notificacao': 'Notificação de Encomendas',
-    };
-    return titleMap[path] || 'Dashboard';
-  }; */
+  /*  const getPageTitle = () => {
+     const path = location.pathname;
+     const titleMap: { [key: string]: string } = {
+       '/dashboard': 'Dashboard',
+       '/condominio': 'Condôminio',
+       '/reservas/tipo': 'Tipo de Reserva',
+       '/reservas/listagem': 'Listagem de Reservas',
+       '/reservas/calendario': 'Calendário de Reservas',
+       '/reservas/disponibilidade': 'Disponibilidade',
+       '/financeiro/boletos': 'Boletos',
+       '/financeiro/balancetes': 'Balancetes',
+       '/financeiro/despesas': 'Despesas',
+       '/portaria/usuarios': 'Usuários da Portaria',
+       '/portaria/liberacao': 'Liberação de Acesso',
+       '/portaria/relatorios': 'Relatórios da Portaria',
+       '/moradores': 'Moradores',
+       '/veiculos': 'Veículos',
+       '/fale-conosco': 'Fale Conosco',
+       '/encomendas/recebimento': 'Recebimento de Encomendas',
+       '/encomendas/notificacao': 'Notificação de Encomendas',
+     };
+     return titleMap[path] || 'Dashboard';
+   }; */
 
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -88,7 +91,7 @@ export default function MainLayout() {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/");
   };
 
   const handleMarkAsRead = (id: string) => {
@@ -110,7 +113,6 @@ export default function MainLayout() {
   const routeTitles: Record<string, { label: string; parent?: string }> = {
     [RouteNames.Dashboard]: { label: "Dashboard" },
     [RouteNames.Condominio]: { label: "Condominio" },
-    [RouteNames.Moradores]: { label: "Moradores" },
     [RouteNames.Veiculos]: { label: "Veiculos" },
     [RouteNames.FaleConosco]: { label: "Fale Conosco" },
 
@@ -135,11 +137,11 @@ export default function MainLayout() {
     [RouteNames.EncomendasRecebimento]: { label: "Recebimento", parent: "Encomendas" },
     [RouteNames.EncomendasNotificacao]: { label: "Notificacao", parent: "Encomendas" },
 
-    [RouteNames.CadastrosBlocos]: { label: "Blocos", parent: "Cadastros" },
-    [RouteNames.CadastrosUnidades]: { label: "Unidades", parent: "Cadastros" },
-    [RouteNames.CadastrosResidentes]: { label: "Residentes", parent: "Cadastros" },
-    [RouteNames.CadastrosOrganizacoes]: { label: "Organizacoes", parent: "Cadastros" },
-    [RouteNames.CadastrosPerfis]: { label: "Perfis", parent: "Cadastros" },
+    [RouteNames.CadastrosBlocos]: { label: "Blocos", },
+    [RouteNames.CadastrosUnidades]: { label: "Unidades", },
+    [RouteNames.CadastrosResidentes]: { label: "Moradores", },
+    [RouteNames.CadastrosOrganizacoes]: { label: "Organizações", },
+    [RouteNames.CadastrosPerfis]: { label: "Perfis", },
   };
 
   const getHeaderTitle = () => {
@@ -159,7 +161,7 @@ export default function MainLayout() {
   return (
     <div className="main-layout">
       <aside className={`main-layout-sidebar ${mobileMenuOpen ? "mobile-open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
-        <MenuComponent 
+        <MenuComponent
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
@@ -178,8 +180,9 @@ export default function MainLayout() {
           </div>
 
           <div className="header-right">
-            <button 
-              className="header-icon-btn" 
+            <LanguageToggle i18n={i18n} />
+            <button
+              className="header-icon-btn"
               title="Notificações"
               onClick={() => setNotificationsOpen(!notificationsOpen)}
             >
@@ -193,7 +196,7 @@ export default function MainLayout() {
               <MdAccountCircle className="user-avatar" />
               <div className="user-info">
                 <span className="user-name">{user?.name}</span>
-{/*                 <span className="user-role">{user?.role || 'Sem cargo'}</span>
+                {/*                 <span className="user-role">{user?.role || 'Sem cargo'}</span>
  */}              </div>
             </div>
 

@@ -5,7 +5,9 @@ import type {
   UpdateAccountRequest,
   AccountResponse,
   ChangePasswordRequest,
+  TypesDoc,
 } from '../models/api.model';
+import axios from 'axios';
 
 const BASE_PATH = 'https://horizonauthapi-dfbah3fghze8f9gb.australiaeast-01.azurewebsites.net/api/v1/accounts';
 
@@ -13,8 +15,23 @@ export class AccountService {
   /**
    * Cria uma nova conta de usuário
    */
-  static async createAccount(payload: CreateAccountRequest): Promise<CreateAccountResponse> {
-    return apiClient.post<CreateAccountResponse>(`${BASE_PATH}`, payload);
+  static async createAccount(payload: CreateAccountRequest): Promise<string> {
+    return apiClient.post<string>(`${BASE_PATH}`, payload);
+  }
+
+    static async validateAccount(payload: CreateAccountRequest) {
+    try {
+      await apiClient.post<{ condominiumUnitResidentId?: string }>(`${BASE_PATH}`, payload);
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
+      throw error;
+    }
   }
 
   /**
@@ -27,15 +44,15 @@ export class AccountService {
   /**
    * Atualiza a conta do usuário logado
    */
-  static async updateMyAccount(payload: UpdateAccountRequest): Promise<CreateAccountResponse> {
-    return apiClient.put<CreateAccountResponse>(`${BASE_PATH}/me`, payload);
+  static async updateMyAccount(payload: UpdateAccountRequest): Promise<string> {
+    return apiClient.put<string>(`${BASE_PATH}/me`, payload);
   }
 
   /**
    * Atualiza a conta de um usuário específico (requer permissão)
    */
-  static async updateAccount(userId: string, payload: UpdateAccountRequest): Promise<CreateAccountResponse> {
-    return apiClient.put<CreateAccountResponse>(`${BASE_PATH}/${userId}`, payload);
+  static async updateAccount(userId: string, payload: UpdateAccountRequest): Promise<string> {
+    return apiClient.put<string>(`${BASE_PATH}/${userId}`, payload);
   }
 
   /**
@@ -73,5 +90,11 @@ export class AccountService {
    */
   static async createAccountStatus(statusId: number): Promise<CreateAccountResponse> {
     return apiClient.post<CreateAccountResponse>(`${BASE_PATH}/status`, { statusId });
+  }
+  static async accountTypes(): Promise<TypesDoc[]> {
+    return apiClient.get<TypesDoc[]>(`${BASE_PATH}/types`);
+  }
+  static async accountMe(id:string): Promise<AccountResponse> {
+    return apiClient.get<AccountResponse>(`${BASE_PATH}/${id}`);
   }
 }

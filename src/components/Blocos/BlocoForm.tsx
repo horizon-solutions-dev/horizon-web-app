@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import React, { useEffect, useState } from "react";
 import "./Bloco.scss";
 import {
@@ -5,20 +6,19 @@ import {
   Button,
   TextField,
   CircularProgress,
-  Alert,
+  // Alert,
 } from "@mui/material";
 import { type CondominiumBlock, type CondominiumBlockRequest, blockService } from "../../services/blockService";
 import StepWizardCard from "../../shared/components/StepWizardCard";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import { useTranslation } from "react-i18next";
 
 interface BlocoFormProps {
   open: boolean;
   editingBlock: CondominiumBlock | null;
   onClose: () => void;
   onSaved: () => void | Promise<void>;
-  onNotify: (
-    message: string,
-    severity?: "success" | "error" | "info" | "warning",
-  ) => void;
   loading: boolean;
   setLoading: (loading: boolean) => void;
   condominiumIdPreset?: string;
@@ -29,11 +29,14 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
   editingBlock,
   onClose,
   onSaved,
-  onNotify,
   loading,
   setLoading,
   condominiumIdPreset,
 }) => {
+  const { t } = useTranslation();
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
+  const [closeAfterModal, setCloseAfterModal] = useState(false);
+
   const initialForm: CondominiumBlockRequest = {
     condominiumId: condominiumIdPreset || "",
     code: "",
@@ -44,7 +47,7 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const steps = ["Dados do Bloco"];
+  const steps = [t("blocoForm.stepData")];
 
   useEffect(() => {
     if (!open) return;
@@ -84,15 +87,15 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.condominiumId?.trim()) {
-      newErrors.condominiumId = "CondominiumId é obrigatório.";
+      newErrors.condominiumId = t("blocoForm.condominiumIdRequired");
     }
 
     if (!formData.code?.trim()) {
-      newErrors.code = "Código é obrigatório.";
+      newErrors.code = t("blocoForm.codeRequired");
     }
 
     if (!formData.name?.trim()) {
-      newErrors.name = "Nome é obrigatório.";
+      newErrors.name = t("blocoForm.nameRequired");
     }
 
     setErrors(newErrors);
@@ -101,7 +104,6 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      onNotify("Por favor, corrija os erros antes de continuar.", "error");
       return;
     }
 
@@ -109,13 +111,11 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
     try {
       if (editingId) {
         await blockService.updateBlock(editingId, formData);
-        onNotify("Bloco atualizado com sucesso.", "success");
+        showSuccess(t("blocoForm.updateSuccess"));
       } else {
         await blockService.createBlock(formData);
-        onNotify("Bloco criado com sucesso.", "success");
+        showSuccess(t("blocoForm.createSuccess"));
       }
-
-      await onSaved();
       setFormData({
         condominiumId: condominiumIdPreset || "",
         code: "",
@@ -124,77 +124,110 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
       setEditingId(null);
       setActiveStep(0);
       setErrors({});
-      onClose();
+      setCloseAfterModal(true);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao salvar bloco.";
-      onNotify(message, "error");
+      if (error instanceof AxiosError && error.response?.status === 422) {
+        setErrors({ code: t("blocoForm.duplicateCode") });
+      } else {
+        const message = error instanceof Error ? error.message : t("blocoForm.saveError");
+        showError(message);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    handleClose();
+    onSaved();
+    if (closeAfterModal) {
+      setCloseAfterModal(false);
+      onClose();
     }
   };
 
   const renderStepContent = () => {
     if (activeStep === 0) {
       return (
-        <Box className="bloco-form" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <TextField
-            placeholder="Código"
-            value={formData.code}
-            onChange={(e) => handleChange("code", e.target.value)}
-            error={!!errors.code}
-            helperText={errors.code}
-            fullWidth
-            required
-            variant="outlined"
-            InputLabelProps={{ shrink: false }}
-          />
-          <TextField
-            placeholder="Nome"
-            value={formData.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            error={!!errors.name}
-            helperText={errors.name}
-            fullWidth
-            required
-            variant="outlined"
-            InputLabelProps={{ shrink: false }}
-          />
-        </Box>
+        <>
+          <Box className="bloco-form" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
+              placeholder={t("blocoForm.codePlaceholder")}
+              value={formData.code}
+              onChange={(e) => handleChange("code", e.target.value)}
+              error={!!errors.code}
+              helperText={errors.code}
+              fullWidth
+              required
+              variant="outlined"
+
+            />
+            <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
+              placeholder={t("blocoForm.namePlaceholder")}
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              error={!!errors.name}
+              helperText={errors.name}
+              fullWidth
+              required
+              variant="outlined"
+
+            />
+          </Box>
+
+        </>
       );
     }
 
     return null;
   };
 
+
+  const renderActions = () => {
+    return (
+      <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+        {loading ? <CircularProgress size={20} /> : t("common.finish")}
+      </Button>
+    );
+  };
+
   return (
     <Box className="bloco-container">
       <StepWizardCard
-        title={editingId ? "Editar Bloco" : "Criar Bloco"}
+        title={editingId ? t("blocoForm.editTitle") : t("blocoForm.createTitle")}
         subtitle={steps[activeStep]}
         subtitleClassName="bloco-form-subtitle"
         steps={steps}
         activeStep={activeStep}
         showBack={false}
         onClose={onClose}
+        disableContent={loading}
+        actions={renderActions()}
       >
         {renderStepContent()}
-        
-        {Object.keys(errors).length > 0 && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            Por favor, corrija os erros acima antes de continuar.
-          </Alert>
-        )}
-
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 3 }}>
-          <Button 
-            variant="contained" 
-            onClick={handleSubmit} 
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={20} /> : "Concluir"}
-          </Button>
-        </Box>
       </StepWizardCard>
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        item={appStateModal.item}
+        onConfirm={handleModalClose}
+        onClose={handleModalClose}
+        showCancel={false}
+      />
     </Box>
   );
 };

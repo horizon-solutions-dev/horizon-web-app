@@ -182,7 +182,6 @@
         border: 2px solid #e0e0e0 !important;
         transition: all 0.3s ease !important;
         padding: 0 !important;
-        flex-shrink: 0 !important;
 
         &:hover {
           border-color: #d32f2f !important;
@@ -288,7 +287,6 @@
       & > div:last-child {
         display: flex !important;
         gap: 8px !important;
-        flex-shrink: 0 !important;
 
         @media (max-width: 768px) {
           width: 100% !important;

@@ -7,8 +7,6 @@ import {
   Button,
   TextField,
   MenuItem,
-  Alert,
-  Snackbar,
 } from "@mui/material";
 import {
   Add,
@@ -22,6 +20,8 @@ import BoletoForm from "./BoletoForm";
 import BoletoViewer from "./BoletoViewer";
 import CardList from "../../shared/components/CardList";
 import "./Boletos.scss";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 interface Boleto {
   id: number;
@@ -84,12 +84,7 @@ const Boletos: React.FC = () => {
   const [openViewer, setOpenViewer] = useState(false);
   const [selectedBoleto, setSelectedBoleto] = useState<Boleto | null>(null);
   const [page, setPage] = useState(1);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
-
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
   const handleOpenForm = (boleto?: Boleto) => {
     setSelectedBoleto(boleto || null);
     setOpenForm(true);
@@ -117,19 +112,11 @@ const Boletos: React.FC = () => {
           b.id === selectedBoleto.id ? { ...boleto, id: selectedBoleto.id } : b,
         ),
       );
-      setSnackbar({
-        open: true,
-        message: "Boleto atualizado com sucesso!",
-        severity: "success",
-      });
+      showSuccess("Boleto atualizado com sucesso!");
     } else {
       const newId = Math.max(...boletos.map((b) => b.id), 0) + 1;
       setBoletos([...boletos, { ...boleto, id: newId }]);
-      setSnackbar({
-        open: true,
-        message: "Boleto criado com sucesso!",
-        severity: "success",
-      });
+      showSuccess("Boleto criado com sucesso!");
     }
     handleCloseForm();
   };
@@ -137,11 +124,7 @@ const Boletos: React.FC = () => {
   const handleDeleteBoleto = (boleto: Boleto) => {
     if (window.confirm(`Deseja realmente excluir o boleto ${boleto.numero}?`)) {
       setBoletos(boletos.filter((b) => b.id !== boleto.id));
-      setSnackbar({
-        open: true,
-        message: "Boleto excluido com sucesso!",
-        severity: "success",
-      });
+      showSuccess("Boleto deletado com sucesso!");
     }
   };
 
@@ -151,9 +134,9 @@ const Boletos: React.FC = () => {
       link.href = boleto.imagem;
       link.download = `boleto_${boleto.numero}.png`;
       link.click();
-      setSnackbar({ open: true, message: "Download iniciado!", severity: "success" });
+      showSuccess("Download iniciado!");
     } else {
-      setSnackbar({ open: true, message: "Este boleto nao possui imagem!", severity: "error" });
+      showError("Este boleto não possui imagem!");
     }
   };
 
@@ -192,8 +175,12 @@ const Boletos: React.FC = () => {
             <Box className="toolbar">
               <Box className="toolbar-actions">
                 <TextField
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      height: 46,
+                    },
+                  }}
                   select
-                  size="small"
                   value={filterStatus}
                   onChange={(e) => {
                     setFilterStatus(e.target.value);
@@ -253,7 +240,7 @@ const Boletos: React.FC = () => {
                       startIcon={<Visibility fontSize="small" />}
                       onClick={() => handleOpenViewer(boleto)}
                     >
-                      Visualizar
+                      Visualizar Boleto
                     </Button>
                     <Button
                       size="small"
@@ -318,15 +305,16 @@ const Boletos: React.FC = () => {
         onDownload={handleDownload}
       />
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        item={appStateModal.item}
+        onConfirm={handleClose}
+        onClose={handleClose}
+      />
     </Box>
   );
 };

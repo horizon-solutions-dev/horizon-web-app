@@ -5,10 +5,9 @@ import {
   MdEventAvailable,
   MdAttachMoney,
   MdSecurity,
-  MdPeople,
   MdDirectionsCar,
-  MdEmail,
   MdLocalShipping,
+  MdEmail,
   MdApartment,
   MdSettings,
   MdExpandMore,
@@ -19,7 +18,9 @@ import {
 } from "react-icons/md";
 import "./MenuComponent.scss";
 import RouteNames from "../../routes/routeNames";
-
+import { AssignmentInd, Home, People, ViewModule } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
+import Logo from '../../assets/logo.svg'
 interface MenuItem {
   id: string;
   label: string;
@@ -33,95 +34,50 @@ interface MenuComponentProps {
   onToggleCollapse?: () => void;
 }
 
-const menuItems: MenuItem[] = [
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: <MdDashboard />,
-    path: RouteNames.Dashboard,
-  },
-  {
-    id: "condominio",
-    label: "Condominio",
-    icon: <MdApartment />,
-    path: RouteNames.Condominio,
-  },
-  {
-    id: "reservas",
-    label: "Reservas",
-    icon: <MdEventAvailable />,
-    children: [
-      { id: "reservas-tipo", label: "Tipo de Reserva", icon: <></>, path: RouteNames.ReservasTipo },
-      { id: "reservas-listagem", label: "Listagem", icon: <></>, path: RouteNames.ReservasListagem },
-      { id: "reservas-calendario", label: "Calendário", icon: <></>, path: RouteNames.ReservasCalendario },
-      { id: "reservas-disponibilidade", label: "Disponibilidade", icon: <></>, path: RouteNames.ReservasDisponibilidade },
-    ],
-  },
-  {
-    id: "financeiro",
-    label: "Financeiro",
-    icon: <MdAttachMoney />,
-    children: [
-      { id: "financeiro-boletos", label: "Boletos", icon: <></>, path: RouteNames.FinanceiroBoletos },
-      { id: "financeiro-balancetes", label: "Balancetes", icon: <></>, path: RouteNames.FinanceiroBalancetes },
-      { id: "financeiro-despesas", label: "Despesas", icon: <></>, path: RouteNames.FinanceiroDespesas },
-    ],
-  },
-  {
-    id: "portaria",
-    label: "Portaria",
-    icon: <MdSecurity />,
-    children: [
-      { id: "portaria-usuarios", label: "Usuários", icon: <></>, path: RouteNames.PortariaUsuarios },
-      { id: "portaria-liberacao", label: "Liberação", icon: <></>, path: RouteNames.PortariaLiberacao },
-      { id: "portaria-relatorios", label: "Relatórios", icon: <></>, path: RouteNames.PortariaRelatorios },
-    ],
-  },
-  {
-    id: "moradores",
-    label: "Moradores",
-    icon: <MdPeople />,
-    path: RouteNames.Moradores,
-  },
-  {
-    id: "cadastros",
-    label: "Cadastros",
-    icon: <MdSettings />,
-    children: [
-      { id: "cadastros-blocos", label: "Blocos", icon: <></>, path: RouteNames.CadastrosBlocos },
-      { id: "cadastros-unidades", label: "Unidades", icon: <></>, path: RouteNames.CadastrosUnidades },
-      { id: "cadastros-residentes", label: "Residentes", icon: <></>, path: RouteNames.CadastrosResidentes },
-      { id: "cadastros-organizacoes", label: "Organizacoes", icon: <></>, path: RouteNames.CadastrosOrganizacoes },
-      { id: "cadastros-perfis", label: "Perfis", icon: <></>, path: RouteNames.CadastrosPerfis },
-    ],
-  },
-  {
-    id: "veiculos",
-    label: "Veículos",
-    icon: <MdDirectionsCar />,
-    path: RouteNames.Veiculos,
-  },
-  {
-    id: "fale-conosco",
-    label: "Fale Conosco",
-    icon: <MdEmail />,
-    path: RouteNames.FaleConosco,
-  },
-  {
-    id: "encomendas",
-    label: "Encomendas",
-    icon: <MdLocalShipping />,
-    children: [
-      { id: "encomendas-recebimento", label: "Recebimento", icon: <></>, path: RouteNames.EncomendasRecebimento },
-      { id: "encomendas-notificacao", label: "Notificação", icon: <></>, path: RouteNames.EncomendasNotificacao },
-    ],
-  },
-];
 
 export default function MenuComponent({ collapsed = false, onToggleCollapse }: MenuComponentProps) {
   const location = useLocation();
+  const { t } = useTranslation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [organizationName, setOrganizationName] = useState<string>("");
+
+  const menuItems: MenuItem[] = [
+    {
+      id: "dashboard",
+      label: t("menu.dashboard"),
+      icon: <MdDashboard />,
+      path: RouteNames.Dashboard,
+    },
+    { id: "cadastros-organizacoes", label: t("menu.organizations"), icon: <MdBusiness />, path: RouteNames.CadastrosOrganizacoes },
+    {
+      id: "condominios",
+      label: t("menu.condominiums"),
+      icon: <MdApartment />,
+      path: RouteNames.Condominio,
+    },
+    { id: "cadastros-blocos", label: t("menu.blocks"), icon: <ViewModule />, path: RouteNames.CadastrosBlocos },
+    { id: "cadastros-unidades", label: t("menu.units"), icon: <Home />, path: RouteNames.CadastrosUnidades },
+    { id: "cadastros-moradores", label: t("menu.residents"), icon: <People />, path: RouteNames.CadastrosResidentes },
+    { id: "cadastros-perfis", label: t("menu.profiles"), icon: <AssignmentInd />, path: RouteNames.CadastrosPerfis },
+    {
+      id: "itens-pendentes",
+      label: t("menu.pendingItems"),
+      icon: <MdSettings />,
+      children: [
+        { id: "pendente-reservas", label: t("menu.reservations"), icon: <MdEventAvailable />, path: RouteNames.ReservasTipo },
+        { id: "pendente-financeiro", label: t("menu.financial"), icon: <MdAttachMoney />, path: RouteNames.FinanceiroBoletos },
+        { id: "pendente-portaria", label: t("menu.gatehouse"), icon: <MdSecurity />, path: RouteNames.PortariaUsuarios },
+        { id: "pendente-veiculos", label: t("menu.vehicles"), icon: <MdDirectionsCar />, path: RouteNames.Veiculos },
+        { id: "pendente-encomendas", label: t("menu.deliveries"), icon: <MdLocalShipping />, path: RouteNames.EncomendasRecebimento },
+        {
+          id: "fale-conosco",
+          label: t("menu.contactUs"),
+          icon: <MdEmail />,
+          path: RouteNames.FaleConosco,
+        },
+      ],
+    },
+  ];
 
   useEffect(() => {
     const loadOrganization = () => {
@@ -157,7 +113,7 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
 
   const toggleExpand = (itemId: string) => {
     if (collapsed) return; // Não expande quando colapsado
-    
+
     setExpandedItems((prev) =>
       prev.includes(itemId)
         ? prev.filter((id) => id !== itemId)
@@ -226,9 +182,9 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
   return (
     <div className={`menu-component ${collapsed ? "collapsed" : ""}`}>
       <div className="menu-header">
-        <img 
-          src="/src/assets/logo.svg" 
-          alt="Horizon Logo" 
+        <img
+          src={Logo}
+          alt="Horizon Logo"
           className={`menu-logo ${collapsed ? "collapsed" : ""}`}
         />
         {!collapsed && <h2 className="menu-title">Horizon</h2>}
@@ -245,11 +201,11 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
       </div>
 
       {/* Botão de Colapso */}
-      <button 
-        className="collapse-toggle" 
+      <button
+        className="collapse-toggle"
         onClick={onToggleCollapse}
-        title={collapsed ? "Expandir menu" : "Recolher menu"}
-        aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+        title={collapsed ? t("common.expandMenu") : t("common.collapseMenu")}
+        aria-label={collapsed ? t("common.expandMenu") : t("common.collapseMenu")}
       >
         {collapsed ? <MdChevronRight /> : <MdChevronLeft />}
       </button>

@@ -7,21 +7,18 @@ import {
   Paper,
   Typography,
   Button,
-  Snackbar,
-  Alert,
   CircularProgress,
   IconButton,
   Tooltip,
 } from "@mui/material";
 import {
-  Business,
   DeleteOutline,
   EditOutlined,
   Close,
   ViewModule,
-  Apartment,
-  SettingsOutlined,
-  ChevronRight,
+  Article,
+  LocationOn,
+  SearchOutlined,
 } from "@mui/icons-material";
 import {
   blockService,
@@ -30,42 +27,53 @@ import {
 import {
   condominiumService,
   type Condominium,
+  type CondominiumTypeEnum,
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
 import BlocoForm from "./BlocoForm";
+import DeleteConfirmModal from "../../shared/components/ActionModal/DeleteConfirmModal";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
+import { useTranslation } from "react-i18next";
+import { formatCNPJ } from "../../shared/utils/funcoes";
 
 const Blocos: React.FC = () => {
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState<"condominios" | "blocos">("condominios");
+  const { t } = useTranslation();
+  const [activeView, setActiveView] = useState<"condominios" | "blocos">(
+    "condominios",
+  );
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [organizationName, setOrganizationName] = useState("");
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [listPage, setListPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [condominiumsPage, setCondominiumsPage] = useState(1);
+  const [condominiumsTotalPages, setCondominiumsTotalPages] = useState(1);
+  const [blocksPage, setBlocksPage] = useState(1);
+  const [blocksTotalPages, setBlocksTotalPages] = useState(1);
   const pageSize = 4;
 
   const [condominiumIdQuery, setCondominiumIdQuery] = useState("");
-  const [selectedCondominium, setSelectedCondominium] = useState<Condominium | null>(null);
+  const [selectedCondominium, setSelectedCondominium] =
+    useState<Condominium | null>(null);
   const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingBlock, setEditingBlock] = useState<CondominiumBlock | null>(null);
+  const [editingBlock, setEditingBlock] = useState<CondominiumBlock | null>(
+    null,
+  );
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [blockSearchText, setBlockSearchText] = useState("");
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error" | "info" | "warning",
-  });
 
-  const handleNotify = (
-    message: string,
-    severity: "success" | "error" | "info" | "warning" = "success",
-  ) => {
-    setSnackbar({ open: true, message, severity });
-  };
+  // Estado para o modal de exclusão
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [blockToDelete, setBlockToDelete] = useState<CondominiumBlock | null>(
+    null,
+  );
+  const { appStateModal, handleClose, showSuccess, showError, showDelete } =
+    useAppStateModal();
 
   const loadCondominiums = async (pageNumber = 1) => {
     setListLoading(true);
@@ -86,8 +94,12 @@ const Blocos: React.FC = () => {
       if (!organizationName) {
         try {
           const organizations = await organizationService.getMyOrganization();
+          const nameStorage = localStorage.getItem("condominium");
+          const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
           const orgName =
-            organizations?.[0]?.name || organizations?.[0]?.legalName;
+            organizations?.find(
+              (o) => o.organizationId === dataParse?.organizationId,
+            )?.name || dataParse?.nameations?.[0]?.legalName;
           if (orgName) setOrganizationName(orgName);
         } catch {
           // ignore organization name errors
@@ -100,14 +112,12 @@ const Blocos: React.FC = () => {
           1,
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
-      setListPage(response?.paging?.pageNumber ?? pageNumber);
-      setTotalPages(computedTotalPages);
+      setCondominiumsPage(response?.paging?.pageNumber ?? pageNumber);
+      setCondominiumsTotalPages(computedTotalPages);
       setCondominiums(normalized);
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : "Erro ao carregar condomínios.";
+        error instanceof Error ? error.message : t("blocos.deleteError");
       setListError(message);
     } finally {
       setListLoading(false);
@@ -116,9 +126,10 @@ const Blocos: React.FC = () => {
 
   useEffect(() => {
     loadCondominiums(1);
+    loadCondominiumTypes();
   }, []);
 
-  const loadBlocks = async () => {
+  const loadBlocks = async (pageNumber = 1) => {
     if (!condominiumIdQuery.trim()) {
       setListError("Informe o CondominiumId para carregar os blocos.");
       return;
@@ -127,13 +138,29 @@ const Blocos: React.FC = () => {
     setListLoading(true);
     setListError(null);
     try {
-      const data = await blockService.getBlocks(condominiumIdQuery.trim());
-      setBlocks(data?.data ?? []);
+      const response = await blockService.getBlocks(
+        condominiumIdQuery.trim(),
+        pageNumber,
+        pageSize,
+      );
+      const normalized = response?.items ?? [];
+      const computedTotalPages =
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
+        );
+
+      setBlocksPage(response?.paging.pageNumber ?? pageNumber);
+      setBlocksTotalPages(computedTotalPages);
+      setBlocks(normalized);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar blocos.";
       setListError(message);
-      setBlocks([]); // Adicionado para resetar blocks em caso de erro
+      setBlocks([]);
+      setBlocksPage(1);
+      setBlocksTotalPages(1);
     } finally {
       setListLoading(false);
     }
@@ -146,19 +173,35 @@ const Blocos: React.FC = () => {
     setEditingBlock(null);
     setIsCadastroOpen(false);
     setBlockSearchText("");
+    setBlocksPage(1);
+    setBlocksTotalPages(1);
     setActiveView("blocos");
-    
+
     // Carregar blocos automaticamente
     setListLoading(true);
     setListError(null);
     try {
-      const data = await blockService.getBlocks(condominium.condominiumId);
-      setBlocks(data?.data ?? []);
+      const response = await blockService.getBlocks(
+        condominium.condominiumId,
+        1,
+        pageSize,
+      );
+      const normalized = response?.items ?? [];
+      const computedTotalPages =
+        response?.paging?.totalPages ??
+        Math.max(
+          1,
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
+        );
+
+      setBlocksPage(1);
+      setBlocksTotalPages(computedTotalPages);
+      setBlocks(normalized);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar blocos.";
       setListError(message);
-      setBlocks([]); // Adicionado para resetar blocks em caso de erro
+      setBlocks([]);
     } finally {
       setListLoading(false);
     }
@@ -170,11 +213,37 @@ const Blocos: React.FC = () => {
   };
 
   const handleDelete = (block: CondominiumBlock) => {
-    const confirmed = window.confirm(
-      `Deseja excluir o bloco ${block.name}?`,
-    );
-    if (!confirmed) return;
-    handleNotify("Exclusão ainda não está disponível.", "error");
+    setBlockToDelete(block);
+    showDelete("Confirma a exclusao do item?", `${block?.name || "-"}`);
+  };
+  const [confirm, setConfirm] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    if (!blockToDelete) return;
+
+    try {
+      setLoading(true);
+      await blockService.deleteBlock(blockToDelete.condominiumBlockId);
+
+      showSuccess(t("blocos.deleteSuccess", { name: blockToDelete.name }));
+      if(confirm) {
+        await loadBlocks(blocksPage);
+        
+        setDeleteModalOpen(false);
+        setBlockToDelete(null);
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t("blocos.deleteError");
+      showError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setBlockToDelete(null);
   };
 
   const handleOpenCreate = () => {
@@ -188,7 +257,31 @@ const Blocos: React.FC = () => {
   };
 
   const handleSaved = async () => {
-    await loadBlocks();
+    await loadBlocks(blocksPage);
+    setIsCadastroOpen(false);
+    setEditingBlock(null);
+  };
+
+    const [condominiumTypes, setCondominiumTypes] = useState<
+    CondominiumTypeEnum[]
+  >([]);
+
+  const getCondominiumImageUrl = (condominium: Condominium) => {
+    if (!condominium.thumbnailFile || !condominium.contentType)
+      return undefined;
+    return `data:${condominium.contentType};base64,${condominium.thumbnailFile}`;
+  };
+
+  const getCondominiumTypeLabel = (value: string | number) => {
+    const match = condominiumTypes.find(
+      (type) => type.id === value || type.value === value,
+    );
+    return match?.description || match?.value || String(value);
+  };
+
+  const loadCondominiumTypes = async () => {
+      const data = await condominiumService.getCondominiumTypes();
+      setCondominiumTypes(data ?? []);
   };
 
   return (
@@ -202,42 +295,55 @@ const Blocos: React.FC = () => {
                 pb: 1.5,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                flexDirection: "column",
                 borderBottom: "2px solid #f0f0f0",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
-                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
-                  {organizationName}
-                </Typography>
+              <Container
+                sx={{
+                  p: "0 !important",
+                  maxWidth: "100vw !important",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ fontSize: "26px" }}
+                  >
+                    {organizationName}
+                  </Typography>
+                </Box>
+                <Tooltip title={t("common.closeTooltip")}>
+                  <IconButton
+                    onClick={() => navigate("/dashboard")}
+                    className="close-button"
+                    aria-label={t("common.close")}
+                  >
+                    <Close sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
+              </Container>
+              <Box>
+                <BreadcrumbTrail
+                  items={[t("common.organization"), t("common.condominiums")]}
+                />
               </Box>
-              <Tooltip title="Fechar">
-                <IconButton
-                  onClick={() => navigate("/dashboard")}
-                  className="close-button"
-                  aria-label="Fechar"
-                >
-                  <Close sx={{ fontSize: 20 }} />
-                </IconButton>
-              </Tooltip>
             </Box>
 
             <Paper variant="outlined" sx={{ p: 2 }}>
               {listLoading ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <CircularProgress size={20} />
-                  <Typography variant="body2">Carregando...</Typography>
+                  <Typography variant="body2">{t("common.loading")}</Typography>
                 </Box>
               ) : listError ? (
-                <Alert severity="error">{listError}</Alert>
-              ) : condominiums.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  Nenhum condomínio encontrado para esta organização.
-                </Typography>
-              ) : (
                 <CardList
-                  title="Condomínios da organização"
+                  title="Condôminios da organização"
                   showTitle={false}
                   searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}
@@ -245,10 +351,11 @@ const Blocos: React.FC = () => {
                   addButtonPlacement="toolbar"
                   emptyImageLabel="Sem imagem"
                   showFilters={false}
-                  page={listPage}
-                  totalPages={totalPages}
+                  showPagination={true}
+                  page={condominiumsPage}
+                  totalPages={condominiumsTotalPages}
                   onPageChange={(page) => {
-                    setListPage(page);
+                    setCondominiumsPage(page);
                     loadCondominiums(page);
                   }}
                   items={condominiums
@@ -263,20 +370,187 @@ const Blocos: React.FC = () => {
                       id: condominium.condominiumId,
                       title: condominium.name,
                       subtitle: (
-                        <>
-                          <Apartment sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }} />
-                          {condominium.city} - {condominium.state}
-                        </>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.35,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Article sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {formatCNPJ(condominium.doc) || "-"}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <LocationOn sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {condominium.city} - {condominium.state}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {getCondominiumTypeLabel(
+                                condominium.condominiumType,
+                              )}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {
+                                condominiumTypes.find(
+                                  (f) => f?.id == condominium?.allocationType,
+                                )?.description
+                              }
+                            </Typography>
+                          </Box>
+                        </Box>
                       ),
+                   //   imageUrl: getCondominiumImageUrl(condominium),
                       actions: (
                         <Button
                           size="small"
                           variant="outlined"
                           className="action-button-manage"
-                          startIcon={<SettingsOutlined />}
+                          startIcon={<SearchOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Gerenciar Blocos
+                          Visualizars Blocos
+                        </Button>
+                      ),
+                      accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                    }))}
+                />
+              ) : condominiums.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  {t("blocos.noCondominiumsFound")}
+                </Typography>
+              ) : (
+                <CardList
+                  title="Condôminios da organização"
+                  showTitle={false}
+                  searchPlaceholder="Buscar condomínio..."
+                  onSearchChange={setSearchText}
+                  onAddClick={undefined}
+                  addButtonPlacement="toolbar"
+                  emptyImageLabel="Sem imagem"
+                  showFilters={false}
+                  showPagination={true}
+                  page={condominiumsPage}
+                  totalPages={condominiumsTotalPages}
+                  onPageChange={(page) => {
+                    setCondominiumsPage(page);
+                    loadCondominiums(page);
+                  }}
+                  items={condominiums
+                    .filter((condominium) =>
+                      [condominium.name, condominium.city, condominium.state]
+                        .filter(Boolean)
+                        .join(" ")
+                        .toLowerCase()
+                        .includes(searchText.toLowerCase()),
+                    )
+                    .map((condominium, index) => ({
+                      id: condominium.condominiumId,
+                      title: condominium.name,
+                      subtitle: (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.35,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Article sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {formatCNPJ(condominium.doc) || "-"}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <LocationOn sx={{ fontSize: 14 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {condominium.city} - {condominium.state}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {getCondominiumTypeLabel(
+                                condominium.condominiumType,
+                              )}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.7,
+                            }}
+                          >
+                            <Typography variant="body2" color="text.secondary">
+                              {
+                                condominiumTypes.find(
+                                  (f) => f?.id == condominium?.allocationType,
+                                )?.description
+                              }
+                            </Typography>
+                          </Box>
+                        </Box>
+                      ),
+                      imageUrl: getCondominiumImageUrl(condominium),
+
+                      actions: (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          className="action-button-manage"
+                          startIcon={<SearchOutlined />}
+                          onClick={() => handleSelectCondominium(condominium)}
+                        >
+                          {t("common.viewBlocks")}
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -293,7 +567,6 @@ const Blocos: React.FC = () => {
                 editingBlock={editingBlock}
                 onClose={handleCloseForm}
                 onSaved={handleSaved}
-                onNotify={handleNotify}
                 loading={loading}
                 setLoading={setLoading}
                 condominiumIdPreset={selectedCondominium?.condominiumId}
@@ -313,19 +586,29 @@ const Blocos: React.FC = () => {
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                     <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
                     <Box>
-                      <Typography variant="h5" fontWeight="bold" sx={{ fontSize: "26px" }}>
-                        Blocos
+                      <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        sx={{ fontSize: "26px" }}
+                      >
+                        {t("blocos.title")}
                       </Typography>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.3, mt: 0.5 }}>
-                        <ChevronRight sx={{ fontSize: 16, color: "#1976d2", mr: 0.2 }} />
-                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: "12px" }}>
-                          {selectedCondominium?.name || "Condomínio selecionado"}
-                        </Typography>
-                      </Box>
+                      <BreadcrumbTrail
+                        items={[
+                          localStorage.getItem("condominium")
+                            ? JSON.parse(
+                                localStorage.getItem("condominium") || "{}",
+                              )?.name
+                            : {},
+                          selectedCondominium?.name ||
+                            t("blocos.selectedCondominium"),
+                          t("common.blocks"),
+                        ]}
+                      />
                     </Box>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="Voltar">
+                    <Tooltip title={t("common.closeTooltip")}>
                       <IconButton
                         onClick={() => {
                           setActiveView("condominios");
@@ -335,9 +618,12 @@ const Blocos: React.FC = () => {
                           setIsCadastroOpen(false);
                           setBlockSearchText("");
                           setListError(null);
+                          setBlocksPage(1);
+                          setBlocksTotalPages(1);
+                          void loadCondominiums(condominiumsPage);
                         }}
                         className="close-button"
-                        aria-label="Voltar"
+                        aria-label={t("common.back")}
                       >
                         <Close sx={{ fontSize: 20 }} />
                       </IconButton>
@@ -349,26 +635,31 @@ const Blocos: React.FC = () => {
                   {listLoading ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <CircularProgress size={20} />
-                      <Typography variant="body2">Carregando...</Typography>
+                      <Typography variant="body2">
+                        {t("common.loading")}
+                      </Typography>
                     </Box>
-                  ) : listError ? (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                      {listError}
-                    </Alert>
                   ) : null}
 
                   <CardList
-                    title="Blocos do condomínio"
+                    title={t("blocos.blocksList")}
                     showTitle={false}
                     showFilters={true}
-                    searchPlaceholder="Buscar bloco..."
+                    haveImage={false}
+                    searchPlaceholder={t("blocos.searchPlaceholder")}
                     onSearchChange={setBlockSearchText}
                     onAddClick={handleOpenCreate}
-                    addLabel="Novo"
+                    addLabel={t("common.new")}
                     addButtonPlacement="toolbar"
-                    emptyImageLabel="Sem imagem"
-                    showPagination={false}
-                    items={(Array.isArray(blocks) ? blocks : []) // Adicionado check para evitar erro se blocks não for array
+                    emptyImageLabel={t("common.noImage")}
+                    showPagination={true}
+                    page={blocksPage}
+                    totalPages={blocksTotalPages}
+                    onPageChange={(page) => {
+                      setBlocksPage(page);
+                      loadBlocks(page);
+                    }}
+                    items={(Array.isArray(blocks) ? blocks : [])
                       .filter((block) =>
                         [block.name, block.code]
                           .filter(Boolean)
@@ -378,15 +669,28 @@ const Blocos: React.FC = () => {
                       )
                       .map((block, index) => ({
                         id: block.condominiumBlockId,
-                        title: block.name || "Sem nome",
+                        title: block.name || t("common.noName"),
                         subtitle: (
                           <>
-                            <ViewModule sx={{ fontSize: 14, mr: 0.5, verticalAlign: "middle" }} />
-                            Código: {block.code || "-"}
+                            <ViewModule
+                              sx={{
+                                fontSize: 14,
+                                mr: 0.5,
+                                verticalAlign: "middle",
+                              }}
+                            />
+                            {block.code || "-"}
                           </>
                         ),
                         actions: (
-                          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 1,
+                              flexWrap: "wrap",
+                              mt: 2,
+                            }}
+                          >
                             <Button
                               size="small"
                               variant="outlined"
@@ -394,7 +698,7 @@ const Blocos: React.FC = () => {
                               startIcon={<EditOutlined />}
                               onClick={() => handleEdit(block)}
                             >
-                              Editar
+                              {t("common.edit")}
                             </Button>
                             <Button
                               size="small"
@@ -403,7 +707,7 @@ const Blocos: React.FC = () => {
                               startIcon={<DeleteOutline />}
                               onClick={() => handleDelete(block)}
                             >
-                              Excluir
+                              {t("common.delete")}
                             </Button>
                           </Box>
                         ),
@@ -417,19 +721,33 @@ const Blocos: React.FC = () => {
         )}
       </Container>
 
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      {/* Modal de confirmação de exclusão */}
+      <DeleteConfirmModal
+        open={deleteModalOpen}
+        title={t("blocos.deleteTitle")}
+        message={
+          blockToDelete
+            ? t("blocos.deleteMessage", { name: blockToDelete.name })
+            : ""
+        }
+        imageAlt={t("blocos.deleteImageAlt")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        onClose={handleCancelDelete}
+      />
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        item={appStateModal.item}
+        onConfirm={()=>{handleClose();setConfirm(true)}}
+        onClose={()=>{handleClose();setConfirm(true)}}
+      />
     </Box>
   );
 };

@@ -10,22 +10,10 @@ import {
   Box,
   Typography,
   IconButton,
-  Autocomplete
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import './Veiculos.scss';
 import { type Veiculo } from '../../services/veiculoService';
-
-export interface Morador {
-  id?: string;
-  nome: string;
-  cpf: string;
-  unidade: string;
-  telefone: string;
-  email: string;
-  foto?: string | null;
-  status: 'ativo' | 'inativo';
-}
 
 interface VeiculoFormProps {
   open: boolean;
@@ -45,14 +33,7 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
     ano: ''
   });
 
-  const [moradores] = useState<Morador[]>([]);
-  const [selectedMorador, setSelectedMorador] = useState<Morador | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    // Carregar moradores aqui se necessário
-    // Para este formulário, vamos assumir que os moradores estão disponíveis
-  }, []);
 
   useEffect(() => {
     if (veiculo) {
@@ -66,7 +47,6 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
         ano: veiculo.ano || ''
       });
     } else {
-      setSelectedMorador(null);
       setFormData({
         placa: '',
         modelo: '',
@@ -87,24 +67,6 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
     }
   };
 
-  const handleMoradorChange = (_event: unknown, newValue: Morador | null): void => {
-    setSelectedMorador(newValue);
-    if (newValue) {
-      setFormData(prev => ({
-        ...prev,
-        moradorId: newValue.id || '',
-        moradorNome: newValue.nome
-      }));
-      if (errors.morador) setErrors(prev => ({ ...prev, morador: '' }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        moradorId: '',
-        moradorNome: ''
-      }));
-    }
-  };
-
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
@@ -112,7 +74,7 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
     if (!formData.modelo.trim()) newErrors.modelo = 'Modelo é obrigatório';
     if (!formData.marca.trim()) newErrors.marca = 'Marca é obrigatória';
     if (!formData.cor.trim()) newErrors.cor = 'Cor é obrigatória';
-    if (!selectedMorador) newErrors.morador = 'Morador é obrigatório';
+    if (!formData.moradorNome.trim()) newErrors.moradorNome = 'Morador é obrigatório';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -140,27 +102,29 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
       <DialogContent dividers className="form-content">
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Autocomplete
-              options={moradores}
-              getOptionLabel={(option) => `${option.nome} - ${option.unidade}`}
-              value={selectedMorador}
-              onChange={handleMoradorChange}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Morador Responsável"
-                  error={!!errors.morador}
-                  helperText={errors.morador}
-                  placeholder="Selecione um morador"
-                />
-              )}
+            <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
+              fullWidth
+              value={formData.moradorNome}
+              onChange={(e) => handleChange('moradorNome', e.target.value)}
+              error={!!errors.moradorNome}
+              helperText={errors.moradorNome}
+              placeholder="Digite o nome do morador"
             />
           </Grid>
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Placa"
               value={formData.placa}
               onChange={(e) => handleChange('placa', e.target.value.toUpperCase())}
               error={!!errors.placa}
@@ -171,8 +135,12 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Marca"
               value={formData.marca}
               onChange={(e) => handleChange('marca', e.target.value)}
               error={!!errors.marca}
@@ -182,8 +150,12 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Modelo"
               value={formData.modelo}
               onChange={(e) => handleChange('modelo', e.target.value)}
               error={!!errors.modelo}
@@ -193,8 +165,12 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Cor"
               value={formData.cor}
               onChange={(e) => handleChange('cor', e.target.value)}
               error={!!errors.cor}
@@ -204,8 +180,12 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
 
           <Grid item xs={12} md={6}>
             <TextField
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  height: 46,
+                },
+              }}
               fullWidth
-              label="Ano"
               type="number"
               value={formData.ano}
               onChange={(e) => handleChange('ano', e.target.value)}
@@ -227,3 +207,4 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
 };
 
 export default VeiculoForm;
+

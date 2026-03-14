@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient } from './apiClient';
 
 export interface OrganizationMeResponse {
@@ -11,6 +12,8 @@ export interface OrganizationMeResponse {
   organizationId: string;   // UUID
   phone: string;
   state: string;            // UF
+  zipCode?: string;
+  cep?: string;
 }
 
 export interface OrganizationRequest {
@@ -22,6 +25,9 @@ export interface OrganizationRequest {
   phone: string;
   city: string;
   state: string;
+  zipCode?: string;
+  cep?: string;
+  commit?: boolean;
 }
 
 export interface Organization extends OrganizationRequest {
@@ -41,15 +47,33 @@ export interface OrganizationUserRequest {
   owner: boolean;
 }
 
+type OrganizationCreateResponse = { organizationId: string } | string;
+type OrganizationUserCreateResponse = { organizationUserId: string } | string;
+
 class OrganizationService {
   private baseUrl =
     'https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/organizations';
 
   async createOrganization(payload: OrganizationRequest) {
     try {
-      return await apiClient.post<{ organizationId: string }>(this.baseUrl, payload);
+      return await apiClient.post<OrganizationCreateResponse>(this.baseUrl, payload);
     } catch (error) {
       console.error('Erro ao criar organizacao:', error);
+      throw error;
+    }
+  }
+
+  async validateOrganization(payload: OrganizationRequest) {
+    try {
+      await apiClient.post<{ organizationId?: string }>(this.baseUrl, payload);
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
       throw error;
     }
   }
@@ -74,7 +98,7 @@ class OrganizationService {
 
   async addUserToOrganization(organizationId: string, payload: OrganizationUserRequest) {
     try {
-      return await apiClient.post<{ organizationUserId: string }>(
+      return await apiClient.post<OrganizationUserCreateResponse>(
         `${this.baseUrl}/${organizationId}/users`,
         payload
       );
@@ -111,3 +135,4 @@ class OrganizationService {
 }
 
 export const organizationService = new OrganizationService();
+
