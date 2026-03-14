@@ -20,7 +20,8 @@ import "./MenuComponent.scss";
 import RouteNames from "../../routes/routeNames";
 import { AssignmentInd, Home, People, ViewModule } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-import Logo from '../../assets/logo.svg'
+import Logo from "../../assets/logo1.png";
+import Logo2 from "../../assets/logo2.png";
 interface MenuItem {
   id: string;
   label: string;
@@ -34,8 +35,10 @@ interface MenuComponentProps {
   onToggleCollapse?: () => void;
 }
 
-
-export default function MenuComponent({ collapsed = false, onToggleCollapse }: MenuComponentProps) {
+export default function MenuComponent({
+  collapsed = false,
+  onToggleCollapse,
+}: MenuComponentProps) {
   const location = useLocation();
   const { t } = useTranslation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -48,27 +51,77 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
       icon: <MdDashboard />,
       path: RouteNames.Dashboard,
     },
-    { id: "cadastros-organizacoes", label: t("menu.organizations"), icon: <MdBusiness />, path: RouteNames.CadastrosOrganizacoes },
+    {
+      id: "cadastros-organizacoes",
+      label: t("menu.organizations"),
+      icon: <MdBusiness />,
+      path: RouteNames.CadastrosOrganizacoes,
+    },
     {
       id: "condominios",
       label: t("menu.condominiums"),
       icon: <MdApartment />,
       path: RouteNames.Condominio,
     },
-    { id: "cadastros-blocos", label: t("menu.blocks"), icon: <ViewModule />, path: RouteNames.CadastrosBlocos },
-    { id: "cadastros-unidades", label: t("menu.units"), icon: <Home />, path: RouteNames.CadastrosUnidades },
-    { id: "cadastros-moradores", label: t("menu.residents"), icon: <People />, path: RouteNames.CadastrosResidentes },
-    { id: "cadastros-perfis", label: t("menu.profiles"), icon: <AssignmentInd />, path: RouteNames.CadastrosPerfis },
+    {
+      id: "cadastros-blocos",
+      label: t("menu.blocks"),
+      icon: <ViewModule />,
+      path: RouteNames.CadastrosBlocos,
+    },
+    {
+      id: "cadastros-unidades",
+      label: t("menu.units"),
+      icon: <Home />,
+      path: RouteNames.CadastrosUnidades,
+    },
+    {
+      id: "cadastros-moradores",
+      label: t("menu.residents"),
+      icon: <People />,
+      path: RouteNames.CadastrosResidentes,
+    },
+    {
+      id: "cadastros-perfis",
+      label: t("menu.profiles"),
+      icon: <AssignmentInd />,
+      path: RouteNames.CadastrosPerfis,
+    },
     {
       id: "itens-pendentes",
       label: t("menu.pendingItems"),
       icon: <MdSettings />,
       children: [
-        { id: "pendente-reservas", label: t("menu.reservations"), icon: <MdEventAvailable />, path: RouteNames.ReservasTipo },
-        { id: "pendente-financeiro", label: t("menu.financial"), icon: <MdAttachMoney />, path: RouteNames.FinanceiroBoletos },
-        { id: "pendente-portaria", label: t("menu.gatehouse"), icon: <MdSecurity />, path: RouteNames.PortariaUsuarios },
-        { id: "pendente-veiculos", label: t("menu.vehicles"), icon: <MdDirectionsCar />, path: RouteNames.Veiculos },
-        { id: "pendente-encomendas", label: t("menu.deliveries"), icon: <MdLocalShipping />, path: RouteNames.EncomendasRecebimento },
+        {
+          id: "pendente-reservas",
+          label: t("menu.reservations"),
+          icon: <MdEventAvailable />,
+          path: RouteNames.ReservasTipo,
+        },
+        {
+          id: "pendente-financeiro",
+          label: t("menu.financial"),
+          icon: <MdAttachMoney />,
+          path: RouteNames.FinanceiroBoletos,
+        },
+        {
+          id: "pendente-portaria",
+          label: t("menu.gatehouse"),
+          icon: <MdSecurity />,
+          path: RouteNames.PortariaUsuarios,
+        },
+        {
+          id: "pendente-veiculos",
+          label: t("menu.vehicles"),
+          icon: <MdDirectionsCar />,
+          path: RouteNames.Veiculos,
+        },
+        {
+          id: "pendente-encomendas",
+          label: t("menu.deliveries"),
+          icon: <MdLocalShipping />,
+          path: RouteNames.EncomendasRecebimento,
+        },
         {
           id: "fale-conosco",
           label: t("menu.contactUs"),
@@ -84,7 +137,10 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
       const stored = localStorage.getItem("condominium");
       if (stored) {
         try {
-          const parsed = JSON.parse(stored) as { name?: string; legalName?: string };
+          const parsed = JSON.parse(stored) as {
+            name?: string;
+            legalName?: string;
+          };
           const name = parsed?.name || parsed?.legalName || "";
           setOrganizationName(name);
           return;
@@ -117,7 +173,7 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
     setExpandedItems((prev) =>
       prev.includes(itemId)
         ? prev.filter((id) => id !== itemId)
-        : [...prev, itemId]
+        : [...prev, itemId],
     );
   };
 
@@ -128,7 +184,9 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
 
   const isParentActive = (children?: MenuItem[]) => {
     if (!children) return false;
-    return children.some((child) => child.path && location.pathname === child.path);
+    return children.some(
+      (child) => child.path && location.pathname === child.path,
+    );
   };
 
   const renderMenuItem = (item: MenuItem, level: number = 0) => {
@@ -143,7 +201,7 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
           <div
             className={`menu-item ${parentActive ? "parent-active" : ""} ${collapsed ? "collapsed" : ""}`}
             onClick={() => toggleExpand(item.id)}
-            style={{ paddingLeft: collapsed ? '0' : `${level * 16 + 16}px` }}
+            style={{ paddingLeft: collapsed ? "0" : `${level * 16 + 16}px` }}
             title={collapsed ? item.label : undefined}
           >
             <span className="menu-icon">{item.icon}</span>
@@ -170,7 +228,7 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
         key={item.id}
         to={item.path || "#"}
         className={`menu-item ${itemIsActive ? "active" : ""} ${collapsed ? "collapsed" : ""}`}
-        style={{ paddingLeft: collapsed ? '0' : `${level * 16 + 16}px` }}
+        style={{ paddingLeft: collapsed ? "0" : `${level * 16 + 16}px` }}
         title={collapsed ? item.label : undefined}
       >
         {level === 0 && <span className="menu-icon">{item.icon}</span>}
@@ -182,18 +240,33 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
   return (
     <div className={`menu-component ${collapsed ? "collapsed" : ""}`}>
       <div className="menu-header">
-        <img
-          src={Logo}
-          alt="Horizon Logo"
-          className={`menu-logo ${collapsed ? "collapsed" : ""}`}
-        />
+        {collapsed ? (
+          <img
+            src={Logo2}
+            alt="Horizon Logo"
+            className={`menu-logo ${collapsed ? "collapsed" : ""}`}
+          />
+        ) : (
+          <img
+            src={Logo}
+            alt="Horizon Logo"
+            className={`menu-logo ${collapsed ? "collapsed" : ""}`}
+          />
+        )}
         {!collapsed && <h2 className="menu-title">Horizon</h2>}
         <div className="menu-org">
           <div className="menu-org-avatar">
-            {organizationName ? getOrganizationInitials(organizationName) : <MdBusiness />}
+            {organizationName ? (
+              getOrganizationInitials(organizationName)
+            ) : (
+              <MdBusiness />
+            )}
           </div>
           {!collapsed && (
-            <div className="menu-org-name" title={organizationName || "Sao Gabriel"}>
+            <div
+              className="menu-org-name"
+              title={organizationName || "Sao Gabriel"}
+            >
               {organizationName || "Sao Gabriel"}
             </div>
           )}
@@ -205,7 +278,9 @@ export default function MenuComponent({ collapsed = false, onToggleCollapse }: M
         className="collapse-toggle"
         onClick={onToggleCollapse}
         title={collapsed ? t("common.expandMenu") : t("common.collapseMenu")}
-        aria-label={collapsed ? t("common.expandMenu") : t("common.collapseMenu")}
+        aria-label={
+          collapsed ? t("common.expandMenu") : t("common.collapseMenu")
+        }
       >
         {collapsed ? <MdChevronRight /> : <MdChevronLeft />}
       </button>
