@@ -1,5 +1,5 @@
 const CommonRoutes = {
-  Login: "/login",
+  Login: "/",
   NotFound: "/not-found",
   EsqueciSenha: "/esqueci-senha",
   RecuperarSenha: "/recuperar-senha/:recoveryToken",
