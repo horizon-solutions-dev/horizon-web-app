@@ -23,6 +23,7 @@ import DespesasAnexo from "../components/Financeiro/Despesas/DespesasAnexo";
 
 // Portaria
 import PortariaUsuarios from "../components/Portaria/PortariaUsuarios";
+import Visitantes from "../components/Portaria/Visitantes";
 import PortariaLiberacao from "../components/Portaria/PortariaLiberacao";
 import PortariaRelatorios from "../components/Portaria/PortariaRelatorios";
 
@@ -120,6 +121,10 @@ const router = createBrowserRouter([
 			{
 				path: RouteNames.PortariaUsuarios,
 				element: <PortariaUsuarios />,
+			},
+			{
+				path: RouteNames.PortariaVisitantes,
+				element: <Visitantes />,
 			},
 			{
 				path: RouteNames.PortariaLiberacao,

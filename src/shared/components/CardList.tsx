@@ -6,6 +6,7 @@ import {
   TextField,
   IconButton,
   Button,
+  Chip,
   Grid,
   Pagination,
   PaginationItem,
@@ -24,9 +25,11 @@ import {
 export interface CardListItem {
   id: string;
   title: string;
+  badge?: React.ReactNode;
   subtitle?: React.ReactNode;
   meta?: React.ReactNode;
   imageUrl?: string;
+  onImageClick?: () => void;
   actions?: React.ReactNode;
   accentColor?: string;
   toolTip?: string;
@@ -248,13 +251,30 @@ export default function CardList({
                 }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 600, mb:'12px' }}
-                    noWrap
+                  <Box
+                    sx={{ display: "flex", alignItems: "center", gap: 1, mb: "12px" }}
                   >
-                    {item.title}
-                  </Typography>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 600, minWidth: 0 }}
+                      noWrap
+                    >
+                      {item.title}
+                    </Typography>
+                    {item.badge ? (
+                      typeof item.badge === "string" ? (
+                        <Chip
+                          label={item.badge}
+                          size="small"
+                          sx={{ fontWeight: 600, flexShrink: 0, backgroundColor: '#f6f7fb' }}
+                        />
+                      ) : (
+                        <Box sx={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+                          {item.badge}
+                        </Box>
+                      )
+                    ) : null}
+                  </Box>
                   {item.subtitle ? (
                     typeof item.subtitle === "string" ? (
                       <Typography variant="body2" color="text.secondary" noWrap>
@@ -280,6 +300,8 @@ export default function CardList({
                 {
                   haveImage && (
                 <Box
+                  role={item.onImageClick ? "button" : undefined}
+                  tabIndex={item.onImageClick ? 0 : undefined}
                   sx={{
                     width: imageWidth,
                     height: imageHeight,
@@ -289,6 +311,14 @@ export default function CardList({
                     alignItems: "center",
                     justifyContent: "center",
                     overflow: "hidden",
+                    cursor: item.onImageClick ? "pointer" : "default",
+                  }}
+                  onClick={item.onImageClick}
+                  onKeyDown={(event) => {
+                    if (item.onImageClick && (event.key === "Enter" || event.key === " ")) {
+                      event.preventDefault();
+                      item.onImageClick();
+                    }
                   }}
                 >
                   {item.imageUrl ? (

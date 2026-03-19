@@ -1,0 +1,247 @@
+.visitantes-container {
+  width: 100% !important;
+
+  & > .MuiContainer-root {
+    max-width: 1400px !important;
+    padding: 0 !important;
+
+    & > .MuiPaper-root {
+      border-radius: 20px !important;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08) !important;
+      padding: 24px !important;
+      background: white !important;
+      border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    }
+  }
+
+  .close-button,
+  .MuiIconButton-root[aria-label="Fechar"] {
+    width: 40px !important;
+    height: 40px !important;
+    background: white !important;
+    border: 2px solid #e0e4e8 !important;
+    border-radius: 10px !important;
+    color: #666 !important;
+    transition: all 0.2s ease !important;
+
+    &:hover {
+      background: white !important;
+      border-color: #ef4444 !important;
+      color: #ef4444 !important;
+    }
+
+    .MuiSvgIcon-root {
+      font-size: 20px !important;
+      color: inherit !important;
+    }
+  }
+
+  .action-button-edit {
+    border-color: #15a36b !important;
+    color: #15a36b !important;
+    font-weight: 600 !important;
+
+    &:hover {
+      border-color: #108b5a !important;
+      background: rgba(21, 163, 107, 0.06) !important;
+    }
+  }
+
+  .action-button-delete {
+    font-weight: 600 !important;
+  }
+
+  .visitante-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .visitante-step-help {
+    color: #8a94a6;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .visitante-section-title {
+    color: #46526a;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+  }
+
+  .visitante-search-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .visitante-upload-card,
+  .visitante-residents-list,
+  .visitante-access-list,
+  .visitante-option-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .visitante-upload-box {
+    border: 1px dashed #cfd7e6;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    min-height: 180px;
+    overflow: hidden;
+  }
+
+  .visitante-upload-trigger {
+    min-height: 180px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .visitante-upload-preview-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .visitante-upload-preview {
+    width: 100%;
+    max-width: 260px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 1px solid #dbe4f0;
+    background: #f8fafc;
+  }
+
+  .visitante-upload-icon,
+  .visitante-option-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1976d2;
+    background: #eaf3ff;
+    flex-shrink: 0;
+  }
+
+  .visitante-upload-label,
+  .visitante-option-title,
+  .visitante-resident-name {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #24324a;
+  }
+
+  .visitante-upload-description,
+  .visitante-option-description {
+    color: #6f7d92;
+    text-align: center;
+  }
+
+  .visitante-resident-card,
+  .visitante-option-card,
+  .visitante-access-card {
+    border: 1px solid #dbe4f0;
+    border-radius: 16px;
+    background: #ffffff;
+    padding: 16px;
+  }
+
+  .visitante-resident-main,
+  .visitante-option-card,
+  .visitante-access-card,
+  .visitante-access-copy {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .visitante-option-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .visitante-resident-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #66758c;
+    margin-top: 6px;
+  }
+
+  .visitante-chip {
+    margin-top: 12px;
+  }
+
+  .visitante-option-card {
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &.selected {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+      background: #f6faff;
+    }
+
+    &.blocked {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .visitante-option-icon.manual {
+    color: #2563eb;
+    background: #dbeafe;
+  }
+
+  .visitante-option-icon.resident {
+    color: #d97706;
+    background: #fef3c7;
+  }
+
+  .visitante-option-icon.area {
+    color: #0284c7;
+    background: #e0f2fe;
+  }
+
+  .visitante-alert,
+  .visitante-resident-fallback {
+    margin-top: 4px;
+  }
+
+  .visitante-error-text {
+    color: #d32f2f;
+    font-size: 12px !important;
+    margin-top: -8px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .visitantes-container {
+    .visitante-search-row {
+      grid-template-columns: 1fr;
+    }
+
+    .visitante-resident-main,
+    .visitante-option-card,
+    .visitante-access-card,
+    .visitante-access-copy {
+      align-items: flex-start;
+    }
+  }
+}

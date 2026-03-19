@@ -254,6 +254,7 @@ const Organizacoes: React.FC = () => {
               ) : (
                 <>
                   <CardList
+                  
                     haveImage={false}
                     title="Organizações"
                     showTitle={false}
@@ -272,6 +273,7 @@ const Organizacoes: React.FC = () => {
                     onPageChange={setListPage}
                     items={paginatedOrganizations.map(
                       (organization, index) => ({
+                        badge: "teste",
                         id: organization.organizationId,
                         title: organization.name || "Sem nome",
                         meta: getOrgTypeLabel(organization.orgType),

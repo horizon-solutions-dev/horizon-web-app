@@ -92,36 +92,12 @@ export default function MenuComponent({
       label: t("menu.pendingItems"),
       icon: <MdSettings />,
       children: [
-        {
-          id: "pendente-reservas",
-          label: t("menu.reservations"),
-          icon: <MdEventAvailable />,
-          path: RouteNames.ReservasTipo,
-        },
-        {
-          id: "pendente-financeiro",
-          label: t("menu.financial"),
-          icon: <MdAttachMoney />,
-          path: RouteNames.FinanceiroBoletos,
-        },
-        {
-          id: "pendente-portaria",
-          label: t("menu.gatehouse"),
-          icon: <MdSecurity />,
-          path: RouteNames.PortariaUsuarios,
-        },
-        {
-          id: "pendente-veiculos",
-          label: t("menu.vehicles"),
-          icon: <MdDirectionsCar />,
-          path: RouteNames.Veiculos,
-        },
-        {
-          id: "pendente-encomendas",
-          label: t("menu.deliveries"),
-          icon: <MdLocalShipping />,
-          path: RouteNames.EncomendasRecebimento,
-        },
+        { id: "pendente-reservas", label: t("menu.reservations"), icon: <MdEventAvailable />, path: RouteNames.ReservasTipo },
+        { id: "pendente-financeiro", label: t("menu.financial"), icon: <MdAttachMoney />, path: RouteNames.FinanceiroBoletos },
+        { id: "pendente-portaria", label: t("menu.gatehouse"), icon: <MdSecurity />, path: RouteNames.PortariaUsuarios },
+        { id: "pendente-portaria-visitantes", label: "Visitantes", icon: <MdSecurity />, path: RouteNames.PortariaVisitantes },
+        { id: "pendente-veiculos", label: t("menu.vehicles"), icon: <MdDirectionsCar />, path: RouteNames.Veiculos },
+        { id: "pendente-encomendas", label: t("menu.deliveries"), icon: <MdLocalShipping />, path: RouteNames.EncomendasRecebimento },
         {
           id: "fale-conosco",
           label: t("menu.contactUs"),

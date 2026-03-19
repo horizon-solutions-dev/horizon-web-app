@@ -131,6 +131,7 @@ export default function MainLayout() {
     [RouteNames.FinanceiroDespesasAnexo]: { label: "Anexos", parent: "Financeiro / Despesas" },
 
     [RouteNames.PortariaUsuarios]: { label: "Usuarios", parent: "Portaria" },
+    [RouteNames.PortariaVisitantes]: { label: "Visitantes", parent: "Portaria" },
     [RouteNames.PortariaLiberacao]: { label: "Liberacao", parent: "Portaria" },
     [RouteNames.PortariaRelatorios]: { label: "Relatorios", parent: "Portaria" },
 
