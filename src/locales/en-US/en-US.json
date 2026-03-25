@@ -136,7 +136,11 @@
     "gatehouse": "Gatehouse",
     "vehicles": "Vehicles",
     "deliveries": "Deliveries",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "switchCondominium": "Switch condominium",
+    "switchCondominiumTitle": "Select condominium",
+    "switchCondominiumDescription": "Choose which condominium you want to load now.",
+    "switchError": "Error loading condominiums."
   },
   "blocos": {
     "title": "Blocks",

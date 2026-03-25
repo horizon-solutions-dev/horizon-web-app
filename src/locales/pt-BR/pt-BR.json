@@ -136,7 +136,11 @@
     "gatehouse": "Portaria",
     "vehicles": "Veículos",
     "deliveries": "Encomendas",
-    "contactUs": "Fale Conosco"
+    "contactUs": "Fale Conosco",
+    "switchCondominium": "Trocar condominio",
+    "switchCondominiumTitle": "Selecionar condominio",
+    "switchCondominiumDescription": "Escolha qual condominio deseja carregar agora.",
+    "switchError": "Erro ao carregar condominios."
   },
   "blocos": {
     "title": "Blocos",
