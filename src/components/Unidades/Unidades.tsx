@@ -34,6 +34,7 @@ import {
 import {
   condominiumService,
   type Condominium,
+  type AllocationTypeEnum,
   type CondominiumTypeEnum,
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
@@ -69,9 +70,16 @@ const Unidades: React.FC = () => {
   const [units, setUnits] = useState<CondominiumUnit[]>([]);
   const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [unitTypes, setUnitTypes] = useState<UnitTypeEnum[]>([]);
+  const [allocationTypes, setAllocationTypes] = useState<AllocationTypeEnum[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [typesLoading, setTypesLoading] = useState(false);
+  const [allocationTypesLoading, setAllocationTypesLoading] = useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
+  const [allocationTypesError, setAllocationTypesError] = useState<
+    string | null
+  >(null);
   const [editingUnit, setEditingUnit] = useState<CondominiumUnit | null>(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [unitSearchText, setUnitSearchText] = useState("");
@@ -240,9 +248,27 @@ const Unidades: React.FC = () => {
     }
   };
 
+  const loadAllocationTypes = async () => {
+    setAllocationTypesLoading(true);
+    setAllocationTypesError(null);
+    try {
+      const data = await unitService.getAllocationTypes();
+      setAllocationTypes(data ?? []);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : t("unidadeForm.allocationLoadError");
+      setAllocationTypesError(message);
+    } finally {
+      setAllocationTypesLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadCondominiums(1);
     loadUnitTypes();
+    loadAllocationTypes();
     loadCondominiumTypes();
   }, []);
 
@@ -597,8 +623,11 @@ const Unidades: React.FC = () => {
                 onClose={handleCloseForm}
                 onSaved={handleSaved}
                 unitTypes={unitTypes}
+                allocationTypes={allocationTypes}
                 typesLoading={typesLoading}
+                allocationTypesLoading={allocationTypesLoading}
                 typesError={typesError}
+                allocationTypesError={allocationTypesError}
                 loading={loading}
                 blockId={
                   selectedBlockId || editingUnit?.condominiumBlockId || ""

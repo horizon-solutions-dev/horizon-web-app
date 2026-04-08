@@ -228,6 +228,9 @@
     "unitCodeRequired": "Informe o código da unidade.",
     "unitTypeRequired": "Selecione o tipo da unidade.",
     "allocationTypeRequired": "Selecione o tipo de alocação.",
+    "allocationTypeValueRequired": "Informe o valor do rateio.",
+    "allocationTypeValuePlaceholder": "Valor do rateio",
+    "allocationTypeFallback": "Fracionado",
     "duplicateUnitCode": "Já existe uma unidade com este código neste bloco.",
     "createSuccess": "Unidade criada com sucesso.",
     "updateSuccess": "Unidade atualizada com sucesso.",
@@ -297,3 +300,4 @@
     "validateError": "Erro ao validar morador."
   }
 }
+

@@ -16,6 +16,7 @@ import {
   type CondominiumUnitRequest,
   type UnitTypeEnum,
 } from "../../services/unitService";
+import type { AllocationTypeEnum } from "../../services/condominiumService";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
@@ -26,8 +27,11 @@ interface UnidadeFormProps {
   onClose: () => void;
   onSaved: () => void | Promise<void>;
   unitTypes: UnitTypeEnum[];
+  allocationTypes: AllocationTypeEnum[];
   typesLoading: boolean;
+  allocationTypesLoading: boolean;
   typesError: string | null;
+  allocationTypesError: string | null;
   loading: boolean;
   setLoading: (loading: boolean) => void;
   condominiumIdPreset?: string;
@@ -40,6 +44,7 @@ type FormErrors = {
   unitCode?: string;
   unitType?: string;
   allocationType?: string;
+  allocationTypeValue?: string;
 };
 /* 
 const ALLOCATION_OPTIONS = [
@@ -61,14 +66,27 @@ const normalizeAllocationType = (value?: string | number) => {
   return value || "FractionalAllocation";
 };
 
+const normalizeAllocationTypeValue = (
+  value: string | number | undefined,
+  allocationTypes: AllocationTypeEnum[],
+) => {
+  const match = allocationTypes.find(
+    (type) => type.id === value || type.value === value,
+  );
+  return match?.id ?? value;
+};
+
 const UnidadeForm: React.FC<UnidadeFormProps> = ({
   open,
   editingUnit,
   onClose,
   onSaved,
   unitTypes,
+  allocationTypes,
   typesLoading,
+  allocationTypesLoading,
   typesError,
+  allocationTypesError,
   loading,
   setLoading,
   condominiumIdPreset,
@@ -85,6 +103,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     unitCode: "",
     unitType: "Owner",
     allocationType: "FractionalAllocation",
+    allocationTypeValue: "",
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -112,6 +131,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
         unitCode: editingUnit.unitCode,
         unitType: normalizeUnitType(editingUnit.unitType),
         allocationType: normalizeAllocationType(editingUnit.allocationType),
+        allocationTypeValue: editingUnit.allocationTypeValue ?? "",
       });
       return;
     }
@@ -123,6 +143,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       unitCode: "",
       unitType: "Owner",
       allocationType: "FractionalAllocation",
+      allocationTypeValue: "",
     });
   }, [open, editingUnit, condominiumIdPreset, blockId]);
 
@@ -146,6 +167,15 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     if (!formData.allocationType) {
       nextErrors.allocationType = t("unidadeForm.allocationTypeRequired");
     }
+    if (
+      formData.allocationTypeValue === undefined ||
+      formData.allocationTypeValue === null ||
+      String(formData.allocationTypeValue).trim() === ""
+    ) {
+      nextErrors.allocationTypeValue = t(
+        "unidadeForm.allocationTypeValueRequired",
+      );
+    }
 
     setErrors(nextErrors);
     const hasIdErrors = !formData.condominiumId || !formData.condominiumBlockId;
@@ -158,6 +188,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     unitcode: "unitCode",
     unittype: "unitType",
     allocationtype: "allocationType",
+    allocationtypevalue: "allocationTypeValue",
     commit: "commit",
   };
 
@@ -173,6 +204,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
       if (field === "unitType") nextErrors.unitType = validation.message;
       if (field === "allocationType")
         nextErrors.allocationType = validation.message;
+      if (field === "allocationTypeValue")
+        nextErrors.allocationTypeValue = validation.message;
     });
 
     if (Object.keys(nextErrors).length > 0) {
@@ -191,6 +224,11 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     try {
       const payload: CondominiumUnitRequest = {
         ...formData,
+        allocationType: normalizeAllocationTypeValue(
+          formData.allocationType,
+          allocationTypes,
+        ),
+        allocationTypeValue: Number(formData.allocationTypeValue),
         commit: true,
       };
 
@@ -361,26 +399,52 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           >
             {renderUnitTypeOptions()}
           </TextField>
-          {/* <TextField
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              height: 46,
-              display: "flex",
-            },
-          }}
-          select
-          value={formData.allocationType || ""}
-          onChange={(e) => handleChange("allocationType", e.target.value)}
-          fullWidth
-          error={Boolean(errors.allocationType)}
-          helperText={errors.allocationType}
-        >
-          {allocationTypes.map((type) => (
-            <MenuItem sx={{ width: "420px" }} key={type.id} value={type.id}>
-              {type.description || type.value}
-            </MenuItem>
-          ))}
-        </TextField> */}
+          <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+                display: "flex",
+              },
+            }}
+            select
+            value={formData.allocationType || ""}
+            onChange={(e) => handleChange("allocationType", e.target.value)}
+            fullWidth
+            error={Boolean(errors.allocationType)}
+            helperText={errors.allocationType || allocationTypesError || ""}
+          >
+            {allocationTypesLoading ? (
+              <MenuItem value={formData.allocationType} disabled>
+                {t("common.loading")}
+              </MenuItem>
+            ) : allocationTypes.length > 0 ? (
+              allocationTypes.map((type) => (
+                <MenuItem key={type.id} value={type.value}>
+                  {type.description || type.value}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem value="FractionalAllocation">
+                {t("unidadeForm.allocationTypeFallback")}
+              </MenuItem>
+            )}
+          </TextField>
+          <TextField
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                height: 46,
+                display: "flex",
+              },
+            }}
+            fullWidth
+            type="number"
+            value={formData.allocationTypeValue ?? ""}
+            onChange={(e) => handleChange("allocationTypeValue", e.target.value)}
+            error={Boolean(errors.allocationTypeValue)}
+            helperText={errors.allocationTypeValue}
+            placeholder={t("unidadeForm.allocationTypeValuePlaceholder")}
+            inputProps={{ min: 0, step: "any" }}
+          />
         </Box>
       </StepWizardCard>
 

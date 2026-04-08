@@ -228,6 +228,9 @@
     "unitCodeRequired": "Enter the unit code.",
     "unitTypeRequired": "Select the unit type.",
     "allocationTypeRequired": "Select the allocation type.",
+    "allocationTypeValueRequired": "Enter the allocation value.",
+    "allocationTypeValuePlaceholder": "Allocation value",
+    "allocationTypeFallback": "Fractional",
     "duplicateUnitCode": "A unit with this code already exists in this block.",
     "createSuccess": "Unit created successfully.",
     "updateSuccess": "Unit updated successfully.",
@@ -297,3 +300,4 @@
     "validateError": "Error validating resident."
   }
 }
+

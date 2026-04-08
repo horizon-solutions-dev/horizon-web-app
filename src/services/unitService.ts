@@ -2,6 +2,7 @@ import axios from 'axios';
 import { apiClient } from './apiClient';
 import type { PagedResponse } from '../models/pagination.model';
 import { normalizePagedResponse } from '../shared/utils/pagination';
+import type { AllocationTypeEnum } from './condominiumService';
 
 export type UnitType = 'Owner' | 'Tenant' | string | '1' | '2' | number;
 
@@ -11,6 +12,7 @@ export interface CondominiumUnitRequest {
   unitCode: string;
   unitType: 'Owner' | 'Tenant' | string | '1' | '2' | number; // 'Owner' | 'Tenant' | string;
   allocationType?: 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string | number; // 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string;
+  allocationTypeValue?: string | number;
   commit?: boolean;
 }
 export interface CondominiumUnitResponse {
@@ -19,6 +21,7 @@ export interface CondominiumUnitResponse {
   unitCode: string;
   unitType?: 1 | 2 | '1' | '2' | string;
   allocationType?: 1 | 2 | 3 | '1' | '2' | '3' | string;
+  allocationTypeValue?: string | number;
 }
 
 export interface CondominiumUnit extends CondominiumUnitResponse {
@@ -136,6 +139,15 @@ class UnitService {
       return await apiClient.get<UnitTypeEnum[]>(`${this.baseUrl}/types`);
     } catch (error) {
       console.error('Erro ao buscar tipos de unidade:', error);
+      throw error;
+    }
+  }
+
+  async getAllocationTypes() {
+    try {
+      return await apiClient.get<AllocationTypeEnum[]>(`${this.baseUrl}/types/allocations`);
+    } catch (error) {
+      console.error('Erro ao buscar tipos de rateio da unidade:', error);
       throw error;
     }
   }
