@@ -145,7 +145,7 @@ class UnitService {
 
   async getAllocationTypes() {
     try {
-      return await apiClient.get<AllocationTypeEnum[]>(`${this.baseUrl}/types/allocations`);
+      return await apiClient.get<AllocationTypeEnum[]>(`${this.baseUrl}/allocation-types`);
     } catch (error) {
       console.error('Erro ao buscar tipos de rateio da unidade:', error);
       throw error;
