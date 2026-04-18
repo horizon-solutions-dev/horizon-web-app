@@ -387,9 +387,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
             }}
             select
             value={formData.unitType || ""}
-            onChange={(e) =>
-              handleChange("unitType", normalizeUnitType(e.target.value))
-            }
+                        onChange={(e) => handleChange("unitType", e.target.value)}
+
             fullWidth
             error={Boolean(errors.unitType)}
             helperText={errors.unitType || typesError || ""}
