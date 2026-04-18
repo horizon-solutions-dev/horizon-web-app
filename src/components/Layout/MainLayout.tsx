@@ -136,6 +136,7 @@ export default function MainLayout() {
 
     [RouteNames.EncomendasRecebimento]: { label: "Recebimento", parent: "Encomendas" },
     [RouteNames.EncomendasNotificacao]: { label: "Notificacao", parent: "Encomendas" },
+    [RouteNames.ValidacaoAcesso]: { label: "Validacao de Acesso", parent: "Pendentes" },
 
     [RouteNames.CadastrosBlocos]: { label: "Blocos", },
     [RouteNames.CadastrosUnidades]: { label: "Unidades", },

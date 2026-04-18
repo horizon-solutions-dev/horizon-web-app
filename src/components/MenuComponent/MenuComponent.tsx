@@ -156,6 +156,12 @@ export default function MenuComponent({
           icon: <MdEmail />,
           path: RouteNames.FaleConosco,
         },
+        {
+          id: "pendente-validacao-acesso",
+          label: t("menu.accessValidation"),
+          icon: <MdSecurity />,
+          path: RouteNames.ValidacaoAcesso,
+        },
       ],
     },
   ];

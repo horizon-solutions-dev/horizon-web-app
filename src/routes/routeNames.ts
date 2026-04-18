@@ -51,6 +51,7 @@ const CondominioRoutes = {
   // Encomendas
   EncomendasRecebimento: "/encomendas/recebimento",
   EncomendasNotificacao: "/encomendas/notificacao",
+  ValidacaoAcesso: "/pendentes/validacao-acesso",
 };
 
 const PersonalRoutes = {

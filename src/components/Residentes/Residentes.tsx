@@ -331,21 +331,6 @@ const Residentes: React.FC = () => {
               {getCondominiumTypeLabel(condominium?.condominiumType)}
             </Typography>
           </Box>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 0.7,
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              {
-                condominiumTypes.find(
-                  (f) => f?.id == condominium?.allocationType,
-                )?.description
-              }
-            </Typography>
-          </Box>
         </Box>
       ),
       imageUrl: getCondominiumImageUrl(condominium),

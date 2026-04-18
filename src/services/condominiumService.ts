@@ -7,6 +7,9 @@ export interface CondominiumRequest {
   organizationId: string;
   name: string;
   doc: string;
+  email: string;
+  phone?: string;
+  mobilePhone?: string;
   address: string;
   addressNumber: string;
   complement?: string;
@@ -15,13 +18,12 @@ export interface CondominiumRequest {
   state: string;
   zipCode: string;
   condominiumType: number | string;
+  physicalStructureId?: number | string;
   unitCount: number;
   hasBlocks: boolean;
   hasWaterIndividual: boolean;
   hasPowerByBlock: boolean;
   hasGasByBlock: boolean;
-  allocationType: 'FractionalAllocation' | 'FixedAllocation' | 'ProportionalAllocation' | string | number;
-  allocationValuePerc: number;
   commit: boolean;
 }
 
@@ -40,6 +42,12 @@ export interface CondominiumTypeEnum {
 }
 
 export interface AllocationTypeEnum {
+  id: number;
+  value: string;
+  description: string;
+}
+
+export interface PhysicalStructureEnum {
   id: number;
   value: string;
   description: string;
@@ -137,6 +145,15 @@ class CondominiumService {
       return await apiClient.get<AllocationTypeEnum[]>(`${this.baseUrl}/types/allocations`);
     } catch (error) {
       console.error('Erro ao buscar tipos de alocacao:', error);
+      throw error;
+    }
+  }
+
+  async getPhysicalStructures() {
+    try {
+      return await apiClient.get<PhysicalStructureEnum[]>(`${this.baseUrl}/physical-structures`);
+    } catch (error) {
+      console.error('Erro ao buscar tipos de estrutura fisica:', error);
       throw error;
     }
   }

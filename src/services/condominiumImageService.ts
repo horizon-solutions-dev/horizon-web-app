@@ -37,7 +37,8 @@ export type ImageType =
   | 'Sauna' 
   | 'SecurityCamera' 
   | 'SportsCourt' 
-  | 'Thumbnail';
+  | 'Thumbnail'
+  | string;
 
 export interface CondominiumImage {
   condominiumImageId: string;
