@@ -113,8 +113,10 @@ const CondominioPage: React.FC = () => {
       const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
+        response?.paging?.totalPages ??
         Math.max(
           1,
+          Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
           Math.ceil((response?.paging?.total ?? normalized.length) / pageSize),
         );
 
@@ -184,6 +186,7 @@ const CondominioPage: React.FC = () => {
     loadCondominiums(1);
     loadCondominiumTypes();
     loadPhysicalStructureTypes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getCondominiumTypeLabel = (value: string | number) => {

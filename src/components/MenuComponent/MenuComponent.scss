@@ -72,18 +72,15 @@
     height: auto !important;
     max-height: 70px;
     object-fit: contain;
-    filter: brightness(0) invert(1) drop-shadow(0 8px 24px rgba(79, 172, 254, 0.6));
     transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
       transform: scale(1.08) translateY(-2px);
-      filter: brightness(0) invert(1) drop-shadow(0 12px 32px rgba(79, 172, 254, 0.8));
     }
 
     &.collapsed {
       width: 55px !important;
       height: 55px !important;
-      filter: brightness(0) invert(1) drop-shadow(0 6px 16px rgba(79, 172, 254, 0.6));
     }
   }
 
