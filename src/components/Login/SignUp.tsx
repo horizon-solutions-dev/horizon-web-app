@@ -239,7 +239,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
   const [typesLoading, setTypesLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [closeAfterModal, setCloseAfterModal] = useState(false);
-
+  const notTrue = false
   useEffect(() => {
     const loadTypes = async () => {
       setTypesLoading(true);
@@ -256,8 +256,9 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
         setTypesLoading(false);
       }
     };
-
-  //  loadTypes();
+    if(notTrue) {
+      loadTypes();
+    }
   }, []);
 
   const currentDocType = useMemo(
