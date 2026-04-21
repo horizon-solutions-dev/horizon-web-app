@@ -34,6 +34,9 @@
   "signup": {
     "title": "Criar Conta",
     "description": "Preencha os dados abaixo para criar sua conta",
+    "stepInitial": "Informações iniciais",
+    "stepContact": "Contato",
+    "contactDescription": "Informe os dados de contato para finalizar o cadastro",
     "name": "Nome",
     "surname": "Sobrenome",
     "email": "E-mail",
@@ -44,6 +47,7 @@
     "confirmPassword": "Confirmar Senha",
     "createAccount": "Criar Conta",
     "creating": "Criando conta...",
+    "createError": "Erro ao criar conta.",
     "passwordRequirements": "Requisitos de senha:",
     "minChars": "Mínimo 8 caracteres",
     "uppercase": "Uma letra maiúscula",

@@ -34,6 +34,9 @@
   "signup": {
     "title": "Create Account",
     "description": "Fill in the information below to create your account",
+    "stepInitial": "Initial information",
+    "stepContact": "Contact",
+    "contactDescription": "Enter your contact details to finish registration",
     "name": "Name",
     "surname": "Surname",
     "email": "Email",
@@ -44,6 +47,7 @@
     "confirmPassword": "Confirm Password",
     "createAccount": "Create Account",
     "creating": "Creating account...",
+    "createError": "Error creating account.",
     "passwordRequirements": "Password requirements:",
     "minChars": "Minimum 8 characters",
     "uppercase": "One uppercase letter",

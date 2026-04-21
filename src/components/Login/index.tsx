@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { IoChevronBack } from "react-icons/io5";
 import PasswordRecovery from "./PasswordRecovery";
 import SignUp from "./SignUp";
+import ValidacaoAcesso from "../Pendentes/ValidacaoAcesso";
 import { AuthService } from "../../services/authService";
 import { organizationService, type OrganizationMeResponse } from "../../services/organizationService";
 import { IoIosArrowBack } from "react-icons/io";
@@ -54,6 +55,8 @@ export default function MultiStepLogin() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [isAccountValidationMode, setIsAccountValidationMode] = useState(false);
+  const [createdAccountEmail, setCreatedAccountEmail] = useState("");
   const [condominiums, setCondominiums] = useState<OrganizationMeResponse[]>([]);
   const [isLoadingCondominiums, setIsLoadingCondominiums] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -503,15 +506,42 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
     <>
       {isRecoveryMode ? (
         <PasswordRecovery onBack={() => setIsRecoveryMode(false)} />
+      ) : isAccountValidationMode ? (
+        <ValidacaoAcesso
+          title="Validar código"
+          subtitle={
+            createdAccountEmail
+              ? `Digite o c?digo enviado para ${createdAccountEmail} para concluir seu cadastro.`
+              : "Digite o c?digo enviado para concluir seu cadastro."
+          }
+          submitLabel="Confirmar código"
+          onBack={() => {
+            setIsAccountValidationMode(false);
+            setIsSignUpMode(true);
+          }}
+          onValidated={() => {
+            formik.setFieldValue("email", createdAccountEmail);
+            formik.setFieldValue("password", "");
+            formik.setFieldValue("condominium", null);
+            setStep(1);
+            setIsAccountValidationMode(false);
+            setIsSignUpMode(false);
+            setCreatedAccountEmail("");
+            toast.success(
+              "C?digo validado com sucesso! Fa?a login para continuar.",
+            );
+          }}
+        />
       ) : isSignUpMode ? (
         <SignUp
           onBack={() => setIsSignUpMode(false)}
-          onSuccess={() => {
+          onSuccess={({ email }) => {
+            setCreatedAccountEmail(email);
+            formik.setFieldValue("email", email);
+            formik.setFieldValue("password", "");
+            formik.setFieldValue("condominium", null);
             setIsSignUpMode(false);
-            toast.info(
-              t("toast.accountCreatedRedirect") ||
-                "Conta criada! Faça login com suas credenciais.",
-            );
+            setIsAccountValidationMode(true);
           }}
         />
       ) : (

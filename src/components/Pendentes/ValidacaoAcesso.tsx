@@ -15,10 +15,31 @@ import RouteNames from "../../routes/routeNames";
 import { verificationService } from "../../services/verificationService";
 import "./ValidacaoAcesso.scss";
 
-const CODE_LENGTH = 6;
+const CODE_LENGTH = 4;
 const keypadKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
-export default function ValidacaoAcesso() {
+type ValidationResult = Awaited<
+  ReturnType<typeof verificationService.validateCode>
+>;
+
+interface ValidacaoAcessoProps {
+  onValidated?: (payload: {
+    verificationCode: string;
+    verificationResult: ValidationResult;
+  }) => void;
+  onBack?: () => void;
+  title?: string;
+  subtitle?: string;
+  submitLabel?: string;
+}
+
+export default function ValidacaoAcesso({
+  onValidated,
+  onBack,
+  title = "Confirmar acesso",
+  subtitle = "Digite o código numérico para continuar a autenticação.",
+  submitLabel = "Validar código",
+}: ValidacaoAcessoProps) {
   const navigate = useNavigate();
   const [code, setCode] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -26,7 +47,7 @@ export default function ValidacaoAcesso() {
 
   const digits = useMemo(
     () => Array.from({ length: CODE_LENGTH }, (_, i) => code[i] || ""),
-    [code]
+    [code],
   );
 
   const appendDigit = (digit: string) => {
@@ -58,6 +79,15 @@ export default function ValidacaoAcesso() {
 
     try {
       const response = await verificationService.validateCode(code);
+
+      if (onValidated) {
+        onValidated({
+          verificationCode: code,
+          verificationResult: response,
+        });
+        return;
+      }
+
       navigate(RouteNames.CadastrosOrganizacoes, {
         state: {
           openCreate: true,
@@ -78,7 +108,7 @@ export default function ValidacaoAcesso() {
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "Não foi possível validar o código agora."
+            : "Não foi possível validar o código agora.",
         );
       }
     } finally {
@@ -90,19 +120,29 @@ export default function ValidacaoAcesso() {
     <Box className="av-page">
       <Container className="container-max">
         <Paper elevation={0} className="av-card">
+          {onBack ? (
+            <Button
+              variant="text"
+              onClick={onBack}
+              disabled={loading}
+              sx={{
+                alignSelf: "flex-start",
+                textTransform: "none",
+                mb: 1,
+                color: "#6b7280",
+              }}
+            >
+              Voltar
+            </Button>
+          ) : null}
 
-          {/* Ícone */}
           <Box className="av-icon-aqui">
             <LockOutlinedIcon className="av-icon__lock" />
           </Box>
 
-          {/* Textos */}
-          <Typography className="av-title">Confirmar acesso</Typography>
-          <Typography className="av-subtitle">
-            Digite o código numérico para continuar a autenticação.
-          </Typography>
+          <Typography className="av-title">{title}</Typography>
+          <Typography className="av-subtitle">{subtitle}</Typography>
 
-          {/* Display de dígitos */}
           <Box className="av-digits">
             {digits.map((digit, i) => (
               <Box
@@ -114,16 +154,16 @@ export default function ValidacaoAcesso() {
             ))}
           </Box>
 
-          {/* Status / Erro */}
-          <Typography className={`av-status ${errorMessage ? "av-status--error" : ""}`}>
+          <Typography
+            className={`av-status ${errorMessage ? "av-status--error" : ""}`}
+          >
             {errorMessage
               ? errorMessage
               : code.length === CODE_LENGTH
-              ? "Código preenchido"
-              : "\u00A0"}
+                ? "Código preenchido"
+                : "\u00A0"}
           </Typography>
 
-          {/* Teclado */}
           <Box className="av-keypad">
             {keypadKeys.map((key) => (
               <Button
@@ -136,18 +176,29 @@ export default function ValidacaoAcesso() {
               </Button>
             ))}
 
-            <Button className="av-key av-key--action" onClick={clearCode} disabled={loading}>
+            <Button
+              className="av-key av-key--action"
+              onClick={clearCode}
+              disabled={loading}
+            >
               Limpar
             </Button>
-            <Button className="av-key" onClick={() => appendDigit("0")} disabled={loading}>
+            <Button
+              className="av-key"
+              onClick={() => appendDigit("0")}
+              disabled={loading}
+            >
               0
             </Button>
-            <Button className="av-key av-key--action" onClick={removeDigit} disabled={loading}>
+            <Button
+              className="av-key av-key--action"
+              onClick={removeDigit}
+              disabled={loading}
+            >
               <BackspaceOutlinedIcon fontSize="small" />
             </Button>
           </Box>
 
-          {/* Botão principal */}
           <Button
             fullWidth
             className="av-submit"
@@ -157,7 +208,7 @@ export default function ValidacaoAcesso() {
             {loading ? (
               <CircularProgress size={22} sx={{ color: "#fff" }} />
             ) : (
-              "Validar código"
+              submitLabel
             )}
           </Button>
         </Paper>
