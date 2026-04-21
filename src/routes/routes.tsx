@@ -45,6 +45,7 @@ import Unidades from "../components/Unidades/Unidades";
 import Residentes from "../components/Residentes/Residentes";
 import Organizacoes from "../components/Organizacoes/Organizacoes";
 import Perfis from "../components/Perfis/Perfis";
+import ValidacaoAcesso from "../components/Pendentes/ValidacaoAcesso";
 
 
 const router = createBrowserRouter([
@@ -178,6 +179,10 @@ const router = createBrowserRouter([
 			{
 				path: RouteNames.EncomendasNotificacao,
 				element: <EncomendasNotificacao />,
+			},
+			{
+				path: RouteNames.ValidacaoAcesso,
+				element: <ValidacaoAcesso />,
 			},
 		]
 	}

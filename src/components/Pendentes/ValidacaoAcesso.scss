@@ -1,0 +1,213 @@
+// Paleta base (fiel à imagem)
+$bg-page:        #0e1117;
+$bg-card:        #161b27;
+$bg-digit:       #1c2235;
+$bg-key:         #1c2235;
+$bg-key-hover:   #252d42;
+$border-digit:   #2a3352;
+$border-filled:  #6c63ff;
+$purple-start:   #7c6aff;
+$purple-end:     #5d8bff;
+$text-primary:   #ffffff;
+$text-muted:     rgba(255, 255, 255, 0.45);
+$text-status:    rgba(200, 210, 255, 0.6);
+$text-error:     #ff6b7a;
+$icon-bg:        rgba(110, 85, 255, 0.20);
+$icon-border:    rgba(130, 110, 255, 0.30);
+$icon-color:     #f5a623;
+
+// ─── Página ───────────────────────────────────────────────
+.av-page {
+  min-height: 100vh;
+ // background-color: $bg-page;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+// ─── Card ─────────────────────────────────────────────────
+.av-card {
+  width: 100%;
+  background: $bg-card !important;
+  border-radius: 28px !important;
+  padding: 36px 28px 32px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.055) !important;
+}
+
+// ─── Ícone ────────────────────────────────────────────────
+.av-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 22px;
+  background: $icon-bg;
+  border: 1px solid $icon-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 22px;
+
+  &__lock {
+    font-size: 38px !important;
+    color: $icon-color !important;
+  }
+}
+
+// ─── Textos ───────────────────────────────────────────────
+.av-title {
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  color: $text-primary !important;
+  text-align: center;
+  margin-bottom: 8px !important;
+  letter-spacing: -0.3px;
+}
+
+.av-subtitle {
+  font-size: 14px !important;
+  color: $text-muted !important;
+  text-align: center;
+  line-height: 1.55 !important;
+  margin-bottom: 28px !important;
+  max-width: 260px;
+}
+
+// ─── Display de dígitos ───────────────────────────────────
+.av-digits {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.av-digit {
+  height: 58px;
+  border-radius: 14px;
+  background: $bg-digit;
+  border: 1.5px solid $border-digit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: $text-primary;
+  transition: border-color 0.18s ease, background 0.18s ease;
+
+  &--filled {
+    border-color: $border-filled;
+    background: rgba(108, 99, 255, 0.12);
+  }
+}
+
+// ─── Status / Erro ────────────────────────────────────────
+.av-status {
+  min-height: 24px;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: $text-status !important;
+  text-align: center;
+  margin-bottom: 18px !important;
+  transition: color 0.2s;
+
+  &--error {
+    color: $text-error !important;
+  }
+}
+
+// ─── Teclado ──────────────────────────────────────────────
+.av-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.av-key {
+  min-height: 68px !important;
+  border-radius: 18px !important;
+  background: $bg-key !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: $text-primary !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  transition: background 0.15s ease, transform 0.1s ease !important;
+
+  &:hover {
+    background: $bg-key-hover !important;
+  }
+
+  &:active {
+    transform: scale(0.96) !important;
+  }
+
+  &--action {
+    font-size: 13px !important;
+    color: rgba(255, 255, 255, 0.55) !important;
+
+    svg {
+      font-size: 18px !important;
+      opacity: 0.7;
+    }
+  }
+
+  &.Mui-disabled {
+    opacity: 0.4 !important;
+  }
+}
+
+// ─── Botão principal ──────────────────────────────────────
+.av-submit {
+  min-height: 56px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(90deg, $purple-start 0%, $purple-end 100%) !important;
+  color: $text-primary !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  letter-spacing: 0.2px;
+  transition: opacity 0.2s ease !important;
+
+  &.Mui-disabled {
+    opacity: 0.45 !important;
+    background: linear-gradient(90deg, $purple-start 0%, $purple-end 100%) !important;
+    color: $text-primary !important;
+  }
+
+  &:hover {
+    opacity: 0.9 !important;
+  }
+}
+
+// ─── Responsivo ───────────────────────────────────────────
+@media (max-width: 480px) {
+  .av-card {
+    padding: 28px 20px 26px !important;
+    border-radius: 22px !important;
+  }
+
+  .av-digit {
+    height: 50px;
+    font-size: 18px;
+    border-radius: 12px;
+  }
+
+  .av-key {
+    min-height: 60px !important;
+    border-radius: 16px !important;
+    font-size: 20px !important;
+  }
+
+  .av-submit {
+    min-height: 52px !important;
+  }
+}
+
+.container-max {
+  max-width: 800px !important;
+}

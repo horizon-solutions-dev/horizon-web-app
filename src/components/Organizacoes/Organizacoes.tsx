@@ -17,7 +17,7 @@ import {
   EditOutlined,
   PlaceOutlined,
 } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import CardList from "../../shared/components/CardList";
 import {
   organizationService,
@@ -48,6 +48,7 @@ const mapToOrganization = (item: OrganizationMeResponse): Organization => ({
 
 const Organizacoes: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
   const [, setListError] = useState<string | null>(null);
@@ -104,6 +105,15 @@ const Organizacoes: React.FC = () => {
     loadOrganizations();
     loadTypes();
   }, []);
+
+  useEffect(() => {
+    const state = location.state as { openCreate?: boolean } | null;
+    if (!state?.openCreate) return;
+
+    setEditingOrganization(null);
+    setIsCadastroOpen(true);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   const filteredOrganizations = useMemo(
     () =>

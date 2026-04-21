@@ -34,6 +34,9 @@
   "signup": {
     "title": "Create Account",
     "description": "Fill in the information below to create your account",
+    "stepInitial": "Initial information",
+    "stepContact": "Contact",
+    "contactDescription": "Enter your contact details to finish registration",
     "name": "Name",
     "surname": "Surname",
     "email": "Email",
@@ -44,6 +47,7 @@
     "confirmPassword": "Confirm Password",
     "createAccount": "Create Account",
     "creating": "Creating account...",
+    "createError": "Error creating account.",
     "passwordRequirements": "Password requirements:",
     "minChars": "Minimum 8 characters",
     "uppercase": "One uppercase letter",
@@ -136,7 +140,12 @@
     "gatehouse": "Gatehouse",
     "vehicles": "Vehicles",
     "deliveries": "Deliveries",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "accessValidation": "Access validation",
+    "switchCondominium": "Switch condominium",
+    "switchCondominiumTitle": "Select condominium",
+    "switchCondominiumDescription": "Choose which condominium you want to load now.",
+    "switchError": "Error loading condominiums."
   },
   "blocos": {
     "title": "Blocks",
@@ -224,6 +233,9 @@
     "unitCodeRequired": "Enter the unit code.",
     "unitTypeRequired": "Select the unit type.",
     "allocationTypeRequired": "Select the allocation type.",
+    "allocationTypeValueRequired": "Enter the allocation value.",
+    "allocationTypeValuePlaceholder": "Allocation value",
+    "allocationTypeFallback": "Fractional",
     "duplicateUnitCode": "A unit with this code already exists in this block.",
     "createSuccess": "Unit created successfully.",
     "updateSuccess": "Unit updated successfully.",
@@ -293,3 +305,4 @@
     "validateError": "Error validating resident."
   }
 }
+

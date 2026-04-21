@@ -34,6 +34,9 @@
   "signup": {
     "title": "Criar Conta",
     "description": "Preencha os dados abaixo para criar sua conta",
+    "stepInitial": "Informações iniciais",
+    "stepContact": "Contato",
+    "contactDescription": "Informe os dados de contato para finalizar o cadastro",
     "name": "Nome",
     "surname": "Sobrenome",
     "email": "E-mail",
@@ -44,6 +47,7 @@
     "confirmPassword": "Confirmar Senha",
     "createAccount": "Criar Conta",
     "creating": "Criando conta...",
+    "createError": "Erro ao criar conta.",
     "passwordRequirements": "Requisitos de senha:",
     "minChars": "Mínimo 8 caracteres",
     "uppercase": "Uma letra maiúscula",
@@ -136,7 +140,12 @@
     "gatehouse": "Portaria",
     "vehicles": "Veículos",
     "deliveries": "Encomendas",
-    "contactUs": "Fale Conosco"
+    "contactUs": "Fale Conosco",
+    "accessValidation": "Validar acesso",
+    "switchCondominium": "Trocar condominio",
+    "switchCondominiumTitle": "Selecionar condominio",
+    "switchCondominiumDescription": "Escolha qual condominio deseja carregar agora.",
+    "switchError": "Erro ao carregar condominios."
   },
   "blocos": {
     "title": "Blocos",
@@ -224,6 +233,9 @@
     "unitCodeRequired": "Informe o código da unidade.",
     "unitTypeRequired": "Selecione o tipo da unidade.",
     "allocationTypeRequired": "Selecione o tipo de alocação.",
+    "allocationTypeValueRequired": "Informe o valor do rateio.",
+    "allocationTypeValuePlaceholder": "Valor do rateio",
+    "allocationTypeFallback": "Fracionado",
     "duplicateUnitCode": "Já existe uma unidade com este código neste bloco.",
     "createSuccess": "Unidade criada com sucesso.",
     "updateSuccess": "Unidade atualizada com sucesso.",
@@ -293,3 +305,4 @@
     "validateError": "Erro ao validar morador."
   }
 }
+

@@ -18,7 +18,7 @@ export type CondominiumBlockPagedResponse = PagedResponse<CondominiumBlock>;
 
 class BlockService {
   private baseUrl =
-    'https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/blocks';
+    'https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/condominium-structure-types';
 
   async createBlock(block: CondominiumBlockRequest) {
     try {
