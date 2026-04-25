@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { IoChevronBack } from "react-icons/io5";
 import PasswordRecovery from "./PasswordRecovery";
 import SignUp from "./SignUp";
+import DefinePassword from "./DefinePassword";
 import ValidacaoAcesso from "../Pendentes/ValidacaoAcesso";
 import { AuthService } from "../../services/authService";
 import { organizationService, type OrganizationMeResponse } from "../../services/organizationService";
@@ -56,7 +57,10 @@ export default function MultiStepLogin() {
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [isAccountValidationMode, setIsAccountValidationMode] = useState(false);
+  const [isDefinePasswordMode, setIsDefinePasswordMode] = useState(false);
   const [createdAccountEmail, setCreatedAccountEmail] = useState("");
+  const [createdAccountUserId, setCreatedAccountUserId] = useState("");
+  const [validatedTokenCode, setValidatedTokenCode] = useState("");
   const [condominiums, setCondominiums] = useState<OrganizationMeResponse[]>([]);
   const [isLoadingCondominiums, setIsLoadingCondominiums] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -506,6 +510,28 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
     <>
       {isRecoveryMode ? (
         <PasswordRecovery onBack={() => setIsRecoveryMode(false)} />
+      ) : isDefinePasswordMode ? (
+        <DefinePassword
+          userId={createdAccountUserId}
+          tokenCode={validatedTokenCode}
+          onBack={() => {
+            setIsDefinePasswordMode(false);
+            setIsAccountValidationMode(true);
+          }}
+          onSuccess={() => {
+            formik.setFieldValue("email", createdAccountEmail);
+            formik.setFieldValue("password", "");
+            formik.setFieldValue("condominium", null);
+            setStep(1);
+            setIsDefinePasswordMode(false);
+            setIsAccountValidationMode(false);
+            setIsSignUpMode(false);
+            setCreatedAccountEmail("");
+            setCreatedAccountUserId("");
+            setValidatedTokenCode("");
+            navigate("/");
+          }}
+        />
       ) : isAccountValidationMode ? (
         <ValidacaoAcesso
           title="Validar código"
@@ -519,24 +545,21 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
             setIsAccountValidationMode(false);
             setIsSignUpMode(true);
           }}
-          onValidated={() => {
-            formik.setFieldValue("email", createdAccountEmail);
-            formik.setFieldValue("password", "");
-            formik.setFieldValue("condominium", null);
-            setStep(1);
-            setIsAccountValidationMode(false);
-            setIsSignUpMode(false);
-            setCreatedAccountEmail("");
-            toast.success(
-              "C?digo validado com sucesso! Fa?a login para continuar.",
+          onValidated={({ verificationCode, verificationResult }) => {
+            setValidatedTokenCode(
+              verificationResult.tokenCode || verificationCode,
             );
+            setIsAccountValidationMode(false);
+            setIsDefinePasswordMode(true);
+            toast.success("Codigo validado com sucesso.");
           }}
         />
       ) : isSignUpMode ? (
         <SignUp
           onBack={() => setIsSignUpMode(false)}
-          onSuccess={({ email }) => {
+          onSuccess={({ email, userId }) => {
             setCreatedAccountEmail(email);
+            setCreatedAccountUserId(userId);
             formik.setFieldValue("email", email);
             formik.setFieldValue("password", "");
             formik.setFieldValue("condominium", null);

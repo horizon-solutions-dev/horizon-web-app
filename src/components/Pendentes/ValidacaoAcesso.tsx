@@ -15,7 +15,7 @@ import RouteNames from "../../routes/routeNames";
 import { verificationService } from "../../services/verificationService";
 import "./ValidacaoAcesso.scss";
 
-const CODE_LENGTH = 4;
+const CODE_LENGTH = 6;
 const keypadKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 type ValidationResult = Awaited<

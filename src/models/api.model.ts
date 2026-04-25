@@ -105,6 +105,16 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface SetPasswordRequest {
+  userId: string;
+  newPassword: string;
+  tokenCode: string;
+}
+
+export interface SetPasswordResponse {
+  userId: string;
+}
+
 export interface AccountResponse {
   userId: string;
   name: string;

@@ -22,7 +22,7 @@ import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 interface SignUpProps {
   onBack: () => void;
-  onSuccess: (payload: { email: string }) => void;
+  onSuccess: (payload: { email: string; userId: string }) => void;
 }
 
 type SignUpFormData = {
@@ -239,6 +239,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
   const [typesLoading, setTypesLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [closeAfterModal, setCloseAfterModal] = useState(false);
+  const [pendingCreatedUserId, setPendingCreatedUserId] = useState("");
   const notTrue = false
   useEffect(() => {
     const loadTypes = async () => {
@@ -433,7 +434,8 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
 
     setIsSubmitting(true);
     try {
-      await AccountService.createAccount(payload);
+      const createdUserId = await AccountService.createAccount(payload);
+      setPendingCreatedUserId(createdUserId);
       setCloseAfterModal(true);
       showSuccess(
         t("toast.accountCreated") ||
@@ -470,7 +472,11 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
     handleClose();
     if (closeAfterModal) {
       setCloseAfterModal(false);
-      onSuccess({ email: formData.email.trim() });
+      onSuccess({
+        email: formData.email.trim(),
+        userId: pendingCreatedUserId,
+      });
+      setPendingCreatedUserId("");
     }
   };
 
@@ -605,10 +611,6 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
                 color="text.secondary"
                 sx={{ textAlign: "center", mb: 0.5 }}
               >
-                {currentDocType?.description
-                  ? `Documento selecionado: ${currentDocType.description}`
-                  : t("signup.contactDescription") ||
-                    "Informe os dados de contato para finalizar o cadastro"}
               </Typography>
 
               <TextField
