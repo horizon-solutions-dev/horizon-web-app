@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -261,11 +261,6 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
       loadTypes();
     }
   }, []);
-
-  const currentDocType = useMemo(
-    () => docTypes.find((type) => type.value === formData.docType),
-    [docTypes, formData.docType],
-  );
 
   const handleChange = (field: keyof SignUpFormData, value: string) => {
     let nextValue = value;

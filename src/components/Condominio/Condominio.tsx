@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Condominio.scss";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
@@ -37,6 +37,7 @@ import { formatCNPJ } from "../../shared/utils/funcoes";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
@@ -188,6 +189,16 @@ const CondominioPage: React.FC = () => {
     loadPhysicalStructureTypes();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const state = location.state as { openCreate?: boolean } | null;
+    if (!state?.openCreate) return;
+
+    setEditingCondominium(null);
+    setImageSelected(null);
+    setIsCadastroOpen(true);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   const getCondominiumTypeLabel = (value: string | number) => {
     const match = condominiumTypes.find(

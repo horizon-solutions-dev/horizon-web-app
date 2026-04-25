@@ -36,6 +36,14 @@ interface UnidadeFormProps {
   condominiumNamePreset?: string;
   blockId: string;
   blockNamePreset?: string;
+  firstAccessMode?: boolean;
+  onCreated?: (payload: {
+    unitId: any;
+    label: string;
+    condominiumBlockId: string;
+    unitType: string | number;
+  }) => void;
+  onCompleted?: () => void;
 }
 
 type FormErrors = {
@@ -78,6 +86,9 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   condominiumNamePreset,
   blockId,
   blockNamePreset,
+  firstAccessMode = false,
+  onCreated,
+  onCompleted,
 }) => {
   const { appStateModal, handleClose, showSuccess, showError } =
     useAppStateModal();
@@ -212,7 +223,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!validate()) return;
+    if (!validate() && firstAccessMode == false) return;
 
     setLoading(true);
     try {
@@ -249,7 +260,13 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
         await unitService.updateUnit(editingId, payload);
         showSuccess(t("unidadeForm.updateSuccess"));
       } else {
-        await unitService.createUnit(payload);
+        const response = await unitService.createUnit(payload);
+        onCreated?.({
+          unitId: response,
+          label: formData.unitCode.trim(),
+          condominiumBlockId: payload.condominiumBlockId,
+          unitType: payload.unitType,
+        });
         showSuccess(t("unidadeForm.createSuccess"));
       }
 
@@ -275,7 +292,11 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
 
     if (closeAfterModal) {
       setCloseAfterModal(false);
-      onClose();
+      if (!firstAccessMode) {
+        onClose();
+      } else {
+        onCompleted?.();
+      }
     }
   };
 

@@ -56,6 +56,9 @@ interface CondominioFormProps {
   physicalStructuresError: string | null;
   loading: boolean;
   setLoading: (loading: boolean) => void;
+  firstAccessMode?: boolean;
+  onCreated?: (payload: { condominiumId: string; label: string }) => void;
+  onCompleted?: () => void;
 }
 
 type ImageUploadItem = {
@@ -94,6 +97,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   physicalStructuresError,
   loading,
   setLoading,
+  firstAccessMode = false,
+  onCreated,
+  onCompleted,
 }) => {
   const { t } = useTranslation();
   const { appStateModal, handleClose, showSuccess, showError } =
@@ -624,6 +630,13 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       const condominiumId = response || editingId || "";
       if (condominiumId) await uploadImages(condominiumId);
 
+      if (!editingId && condominiumId) {
+        onCreated?.({
+          condominiumId,
+          label: formData.name.trim(),
+        });
+      }
+
       showSuccess(
         editingId
           ? t("condominioForm.updateSuccess", { name: formData.name })
@@ -631,7 +644,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       );
 
       setCloseAfterModal(true);
-      handleCloseWizard(false);
+      if (!firstAccessMode) {
+        handleCloseWizard(false);
+      }
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         setErrors({ doc: t("condominioForm.duplicateCnpj") });
@@ -655,7 +670,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     await onSaved();
     if (closeAfterModal) {
       setCloseAfterModal(false);
-      onClose();
+      if (!firstAccessMode) {
+        onClose();
+      } else {
+        onCompleted?.();
+      }
     }
   };
 

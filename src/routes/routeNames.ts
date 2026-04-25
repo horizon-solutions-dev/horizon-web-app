@@ -3,7 +3,8 @@ const CommonRoutes = {
   NotFound: "/not-found",
   EsqueciSenha: "/esqueci-senha",
   RecuperarSenha: "/recuperar-senha/:recoveryToken",
-  CriarConta: "/criar-conta"
+  CriarConta: "/criar-conta",
+  PrimeiroAcesso: "/primeiro-acesso"
 };
 
 const CondominioRoutes = {

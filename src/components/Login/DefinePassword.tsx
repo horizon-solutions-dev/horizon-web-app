@@ -12,7 +12,7 @@ interface DefinePasswordProps {
   userId: string;
   tokenCode: string;
   onBack: () => void;
-  onSuccess: () => void;
+  onSuccess: (payload: { password: string }) => void;
 }
 
 export default function DefinePassword({
@@ -52,7 +52,7 @@ export default function DefinePassword({
         toast.success(
           t("toast.passwordDefined") || "Senha definida com sucesso",
         );
-        onSuccess();
+        onSuccess({ password: values.password });
       } catch (error) {
         toast.error(
           error instanceof Error

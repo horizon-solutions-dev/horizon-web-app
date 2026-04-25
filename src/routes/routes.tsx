@@ -46,6 +46,7 @@ import Residentes from "../components/Residentes/Residentes";
 import Organizacoes from "../components/Organizacoes/Organizacoes";
 import Perfis from "../components/Perfis/Perfis";
 import ValidacaoAcesso from "../components/Pendentes/ValidacaoAcesso";
+import PrimeiroAcessoWizard from "../components/PrimeiroAcesso/PrimeiroAcessoWizard";
 
 
 const router = createBrowserRouter([
@@ -183,6 +184,10 @@ const router = createBrowserRouter([
 			{
 				path: RouteNames.ValidacaoAcesso,
 				element: <ValidacaoAcesso />,
+			},
+			{
+				path: RouteNames.PrimeiroAcesso,
+				element: <PrimeiroAcessoWizard />,
 			},
 		]
 	}
