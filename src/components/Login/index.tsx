@@ -654,7 +654,7 @@ export default function MultiStepLogin() {
             setIsAccountSuccessMode(true);
           }}
         />
-      ) : isAccountSuccessMode ? (
+      ) : !isAccountSuccessMode ? (
         <AccountSuccess
           loading={isSubmitting || isLoggingIn}
           onSetup={() => {
@@ -683,7 +683,6 @@ export default function MultiStepLogin() {
             );
             setIsAccountValidationMode(false);
             setIsDefinePasswordMode(true);
-            toast.success("Código validado com sucesso.");
           }}
         />
       ) : isSignUpMode ? (

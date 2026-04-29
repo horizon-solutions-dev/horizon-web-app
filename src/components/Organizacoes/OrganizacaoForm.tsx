@@ -404,6 +404,12 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
           label: payload.name.trim(),
         });
 
+        if (firstAccessMode) {
+          onCompleted?.();
+          onSaved();
+          return;
+        }
+
         setCloseAfterModal(true);
         showSuccess("Organização criada com sucesso.");
       }
@@ -457,6 +463,8 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
         backLabel="Voltar"
         onClose={onClose}
         disableContent={loading}
+        width={firstAccessMode ? "720px" : "650px"}
+        fullScreen={firstAccessMode}
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {activeStep === 0 ? (

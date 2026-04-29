@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, CircularProgress, Typography } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import StepWizardCard from "../../shared/components/StepWizardCard";
 import RouteNames from "../../routes/routeNames";
 import OrganizacaoForm from "../Organizacoes/OrganizacaoForm";
 import CondominioForm from "../Condominio/CondominioForm";
 import BlocoForm from "../Blocos/BlocoForm";
 import UnidadeForm from "../Unidades/UnidadeForm";
 import ResidenteForm from "../Residentes/ResidenteForm";
+import FirstAccessComplete from "./FirstAccessComplete";
 import {
   organizationService,
   type OrganizationTypeEnum,
 } from "../../services/organizationService";
 import {
   condominiumService,
+  type Condominium,
   type CondominiumTypeEnum,
   type PhysicalStructureEnum,
   type AllocationTypeEnum,
@@ -38,10 +39,6 @@ type WizardStage =
 const getInitialStage = (): WizardStage => {
   const context = readFirstAccessContext();
   if (!context?.organization) return "organization";
-  if (!context.condominiums.length) return "condominium";
-  if (!context.block?.id) return "block";
-  if (!context.unit?.id) return "unit";
-  if (!context.resident?.id) return "resident";
   return "done";
 };
 
@@ -66,6 +63,10 @@ export default function PrimeiroAcessoWizard() {
     [],
   );
   const [bootstrapLoading, setBootstrapLoading] = useState(true);
+  const [existingCondominium, setExistingCondominium] =
+    useState<Condominium | null>(null);
+  const [existingCondominiumLoading, setExistingCondominiumLoading] =
+    useState(false);
 
   useEffect(() => {
     if (!isFirstAccess) {
@@ -109,8 +110,57 @@ export default function PrimeiroAcessoWizard() {
     void loadBootstrap();
   }, []);
 
+  useEffect(() => {
+    const loadExistingCondominium = async () => {
+      if (stage !== "condominium") {
+        return;
+      }
+
+      const currentContext = readFirstAccessContext();
+      const organizationId = currentContext?.organization?.id;
+      const orgType = Number(currentContext?.orgType || 0);
+
+      if (orgType !== 2 || !organizationId) {
+        setExistingCondominium(null);
+        return;
+      }
+
+      setExistingCondominiumLoading(true);
+      try {
+        const response = await condominiumService.getCondominiums(
+          organizationId,
+          1,
+          10,
+        );
+        const firstCondominium = response?.items?.[0] ?? null;
+        setExistingCondominium(firstCondominium);
+
+        if (firstCondominium) {
+          patchFirstAccessContext({
+            condominiums: [
+              {
+                id: firstCondominium.condominiumId,
+                label: firstCondominium.name,
+              },
+            ],
+            selectedCondominiumId: firstCondominium.condominiumId,
+          });
+          syncFirstAccessIdsToLegacyStorage({
+            condominiumId: firstCondominium.condominiumId,
+          });
+          markFirstAccessStepCompleted("condominium");
+        }
+      } catch {
+        setExistingCondominium(null);
+      } finally {
+        setExistingCondominiumLoading(false);
+      }
+    };
+
+    void loadExistingCondominium();
+  }, [stage]);
+
   const context = readFirstAccessContext();
-  console.log(context)
   const selectedCondominium = useMemo(() => {
     const currentId = context?.selectedCondominiumId;
     return (
@@ -154,6 +204,22 @@ export default function PrimeiroAcessoWizard() {
     );
   }
 
+  if (stage === "condominium" && existingCondominiumLoading) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%)",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   if (stage === "organization") {
     return (
       <OrganizacaoForm
@@ -176,7 +242,7 @@ export default function PrimeiroAcessoWizard() {
           markFirstAccessStepCompleted("organization");
         }}
         onCompleted={() => {
-          setStage("condominium");
+          setStage("done");
         }}
       />
     );
@@ -186,7 +252,7 @@ export default function PrimeiroAcessoWizard() {
     return (
       <CondominioForm
         open={true}
-        editingCondominium={null}
+        editingCondominium={Number(context?.orgType || 0) === 2 ? existingCondominium : null}
         onClose={handleWizardClose}
         imageSelected={null}
         onSaved={() => {}}
@@ -208,6 +274,21 @@ export default function PrimeiroAcessoWizard() {
           markFirstAccessStepCompleted("condominium");
         }}
         onCompleted={() => {
+          if (Number(context?.orgType || 0) === 2 && existingCondominium) {
+            patchFirstAccessContext({
+              condominiums: [
+                {
+                  id: existingCondominium.condominiumId,
+                  label: existingCondominium.name,
+                },
+              ],
+              selectedCondominiumId: existingCondominium.condominiumId,
+            });
+            syncFirstAccessIdsToLegacyStorage({
+              condominiumId: existingCondominium.condominiumId,
+            });
+            markFirstAccessStepCompleted("condominium");
+          }
           setStage("block");
         }}
       />
@@ -266,7 +347,7 @@ export default function PrimeiroAcessoWizard() {
         setLoading={setBusy}
         condominiumIdPreset={selectedCondominium?.id}
         condominiumNamePreset={selectedCondominium?.label}
-        blockId={context.block?.condominiumId || ""}
+        blockId={context.block?.id || ""}
         blockNamePreset={context.block?.label}
         firstAccessMode={true}
         onCreated={({ unitId, label, condominiumBlockId, unitType }) => {
@@ -329,26 +410,5 @@ export default function PrimeiroAcessoWizard() {
     );
   }
 
-  return (
-    <StepWizardCard
-      title="Primeiro Acesso Concluido"
-      subtitle="A configuracao inicial foi finalizada com sucesso. Voce ja pode continuar usando a plataforma."
-      steps={["Organizacao", "Condominio", "Estrutura", "Unidade", "Ocupante"]}
-      activeStep={4}
-      onClose={finishWizard}
-      disableContent={false}
-      actions={
-        <Button
-          variant="contained"
-          onClick={finishWizard}
-          sx={{ textTransform: "none" }}
-        >
-          Ir para o Dashboard
-        </Button>
-      }
-    >
-      <Box sx={{ textAlign: "center" }}>
-      </Box>
-    </StepWizardCard>
-  );
+  return <FirstAccessComplete onFinish={finishWizard} />;
 }

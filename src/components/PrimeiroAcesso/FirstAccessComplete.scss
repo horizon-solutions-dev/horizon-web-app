@@ -1,0 +1,204 @@
+.first-access-complete-page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+}
+
+.first-access-complete-container {
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.first-access-complete-card {
+  width: 100%;
+  max-width: 700px;
+  padding: 40px 44px !important;
+  border-radius: 24px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfefd 100%) !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.1) !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.first-access-complete-badge {
+  margin-bottom: 8px;
+
+  img {
+    width: 56px;
+    height: auto;
+  }
+}
+
+.first-access-complete-title {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-bottom: 10px !important;
+}
+
+.first-access-complete-subtitle {
+  max-width: 520px;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+  color: #475467 !important;
+  margin-bottom: 4px !important;
+}
+
+.first-access-complete-highlight {
+  width: 100%;
+  margin-top: 22px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid #b7efca;
+  background: linear-gradient(135deg, #f2fcf5 0%, #eefbf4 100%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+
+  svg {
+    color: #16a34a;
+    font-size: 30px;
+    flex-shrink: 0;
+  }
+}
+
+.first-access-complete-highlight-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #16a34a !important;
+  margin-bottom: 4px !important;
+}
+
+.first-access-complete-highlight-text {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #475467 !important;
+}
+
+.first-access-complete-button {
+  width: 100%;
+  min-height: 52px !important;
+  margin-top: 22px !important;
+  border-radius: 14px !important;
+  text-transform: none !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  background: linear-gradient(135deg, #16a34a 0%, #0b9444 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 28px rgba(22, 163, 74, 0.2) !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #148f42 0%, #09783a 100%) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .first-access-complete-card {
+    padding: 36px 24px !important;
+    border-radius: 22px !important;
+  }
+
+  .first-access-complete-title {
+    font-size: 24px !important;
+  }
+
+  .first-access-complete-highlight {
+    align-items: flex-start;
+  }
+}
+
+@media (max-height: 820px) {
+  .first-access-complete-page {
+    padding: 16px;
+  }
+
+  .first-access-complete-card {
+    max-width: 640px;
+    padding: 28px 30px !important;
+    border-radius: 20px !important;
+  }
+
+  .first-access-complete-badge img {
+    width: 48px;
+  }
+
+  .first-access-complete-title {
+    font-size: 21px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .first-access-complete-subtitle {
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+    max-width: 470px;
+  }
+
+  .first-access-complete-highlight {
+    margin-top: 18px;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .first-access-complete-highlight svg {
+    font-size: 26px;
+  }
+
+  .first-access-complete-highlight-title {
+    font-size: 14px !important;
+  }
+
+  .first-access-complete-highlight-text {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+
+  .first-access-complete-button {
+    min-height: 48px !important;
+    margin-top: 18px !important;
+    font-size: 14px !important;
+  }
+}
+
+@media (max-height: 700px) {
+  .first-access-complete-card {
+    max-width: 600px;
+    padding: 22px 24px !important;
+  }
+
+  .first-access-complete-badge {
+    margin-bottom: 4px;
+  }
+
+  .first-access-complete-badge img {
+    width: 42px;
+  }
+
+  .first-access-complete-title {
+    font-size: 19px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .first-access-complete-subtitle {
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    max-width: 430px;
+  }
+
+  .first-access-complete-highlight {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+
+  .first-access-complete-button {
+    min-height: 44px !important;
+    margin-top: 14px !important;
+  }
+}

@@ -49,9 +49,6 @@ export default function DefinePassword({
           tokenCode,
         });
 
-        toast.success(
-          t("toast.passwordDefined") || "Senha definida com sucesso",
-        );
         onSuccess({ password: values.password });
       } catch (error) {
         toast.error(

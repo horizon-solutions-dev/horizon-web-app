@@ -62,18 +62,6 @@ export default function AccountSuccess({
               )}
             </Button>
 
-            <Button
-              className="account-success-button account-success-button--secondary"
-              onClick={onAccessAccount}
-              disabled={loading}
-              startIcon={<PersonOutlineOutlinedIcon />}
-            >
-              {loading ? (
-                <CircularProgress size={20} sx={{ color: "#16a34a" }} />
-              ) : (
-                "Acessar minha conta"
-              )}
-            </Button>
           </Box>
         </Paper>
       </Container>

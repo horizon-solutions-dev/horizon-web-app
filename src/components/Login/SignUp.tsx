@@ -230,16 +230,13 @@ const normalizePhoneToE164 = (phone: string) => {
 
 export default function SignUp({ onBack, onSuccess }: SignUpProps) {
   const { t } = useTranslation();
-  const { appStateModal, handleClose, showSuccess, showError } =
-    useAppStateModal();
+  const { appStateModal, handleClose, showError } = useAppStateModal();
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<SignUpFormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [docTypes, setDocTypes] = useState<TypesDoc[]>(fallbackDocTypes);
   const [typesLoading, setTypesLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [closeAfterModal, setCloseAfterModal] = useState(false);
-  const [pendingCreatedUserId, setPendingCreatedUserId] = useState("");
   const notTrue = false
   useEffect(() => {
     const loadTypes = async () => {
@@ -430,12 +427,10 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
     setIsSubmitting(true);
     try {
       const createdUserId = await AccountService.createAccount(payload);
-      setPendingCreatedUserId(createdUserId);
-      setCloseAfterModal(true);
-      showSuccess(
-        t("toast.accountCreated") ||
-          "Conta criada com sucesso! Faça login com suas credenciais.",
-      );
+      onSuccess({
+        email: formData.email.trim(),
+        userId: createdUserId,
+      });
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         const responseData = error.response.data as
@@ -463,22 +458,16 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
     }
   };
 
-  const handleModalClose = () => {
-    handleClose();
-    if (closeAfterModal) {
-      setCloseAfterModal(false);
-      onSuccess({
-        email: formData.email.trim(),
-        userId: pendingCreatedUserId,
-      });
-      setPendingCreatedUserId("");
-    }
-  };
-
   return (
-    <Box className="page-container">
+    <Box className="page-container" sx={{
+          height: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+    }}>
       <Container maxWidth="xl">
       <StepWizardCard
+      
         title={t("signup.title") || "Criar Conta"}
         subtitle={
           activeStep === 0
@@ -640,8 +629,8 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
         message={appStateModal.message}
         detail={appStateModal.detail}
         item={appStateModal.item}
-        onConfirm={handleModalClose}
-        onClose={handleModalClose}
+        onConfirm={handleClose}
+        onClose={handleClose}
         showCancel={false}
       />
     </Container>
