@@ -7,20 +7,18 @@ import {
   Typography,
 } from "@mui/material";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import "./AccountSuccess.scss";
 import Check from "../../assets/5610944.png";
 interface AccountSuccessProps {
   loading?: boolean;
   onSetup: () => void;
-  onAccessAccount: () => void;
+  onAccessAccount?: () => void;
 }
 
 export default function AccountSuccess({
   loading = false,
   onSetup,
-  onAccessAccount,
 }: AccountSuccessProps) {
   return (
     <Box className="account-success-page">

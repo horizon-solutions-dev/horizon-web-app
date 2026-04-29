@@ -654,7 +654,7 @@ export default function MultiStepLogin() {
             setIsAccountSuccessMode(true);
           }}
         />
-      ) : !isAccountSuccessMode ? (
+      ) : isAccountSuccessMode ? (
         <AccountSuccess
           loading={isSubmitting || isLoggingIn}
           onSetup={() => {

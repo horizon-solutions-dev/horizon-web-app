@@ -31,6 +31,9 @@ import {
   organizationService,
   type OrganizationMeResponse,
 } from "../../services/organizationService";
+import type { AccessRequirement } from "../../rbac/types";
+import { APP_PERMISSIONS } from "../../rbac/types";
+import { useAuth } from "../../contexts/useAuth";
 
 interface MenuItem {
   id: string;
@@ -38,6 +41,7 @@ interface MenuItem {
   icon: JSX.Element;
   path?: string;
   children?: MenuItem[];
+  access?: AccessRequirement;
 }
 
 interface MenuComponentProps {
@@ -62,6 +66,7 @@ export default function MenuComponent({
 }: MenuComponentProps) {
   const location = useLocation();
   const { t } = useTranslation();
+  const { canAccess } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [organizationName, setOrganizationName] = useState<string>("");
   const [activeOrganizationId, setActiveOrganizationId] = useState("");
@@ -78,42 +83,49 @@ export default function MenuComponent({
       label: t("menu.dashboard"),
       icon: <MdDashboard />,
       path: RouteNames.Dashboard,
+      access: { permissions: [APP_PERMISSIONS.DashboardView] },
     },
     {
       id: "cadastros-organizacoes",
       label: t("menu.organizations"),
       icon: <MdBusiness />,
       path: RouteNames.CadastrosOrganizacoes,
+      access: { permissions: [APP_PERMISSIONS.OrganizationView] },
     },
     {
       id: "condominios",
       label: t("menu.condominiums"),
       icon: <MdApartment />,
       path: RouteNames.Condominio,
+      access: { permissions: [APP_PERMISSIONS.CondominiumView] },
     },
     {
       id: "cadastros-blocos",
       label: t("menu.blocks"),
       icon: <ViewModule />,
       path: RouteNames.CadastrosBlocos,
+      access: { permissions: [APP_PERMISSIONS.StructureView] },
     },
     {
       id: "cadastros-unidades",
       label: t("menu.units"),
       icon: <Home />,
       path: RouteNames.CadastrosUnidades,
+      access: { permissions: [APP_PERMISSIONS.UnitView] },
     },
     {
       id: "cadastros-moradores",
       label: t("menu.residents"),
       icon: <People />,
       path: RouteNames.CadastrosResidentes,
+      access: { permissions: [APP_PERMISSIONS.ResidentView] },
     },
     {
       id: "cadastros-perfis",
       label: t("menu.profiles"),
       icon: <AssignmentInd />,
       path: RouteNames.CadastrosPerfis,
+      access: { permissions: [APP_PERMISSIONS.ProfileView] },
     },
     {
       id: "itens-pendentes",
@@ -125,30 +137,35 @@ export default function MenuComponent({
           label: t("menu.reservations"),
           icon: <MdEventAvailable />,
           path: RouteNames.ReservasTipo,
+          access: { permissions: [APP_PERMISSIONS.ReservationView] },
         },
         {
           id: "pendente-financeiro",
           label: t("menu.financial"),
           icon: <MdAttachMoney />,
           path: RouteNames.FinanceiroBoletos,
+          access: { permissions: [APP_PERMISSIONS.FinancialView] },
         },
         {
           id: "pendente-portaria",
           label: t("menu.gatehouse"),
           icon: <MdSecurity />,
           path: RouteNames.PortariaUsuarios,
+          access: { permissions: [APP_PERMISSIONS.GatehouseView] },
         },
         {
           id: "pendente-veiculos",
           label: t("menu.vehicles"),
           icon: <MdDirectionsCar />,
           path: RouteNames.Veiculos,
+          access: { permissions: [APP_PERMISSIONS.VehicleView] },
         },
         {
           id: "pendente-encomendas",
           label: t("menu.deliveries"),
           icon: <MdLocalShipping />,
           path: RouteNames.EncomendasRecebimento,
+          access: { permissions: [APP_PERMISSIONS.DeliveryView] },
         },
         {
           id: "fale-conosco",
@@ -161,10 +178,24 @@ export default function MenuComponent({
           label: t("menu.accessValidation"),
           icon: <MdSecurity />,
           path: RouteNames.ValidacaoAcesso,
+          access: { permissions: [APP_PERMISSIONS.PendingView] },
         },
       ],
+      access: { permissions: [APP_PERMISSIONS.PendingView] },
     },
   ];
+
+  const canRenderMenuItem = (item: MenuItem): boolean => {
+    if (!canAccess(item.access)) {
+      return false;
+    }
+
+    if (!item.children?.length) {
+      return true;
+    }
+
+    return item.children.some((child) => canRenderMenuItem(child));
+  };
 
   useEffect(() => {
     const loadOrganization = () => {
@@ -298,7 +329,9 @@ export default function MenuComponent({
           </div>
           {!collapsed && isExpanded ? (
             <div className="menu-submenu">
-              {item.children?.map((child) => renderMenuItem(child, level + 1))}
+              {item.children
+                ?.filter((child) => canRenderMenuItem(child))
+                .map((child) => renderMenuItem(child, level + 1))}
             </div>
           ) : null}
         </div>
@@ -370,7 +403,9 @@ export default function MenuComponent({
         </button>
 
         <nav className="menu-nav">
-          {menuItems.map((item) => renderMenuItem(item))}
+          {menuItems
+            .filter((item) => canRenderMenuItem(item))
+            .map((item) => renderMenuItem(item))}
         </nav>
       </div>
 
