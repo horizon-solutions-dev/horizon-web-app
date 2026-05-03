@@ -224,7 +224,9 @@ const CondominioPage: React.FC = () => {
     setImageSelected(null);
     setIsCadastroOpen(true);
   };
-
+  const data =  JSON.parse(localStorage.getItem("dataCondominium")!)
+  console.log('aaaa',data)
+  console.log("aquio")
   const handleCloseForm = () => {
     setIsCadastroOpen(false);
     setEditingCondominium(null);
@@ -393,6 +395,7 @@ const CondominioPage: React.FC = () => {
                     </Typography>
                   ) : null}
                   <CardList
+                    showAddButton={data.orgType == 1}
                     title={t("condominio.condominiumsList")}
                     showTitle={false}
                     searchPlaceholder={t("condominio.searchPlaceholder")}

@@ -70,12 +70,16 @@ export default function MenuComponent({
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [organizationName, setOrganizationName] = useState<string>("");
   const [activeOrganizationId, setActiveOrganizationId] = useState("");
+  const [activeOrganizationType, setActiveOrganizationType] = useState<
+    number | null
+  >(null);
   const [availableOrganizations, setAvailableOrganizations] = useState<
     OrganizationMeResponse[]
   >([]);
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const [isSwitchingListLoading, setIsSwitchingListLoading] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
+  const canManageOrganizations = activeOrganizationType === 1;
 
   const menuItems: MenuItem[] = [
     {
@@ -85,13 +89,17 @@ export default function MenuComponent({
       path: RouteNames.Dashboard,
       access: { permissions: [APP_PERMISSIONS.DashboardView] },
     },
-    {
-      id: "cadastros-organizacoes",
-      label: t("menu.organizations"),
-      icon: <MdBusiness />,
-      path: RouteNames.CadastrosOrganizacoes,
-      access: { permissions: [APP_PERMISSIONS.OrganizationView] },
-    },
+    ...(canManageOrganizations
+      ? [
+          {
+            id: "cadastros-organizacoes",
+            label: t("menu.organizations"),
+            icon: <MdBusiness />,
+            path: RouteNames.CadastrosOrganizacoes,
+            access: { permissions: [APP_PERMISSIONS.OrganizationView] },
+          },
+        ]
+      : []),
     {
       id: "condominios",
       label: t("menu.condominiums"),
@@ -205,6 +213,7 @@ export default function MenuComponent({
           storedOrganization.name || storedOrganization.legalName || "",
         );
         setActiveOrganizationId(storedOrganization.organizationId || "");
+        setActiveOrganizationType(Number(storedOrganization.orgType ?? 0));
         return;
       }
 
@@ -212,6 +221,7 @@ export default function MenuComponent({
       const organizationId = localStorage.getItem("organizationId") || "";
       setOrganizationName(fallback);
       setActiveOrganizationId(organizationId);
+      setActiveOrganizationType(null);
     };
 
     loadOrganization();

@@ -27,6 +27,7 @@ import {
   readFirstAccessContext,
   syncFirstAccessIdsToLegacyStorage,
 } from "../../shared/utils/firstAccessStorage";
+import { AuthService } from "../../services/authService";
 
 type WizardStage =
   | "organization"
@@ -179,13 +180,19 @@ export default function PrimeiroAcessoWizard() {
         ? context.unit.unitType
         : undefined;
 
-  const finishWizard = () => {
+  const endFirstAccessAndGoToLogin = () => {
     clearFirstAccessContext();
-    navigate(RouteNames.Login);
+    AuthService.logout();
+    window.dispatchEvent(new Event("storage"));
+    navigate(RouteNames.Login, { replace: true });
+  };
+
+  const finishWizard = () => {
+    endFirstAccessAndGoToLogin();
   };
 
   const handleWizardClose = () => {
-    navigate(RouteNames.Dashboard);
+    endFirstAccessAndGoToLogin();
   };
 
   if (bootstrapLoading || !context) {

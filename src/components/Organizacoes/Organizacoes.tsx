@@ -199,6 +199,7 @@ const Organizacoes: React.FC = () => {
   };
   const nameStorage = localStorage.getItem("condominium");
   const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
+  const canManageOrganizations = Number(dataParse?.orgType ?? 0) === 2;
   const orgName =
     organizations?.find((o) => o.organizationId === dataParse?.organizationId)
       ?.name || dataParse?.name;
@@ -272,6 +273,7 @@ const Organizacoes: React.FC = () => {
                       setSearchText(value);
                       setListPage(1);
                     }}
+                    showAddButton={canManageOrganizations}
                     onAddClick={handleOpenCreate}
                     addLabel="Novo"
                     addButtonPlacement="toolbar"
