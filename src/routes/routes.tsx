@@ -55,6 +55,10 @@ const router = createBrowserRouter([
 		path: "/",
 		element: <PublicRoute><LoginFlow /></PublicRoute>,
 	},
+				{
+				path: RouteNames.PrimeiroAcesso,
+				element: <PrimeiroAcessoWizard />,
+			},
 	
 	// Protected routes with MainLayout
 	{
@@ -184,10 +188,6 @@ const router = createBrowserRouter([
 			{
 				path: RouteNames.ValidacaoAcesso,
 				element: <ValidacaoAcesso />,
-			},
-			{
-				path: RouteNames.PrimeiroAcesso,
-				element: <PrimeiroAcessoWizard />,
 			},
 		]
 	}

@@ -35,7 +35,7 @@ export default function FirstAccessComplete({
               </Typography>
               <Typography className="first-access-complete-highlight-text">
                 Agora você já pode entrar na plataforma e continuar a
-                configuração por lá, se precisar.
+                configuração por lá.
               </Typography>
             </Box>
           </Box>

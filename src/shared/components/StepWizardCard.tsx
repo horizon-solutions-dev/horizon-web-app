@@ -44,7 +44,7 @@ export default function StepWizardCard({
 }: StepWizardCardProps) {
   return (
     <div
-      className={`step-wizard ${fullScreen ? "step-wizard--fullscreen" : ""} ${full ? 'full' : ""}`}
+      className={`step-wizard ${fullScreen ? "step-wizard fullscreen" : ""} ${full ? 'full' : ""}`}
     >
       <Box className="step-wizard-card" sx={{ width }}>
         {showBack && onBack ? (

@@ -39,7 +39,7 @@ const steps = ["Informações iniciais", "Contato"];
 const initialFormData: SignUpFormData = {
   name: "",
   surname: "",
-  docType: "",
+  docType: "CompanyTaxDoc",
   doc: "",
   email: "",
   phone: "",
@@ -469,11 +469,6 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
       <StepWizardCard
       
         title={t("signup.title") || "Criar Conta"}
-        subtitle={
-          activeStep === 0
-            ? t("signup.stepInitial") || steps[0]
-            : t("signup.stepContact") || steps[1]
-        }
         steps={steps}
         activeStep={activeStep}
         showBack={true}
@@ -516,15 +511,6 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {activeStep === 0 ? (
             <>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ textAlign: "center", mb: 0.5 }}
-              >
-                {t("signup.description") ||
-                  "Preencha os dados abaixo para criar sua conta"}
-              </Typography>
-
               <TextField
                 fullWidth
                 placeholder={t("signup.name") || "Nome"}
@@ -590,12 +576,6 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
             </>
           ) : (
             <>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ textAlign: "center", mb: 0.5 }}
-              >
-              </Typography>
 
               <TextField
                 fullWidth

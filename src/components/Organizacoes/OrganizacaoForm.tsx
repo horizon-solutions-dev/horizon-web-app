@@ -25,6 +25,7 @@ import "./Organizacoes.scss";
 
 interface OrganizacaoFormProps {
   open: boolean;
+  full: boolean;
   editingOrganization: Organization | null;
   onClose: () => void;
   onSaved: () => void | Promise<void>;
@@ -91,6 +92,7 @@ const stateRegex = /^[A-Z]{2}$/;
 
 const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   open,
+  full,
   editingOrganization,
   onClose,
   onSaved,
@@ -454,6 +456,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   return (
     <>
       <StepWizardCard
+      full
         title={editingOrganization ? "Editar Organizacao" : "Criar Organizacao"}
         subtitle={steps[activeStep]}
         steps={steps}

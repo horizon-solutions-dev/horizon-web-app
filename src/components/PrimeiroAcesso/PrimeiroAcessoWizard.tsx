@@ -181,7 +181,7 @@ export default function PrimeiroAcessoWizard() {
 
   const finishWizard = () => {
     clearFirstAccessContext();
-    navigate(RouteNames.Dashboard);
+    navigate(RouteNames.Login);
   };
 
   const handleWizardClose = () => {
@@ -223,6 +223,7 @@ export default function PrimeiroAcessoWizard() {
   if (stage === "organization") {
     return (
       <OrganizacaoForm
+      full={true}
         open={true}
         editingOrganization={null}
         onClose={handleWizardClose}

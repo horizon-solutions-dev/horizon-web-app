@@ -672,7 +672,7 @@ export default function MultiStepLogin() {
               ? `Digite o código enviado para ${createdAccountEmail} para concluir seu cadastro.`
               : "Digite o código enviado para concluir seu cadastro."
           }
-          submitLabel="Confirmar código"
+          submitLabel="Concluir"
           onBack={() => {
             setIsAccountValidationMode(false);
             setIsAccountCreatedMode(true);
