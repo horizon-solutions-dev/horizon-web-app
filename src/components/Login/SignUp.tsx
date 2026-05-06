@@ -1,377 +1,639 @@
-import React, { useState } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { toast } from "react-toastify";
+import { AxiosError } from "axios";
+import { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  MenuItem,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { IoChevronBack } from "react-icons/io5";
-import "./sign-up.scss";
+import type {
+  AccountDocumentType,
+  CreateAccountRequest,
+  TypesDoc,
+} from "../../models/api.model";
 import { AccountService } from "../../services/accountService";
-import type { CreateAccountRequest } from "../../models/api.model";
-import Logo from "../../assets/logo.svg";
+import StepWizardCard from "../../shared/components/StepWizardCard";
+import { AppStateModal } from "../../shared/components/AppStateModal";
+import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+
 interface SignUpProps {
   onBack: () => void;
-  onSuccess: () => void;
+  onSuccess: (payload: { email: string; userId: string }) => void;
 }
+
+type SignUpFormData = {
+  name: string;
+  surname: string;
+  docType: string;
+  doc: string;
+  email: string;
+  phone: string;
+};
+
+const steps = ["Informações iniciais", "Contato"];
+
+const initialFormData: SignUpFormData = {
+  name: "",
+  surname: "",
+  docType: "",
+  doc: "",
+  email: "",
+  phone: "",
+};
+
+const fallbackDocTypes: TypesDoc[] = [
+  { id: 1, value: "TaxDoc", description: "CPF" },
+  { id: 2, value: "CompanyTaxDoc", description: "CNPJ" },
+  { id: 3, value: "Passport", description: "Passaporte" },
+];
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRegex = /^\+?[0-9()\s-]{8,32}$/;
+
+const formatCpf = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return digits.replace(/(\d{3})(\d+)/, "$1.$2");
+  if (digits.length <= 9) {
+    return digits.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
+  }
+  return digits.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, "$1.$2.$3-$4");
+};
+
+const formatCnpj = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 14);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 5) return digits.replace(/(\d{2})(\d+)/, "$1.$2");
+  if (digits.length <= 8) {
+    return digits.replace(/(\d{2})(\d{3})(\d+)/, "$1.$2.$3");
+  }
+  if (digits.length <= 12) {
+    return digits.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, "$1.$2.$3/$4");
+  }
+  return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/, "$1.$2.$3/$4-$5");
+};
+
+const validateCpf = (value: string) => {
+  const cpf = value.replace(/\D/g, "");
+  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) {
+    sum += parseInt(cpf.charAt(i), 10) * (10 - i);
+  }
+  let digit = (sum * 10) % 11;
+  if (digit === 10) digit = 0;
+  if (digit !== parseInt(cpf.charAt(9), 10)) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) {
+    sum += parseInt(cpf.charAt(i), 10) * (11 - i);
+  }
+  digit = (sum * 10) % 11;
+  if (digit === 10) digit = 0;
+  return digit === parseInt(cpf.charAt(10), 10);
+};
+
+const validateCnpj = (value: string) => {
+  const cnpj = value.replace(/\D/g, "");
+  if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
+
+  let size = cnpj.length - 2;
+  let numbers = cnpj.substring(0, size);
+  const digits = cnpj.substring(size);
+  let sum = 0;
+  let pos = size - 7;
+
+  for (let i = size; i >= 1; i -= 1) {
+    sum += parseInt(numbers.charAt(size - i), 10) * pos--;
+    if (pos < 2) pos = 9;
+  }
+
+  let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  if (result !== parseInt(digits.charAt(0), 10)) return false;
+
+  size += 1;
+  numbers = cnpj.substring(0, size);
+  sum = 0;
+  pos = size - 7;
+
+  for (let i = size; i >= 1; i -= 1) {
+    sum += parseInt(numbers.charAt(size - i), 10) * pos--;
+    if (pos < 2) pos = 9;
+  }
+
+  result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  return result === parseInt(digits.charAt(1), 10);
+};
+
+const getDocumentCategory = (docType: string) => {
+  const normalized = docType.trim().toLowerCase();
+
+  if (
+    normalized.includes("company") ||
+    normalized.includes("cnpj") ||
+    normalized.includes("corporate")
+  ) {
+    return "cnpj";
+  }
+
+  if (
+    normalized.includes("taxdoc") ||
+    normalized.includes("cpf") ||
+    normalized === "taxdoc"
+  ) {
+    return "cpf";
+  }
+
+  if (
+    normalized.includes("passport") ||
+    normalized.includes("passaporte") ||
+    normalized.includes("pass")
+  ) {
+    return "passport";
+  }
+
+  if (
+    normalized.includes("driver") ||
+    normalized.includes("license") ||
+    normalized.includes("cnh")
+  ) {
+    return "driver";
+  }
+
+  return "generic";
+};
+
+const formatDocument = (value: string, docType: string) => {
+  const category = getDocumentCategory(docType);
+
+  if (category === "cpf") return formatCpf(value);
+  if (category === "cnpj") return formatCnpj(value);
+  if (category === "passport" || category === "driver") {
+    return value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
+  }
+
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
+};
+
+const getDocumentPlaceholder = (docType: string) => {
+  const category = getDocumentCategory(docType);
+  if (category === "cpf") return "000.000.000-00";
+  if (category === "cnpj") return "00.000.000/0000-00";
+  if (category === "passport") return "Passaporte";
+  if (category === "driver") return "CNH";
+  return "Documento";
+};
+
+const isValidDocument = (value: string, docType: string) => {
+  const category = getDocumentCategory(docType);
+  const cleanValue = value.replace(/\D/g, "");
+  const normalizedValue = value.replace(/[^A-Z0-9]/gi, "");
+
+  if (category === "cpf") return validateCpf(value);
+  if (category === "cnpj") return validateCnpj(value);
+  if (category === "passport" || category === "driver") {
+    return normalizedValue.length >= 5 && normalizedValue.length <= 20;
+  }
+
+  return cleanValue.length >= 5 || normalizedValue.length >= 5;
+};
+
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 13);
+  if (!digits) return "";
+
+  const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
+  const limited = withCountry.slice(0, 13);
+  const ddi = limited.slice(0, 2);
+  const ddd = limited.slice(2, 4);
+  const number = limited.slice(4);
+
+  if (limited.length <= 2) return `+${ddi}`;
+  if (limited.length <= 4) return `+${ddi} ${ddd}`;
+  if (number.length <= 4) return `+${ddi} (${ddd}) ${number}`;
+  if (number.length <= 8) {
+    return `+${ddi} (${ddd}) ${number.slice(0, 4)}-${number.slice(4)}`;
+  }
+  return `+${ddi} (${ddd}) ${number.slice(0, 5)}-${number.slice(5, 9)}`;
+};
+
+const normalizePhoneToE164 = (phone: string) => {
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return "";
+  return digits.startsWith("55") ? `+${digits}` : `+55${digits}`;
+};
 
 export default function SignUp({ onBack, onSuccess }: SignUpProps) {
   const { t } = useTranslation();
+  const { appStateModal, handleClose, showError } = useAppStateModal();
+  const [activeStep, setActiveStep] = useState(0);
+  const [formData, setFormData] = useState<SignUpFormData>(initialFormData);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [docTypes, setDocTypes] = useState<TypesDoc[]>(fallbackDocTypes);
+  const [typesLoading, setTypesLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const validationSchema = Yup.object({
-    name: Yup.string()
-      .min(3, t("validation.nameTooShort") || "Mínimo 3 caracteres")
-      .required(t("validation.nameRequired") || "Nome é obrigatório"),
-    
-    surname: Yup.string()
-      .min(3, t("validation.surnameTooShort") || "Mínimo 3 caracteres")
-      .required(t("validation.surnameRequired") || "Sobrenome é obrigatório"),
-    
-    email: Yup.string()
-      .email(t("validation.emailInvalid"))
-      .required(t("validation.emailRequired")),
-    
-    phone: Yup.string()
-      .matches(/^\+?55\d{10,11}$/, t("validation.invalidPhone") || "Telefone inválido (ex: +5511999999999)")
-      .required(t("validation.phoneRequired") || "Telefone é obrigatório"),
-    
-    docType: Yup.string()
-      .oneOf(["CPF", "CNPJ", "PASS"], "Tipo de documento inválido")
-      .required(t("validation.docTypeRequired") || "Tipo de documento é obrigatório"),
-    
-    doc: Yup.string()
-      .required(t("validation.docRequired") || "Documento é obrigatório")
-      .test("valid-doc", t("validation.invalidDoc") || "Documento inválido", function (value) {
-        const { docType } = this.parent;
-        if (!value) return false;
-        
-        const cleanDoc = value.replace(/\D/g, "");
-        
-        if (docType === "CPF") {
-          return cleanDoc.length === 11;
-        } else if (docType === "CNPJ") {
-          return cleanDoc.length === 14;
-        } else if (docType === "PASS") {
-          return cleanDoc.length >= 5;
-        }
-        
-        return false;
-      }),
-    
-    password: Yup.string()
-      .min(8, t("validation.passwordMinLength") || "Mínimo 8 caracteres")
-      .matches(/[A-Z]/, t("validation.passwordUppercase") || "Deve conter letra maiúscula")
-      .matches(/[a-z]/, t("validation.passwordLowercase") || "Deve conter letra minúscula")
-      .matches(/[0-9]/, t("validation.passwordNumber") || "Deve conter número")
-      .matches(/[!@#$%^&*]/, t("validation.passwordSpecial") || "Deve conter caractere especial (!@#$%^&*)")
-      .required(t("validation.passwordRequired")),
-    
-    confirmPassword: Yup.string()
-      .oneOf([Yup.ref("password")], t("validation.passwordMatch") || "As senhas não conferem")
-      .required(t("validation.confirmPasswordRequired") || "Confirmação de senha é obrigatória"),
-  });
-
-  const formik = useFormik({
-    initialValues: {
-      name: "",
-      surname: "",
-      email: "",
-      phone: "",
-      docType: 1,
-      doc: "",
-      password: "",
-      confirmPassword: "",
-    },
-    validationSchema,
-    validateOnChange: false,
-    validateOnBlur: true,
-    onSubmit: async (values) => {
-      setIsSubmitting(true);
-
+  const notTrue = false
+  useEffect(() => {
+    const loadTypes = async () => {
+      setTypesLoading(true);
       try {
-        const payload: CreateAccountRequest = {
-          name: values.name,
-          surname: values.surname,
-          email: values.email,
-          phone: values.phone,
-          docType: values.docType as unknown as 1 | 2 | 3 | 4,
-          doc: values.doc.replace(/\D/g, ""),
-        };
-
-        await AccountService.createAccount(payload);
-
-        toast.success(t("toast.accountCreated") || "Conta criada com sucesso! Você será redirecionado para o login.");
-        
-        setTimeout(() => {
-          onSuccess();
-        }, 1500);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : (t("toast.error") || "Erro ao criar conta")
-        );
+        const response = await AccountService.accountTypes();
+        if (response?.length) {
+          setDocTypes(response);
+          return;
+        }
+        setDocTypes(fallbackDocTypes);
+      } catch {
+        setDocTypes(fallbackDocTypes);
       } finally {
-        setIsSubmitting(false);
+        setTypesLoading(false);
       }
-    },
-  });
+    };
+    if(notTrue) {
+      loadTypes();
+    }
+  }, []);
 
-  const handleKeyPress = (e: React.KeyboardEvent, handler?: () => void) => {
-    if (e.key === "Enter" && handler) {
-      e.preventDefault();
-      handler();
+  const handleChange = (field: keyof SignUpFormData, value: string) => {
+    let nextValue = value;
+
+    if (field === "doc") {
+      nextValue = formatDocument(value, formData.docType);
+    }
+
+    if (field === "phone") {
+      nextValue = formatPhone(value);
+    }
+
+    if (field === "docType") {
+      nextValue = value;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [field]: nextValue,
+      ...(field === "docType" ? { doc: "" } : {}),
+    }));
+
+    if (errors[field]) {
+      setErrors((prev) => {
+        const nextErrors = { ...prev };
+        delete nextErrors[field];
+        return nextErrors;
+      });
+    }
+
+    if (field === "docType" && errors.doc) {
+      setErrors((prev) => {
+        const nextErrors = { ...prev };
+        delete nextErrors.doc;
+        return nextErrors;
+      });
     }
   };
 
-  const handlePhoneChange = (value: string) => {
-    let cleaned = value.replace(/\D/g, "");
-    
-    if (cleaned.length > 0 && cleaned.charAt(0) !== "5") {
-      cleaned = "55" + cleaned;
+  const validateInitialStep = () => {
+    const nextErrors: Record<string, string> = {};
+    const trimmedName = formData.name.trim();
+    const trimmedSurname = formData.surname.trim();
+
+    if (!trimmedName) {
+      nextErrors.name = t("validation.nameRequired") || "Nome é obrigatório.";
+    } else if (trimmedName.length < 2) {
+      nextErrors.name = t("validation.nameTooShort") || "Mínimo 3 caracteres";
+    } else if (trimmedName.length > 64) {
+      nextErrors.name = "Nome deve ter no máximo 64 caracteres.";
     }
-    
-    if (cleaned.length > 13) {
-      cleaned = cleaned.slice(0, 13);
+
+    if (!trimmedSurname) {
+      nextErrors.surname =
+        t("validation.surnameRequired") || "Sobrenome é obrigatório.";
+    } else if (trimmedSurname.length < 2) {
+      nextErrors.surname =
+        t("validation.surnameTooShort") || "Mínimo 3 caracteres";
+    } else if (trimmedSurname.length > 128) {
+      nextErrors.surname = "Sobrenome deve ter no máximo 128 caracteres.";
     }
-    
-    let formatted = cleaned;
-    if (cleaned.length >= 2) {
-      formatted = "+" + cleaned;
+
+    if (!formData.docType) {
+      nextErrors.docType =
+        t("validation.docTypeRequired") || "Tipo de documento é obrigatório.";
     }
-    
-    formik.setFieldValue("phone", formatted);
+
+    if (!formData.doc.trim()) {
+      nextErrors.doc =
+        t("validation.docRequired") || "Documento é obrigatório.";
+    } else if (!isValidDocument(formData.doc, formData.docType)) {
+      nextErrors.doc =
+        t("validation.invalidDoc") || "Documento informado é inválido.";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
-  const handleDocumentChange = (value: string) => {
-    let cleaned = value.replace(/\D/g, "");
-    const maxLength = formik.values.docType === 1 ? 14 : formik.values.docType === 2 ? 11 : 20;
-    
-    if (cleaned.length > maxLength) {
-      cleaned = cleaned.slice(0, maxLength);
+  const validateContactStep = () => {
+    const nextErrors: Record<string, string> = {};
+    const trimmedEmail = formData.email.trim();
+    const normalizedPhone = normalizePhoneToE164(formData.phone);
+
+    if (!trimmedEmail) {
+      nextErrors.email =
+        t("validation.emailRequired") || "Email é obrigatório.";
+    } else if (trimmedEmail.length > 256 || !emailRegex.test(trimmedEmail)) {
+      nextErrors.email = t("validation.emailInvalid") || "Email inválido.";
     }
-    
-    formik.setFieldValue("doc", cleaned);
+
+    if (!formData.phone.trim()) {
+      nextErrors.phone =
+        t("validation.phoneRequired") || "Telefone é obrigatório.";
+    } else if (
+      !phoneRegex.test(formData.phone) ||
+      normalizedPhone.replace(/\D/g, "").length < 12
+    ) {
+      nextErrors.phone =
+        t("validation.invalidPhone") ||
+        "Telefone inválido (ex.: +55 11 99999-9999).";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (!validateInitialStep()) return;
+    setActiveStep(1);
+  };
+
+  const handleBack = () => {
+    if (activeStep === 0) {
+      onBack();
+      return;
+    }
+
+    setActiveStep((prev) => Math.max(0, prev - 1));
+  };
+
+  const mapApiValidationErrors = (
+    validations: Array<{ field?: string; message?: string }>,
+  ) => {
+    const fieldMap: Record<string, keyof SignUpFormData> = {
+      name: "name",
+      surname: "surname",
+      lastname: "surname",
+      doc: "doc",
+      doctype: "docType",
+      email: "email",
+      phone: "phone",
+    };
+
+    const nextErrors: Record<string, string> = {};
+    let targetStep = 0;
+
+    validations.forEach((validation) => {
+      const key = validation.field?.replace(/\s+/g, "").toLowerCase() || "";
+      const field = fieldMap[key];
+      if (!field || !validation.message) return;
+      nextErrors[field] = validation.message;
+      if (field === "email" || field === "phone") {
+        targetStep = 1;
+      }
+    });
+
+    return { nextErrors, targetStep };
+  };
+
+  const handleSubmit = async () => {
+    if (!validateContactStep()) return;
+
+    const payload: CreateAccountRequest = {
+      name: formData.name.trim(),
+      surname: formData.surname.trim(),
+      docType: formData.docType as AccountDocumentType,
+      doc:
+        getDocumentCategory(formData.docType) === "passport" ||
+        getDocumentCategory(formData.docType) === "driver"
+          ? formData.doc.replace(/[^A-Z0-9]/gi, "").toUpperCase()
+          : formData.doc.replace(/\D/g, ""),
+      email: formData.email.trim(),
+      phone: normalizePhoneToE164(formData.phone),
+    };
+
+    setIsSubmitting(true);
+    try {
+      const createdUserId = await AccountService.createAccount(payload);
+      onSuccess({
+        email: formData.email.trim(),
+        userId: createdUserId,
+      });
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 422) {
+        const responseData = error.response.data as
+          | { validations?: Array<{ field?: string; message?: string }> }
+          | undefined;
+
+        const { nextErrors, targetStep } = mapApiValidationErrors(
+          responseData?.validations ?? [],
+        );
+
+        if (Object.keys(nextErrors).length > 0) {
+          setErrors(nextErrors);
+          setActiveStep(targetStep);
+          return;
+        }
+      }
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : t("signup.createError") || "Erro ao criar conta.";
+      showError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="signup-container">
-      <div className="signup-wrapper">
-        <div className="signup-card">
-          <button
-            onClick={onBack}
-            className="back-indicator"
-            disabled={isSubmitting}
-            type="button"
-          >
-            <IoChevronBack />
-            <span>{t("login.back") || "Voltar"}</span>
-          </button>
-
-          <div className="logo-section">
-            <div className="logo">
-              <img src={Logo} alt="Logo" />
-            </div>
-          </div>
-
-          <h1 className="title">{t("signup.title") || "Criar Conta"}</h1>
-          <p className="subtitle-text">
-            {t("signup.description") || "Preencha os dados abaixo para criar sua conta"}
-          </p>
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              formik.handleSubmit();
-            }}
-          >
-            <div className="form-row">
-              <div className="form-group">
-                <label>{t("signup.name") || "Nome"}</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formik.values.name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  placeholder="Digite seu nome"
-                  className={`input-field ${
-                    formik.touched.name && formik.errors.name ? "input-error" : ""
-                  }`}
-                  disabled={isSubmitting}
-                />
-                {formik.touched.name && formik.errors.name && (
-                  <div className="error-message">{formik.errors.name}</div>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label>{t("signup.surname") || "Sobrenome"}</label>
-                <input
-                  type="text"
-                  name="surname"
-                  value={formik.values.surname}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  placeholder="Digite seu sobrenome"
-                  className={`input-field ${
-                    formik.touched.surname && formik.errors.surname ? "input-error" : ""
-                  }`}
-                  disabled={isSubmitting}
-                />
-                {formik.touched.surname && formik.errors.surname && (
-                  <div className="error-message">{formik.errors.surname}</div>
-                )}
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>{t("signup.email") || "E-mail"}</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formik.values.email}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  placeholder="seu@email.com"
-                  className={`input-field ${
-                    formik.touched.email && formik.errors.email ? "input-error" : ""
-                  }`}
-                  disabled={isSubmitting}
-                />
-                {formik.touched.email && formik.errors.email && (
-                  <div className="error-message">{formik.errors.email}</div>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label>{t("signup.phone") || "Telefone"}</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formik.values.phone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
-                  onBlur={formik.handleBlur}
-                  placeholder="+5511999999999"
-                  className={`input-field ${
-                    formik.touched.phone && formik.errors.phone ? "input-error" : ""
-                  }`}
-                  disabled={isSubmitting}
-                />
-                {formik.touched.phone && formik.errors.phone && (
-                  <div className="error-message">{formik.errors.phone}</div>
-                )}
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>{t("signup.docType") || "Tipo de Documento"}</label>
-                <select
-                  name="docType"
-                  value={formik.values.docType}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className="input-field"
-                  disabled={isSubmitting}
-                >
-                  <option value="CPF">CPF</option>
-                  <option value="CNPJ">CNPJ</option>
-                  <option value="PASS">Passaporte</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>{t("signup.doc") || "Documento"}</label>
-                <input
-                  type="text"
-                  name="doc"
-                  value={formik.values.doc}
-                  onChange={(e) => handleDocumentChange(e.target.value)}
-                  onBlur={formik.handleBlur}
-                  placeholder={formik.values.docType === 1 ? "00.000.000/0000-00" : "000.000.000-00"}
-                  className={`input-field ${
-                    formik.touched.doc && formik.errors.doc ? "input-error" : ""
-                  }`}
-                  disabled={isSubmitting}
-                />
-                {formik.touched.doc && formik.errors.doc && (
-                  <div className="error-message">{formik.errors.doc}</div>
-                )}
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>{t("signup.password") || "Senha"}</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formik.values.password}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  placeholder="Digite sua senha"
-                  className={`input-field ${
-                    formik.touched.password && formik.errors.password ? "input-error" : ""
-                  }`}
-                  disabled={isSubmitting}
-                />
-                {formik.touched.password && formik.errors.password && (
-                  <div className="error-message">{formik.errors.password}</div>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label>{t("signup.confirmPassword") || "Confirmar Senha"}</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formik.values.confirmPassword}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  placeholder="Confirme sua senha"
-                  className={`input-field ${
-                    formik.touched.confirmPassword && formik.errors.confirmPassword ? "input-error" : ""
-                  }`}
-                  onKeyPress={(e) => handleKeyPress(e, () => formik.handleSubmit())}
-                  disabled={isSubmitting}
-                />
-                {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-                  <div className="error-message">{formik.errors.confirmPassword}</div>
-                )}
-              </div>
-            </div>
-
-            <div className="button-container">
-              <button
-                type="submit"
-                className="btn-primary"
+    <Box className="page-container" sx={{
+          height: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+    }}>
+      <Container maxWidth="xl">
+      <StepWizardCard
+      
+        title={t("signup.title") || "Criar Conta"}
+        subtitle={
+          activeStep === 0
+            ? t("signup.stepInitial") || steps[0]
+            : t("signup.stepContact") || steps[1]
+        }
+        steps={steps}
+        activeStep={activeStep}
+        showBack={true}
+        onBack={handleBack}
+        backLabel={t("login.back") || "Voltar"}
+        onClose={onBack}
+        disableContent={isSubmitting}
+        width="720px"
+        actions={
+          <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
+            {activeStep === steps.length - 1 ? (
+              <Button
+                variant="contained"
+                onClick={handleSubmit}
                 disabled={isSubmitting}
+                sx={{ textTransform: "none", minWidth: 156 }}
               >
-                {isSubmitting
-                  ? t("signup.creating") || "Criando conta..."
-                  : t("signup.createAccount") || "Criar Conta"}
-              </button>
-            </div>
-          </form>
+                {isSubmitting ? (
+                  <>
+                    <CircularProgress size={18} sx={{ mr: 1, color: "inherit" }} />
+                    {t("signup.creating") || "Criando conta..."}
+                  </>
+                ) : (
+                  t("common.finish") || "Concluir"
+                )}
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                onClick={handleNext}
+                disabled={isSubmitting}
+                sx={{ textTransform: "none", minWidth: 156 }}
+              >
+                {t("common.next") || "Avançar"}
+              </Button>
+            )}
+          </Box>
+        }
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {activeStep === 0 ? (
+            <>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ textAlign: "center", mb: 0.5 }}
+              >
+                {t("signup.description") ||
+                  "Preencha os dados abaixo para criar sua conta"}
+              </Typography>
 
-          <div className="password-requirements">
-            <p className="requirements-title">
-              {t("signup.passwordRequirements") || "Requisitos de senha:"}
-            </p>
-            <ul>
-              <li>{t("signup.minChars") || "Mínimo 8 caracteres"}</li>
-              <li>{t("signup.uppercase") || "Uma letra maiúscula"}</li>
-              <li>{t("signup.lowercase") || "Uma letra minúscula"}</li>
-              <li>{t("signup.number") || "Um número"}</li>
-              <li>{t("signup.special") || "Um caractere especial (!@#$%^&*)"}</li>
-              <li>{t("signup.minChars") || "Mínimo 8 caracteres"}</li>
-              <li>{t("signup.uppercase") || "Uma letra maiúscula"}</li>
-              <li>{t("signup.lowercase") || "Uma letra minúscula"}</li>
-              <li>{t("signup.number") || "Um número"}</li>
-              <li>{t("signup.special") || "Um caractere especial (!@#$%^&*)"}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+              <TextField
+                fullWidth
+                placeholder={t("signup.name") || "Nome"}
+                value={formData.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+                error={!!errors.name}
+                helperText={errors.name}
+                inputProps={{ maxLength: 64 }}
+                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+              />
+
+              <TextField
+                fullWidth
+                placeholder={t("signup.surname") || "Sobrenome"}
+                value={formData.surname}
+                onChange={(e) => handleChange("surname", e.target.value)}
+                error={!!errors.surname}
+                helperText={errors.surname}
+                inputProps={{ maxLength: 128 }}
+                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+              />
+
+              <TextField
+                fullWidth
+                select
+                label={formData.docType ? "" : t("signup.docType") || "Tipo de Documento"}
+                value={formData.docType}
+                onChange={(e) => handleChange("docType", e.target.value)}
+                error={!!errors.docType}
+                helperText={errors.docType}
+                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+              >
+                {typesLoading ? (
+                  <MenuItem value="" disabled>
+                    {t("common.loading") || "Carregando..."}
+                  </MenuItem>
+                ) : (
+                  docTypes.map((type) => (
+                    <MenuItem key={`${type.id}-${type.value}`} value={type.value}>
+                      {type.description || type.value}
+                    </MenuItem>
+                  ))
+                )}
+              </TextField>
+
+              <TextField
+                fullWidth
+                placeholder={getDocumentPlaceholder(formData.docType)}
+                value={formData.doc}
+                onChange={(e) => handleChange("doc", e.target.value)}
+                error={!!errors.doc}
+                helperText={errors.doc}
+                inputProps={{
+                  maxLength:
+                    getDocumentCategory(formData.docType) === "cpf"
+                      ? 14
+                      : getDocumentCategory(formData.docType) === "cnpj"
+                        ? 18
+                        : 20,
+                }}
+                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+              />
+            </>
+          ) : (
+            <>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ textAlign: "center", mb: 0.5 }}
+              >
+              </Typography>
+
+              <TextField
+                fullWidth
+                placeholder={t("signup.email") || "E-mail"}
+                value={formData.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                error={!!errors.email}
+                helperText={errors.email}
+                inputProps={{ maxLength: 256 }}
+                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+              />
+
+              <TextField
+                fullWidth
+                placeholder={t("signup.phone") || "Telefone"}
+                value={formData.phone}
+                onChange={(e) => handleChange("phone", e.target.value)}
+                error={!!errors.phone}
+                helperText={errors.phone || "+55 (11) 99999-9999"}
+                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+              />
+            </>
+          )}
+        </Box>
+      </StepWizardCard>
+
+      <AppStateModal
+        open={appStateModal.open}
+        type={appStateModal.type}
+        title={appStateModal.title}
+        message={appStateModal.message}
+        detail={appStateModal.detail}
+        item={appStateModal.item}
+        onConfirm={handleClose}
+        onClose={handleClose}
+        showCancel={false}
+      />
+    </Container>
+    </Box>
   );
 }

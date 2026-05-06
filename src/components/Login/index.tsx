@@ -5,18 +5,26 @@ import "./login.scss";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { IoChevronBack } from "react-icons/io5";
-import PasswordRecovery from "./PasswordRecovery";
-import SignUp from "./SignUp";
-import { AuthService } from "../../services/authService";
-import { organizationService, type OrganizationMeResponse } from "../../services/organizationService";
 import { IoIosArrowBack } from "react-icons/io";
 import { MdCheckCircle } from "react-icons/md";
 import { Close } from "@mui/icons-material";
 import { IconButton, Tooltip } from "@mui/material";
-import { useNavigate } from 'react-router-dom';
-import Logo from '../../assets/logo.svg';
+import { useNavigate } from "react-router-dom";
+import PasswordRecovery from "./PasswordRecovery";
+import SignUp from "./SignUp";
+import DefinePassword from "./DefinePassword";
+import AccountCreated from "./AccountCreated";
+import AccountSuccess from "./AccountSuccess";
+import ValidacaoAcesso from "../Pendentes/ValidacaoAcesso";
+import { AuthService } from "../../services/authService";
+import {
+  organizationService,
+  type OrganizationMeResponse,
+} from "../../services/organizationService";
+import Logo from "../../assets/logo.svg";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import RouteNames from "../../routes/routeNames";
 
 interface LoginFormValues {
   email: string;
@@ -31,14 +39,38 @@ const STEP_CONFIG = {
 } as const;
 
 export default function MultiStepLogin() {
-  useEffect(()=> {
+  const { appStateModal, handleClose, showSessionExpired } = useAppStateModal();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [isAccountValidationMode, setIsAccountValidationMode] = useState(false);
+  const [isDefinePasswordMode, setIsDefinePasswordMode] = useState(false);
+  const [isAccountCreatedMode, setIsAccountCreatedMode] = useState(false);
+  const [isAccountSuccessMode, setIsAccountSuccessMode] = useState(false);
+  const [createdAccountEmail, setCreatedAccountEmail] = useState("");
+  const [createdAccountUserId, setCreatedAccountUserId] = useState("");
+  const [validatedTokenCode, setValidatedTokenCode] = useState("");
+  const [definedPassword, setDefinedPassword] = useState("");
+  const [condominiums, setCondominiums] = useState<OrganizationMeResponse[]>(
+    [],
+  );
+  const [isLoadingCondominiums, setIsLoadingCondominiums] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isResendingValidationCode, setIsResendingValidationCode] =
+    useState(false);
+
+  useEffect(() => {
     const expiredMessage = sessionStorage.getItem("authExpiredMessage");
     if (expiredMessage) {
       showSessionExpired();
       sessionStorage.removeItem("authExpiredMessage");
     }
 
-    // Limpa dados de login anteriores ao montar o componente
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userEmail");
@@ -46,19 +78,8 @@ export default function MultiStepLogin() {
     localStorage.removeItem("condominium");
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("organizationId");
-  },[])
-    const { appStateModal, handleClose, showSessionExpired } = useAppStateModal();
-  
-  const { t } = useTranslation();
-  const [step, setStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
-  const [isSignUpMode, setIsSignUpMode] = useState(false);
-  const [condominiums, setCondominiums] = useState<OrganizationMeResponse[]>([]);
-  const [isLoadingCondominiums, setIsLoadingCondominiums] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const navigate = useNavigate();
+  }, [showSessionExpired]);
+
   const validationSchema = Yup.object({
     email: Yup.string()
       .email(t("validation.emailInvalid"))
@@ -81,8 +102,19 @@ export default function MultiStepLogin() {
         }
 
         localStorage.setItem("userEmail", values.email);
-        localStorage.setItem("condominiumId", values.condominium.organizationId || "");
+        localStorage.setItem(
+          "condominiumId",
+          values.condominium.organizationId || "",
+        );
         localStorage.setItem("condominium", JSON.stringify(values.condominium));
+        localStorage.setItem(
+          "dataCondominium",
+          JSON.stringify(values.condominium),
+        );
+        localStorage.setItem(
+          "organizationId",
+          values.condominium.organizationId || "",
+        );
         localStorage.setItem("isAuthenticated", "true");
         window.dispatchEvent(new Event("storage"));
 
@@ -90,18 +122,110 @@ export default function MultiStepLogin() {
           t("toast.loginSuccess", { company: values.condominium.name }),
         );
 
-       navigate('/dashboard');
-       localStorage.setItem('organizationId', values.condominium.organizationId || '');
+        navigate(RouteNames.Dashboard);
       } catch (error) {
-        setIsLoggingIn(false);
         toast.error(
           error instanceof Error ? error.message : t("toast.loginError"),
         );
       } finally {
         setIsSubmitting(false);
+        setIsLoggingIn(false);
       }
     },
   });
+
+  const finalizeAuthenticatedSession = (
+    email: string,
+    organizations: OrganizationMeResponse[],
+  ) => {
+    setCondominiums(organizations);
+    localStorage.setItem("userEmail", email);
+
+    if (organizations.length === 1) {
+      const [organization] = organizations;
+      localStorage.setItem("condominiumId", organization.organizationId || "");
+      localStorage.setItem("organizationId", organization.organizationId || "");
+      localStorage.setItem("condominium", JSON.stringify(organization));
+      localStorage.setItem("dataCondominium", JSON.stringify(organization));
+      localStorage.setItem("isAuthenticated", "true");
+      window.dispatchEvent(new Event("storage"));
+      return { status: "single" as const };
+    }
+
+    localStorage.removeItem("condominiumId");
+    localStorage.removeItem("condominium");
+    localStorage.removeItem("dataCondominium");
+    localStorage.removeItem("organizationId");
+    localStorage.setItem("isAuthenticated", "true");
+    window.dispatchEvent(new Event("storage"));
+
+    return {
+      status: organizations.length > 1 ? ("multiple" as const) : ("none" as const),
+    };
+  };
+
+  const authenticateCreatedAccount = async () => {
+    if (!createdAccountEmail || !definedPassword) {
+      throw new Error("Não foi possível localizar as credenciais da conta criada.");
+    }
+
+    const response = await AuthService.login({
+      login: createdAccountEmail,
+      pass: definedPassword,
+      dataSource: "web",
+      languageId: "pt-br",
+      version: "1.0.0",
+    });
+
+    localStorage.setItem("token", response.token);
+    localStorage.setItem("refreshToken", response.refreshToken);
+
+    const organizations = await organizationService.getMyOrganization();
+    return finalizeAuthenticatedSession(createdAccountEmail, organizations ?? []);
+  };
+
+  const handleSuccessAction = async (destination: "setup" | "account") => {
+    setIsSubmitting(true);
+    setIsLoggingIn(true);
+
+    try {
+      const session = await authenticateCreatedAccount();
+
+      if (destination === "setup") {
+        navigate(`${RouteNames.PrimeiroAcesso}?primeiro=1`);
+        return;
+      }
+
+      if (session.status === "single") {
+        navigate(RouteNames.Dashboard);
+        return;
+      }
+
+      formik.setFieldValue("email", createdAccountEmail);
+      formik.setFieldValue("password", definedPassword);
+      formik.setFieldValue("condominium", null);
+      setIsAccountSuccessMode(false);
+      setStep(3);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : t("toast.loginError"),
+      );
+    } finally {
+      setIsSubmitting(false);
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleResendValidationCode = async () => {
+    setIsResendingValidationCode(true);
+    try {
+      toast.info(
+        "O reenvio automatico do codigo ainda nao esta disponivel neste fluxo.",
+      );
+    } finally {
+      setIsResendingValidationCode(false);
+    }
+  };
 
   const handleEmailNext = () => {
     formik.validateField("email").then(() => {
@@ -125,7 +249,7 @@ export default function MultiStepLogin() {
       setIsSubmitting(true);
       setIsLoadingCondominiums(true);
       setPasswordError(null);
-      
+
       AuthService.login({
         login: formik.values.email,
         pass: formik.values.password,
@@ -138,15 +262,15 @@ export default function MultiStepLogin() {
           localStorage.setItem("refreshToken", response.refreshToken);
 
           const organizationId = await organizationService.getMyOrganizationId();
-           const data = await organizationService.getMyOrganization();
-          localStorage.setItem("organizationId", organizationId!);
+          const data = await organizationService.getMyOrganization();
 
-          setCondominiums(data);
+          localStorage.setItem("organizationId", organizationId || "");
+          setCondominiums(data ?? []);
           setStep(3);
         })
         .catch((error) => {
-          // Define a mensagem de erro que veio da API
-          const errorMessage = error instanceof Error ? error.message : t("toast.loginError");
+          const errorMessage =
+            error instanceof Error ? error.message : t("toast.loginError");
           setPasswordError(errorMessage);
         })
         .finally(() => {
@@ -157,8 +281,11 @@ export default function MultiStepLogin() {
   };
 
   const handleFinalLogin = () => {
-    console.log(formik.values.condominium)
-    localStorage.setItem('dataCondominium', JSON.stringify(formik.values.condominium));
+    localStorage.setItem(
+      "dataCondominium",
+      JSON.stringify(formik.values.condominium),
+    );
+
     formik.validateForm().then((errors) => {
       if (Object.keys(errors).length === 0) {
         formik.handleSubmit();
@@ -169,7 +296,6 @@ export default function MultiStepLogin() {
   const handleBack = () => {
     if (step > 1) {
       setStep(step - 1);
-      // Limpa o erro de senha ao voltar
       if (step === 2) {
         setPasswordError(null);
       }
@@ -205,8 +331,9 @@ export default function MultiStepLogin() {
   const canGoNext = () => {
     if (step === 1) return !formik.errors.email && !!formik.values.email;
     if (step === 2) return !formik.errors.password && !!formik.values.password;
-    if (step === 3)
+    if (step === 3) {
       return !formik.errors.condominium && !!formik.values.condominium;
+    }
     return false;
   };
 
@@ -225,7 +352,7 @@ export default function MultiStepLogin() {
 
   const renderBackButton = () => {
     if (step === 1 || step === 3) return null;
-    
+
     return (
       <button
         onClick={handleBack}
@@ -239,30 +366,28 @@ export default function MultiStepLogin() {
     );
   };
 
+  const getOrganizationInitials = (org: OrganizationMeResponse): string => {
+    const name = org.name;
 
-const getOrganizationInitials = (org: OrganizationMeResponse): string => {
-  const name = org.name;
+    if (name.length < 2) {
+      return name.charAt(0).toUpperCase();
+    }
 
-  
-  if (name.length < 2) {
-    return name.charAt(0).toUpperCase();
-  }
+    const firstLetter = name.charAt(0).toUpperCase();
+    const secondLetter = name.charAt(1).toLowerCase();
 
-  const firstLetter = name.charAt(0).toUpperCase();
-  const secondLetter = name.charAt(1).toLowerCase();
+    return firstLetter + secondLetter;
+  };
 
-  return firstLetter + secondLetter;
-};
-
-
-  // Função para obter a classe de cor baseada no orgType
   const getOrganizationColorClass = (org: OrganizationMeResponse): string => {
-    // orgType: 1 = PropertyManagementCompany, 2 = ManagedCondominium
     if (org.orgType === 1) {
       return "org-type-company";
-    } else if (org.orgType === 2) {
+    }
+
+    if (org.orgType === 2) {
       return "org-type-condo";
     }
+
     return "org-type-default";
   };
 
@@ -344,6 +469,7 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
         <IoIosArrowBack />
         <span>{t("login.back")}</span>
       </button>
+
       <div className="logo-section">
         <div className="logo">
           <img src={Logo} alt="Logo" />
@@ -360,7 +486,6 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
           value={formik.values.password}
           onChange={(e) => {
             formik.handleChange(e);
-            // Limpa o erro ao começar a digitar
             if (passwordError) {
               setPasswordError(null);
             }
@@ -378,9 +503,7 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
         {formik.touched.password && formik.errors.password && (
           <div className="error-message">{formik.errors.password}</div>
         )}
-        {passwordError && (
-          <div className="error-message">{passwordError}</div>
-        )}
+        {passwordError && <div className="error-message">{passwordError}</div>}
       </div>
 
       <div className="link-section">
@@ -408,8 +531,7 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
   const renderStepThree = () => (
     <>
       {!isLoadingCondominiums && condominiums.length === 0 ? (
-        <Tooltip title="Clique aqui para Fechar a janela">
-
+        <Tooltip title="Clique aqui para fechar a janela">
           <IconButton
             className="login-close-button"
             aria-label="Fechar"
@@ -452,7 +574,9 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
               type="button"
               disabled={isSubmitting}
             >
-              <div className={`company-icon ${getOrganizationColorClass(condominium)}`}>
+              <div
+                className={`company-icon ${getOrganizationColorClass(condominium)}`}
+              >
                 {getOrganizationInitials(condominium)}
               </div>
               <div className="company-info">
@@ -503,15 +627,78 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
     <>
       {isRecoveryMode ? (
         <PasswordRecovery onBack={() => setIsRecoveryMode(false)} />
+      ) : isAccountCreatedMode ? (
+        <AccountCreated
+          email={createdAccountEmail}
+          loading={isSubmitting}
+          resendLoading={isResendingValidationCode}
+          onValidateCode={() => {
+            setIsAccountCreatedMode(false);
+            setIsAccountValidationMode(true);
+          }}
+          onResendCode={() => {
+            void handleResendValidationCode();
+          }}
+        />
+      ) : isDefinePasswordMode ? (
+        <DefinePassword
+          userId={createdAccountUserId}
+          tokenCode={validatedTokenCode}
+          onBack={() => {
+            setIsDefinePasswordMode(false);
+            setIsAccountValidationMode(true);
+          }}
+          onSuccess={({ password }) => {
+            setDefinedPassword(password);
+            setIsDefinePasswordMode(false);
+            setIsAccountSuccessMode(true);
+          }}
+        />
+      ) : isAccountSuccessMode ? (
+        <AccountSuccess
+          loading={isSubmitting || isLoggingIn}
+          onSetup={() => {
+            handleSuccessAction("setup");
+          }}
+          onAccessAccount={() => {
+            handleSuccessAction("account");
+          }}
+        />
+      ) : isAccountValidationMode ? (
+        <ValidacaoAcesso
+          title="Validar código"
+          subtitle={
+            createdAccountEmail
+              ? `Digite o código enviado para ${createdAccountEmail} para concluir seu cadastro.`
+              : "Digite o código enviado para concluir seu cadastro."
+          }
+          submitLabel="Confirmar código"
+          onBack={() => {
+            setIsAccountValidationMode(false);
+            setIsAccountCreatedMode(true);
+          }}
+          onValidated={({ verificationCode, verificationResult }) => {
+            setValidatedTokenCode(
+              verificationResult.tokenCode || verificationCode,
+            );
+            setIsAccountValidationMode(false);
+            setIsDefinePasswordMode(true);
+          }}
+        />
       ) : isSignUpMode ? (
         <SignUp
           onBack={() => setIsSignUpMode(false)}
-          onSuccess={() => {
+          onSuccess={({ email, userId }) => {
+            setCreatedAccountEmail(email);
+            setCreatedAccountUserId(userId);
+            formik.setFieldValue("email", email);
+            formik.setFieldValue("password", "");
+            formik.setFieldValue("condominium", null);
             setIsSignUpMode(false);
-            toast.info(
-              t("toast.accountCreatedRedirect") ||
-                "Conta criada! Faça login com suas credenciais.",
-            );
+            setIsAccountCreatedMode(true);
+            setIsAccountValidationMode(false);
+            setIsAccountSuccessMode(false);
+            setDefinedPassword("");
           }}
         />
       ) : (
@@ -539,7 +726,6 @@ const getOrganizationInitials = (org: OrganizationMeResponse): string => {
             </div>
           </div>
 
-          {/* Loading Overlay */}
           {isLoggingIn && (
             <div className="login-loading-overlay">
               <div className="login-loading-content">

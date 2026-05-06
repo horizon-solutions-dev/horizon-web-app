@@ -31,7 +31,7 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
 
   const passwordValidationSchema = Yup.object({
     password: Yup.string()
-      .min(8, t("validation.passwordMinLength") || "Mínimo 8 caracteres")
+      .min(3, t("validation.passwordMinLength") || "Mínimo 3 caracteres")
       .required(t("validation.passwordRequired")),
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("password")], t("validation.passwordMatch") || "As senhas não conferem")

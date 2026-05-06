@@ -1,0 +1,135 @@
+.account-success-page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: auto;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+}
+
+.account-success-container {
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.account-success-card {
+  width: 100%;
+  max-width: 760px;
+  padding: 48px 56px !important;
+  border-radius: 28px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfefd 100%) !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.1) !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.MuiContainer-root > .MuiPaper-root > .MuiBox-root:first-child { 
+   padding-bottom: 0 !important;
+  
+}
+.account-success-badge {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 24px;
+  background: radial-gradient(circle at top, #e8fbef 0%, #d5f6e0 100%);
+  color: #14a44d;
+
+  svg {
+    font-size: 56px;
+  }
+}
+
+.account-success-title {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-bottom: 14px !important;
+}
+
+.account-success-subtitle {
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+  color: #475467 !important;
+  margin-bottom: 4px !important;
+}
+
+.account-success-highlight {
+  width: 100%;
+  margin-top: 28px;
+  padding: 18px 22px;
+  border-radius: 18px;
+  border: 1px solid #b7efca;
+  background: linear-gradient(135deg, #f2fcf5 0%, #eefbf4 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+
+  svg {
+    color: #16a34a;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  p {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: #475467;
+  }
+}
+
+.account-success-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.account-success-button {
+  min-height: 56px !important;
+  border-radius: 16px !important;
+  text-transform: none !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+
+  &--primary {
+    background: linear-gradient(135deg, #16a34a 0%, #0b9444 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 14px 28px rgba(22, 163, 74, 0.2) !important;
+  }
+
+  &--primary:hover {
+    background: linear-gradient(135deg, #148f42 0%, #09783a 100%) !important;
+  }
+
+  &--secondary {
+    border: 1px solid #87d9a8 !important;
+    background: #ffffff !important;
+    color: #16a34a !important;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04) !important;
+  }
+
+  &--secondary:hover {
+    background: #f8fffb !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .account-success-card {
+    padding: 36px 24px !important;
+    border-radius: 22px !important;
+  }
+
+  .account-success-title {
+    font-size: 24px !important;
+  }
+}

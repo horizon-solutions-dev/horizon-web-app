@@ -21,6 +21,16 @@ export interface TypesDoc {
   description: string;
 }
 
+export type AccountDocumentType =
+  | 1
+  | 2
+  | 3
+  | 4
+  | "TaxDoc"
+  | "CompanyTaxDoc"
+  | "Passport"
+  | "DriverLicense";
+
 export interface RefreshTokenRequest {
   token: string;
   refreshToken: string;
@@ -69,7 +79,7 @@ export interface ResetPasswordResponse {
 export interface CreateAccountRequest {
   name: string;
   surname: string;
-  docType: 1 | 2 | 3 | 4;
+  docType: AccountDocumentType;
   doc: string;
   email: string;
   phone: string;
@@ -84,7 +94,7 @@ export interface CreateAccountRequest {
 export interface UpdateAccountRequest {
   name: string;
   surname: string;
-  docType: 1 | 2 | 3 | 4;
+  docType: AccountDocumentType;
   doc: string;
   email: string;
   phone: string;
@@ -93,6 +103,16 @@ export interface UpdateAccountRequest {
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
+}
+
+export interface SetPasswordRequest {
+  userId: string;
+  newPassword: string;
+  tokenCode: string;
+}
+
+export interface SetPasswordResponse {
+  userId: string;
 }
 
 export interface AccountResponse {

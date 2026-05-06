@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Condominio.scss";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
@@ -23,6 +23,7 @@ import {
   condominiumService,
   type Condominium,
   type CondominiumTypeEnum,
+  type PhysicalStructureEnum,
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import CardList from "../../shared/components/CardList";
@@ -36,6 +37,7 @@ import { formatCNPJ } from "../../shared/utils/funcoes";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
@@ -49,8 +51,16 @@ const CondominioPage: React.FC = () => {
   const [condominiumTypes, setCondominiumTypes] = useState<
     CondominiumTypeEnum[]
   >([]);
+  const [physicalStructureTypes, setPhysicalStructureTypes] = useState<
+    PhysicalStructureEnum[]
+  >([]);
   const [typesLoading, setTypesLoading] = useState(false);
+  const [physicalStructuresLoading, setPhysicalStructuresLoading] =
+    useState(false);
   const [typesError, setTypesError] = useState<string | null>(null);
+  const [physicalStructuresError, setPhysicalStructuresError] = useState<
+    string | null
+  >(null);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [editingCondominium, setEditingCondominium] =
     useState<Condominium | null>(null);
@@ -156,11 +166,39 @@ const CondominioPage: React.FC = () => {
     }
   };
 
+  const loadPhysicalStructureTypes = async () => {
+    setPhysicalStructuresLoading(true);
+    setPhysicalStructuresError(null);
+    try {
+      const data = await condominiumService.getPhysicalStructures();
+      setPhysicalStructureTypes(data ?? []);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar tipos de estrutura física.";
+      setPhysicalStructuresError(message);
+    } finally {
+      setPhysicalStructuresLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadCondominiums(1);
     loadCondominiumTypes();
+    loadPhysicalStructureTypes();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const state = location.state as { openCreate?: boolean } | null;
+    if (!state?.openCreate) return;
+
+    setEditingCondominium(null);
+    setImageSelected(null);
+    setIsCadastroOpen(true);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   const getCondominiumTypeLabel = (value: string | number) => {
     const match = condominiumTypes.find(
@@ -233,15 +271,6 @@ const CondominioPage: React.FC = () => {
               {getCondominiumTypeLabel(condominium.condominiumType)}
             </Typography>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
-            <Typography variant="body2" color="text.secondary">
-              {
-                condominiumTypes.find(
-                  (f) => f?.id == condominium?.allocationType,
-                )?.description
-              }
-            </Typography>
-          </Box>
         </Box>
       ),
       imageUrl: getCondominiumImageUrl(condominium),
@@ -286,8 +315,11 @@ const CondominioPage: React.FC = () => {
             onClose={handleCloseForm}
             onSaved={handleSaved}
             condominiumTypes={condominiumTypes}
+            physicalStructureTypes={physicalStructureTypes}
             typesLoading={typesLoading}
+            physicalStructuresLoading={physicalStructuresLoading}
             typesError={typesError}
+            physicalStructuresError={physicalStructuresError}
             loading={loading}
             setLoading={setLoading}
           />

@@ -22,6 +22,9 @@
     "step1Description": "Digite seu e-mail para receber um código de verificação",
     "step2Description": "Enviamos um código de verificação para {{email}}",
     "step3Description": "Digite uma nova senha para sua conta",
+    "definePasswordTitle": "Definir Senha",
+    "definePasswordDescription": "Crie sua senha para concluir o cadastro",
+    "definePasswordAction": "Definir Senha",
     "sendCode": "Enviar Código",
     "verify": "Verificar",
     "verifyCode": "Verificar Código",
@@ -34,6 +37,9 @@
   "signup": {
     "title": "Criar Conta",
     "description": "Preencha os dados abaixo para criar sua conta",
+    "stepInitial": "Informações iniciais",
+    "stepContact": "Contato",
+    "contactDescription": "Informe os dados de contato para finalizar o cadastro",
     "name": "Nome",
     "surname": "Sobrenome",
     "email": "E-mail",
@@ -44,6 +50,7 @@
     "confirmPassword": "Confirmar Senha",
     "createAccount": "Criar Conta",
     "creating": "Criando conta...",
+    "createError": "Erro ao criar conta.",
     "passwordRequirements": "Requisitos de senha:",
     "minChars": "Mínimo 8 caracteres",
     "uppercase": "Uma letra maiúscula",
@@ -57,6 +64,7 @@
     "recoveryCodeSent": "Código de verificação enviado para seu e-mail",
     "codeVerified": "Código verificado com sucesso",
     "passwordUpdated": "Senha atualizada com sucesso",
+    "passwordDefined": "Senha definida com sucesso",
     "invalidCode": "Código inválido",
     "error": "Erro ao processar sua solicitação",
     "accountCreated": "Conta criada com sucesso! Você será redirecionado para o login.",
@@ -136,7 +144,12 @@
     "gatehouse": "Portaria",
     "vehicles": "Veículos",
     "deliveries": "Encomendas",
-    "contactUs": "Fale Conosco"
+    "contactUs": "Fale Conosco",
+    "accessValidation": "Validar acesso",
+    "switchCondominium": "Trocar condominio",
+    "switchCondominiumTitle": "Selecionar condominio",
+    "switchCondominiumDescription": "Escolha qual condominio deseja carregar agora.",
+    "switchError": "Erro ao carregar condominios."
   },
   "blocos": {
     "title": "Blocos",
@@ -224,6 +237,9 @@
     "unitCodeRequired": "Informe o código da unidade.",
     "unitTypeRequired": "Selecione o tipo da unidade.",
     "allocationTypeRequired": "Selecione o tipo de alocação.",
+    "allocationTypeValueRequired": "Informe o valor do rateio.",
+    "allocationTypeValuePlaceholder": "Valor do rateio",
+    "allocationTypeFallback": "Fracionado",
     "duplicateUnitCode": "Já existe uma unidade com este código neste bloco.",
     "createSuccess": "Unidade criada com sucesso.",
     "updateSuccess": "Unidade atualizada com sucesso.",
@@ -293,3 +309,4 @@
     "validateError": "Erro ao validar morador."
   }
 }
+

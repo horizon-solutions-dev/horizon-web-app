@@ -47,6 +47,9 @@ interface ResidenteFormProps {
   editUserId?: string;
   residentImageUrl?: string; // NOVA PROP
   unit?: 1 | 2 | "1" | "2" | string | undefined;
+  firstAccessMode?: boolean;
+  onCreated?: (payload: { residentId: any; userId: string; label: string }) => void;
+  onCompleted?: () => void;
 }
 
 type DocumentType = 1 | 2 | 3 | 4;
@@ -149,6 +152,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   editUserId,
   residentImageUrl,
   unit,
+  firstAccessMode = false,
+  onCreated,
+  onCompleted,
 }) => {
   const { t } = useTranslation();
   const { appStateModal, handleClose, showSuccess, showError } =
@@ -539,8 +545,10 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   };
 
   const handleNext = async () => {
+    console.log('aa')
     const localErrors = getStepErrors(activeStep);
     if (Object.keys(localErrors).length > 0) {
+      console.log('aqui', localErrors)
       setErrors(localErrors);
       return;
     }
@@ -650,6 +658,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   };
 
   const handleSubmit = async () => {
+    console.log( 'aaa')
     const localErrors = {
       ...getPeriodErrors(),
       ...getResidentDataErrors(),
@@ -660,7 +669,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setActiveStep(localErrors.firstName ? 1 : 0);
       return;
     }
-
+    console.log('aqui')
     try {
       setLoading(true);
 
@@ -668,7 +677,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         buildResidentValidationPayload(),
       );
 
-      if (!valid && validations.length > 0) {
+      if (!valid && validations.length > 0 && firstAccessMode == false) {
         const { nextErrors, targetStep } =
           mapBackendValidationErrors(validations);
         if (Object.keys(nextErrors).length > 0) {
@@ -687,7 +696,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       }
 
       if (!isEditMode) {
-        await unitResidentService.createResident({
+        const residentResponse = await unitResidentService.createResident({
           condominiumUnitId: formData.condominiumUnitId,
           userId: targetUserId,
           fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
@@ -704,7 +713,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           hasGatehouseAccess: formData.hasGatehouseAccess,
           commit: true,
         });
-        console.log("criou morador");
+        onCreated?.({
+          residentId: residentResponse,
+          userId: targetUserId,
+          label: `${firstName.trim()} ${lastName.trim()}`.trim(),
+        });
       }
 
       if (targetUserId) {
@@ -810,7 +823,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     await onSaved();
     if (closeAfterModal) {
       setCloseAfterModal(false);
-      onClose();
+      if (!firstAccessMode) {
+        onClose();
+      } else {
+        onCompleted?.();
+      }
     }
   };
 

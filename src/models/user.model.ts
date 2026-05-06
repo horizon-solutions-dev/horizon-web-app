@@ -1,33 +1,47 @@
+import type {
+  AppPermission,
+  AppRole,
+  AuthorizationSnapshot,
+} from "../rbac/types";
+
 export interface DecodedUser {
-  sub: string; // ID do usuário
+  sub: string;
   email: string;
-  name: string; // Nome do usuário
-  role: string; // Cargo/Role do usuário
-  iat?: number; // Issued at
-  exp?: number; // Expiration time
-  aud?: string; // Audience
-  iss?: string; // Issuer
-  [key: string]: unknown; // Permitir outras propriedades do JWT
+  name: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+  aud?: string;
+  iss?: string;
+  [key: string]: unknown;
 }
 
 export interface UserInfo {
   name: string;
   email: string;
   role: string;
+  profileCode?: string;
+  roles: AppRole[];
+  permissions: AppPermission[];
 }
 
 
 export interface AuthTokenPayload {
-  Doc: string;                       // CPF ou CNPJ
-  DocType: 'CPF' | 'CNPJ';
+  Doc: string;
+  DocType: "CPF" | "CNPJ";
   Fullname: string;
   Name: string;
-  LanguageId: string;                // ex: 'pt-br'
-  RefreshTokenExpiresAt: string;     // formato: YYYY/MM/DD HH:mm:ss
-  TokenExpiresAt: string;            // formato: YYYY/MM/DD HH:mm:ss
-  RemoteIpAddress: string;           // IP:PORT
-  UserId: string;                    // UUID
-  aud: string;                       // audience
-  iss: string;                       // issuer
-  exp: number;                       // unix timestamp (seconds)
+  LanguageId: string;
+  RefreshTokenExpiresAt: string;
+  TokenExpiresAt: string;
+  RemoteIpAddress: string;
+  UserId: string;
+  aud: string;
+  iss: string;
+  exp: number;
+  Role?: string;
+  Roles?: string[] | string;
+  ProfileCode?: string;
 }
+
+export type UserAuthorization = AuthorizationSnapshot;

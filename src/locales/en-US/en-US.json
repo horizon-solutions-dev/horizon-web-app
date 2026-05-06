@@ -22,6 +22,9 @@
     "step1Description": "Enter your email to receive a verification code",
     "step2Description": "We sent a verification code to {{email}}",
     "step3Description": "Enter a new password for your account",
+    "definePasswordTitle": "Set Password",
+    "definePasswordDescription": "Create your password to finish registration",
+    "definePasswordAction": "Set Password",
     "sendCode": "Send Code",
     "verify": "Verify",
     "verifyCode": "Verify Code",
@@ -34,6 +37,9 @@
   "signup": {
     "title": "Create Account",
     "description": "Fill in the information below to create your account",
+    "stepInitial": "Initial information",
+    "stepContact": "Contact",
+    "contactDescription": "Enter your contact details to finish registration",
     "name": "Name",
     "surname": "Surname",
     "email": "Email",
@@ -44,6 +50,7 @@
     "confirmPassword": "Confirm Password",
     "createAccount": "Create Account",
     "creating": "Creating account...",
+    "createError": "Error creating account.",
     "passwordRequirements": "Password requirements:",
     "minChars": "Minimum 8 characters",
     "uppercase": "One uppercase letter",
@@ -57,6 +64,7 @@
     "recoveryCodeSent": "Verification code sent to your email",
     "codeVerified": "Code verified successfully",
     "passwordUpdated": "Password updated successfully",
+    "passwordDefined": "Password set successfully",
     "invalidCode": "Invalid code",
     "error": "Error processing your request",
     "accountCreated": "Account created successfully! You will be redirected to login.",
@@ -136,7 +144,12 @@
     "gatehouse": "Gatehouse",
     "vehicles": "Vehicles",
     "deliveries": "Deliveries",
-    "contactUs": "Contact Us"
+    "contactUs": "Contact Us",
+    "accessValidation": "Access validation",
+    "switchCondominium": "Switch condominium",
+    "switchCondominiumTitle": "Select condominium",
+    "switchCondominiumDescription": "Choose which condominium you want to load now.",
+    "switchError": "Error loading condominiums."
   },
   "blocos": {
     "title": "Blocks",
@@ -224,6 +237,9 @@
     "unitCodeRequired": "Enter the unit code.",
     "unitTypeRequired": "Select the unit type.",
     "allocationTypeRequired": "Select the allocation type.",
+    "allocationTypeValueRequired": "Enter the allocation value.",
+    "allocationTypeValuePlaceholder": "Allocation value",
+    "allocationTypeFallback": "Fractional",
     "duplicateUnitCode": "A unit with this code already exists in this block.",
     "createSuccess": "Unit created successfully.",
     "updateSuccess": "Unit updated successfully.",
@@ -293,3 +309,4 @@
     "validateError": "Error validating resident."
   }
 }
+
