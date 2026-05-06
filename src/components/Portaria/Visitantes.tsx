@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./Visitantes.scss";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Container,
   Dialog,
   DialogContent,
@@ -17,14 +18,17 @@ import {
 import {
   Add,
   Apartment,
+  Article,
   Badge,
   Business,
   Close,
   DeleteOutline,
   Email,
+  LocationOn,
   Person,
   Phone,
   Schedule,
+  SearchOutlined,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import CardList from "../../shared/components/CardList";
@@ -32,6 +36,14 @@ import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import VisitanteForm from "./VisitanteForm";
+import { visitorService } from "../../services/visitorService";
+import type { VisitorResponse } from "../../models/visitor.model";
+import {
+  condominiumService,
+  type Condominium,
+} from "../../services/condominiumService";
+import { organizationService } from "../../services/organizationService";
+import { formatCNPJ } from "../../shared/utils/funcoes";
 
 interface Visitor {
   id: string;
@@ -44,53 +56,10 @@ interface Visitor {
   unit: string;
   lastVisit: string;
   releasedBy: string;
+  activeVisitId?: string;
   imageUrl?: string;
   accentColor: string;
 }
-
-const visitorsSeed: Visitor[] = [
-  {
-    id: "1",
-    fullName: "Carlos Eduardo Silva",
-    document: "123.456.789-00",
-    email: "carlos.silva@email.com",
-    phone: "(41) 99999-9999",
-    visitorType: "Visitante Comum",
-    condominium: "Pallo Alto Residence",
-    unit: "Apto 101",
-    lastVisit: "06/03/2026 14:30",
-    releasedBy: "João Administrador",
-    imageUrl: "https://i.pravatar.cc/320?img=12",
-    accentColor: "#edf7f0",
-  },
-  {
-    id: "2",
-    fullName: "Maria Fernanda Costa",
-    document: "987.654.321-00",
-    email: "maria.costa@email.com",
-    phone: "(41) 98888-8888",
-    visitorType: "Prestador de Serviço",
-    condominium: "Condomínio do Zeca",
-    unit: "Casa 12",
-    lastVisit: "05/03/2026 09:15",
-    releasedBy: "Ana Portaria",
-    accentColor: "#fcf0f6",
-  },
-  {
-    id: "3",
-    fullName: "Bruno Oliveira Santos",
-    document: "456.789.123-45",
-    email: "bruno.santos@email.com",
-    phone: "(41) 97777-2323",
-    visitorType: "Entregador",
-    condominium: "Pallo Alto Residence",
-    unit: "Torre B 304",
-    lastVisit: "03/03/2026 18:05",
-    releasedBy: "Paula Recepção",
-    imageUrl: "https://i.pravatar.cc/320?img=58",
-    accentColor: "#eef5ff",
-  },
-];
 
 const badgeStyles: Record<string, { color: string; backgroundColor: string }> =
   {
@@ -116,28 +85,151 @@ const getStoredOrganizationName = () => {
   return localStorage.getItem("organizationName") || "";
 };
 
+const getVisitorImageUrl = (visitor: VisitorResponse) => {
+  if (!visitor.facePhotoThumbnailFile || !visitor.facePhotoContentType) {
+    return undefined;
+  }
+
+  return `data:${visitor.facePhotoContentType};base64,${visitor.facePhotoThumbnailFile}`;
+};
+
+const mapVisitorResponse = (
+  visitor: VisitorResponse,
+  condominiumName: string,
+  index: number,
+): Visitor => ({
+  id: visitor.visitorId,
+  fullName: visitor.name || "-",
+  document: visitor.documentNumber || "-",
+  email: visitor.email || "-",
+  phone: visitor.phone || "-",
+  visitorType: String(visitor.visitorTypeId || "Visitante"),
+  condominium: condominiumName,
+  unit: "-",
+  lastVisit: visitor.createdAt
+    ? new Date(visitor.createdAt).toLocaleString("pt-BR")
+    : "-",
+  releasedBy: visitor.createdBy || "-",
+  activeVisitId: visitor.visitorHistoryId,
+  imageUrl: getVisitorImageUrl(visitor),
+  accentColor: index % 2 === 0 ? "#edf7f0" : "#eef5ff",
+});
+
 export default function Visitantes() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [activeView, setActiveView] = useState<"condominios" | "visitantes">(
+    "condominios",
+  );
   const [organizationName] = useState(
     () => getStoredOrganizationName() || "Organização",
   );
+  const [condominiums, setCondominiums] = useState<Condominium[]>([]);
+  const [selectedCondominium, setSelectedCondominium] =
+    useState<Condominium | null>(null);
+  const [condoSearchTerm, setCondoSearchTerm] = useState("");
+  const [condoPage, setCondoPage] = useState(1);
+  const [condoTotalPages, setCondoTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-  const [visitors, setVisitors] = useState<Visitor[]>(visitorsSeed);
+  const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{
     src: string;
     name: string;
   } | null>(null);
-  const { appStateModal, handleClose, showSuccess } = useAppStateModal();
+  const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
 
   const filteredVisitors = visitors.filter((visitor) =>
     visitor.fullName.toLowerCase().includes(searchTerm.trim().toLowerCase()),
   );
 
+  const condoPageSize = 6;
   const pageSize = 6;
+
+  const loadCondominiums = async (pageNumber = 1) => {
+    setLoading(true);
+    try {
+      let organizationId = localStorage.getItem("organizationId") || "";
+      if (!organizationId) {
+        organizationId =
+          (await organizationService.getMyOrganizationId()) || "";
+      }
+
+      if (!organizationId) {
+        showError("Organizacao nao identificada para consultar condominios.");
+        return;
+      }
+
+      const response = await condominiumService.getCondominiums(
+        organizationId,
+        pageNumber,
+        condoPageSize,
+      );
+      const items = response.items ?? [];
+      setCondominiums(items);
+      setCondoPage(response.paging?.pageNumber ?? pageNumber);
+      setCondoTotalPages(
+        response.paging?.totalPages ??
+          Math.max(
+            1,
+            Math.ceil((response.paging?.total ?? items.length) / condoPageSize),
+          ),
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar condominios.";
+      showError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadVisitors = async (
+    condominium: Condominium | null = selectedCondominium,
+    pageNumber = 1,
+  ) => {
+    if (!condominium?.condominiumId) {
+      showError("Selecione um condominio para consultar visitantes.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await visitorService.getVisitors(
+        condominium.condominiumId,
+        pageNumber,
+        pageSize,
+      );
+      setVisitors(
+        (response.items ?? []).map((visitor, index) =>
+          mapVisitorResponse(visitor, condominium.name, index),
+        ),
+      );
+      setPage(response.paging?.pageNumber ?? pageNumber);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar visitantes.";
+      showError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadCondominiums(1);
+  }, []);
+
+  const handleSelectCondominium = async (condominium: Condominium) => {
+    setSelectedCondominium(condominium);
+    setVisitors([]);
+    setSearchTerm("");
+    setPage(1);
+    setActiveView("visitantes");
+    await loadVisitors(condominium, 1);
+  };
+
   const totalPages = Math.max(1, Math.ceil(filteredVisitors.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const paginatedVisitors = filteredVisitors.slice(
@@ -145,19 +237,36 @@ export default function Visitantes() {
     currentPage * pageSize,
   );
 
-  const handleDelete = (visitor: Visitor) => {
-    if (
-      !window.confirm(
-        `Deseja realmente excluir o visitante ${visitor.fullName}?`,
-      )
-    ) {
+  const filteredCondominiums = condominiums.filter((condominium) =>
+    [condominium.name, condominium.doc, condominium.city, condominium.state]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(condoSearchTerm.trim().toLowerCase()),
+  );
+
+  const handleFinishVisit = async (visitor: Visitor) => {
+    if (!visitor.activeVisitId) {
+      showError(
+        "Nao foi possivel finalizar.",
+        "A listagem atual nao retornou o identificador da visita desse visitante.",
+      );
       return;
     }
 
-    setVisitors((current) => current.filter((item) => item.id !== visitor.id));
-    showSuccess("Visitante excluído com sucesso.");
+    setLoading(true);
+    try {
+      await visitorService.finishVisit(visitor.activeVisitId);
+      showSuccess("Visita finalizada com sucesso.");
+      await loadVisitors(selectedCondominium, page);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao finalizar visita.";
+      showError(message);
+    } finally {
+      setLoading(false);
+    }
   };
-
   const handleNewVisit = (visitor: Visitor) => {
     showSuccess(`Nova visita preparada para ${visitor.fullName}.`);
   };
@@ -174,6 +283,7 @@ export default function Visitantes() {
     setVisitors((current) => [visitor, ...current]);
     setSearchTerm("");
     setPage(1);
+    await loadVisitors(selectedCondominium, 1);
   };
 
   return (
@@ -182,7 +292,8 @@ export default function Visitantes() {
         {isCadastroOpen ? (
           <VisitanteForm
             open={isCadastroOpen}
-            organizationName={organizationName}
+            organizationName={selectedCondominium?.name || organizationName}
+            condominiumId={selectedCondominium?.condominiumId || ""}
             loading={loading}
             setLoading={setLoading}
             onClose={handleCloseForm}
@@ -221,7 +332,16 @@ export default function Visitantes() {
                 </Box>
                 <Tooltip title={t("common.closeTooltip")}>
                   <IconButton
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => {
+                      if (activeView === "visitantes") {
+                        setActiveView("condominios");
+                        setSelectedCondominium(null);
+                        setVisitors([]);
+                        setSearchTerm("");
+                        return;
+                      }
+                      navigate("/dashboard");
+                    }}
                     className="close-button"
                     aria-label={t("common.close")}
                   >
@@ -231,12 +351,81 @@ export default function Visitantes() {
               </Container>
               <Box>
                 <BreadcrumbTrail
-                  items={[t("common.organization"), "Visitantes"]}
+                  items={[
+                    t("common.organization"),
+                    selectedCondominium?.name || "Condominios",
+                    "Visitantes",
+                  ]}
                 />
               </Box>
             </Box>
 
             <Paper variant="outlined" sx={{ p: 2 }}>
+              {activeView === "condominios" ? (
+                <CardList
+                  title="Condominios"
+                  showTitle={false}
+                  searchPlaceholder="Buscar condominio..."
+                  onSearchChange={(value) => {
+                    setCondoSearchTerm(value);
+                    setCondoPage(1);
+                  }}
+                  onAddClick={undefined}
+                  addButtonPlacement="toolbar"
+                  emptyImageLabel={t("common.noImage")}
+                  showFilters
+                  showPagination={condoTotalPages > 1}
+                  page={condoPage}
+                  totalPages={condoTotalPages}
+                  onPageChange={(nextPage) => {
+                    setCondoPage(nextPage);
+                    void loadCondominiums(nextPage);
+                  }}
+                  items={filteredCondominiums.map((condominium, index) => ({
+                    id: condominium.condominiumId,
+                    title: condominium.name,
+                    subtitle: (
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+                          <Article sx={{ fontSize: 16 }} />
+                          <Typography variant="body2" color="text.secondary">
+                            {formatCNPJ(condominium.doc) || "-"}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+                          <LocationOn sx={{ fontSize: 16 }} />
+                          <Typography variant="body2" color="text.secondary">
+                            {condominium.city} - {condominium.state}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    ),
+                    actions: (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        className="action-button-manage"
+                        startIcon={<SearchOutlined />}
+                        onClick={() => void handleSelectCondominium(condominium)}
+                      >
+                        Ver visitantes
+                      </Button>
+                    ),
+                    imageUrl:
+                      condominium.thumbnailFile && condominium.contentType
+                        ? `data:${condominium.contentType};base64,${condominium.thumbnailFile}`
+                        : undefined,
+                    accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+                  }))}
+                />
+              ) : (
+                <>
+              {loading ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                  <CircularProgress size={20} />
+                  <Typography variant="body2">Carregando visitantes...</Typography>
+                </Box>
+              ) : null}
               <CardList
                 title="Visitantes"
                 showTitle={false}
@@ -257,7 +446,10 @@ export default function Visitantes() {
                 actionsMarginTop={2}
                 page={currentPage}
                 totalPages={totalPages}
-                onPageChange={setPage}
+                onPageChange={(nextPage) => {
+                  setPage(nextPage);
+                  void loadVisitors(selectedCondominium, nextPage);
+                }}
                 items={paginatedVisitors.map((visitor) => {
                   const badgeStyle = badgeStyles[visitor.visitorType] ?? {
                     color: "#355070",
@@ -411,9 +603,9 @@ export default function Visitantes() {
                           variant="outlined"
                           className="action-button-delete"
                           startIcon={<DeleteOutline />}
-                          onClick={() => handleDelete(visitor)}
+                          onClick={() => handleFinishVisit(visitor)}
                         >
-                          Excluir
+                          Finalizar visita
                         </Button>
                       </Box>
                     ),
@@ -432,6 +624,8 @@ export default function Visitantes() {
                   };
                 })}
               />
+                </>
+              )}
             </Paper>
           </Paper>
         )}

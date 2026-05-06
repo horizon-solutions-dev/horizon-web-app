@@ -116,6 +116,7 @@ export default function MainLayout() {
     [RouteNames.Veiculos]: { label: "Veiculos" },
     [RouteNames.FaleConosco]: { label: "Fale Conosco" },
 
+    [RouteNames.Areas]: { label: "Areas", parent: "Reservas" },
     [RouteNames.ReservasTipo]: { label: "Tipo de Reserva", parent: "Reservas" },
     [RouteNames.ReservasListagem]: { label: "Listagem", parent: "Reservas" },
     [RouteNames.ReservasCalendario]: { label: "Calendario", parent: "Reservas" },

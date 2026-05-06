@@ -73,6 +73,10 @@ const router = createBrowserRouter([
 			
 			// Reservas
 			{
+				path: RouteNames.Areas,
+				element: <ReservasTipo />,
+			},
+			{
 				path: RouteNames.ReservasTipo,
 				element: <ReservasTipo />,
 			},

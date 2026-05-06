@@ -11,6 +11,7 @@ const CondominioRoutes = {
   Dashboard: "/dashboard",
   
   // Reservas
+  Areas: "/reservas/areas",
   ReservasTipo: "/reservas/tipo",
   ReservasListagem: "/reservas/listagem",
   ReservasCalendario: "/reservas/calendario",

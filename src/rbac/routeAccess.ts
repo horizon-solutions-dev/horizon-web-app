@@ -36,6 +36,9 @@ export const routeAccessMap: Record<string, AccessRequirement> = {
   [RouteNames.PortariaUsuarios]: {
     permissions: [APP_PERMISSIONS.GatehouseView],
   },
+  [RouteNames.PortariaVisitantes]: {
+    permissions: [APP_PERMISSIONS.GatehouseView],
+  },
   [RouteNames.PortariaLiberacao]: {
     permissions: [APP_PERMISSIONS.GatehouseView],
   },
@@ -52,6 +55,9 @@ export const routeAccessMap: Record<string, AccessRequirement> = {
     permissions: [APP_PERMISSIONS.DeliveryView],
   },
   [RouteNames.ReservasTipo]: {
+    permissions: [APP_PERMISSIONS.ReservationView],
+  },
+  [RouteNames.Areas]: {
     permissions: [APP_PERMISSIONS.ReservationView],
   },
   [RouteNames.ReservasListagem]: {

@@ -14,18 +14,21 @@ import {
 } from "@mui/material";
 import {
   Badge,
-  DirectionsCar,
-  FitnessCenter,
   HowToReg,
   MarkunreadMailbox,
   Phone,
-  Pool,
   Security,
-  Villa,
 } from "@mui/icons-material";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import { blockService, type CondominiumBlock } from "../../services/blockService";
+import { unitResidentService } from "../../services/unitResidentService";
+import { unitService, type CondominiumUnit } from "../../services/unitService";
+import { visitorService } from "../../services/visitorService";
+import { areaService } from "../../services/areaService";
+import type { AreaResponse } from "../../models/area.model";
+import type { VisitorEnum } from "../../models/visitor.model";
 
 interface ResidentContactOption {
   id: string;
@@ -51,7 +54,10 @@ interface VisitorFormData {
   visitorType: string;
   facePhoto: File | null;
   documentPhoto: File | null;
+  destinationBlock: string;
   destinationUnit: string;
+  visitorReasonId: string;
+  notes: string;
   releaseType: "manual" | "resident" | "";
   selectedResidentId: string;
   areaAccess: Record<string, boolean>;
@@ -68,6 +74,7 @@ interface VisitorListItem {
   unit: string;
   lastVisit: string;
   releasedBy: string;
+  activeVisitId?: string;
   imageUrl?: string;
   accentColor: string;
 }
@@ -75,6 +82,7 @@ interface VisitorListItem {
 interface VisitanteFormProps {
   open: boolean;
   organizationName: string;
+  condominiumId: string;
   loading: boolean;
   setLoading: (value: boolean) => void;
   onClose: () => void;
@@ -103,49 +111,6 @@ const visitorTypeOptions = [
   "Familiar",
 ];
 
-const accessAreas = [
-  { key: "piscina", label: "Piscina", icon: <Pool /> },
-  { key: "academia", label: "Academia", icon: <FitnessCenter /> },
-  { key: "salao_de_festas", label: "Salão de festas", icon: <Villa /> },
-  { key: "garagem", label: "Garagem", icon: <DirectionsCar /> },
-] as const;
-
-const mockUnits: UnitSearchResult[] = [
-  {
-    id: "unit-101",
-    label: "Apto 101",
-    residents: [
-      {
-        id: "resident-1",
-        fullName: "João Silva",
-        phone: "(41) 99999-9999",
-        intercom: "101",
-        atHome: true,
-      },
-      {
-        id: "resident-2",
-        fullName: "Maria Souza",
-        phone: "(41) 98888-8888",
-        intercom: "101",
-        atHome: false,
-      },
-    ],
-  },
-  {
-    id: "unit-202",
-    label: "Casa 12",
-    residents: [
-      {
-        id: "resident-3",
-        fullName: "Pedro Oliveira",
-        phone: "(41) 97777-2222",
-        intercom: "Casa 12",
-        atHome: true,
-      },
-    ],
-  },
-];
-
 const accentColors = ["#edf7f0", "#eef5ff", "#fcf0f6", "#fff3e0"];
 
 const initialFormData = (organizationName: string): VisitorFormData => ({
@@ -158,15 +123,13 @@ const initialFormData = (organizationName: string): VisitorFormData => ({
   visitorType: "",
   facePhoto: null,
   documentPhoto: null,
+  destinationBlock: "",
   destinationUnit: "",
+  visitorReasonId: "",
+  notes: "",
   releaseType: "",
   selectedResidentId: "",
-  areaAccess: {
-    piscina: false,
-    academia: false,
-    salao_de_festas: false,
-    garagem: false,
-  },
+  areaAccess: {},
 });
 
 const formatPhone = (value: string) => {
@@ -203,6 +166,41 @@ const getCurrentUserUnit = () => {
     }
   }
   return "";
+};
+
+const getDocumentTypeValue = (documentType: string) => {
+  const option = documentTypeOptions.find((item) => item.value === documentType);
+  return option ? documentTypeOptions.indexOf(option) + 1 : "";
+};
+
+const getEnumOptionLabel = (option: VisitorEnum | string) => {
+  if (typeof option === "string") return option;
+  return option.description || option.value || String(option.id);
+};
+
+const getEnumOptionValue = (option: VisitorEnum | string) => {
+  if (typeof option === "string") return option;
+  return String(option.value || option.id);
+};
+
+const mapUnitResult = async (unit: CondominiumUnit): Promise<UnitSearchResult> => {
+  const residentsResponse = await unitResidentService.getResidents(
+    unit.condominiumUnitId,
+    1,
+    50,
+  );
+
+  return {
+    id: unit.condominiumUnitId,
+    label: unit.unitCode || unit.condominiumUnitId,
+    residents: (residentsResponse.items ?? []).map((resident) => ({
+      id: resident.condominiumUnitResidentId,
+      fullName: resident.fullname || resident.email || resident.userId,
+      phone: resident.phone || "-",
+      intercom: unit.unitCode || "-",
+      atHome: true,
+    })),
+  };
 };
 
 const FileUploadField = ({
@@ -261,6 +259,7 @@ const FileUploadField = ({
 const VisitanteForm: React.FC<VisitanteFormProps> = ({
   open,
   organizationName,
+  condominiumId,
   loading,
   setLoading,
   onClose,
@@ -277,6 +276,12 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
   const [unitSearchResult, setUnitSearchResult] =
     useState<UnitSearchResult | null>(null);
   const [unitSearched, setUnitSearched] = useState(false);
+  const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
+  const [units, setUnits] = useState<CondominiumUnit[]>([]);
+  const [areas, setAreas] = useState<AreaResponse[]>([]);
+  const [destinationLoading, setDestinationLoading] = useState(false);
+  const [visitorTypes, setVisitorTypes] = useState<VisitorEnum[]>([]);
+  const [visitorReasons, setVisitorReasons] = useState<VisitorEnum[]>([]);
   const [facePhotoPreview, setFacePhotoPreview] = useState<string | null>(null);
   const [documentPhotoPreview, setDocumentPhotoPreview] = useState<string | null>(
     null,
@@ -288,10 +293,84 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     setErrors({});
     setUnitSearchResult(null);
     setUnitSearched(false);
+    setUnits([]);
+    setAreas([]);
     setFacePhotoPreview(null);
     setDocumentPhotoPreview(null);
     setFormData(initialFormData(organizationName));
   }, [open, organizationName]);
+
+  useEffect(() => {
+    if (!open || !condominiumId) return;
+
+    const loadAreas = async () => {
+      try {
+        const response = await areaService.getAreas(condominiumId, 1, 100);
+        const loadedAreas = response.items ?? [];
+        setAreas(loadedAreas);
+        setFormData((current) => ({
+          ...current,
+          areaAccess: loadedAreas.reduce<Record<string, boolean>>(
+            (acc, area) => ({
+              ...acc,
+              [area.areaId]: Boolean(current.areaAccess[area.areaId]),
+            }),
+            {},
+          ),
+        }));
+      } catch (error) {
+        setAreas([]);
+        showError(error instanceof Error ? error.message : "Erro ao carregar areas.");
+      }
+    };
+
+    void loadAreas();
+  }, [open, condominiumId]);
+
+  useEffect(() => {
+    if (!open || !condominiumId) return;
+
+    const loadBlocks = async () => {
+      setDestinationLoading(true);
+      try {
+        const response = await blockService.getBlocks(condominiumId, 1, 100);
+        setBlocks(response.items ?? []);
+      } catch (error) {
+        setBlocks([]);
+        const message =
+          error instanceof Error ? error.message : "Erro ao carregar blocos.";
+        showError(message);
+      } finally {
+        setDestinationLoading(false);
+      }
+    };
+
+    void loadBlocks();
+  }, [open, condominiumId]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const loadEnums = async () => {
+      try {
+        const [types, reasons] = await Promise.all([
+          visitorService.getVisitorTypes(),
+          visitorService.getVisitorReasons(),
+        ]);
+        setVisitorTypes(types ?? []);
+        setVisitorReasons(reasons ?? []);
+        setFormData((current) => ({
+          ...current,
+          visitorReasonId: current.visitorReasonId || String(reasons?.[0]?.value ?? reasons?.[0]?.id ?? ""),
+        }));
+      } catch {
+        setVisitorTypes([]);
+        setVisitorReasons([]);
+      }
+    };
+
+    void loadEnums();
+  }, [open]);
 
   useEffect(() => {
     if (!formData.facePhoto) {
@@ -409,11 +488,14 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     }
 
     if (step === 2) {
+      if (!formData.destinationBlock) {
+        nextErrors.destinationBlock = "Selecione o bloco de destino.";
+      }
       if (!formData.destinationUnit.trim()) {
-        nextErrors.destinationUnit = "Informe a unidade de destino.";
+        nextErrors.destinationUnit = "Selecione a unidade de destino.";
       }
       if (!unitSearchResult) {
-        nextErrors.destinationUnit = "Pesquise e selecione uma unidade válida.";
+        nextErrors.destinationUnit = "Selecione uma unidade valida.";
       } else if (!formData.selectedResidentId) {
         nextErrors.selectedResidentId =
           "Selecione com quem o visitante vai falar.";
@@ -421,6 +503,9 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     }
 
     if (step === 3) {
+      if (!formData.visitorReasonId) {
+        nextErrors.visitorReasonId = "Selecione o motivo da visita.";
+      }
       if (!formData.releaseType) {
         nextErrors.releaseType = "Selecione o tipo de liberação.";
       }
@@ -433,55 +518,115 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     return nextErrors;
   };
 
-  void validateStep;
-
   const handleNext = () => {
+    const nextErrors = validateStep(activeStep);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
     setActiveStep((current) => current + 1);
   };
 
-  const handleSearchUnit = async () => {
-    const query = formData.destinationUnit.trim().toLowerCase();
+  const handleBlockChange = async (blockId: string) => {
+    setFormData((current) => ({
+      ...current,
+      destinationBlock: blockId,
+      destinationUnit: "",
+      selectedResidentId: "",
+      releaseType: "",
+    }));
+    setUnitSearchResult(null);
+    setUnitSearched(false);
+    setUnits([]);
+    clearFieldError("destinationBlock");
+    clearFieldError("destinationUnit");
 
-    setLoading(true);
+    if (!blockId) return;
+
+    setDestinationLoading(true);
     try {
-      // TODO: substituir por endpoint de busca de unidade e moradores.
-      const foundUnit =
-        mockUnits.find((unit) => unit.label.toLowerCase() === query) || null;
-
-      setUnitSearchResult(foundUnit);
-      setUnitSearched(true);
-      setFormData((current) => ({
-        ...current,
-        selectedResidentId: "",
-        releaseType: "",
-      }));
-
-      if (!foundUnit) {
-        showError(
-          "Nenhuma unidade encontrada com esse identificador.",
-          "Quando o endpoint estiver liberado, conecte a busca aqui.",
-        );
-      } else {
-        clearFieldError("destinationUnit");
-      }
+      const response = await unitService.getUnitsByBlock(blockId, 1, 100);
+      setUnits(response.items ?? []);
+    } catch (error) {
+      setUnits([]);
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar unidades.";
+      showError(message);
     } finally {
-      setLoading(false);
+      setDestinationLoading(false);
     }
   };
 
-  const handleResidentLookup = () => {
-    // TODO: integrar com a tela/endpoint de pesquisa de morador.
-    showSuccess(
-      "Gatilho de pesquisa de morador preparado.",
-      "Conecte aqui a navegação para localizar o morador e retornar para esta etapa.",
-    );
+  const handleUnitChange = async (unitId: string) => {
+    setFormData((current) => ({
+      ...current,
+      destinationUnit: unitId,
+      selectedResidentId: "",
+      releaseType: "",
+    }));
+    setUnitSearchResult(null);
+    setUnitSearched(true);
+    clearFieldError("destinationUnit");
+
+    const selectedUnit = units.find((unit) => unit.condominiumUnitId === unitId);
+    if (!selectedUnit) return;
+
+    setDestinationLoading(true);
+    try {
+      const mappedUnit = await mapUnitResult(selectedUnit);
+      setUnitSearchResult(mappedUnit);
+      if (mappedUnit.residents.length === 0) {
+        showError("Nenhum morador encontrado para esta unidade.");
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao carregar moradores.";
+      showError(message);
+    } finally {
+      setDestinationLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
+    const nextErrors = validateStep(activeStep);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+    if (!formData.facePhoto || !formData.documentPhoto || !unitSearchResult) return;
+
     setLoading(true);
     try {
+      const visitorResponse = await visitorService.createVisitor({
+        name: formData.visitorName.trim(),
+        documentType: getDocumentTypeValue(formData.documentType),
+        documentNumber: formData.documentNumber.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        visitorTypeId: formData.visitorType,
+        facePhoto: formData.facePhoto,
+        documentPhoto: formData.documentPhoto,
+        commit: true,
+      });
+
+      const visitResponse = await visitorService.createVisit({
+        entryAt: new Date().toISOString(),
+        exitAt: null,
+        releasedByResident: formData.releaseType === "resident",
+        typeVisitorReasonId: formData.visitorReasonId,
+        notes: formData.notes.trim(),
+        visitorId: visitorResponse.visitorId,
+        condominiumId,
+        condominiumUnitId: unitSearchResult.id,
+        condominiumUnitResidentId: formData.selectedResidentId,
+        visitorAccessPermissions: Object.entries(formData.areaAccess).map(
+          ([areaId, active]) => ({
+            visitorId: visitorResponse.visitorId,
+            areaId,
+            active,
+          }),
+        ),
+        commit: true,
+      });
+
       const visitor: VisitorListItem = {
-        id: `visitor-${Date.now()}`,
+        id: visitorResponse.visitorId,
         fullName: formData.visitorName.trim(),
         document: formData.documentNumber.trim(),
         email: formData.email.trim(),
@@ -494,6 +639,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           formData.releaseType === "resident" && selectedResident
             ? selectedResident.fullName
             : "Portaria Manual",
+        activeVisitId: visitResponse.visitorHistoryId,
         imageUrl: formData.facePhoto
           ? URL.createObjectURL(formData.facePhoto)
           : undefined,
@@ -601,9 +747,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             error={Boolean(errors.email)}
             helperText={errors.email}
           />
-          <Typography className="visitante-step-help">
-            Preencha os dados básicos para seguir para as próximas etapas.
-          </Typography>
         </Box>
       );
     }
@@ -623,9 +766,9 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             <MenuItem value="" disabled>
               Selecione
             </MenuItem>
-            {visitorTypeOptions.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
+            {(visitorTypes.length > 0 ? visitorTypes : visitorTypeOptions).map((option) => (
+              <MenuItem key={getEnumOptionValue(option)} value={getEnumOptionValue(option)}>
+                {getEnumOptionLabel(option)}
               </MenuItem>
             ))}
           </TextField>
@@ -673,28 +816,66 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           <Typography className="visitante-section-title">
             Unidade destino
           </Typography>
-          <Box className="visitante-search-row">
-            <TextField
-              fullWidth
-              placeholder="Apto 101"
-              value={formData.destinationUnit}
-              onChange={(event) =>
-                handleChange("destinationUnit", event.target.value)
-              }
-              error={Boolean(errors.destinationUnit)}
-              helperText={errors.destinationUnit}
-            />
-            <Button
-              variant="contained"
-              onClick={handleSearchUnit}
-              disabled={loading}
-            >
-              {loading ? <CircularProgress size={20} /> : "Buscar"}
-            </Button>
-          </Box>
+          <Grid container spacing={1.5}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                select
+                label={formData.destinationBlock ? "" : "Bloco"}
+                value={formData.destinationBlock}
+                onChange={(event) => void handleBlockChange(event.target.value)}
+                error={Boolean(errors.destinationBlock)}
+                helperText={errors.destinationBlock}
+                disabled={destinationLoading}
+              >
+                <MenuItem value="" disabled>
+                  Selecione
+                </MenuItem>
+                {blocks.map((block) => (
+                  <MenuItem
+                    key={block.condominiumBlockId}
+                    value={block.condominiumBlockId}
+                  >
+                    {block.name || block.code || block.condominiumBlockId}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                select
+                label={formData.destinationUnit ? "" : "Unidade"}
+                value={formData.destinationUnit}
+                onChange={(event) => void handleUnitChange(event.target.value)}
+                error={Boolean(errors.destinationUnit)}
+                helperText={errors.destinationUnit}
+                disabled={!formData.destinationBlock || destinationLoading}
+              >
+                <MenuItem value="" disabled>
+                  Selecione
+                </MenuItem>
+                {units.map((unit) => (
+                  <MenuItem
+                    key={unit.condominiumUnitId}
+                    value={unit.condominiumUnitId}
+                  >
+                    {unit.unitCode || unit.condominiumUnitId}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+          </Grid>
+
+          {destinationLoading ? (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CircularProgress size={18} />
+              <Typography variant="body2">Carregando destino...</Typography>
+            </Box>
+          ) : null}
 
           <Typography className="visitante-step-help">
-            Digite a unidade e faça a busca para localizar os moradores.
+            Selecione o bloco e a unidade para localizar os moradores.
           </Typography>
 
           {unitSearchResult ? (
@@ -750,18 +931,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
 
           {unitSearched && !unitSearchResult ? (
             <Alert severity="warning" className="visitante-alert">
-              Unidade não encontrada. Use a pesquisa de morador para identificar o
-              contato e depois retorne para este passo.
+              Nenhum morador foi carregado para a unidade selecionada.
             </Alert>
           ) : null}
 
-          {!unitSearchResult ? (
-            <Box className="visitante-resident-fallback">
-              <Button variant="outlined" onClick={handleResidentLookup}>
-                Pesquisar Morador
-              </Button>
-            </Box>
-          ) : null}
         </Box>
       );
     }
@@ -772,6 +945,34 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           <Typography className="visitante-section-title">
             Tipo de Liberação
           </Typography>
+          <TextField
+            fullWidth
+            select
+            label={formData.visitorReasonId ? "" : "Motivo da visita"}
+            value={formData.visitorReasonId}
+            onChange={(event) =>
+              handleChange("visitorReasonId", event.target.value)
+            }
+            error={Boolean(errors.visitorReasonId)}
+            helperText={errors.visitorReasonId}
+          >
+            <MenuItem value="" disabled>
+              Selecione
+            </MenuItem>
+            {visitorReasons.map((option) => (
+              <MenuItem key={getEnumOptionValue(option)} value={getEnumOptionValue(option)}>
+                {getEnumOptionLabel(option)}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            fullWidth
+            multiline
+            minRows={2}
+            label={formData.notes ? "" : "Observacoes"}
+            value={formData.notes}
+            onChange={(event) => handleChange("notes", event.target.value)}
+          />
           <Box className="visitante-option-list">
             <Box
               className={`visitante-option-card ${
@@ -843,25 +1044,31 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         </Typography>
 
         <Box className="visitante-access-list">
-          {accessAreas.map((area) => (
-            <Box className="visitante-access-card" key={area.key}>
+          {areas.map((area) => (
+            <Box className="visitante-access-card" key={area.areaId}>
               <Box className="visitante-access-copy">
                 <Box className="visitante-option-icon area">
-                  {area.icon}
+                  <Security />
                 </Box>
                 <Typography className="visitante-option-title">
-                  {area.label}
+                  {area.name}
                 </Typography>
               </Box>
               <Switch
-                checked={Boolean(formData.areaAccess[area.key])}
+                checked={Boolean(formData.areaAccess[area.areaId])}
                 onChange={(event) =>
-                  handleAreaToggle(area.key, event.target.checked)
+                  handleAreaToggle(area.areaId, event.target.checked)
                 }
               />
             </Box>
           ))}
         </Box>
+
+        {areas.length === 0 ? (
+          <Alert severity="info">
+            Nenhuma area cadastrada para este condominio.
+          </Alert>
+        ) : null}
 
         <Alert severity={residentCanManageAccess ? "success" : "warning"}>
           {residentCanManageAccess
@@ -876,7 +1083,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     <>
       <StepWizardCard
         title="Registrar Visitante"
-        subtitle={stepLabels[activeStep]}
         steps={stepLabels}
         activeStep={activeStep}
         showBack

@@ -134,9 +134,9 @@ export default function MenuComponent({
       children: [
         {
           id: "pendente-reservas",
-          label: t("menu.reservations"),
+          label: "Areas",
           icon: <MdEventAvailable />,
-          path: RouteNames.ReservasTipo,
+          path: RouteNames.Areas,
           access: { permissions: [APP_PERMISSIONS.ReservationView] },
         },
         {
@@ -151,6 +151,13 @@ export default function MenuComponent({
           label: t("menu.gatehouse"),
           icon: <MdSecurity />,
           path: RouteNames.PortariaUsuarios,
+          access: { permissions: [APP_PERMISSIONS.GatehouseView] },
+        },
+        {
+          id: "portaria-visitantes",
+          label: "Visitantes",
+          icon: <People />,
+          path: RouteNames.PortariaVisitantes,
           access: { permissions: [APP_PERMISSIONS.GatehouseView] },
         },
         {
