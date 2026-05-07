@@ -658,7 +658,7 @@ const EstruturaCondominio: React.FC = () => {
                               display: "flex",
                               gap: 1,
                               flexWrap: "wrap",
-                              mt: 2,
+                              mt: 3,
                             }}
                           >
                             <Button

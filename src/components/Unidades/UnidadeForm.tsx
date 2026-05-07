@@ -407,7 +407,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
               },
             }}
             select
-            value={formData.unitType || ""}
+            value={formData.unitType == "Owner" ? "1" : "2"}
                         onChange={(e) => handleChange("unitType", e.target.value)}
 
             fullWidth

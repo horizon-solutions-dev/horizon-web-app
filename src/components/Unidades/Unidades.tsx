@@ -803,30 +803,38 @@ const Unidades: React.FC = () => {
                           title: unit.unitCode || t("common.noCode"),
                           subtitle: (
                             <>
-                              <Person
+                              <Box
                                 sx={{
-                                  fontSize: 14,
-                                  mr: 0.5,
-                                  verticalAlign: "middle",
+                                  display: "flex",
+                                  flexDirection: "column",
                                 }}
-                              />{" "}
-                              {unit.unitType?.toString() === "1"
-                                ? t("common.owner")
-                                : t("common.tenant")}
+                              >
+                                <Box
+                                  sx={{ display: "flex", alignItems: "center" }}
+                                >
+                                  <Person
+                                    sx={{
+                                      fontSize: 14,
+                                      mr: 0.5,
+                                      verticalAlign: "middle",
+                                    }}
+                                  />{" "}
+                                  {unit.unitType?.toString() === "1"
+                                    ? t("common.owner")
+                                    : t("common.tenant")}
+                                </Box>
+                                <Box
+                                  sx={{ display: "flex", alignItems: "center" }}
+                                >
+                                  {" "}
+                                  {allocationTypes.find((a)=> a.id == unit.allocationType)?.description }
+                                </Box>
+                              </Box>
                             </>
                           ),
                           meta: (
                             <>
-                              <Box
-                                component="img"
-                                src={Allocation}
-                                sx={{
-                                  width: 16,
-                                  height: 16,
-                                  mr: 0.5,
-                                  verticalAlign: "middle",
-                                }}
-                              />{" "}
+                              <ViewModule />{" "}
                               {blocks.find(
                                 (b) =>
                                   b.condominiumBlockId ===
@@ -842,7 +850,7 @@ const Unidades: React.FC = () => {
                                 display: "flex",
                                 gap: 1,
                                 flexWrap: "wrap",
-                                mt: 2,
+                                mt: 3,
                               }}
                             >
                               <Button

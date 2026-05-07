@@ -477,7 +477,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
         disableContent={isSubmitting}
         width="720px"
         actions={
-          <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
+          <Box sx={{ display: "flex", justifyContent: "center", width: "100%", mt:2 }}>
             {activeStep === steps.length - 1 ? (
               <Button
                 variant="contained"

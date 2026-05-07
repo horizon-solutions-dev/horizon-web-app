@@ -62,7 +62,7 @@ export default function AccountCreated({
             {loading ? (
               <CircularProgress size={20} sx={{ color: "#fff" }} />
             ) : (
-              "Validar código"
+              "Avançar"
             )}
           </Button>
 

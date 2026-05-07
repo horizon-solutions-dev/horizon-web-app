@@ -826,7 +826,7 @@ const Residentes: React.FC = () => {
                               >
                                 <Box
                                   sx={{
-                                    mt: 2,
+                                    mt: 3,
                                     display: "flex",
                                     gap: 1,
                                     flexWrap: "wrap",
