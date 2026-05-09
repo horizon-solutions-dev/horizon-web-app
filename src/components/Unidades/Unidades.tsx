@@ -841,6 +841,7 @@ const Unidades: React.FC = () => {
                                   unit.condominiumBlockId,
                               )?.name ||
                                 unit.condominiumBlockId ||
+                                
                                 t("common.unknown")}
                             </>
                           ),
