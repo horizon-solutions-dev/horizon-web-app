@@ -47,7 +47,6 @@ import { useNavigate } from "react-router-dom";
 import { condominiumImageService } from "../../services/condominiumImageService";
 import { useTranslation } from "react-i18next";
 import { formatCNPJ } from "../../shared/utils/funcoes";
-import Allocation from "../../assets/allocation.png";
 const Unidades: React.FC = () => {
   const [activeView, setActiveView] = useState<"condominios" | "unidades">(
     "condominios",

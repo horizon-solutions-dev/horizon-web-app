@@ -1,19 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import "./ReservasTipo.scss";
+import axios from "axios";
 import {
   Box,
   Button,
-  Checkbox,
   CircularProgress,
   Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
   Grid,
   IconButton,
   MenuItem,
   Paper,
+  Switch,
   TextField,
   Tooltip,
   Typography,
@@ -33,6 +30,7 @@ import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import StepWizardCard from "../../shared/components/StepWizardCard";
 import { areaImageService } from "../../services/areaImageService";
 import { areaService } from "../../services/areaService";
 import {
@@ -60,7 +58,7 @@ type AreaFormState = {
   hasAllowsGuests: boolean;
   guestLimit: string;
   notes: string;
-  imageFile: File | null;
+  imageFiles: Record<string, File | null>;
 };
 
 const emptyForm: AreaFormState = {
@@ -80,7 +78,7 @@ const emptyForm: AreaFormState = {
   hasAllowsGuests: false,
   guestLimit: "0",
   notes: "",
-  imageFile: null,
+  imageFiles: {},
 };
 
 const getStoredOrganizationName = () => {
@@ -102,8 +100,55 @@ const toNumber = (value: string) => Number(value.replace(",", ".")) || 0;
 const getEnumOptionLabel = (option: AreaEnum) =>
   option.description || option.value || String(option.id);
 
-const getEnumOptionValue = (option: AreaEnum) =>
-  String(option.value || option.id);
+const getEnumOptionValue = (option?: AreaEnum) =>
+  option ? String(option.value || option.id) : "";
+
+const areaWizardSteps = [
+  "Dados principais",
+  "Regras de funcionamento",
+  "Cobrança",
+  "Uso",
+  "Fotos",
+];
+
+const weekDays = [
+  { key: "Monday", label: "S" },
+  { key: "Tuesday", label: "T" },
+  { key: "Wednesday", label: "Q" },
+  { key: "Thursday", label: "Q" },
+  { key: "Friday", label: "S" },
+  { key: "Saturday", label: "S" },
+  { key: "Sunday", label: "D" },
+];
+
+const areaFieldMap: Record<string, keyof AreaRequest> = {
+  name: "name",
+  type: "type",
+  sizem2: "sizeM2",
+  capacitypeople: "capacityPeople",
+  starttime: "startTime",
+  endtime: "endTime",
+  operatingdays: "operatingDays",
+  hasreservationprice: "hasReservationPrice",
+  hasapprovalrequired: "hasApprovalRequired",
+  hasfee: "hasFee",
+  feeamount: "feeAmount",
+  hasdeposit: "hasDeposit",
+  depositamount: "depositAmount",
+  hasallowsguests: "hasAllowsGuests",
+  guestlimit: "guestLimit",
+  notes: "notes",
+  condominiumid: "condominiumId",
+  commit: "commit",
+};
+
+const areaStepFields: Array<Array<keyof AreaRequest>> = [
+  ["name", "type", "sizeM2", "capacityPeople", "notes"],
+  ["startTime", "endTime", "operatingDays", "hasReservationPrice", "hasApprovalRequired"],
+  ["hasFee", "feeAmount", "hasDeposit", "depositAmount"],
+  ["hasAllowsGuests", "guestLimit", "notes"],
+  [],
+];
 
 const getAreaImageUrl = (area: AreaResponse) => {
   if (!area.thumbnailFile || !area.contentType) return undefined;
@@ -127,7 +172,7 @@ const toFormState = (area: AreaResponse): AreaFormState => ({
   hasAllowsGuests: Boolean(area.hasAllowsGuests),
   guestLimit: String(area.guestLimit ?? 0),
   notes: area.notes || "",
-  imageFile: null,
+  imageFiles: {},
 });
 
 export default function ReservasTipo() {
@@ -144,10 +189,14 @@ export default function ReservasTipo() {
     useState<Condominium | null>(null);
   const [areas, setAreas] = useState<AreaResponse[]>([]);
   const [areaTypes, setAreaTypes] = useState<AreaEnum[]>([]);
+  const [imageTypes, setImageTypes] = useState<AreaEnum[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formStep, setFormStep] = useState(0);
   const [editingArea, setEditingArea] = useState<AreaResponse | null>(null);
   const [formData, setFormData] = useState<AreaFormState>(emptyForm);
+  const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
+  const imagePreviewsRef = useRef<Record<string, string>>({});
   const { appStateModal, handleClose, showSuccess, showError } =
     useAppStateModal();
 
@@ -209,6 +258,57 @@ export default function ReservasTipo() {
     }
   };
 
+  const loadAreaImageTypes = async () => {
+    try {
+      const types = await areaImageService.getAreaImageTypes();
+      setImageTypes(types);
+    } catch {
+      setImageTypes([]);
+    }
+  };
+
+  const loadExistingAreaImages = async (areaId: string) => {
+    try {
+      const images = await areaImageService.getAreaImages(areaId);
+      const entries = await Promise.all(
+        images.map(async (image) => {
+          if (!image.imageType) return null;
+
+          if (image.contentFile && image.contentType) {
+            return [
+              String(image.imageType),
+              `data:${image.contentType};base64,${image.contentFile}`,
+            ] as const;
+          }
+
+          const downloaded = await areaImageService.downloadAreaImage(
+            image.areaImageId,
+          );
+          if (!downloaded.contentFile || !downloaded.contentType) return null;
+
+          return [
+            String(image.imageType),
+            `data:${downloaded.contentType};base64,${downloaded.contentFile}`,
+          ] as const;
+        }),
+      );
+      const previews = entries.reduce<Record<string, string>>((acc, entry) => {
+        if (entry) {
+          acc[entry[0]] = entry[1];
+        }
+        return acc;
+      }, {});
+
+      imagePreviewsRef.current = previews;
+      setImagePreviews(previews);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return;
+      }
+      console.error("Erro ao carregar imagens da area:", error);
+    }
+  };
+
   const loadAreas = async (condominium = selectedCondominium) => {
     if (!condominium?.condominiumId) return;
     setLoading(true);
@@ -228,6 +328,15 @@ export default function ReservasTipo() {
   useEffect(() => {
     void loadCondominiums();
     void loadAreaTypes();
+    void loadAreaImageTypes();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      Object.values(imagePreviewsRef.current).forEach((preview) =>
+        URL.revokeObjectURL(preview),
+      );
+    };
   }, []);
 
   const handleSelectCondominium = async (condominium: Condominium) => {
@@ -239,17 +348,204 @@ export default function ReservasTipo() {
 
   const openCreate = () => {
     setEditingArea(null);
+    setFormStep(0);
     setFormData(emptyForm);
+    imagePreviewsRef.current = {};
+    setImagePreviews({});
     setIsFormOpen(true);
   };
 
   const openEdit = (area: AreaResponse) => {
     setEditingArea(area);
+    setFormStep(0);
     setFormData(toFormState(area));
+    imagePreviewsRef.current = {};
+    setImagePreviews({});
     setIsFormOpen(true);
+    void loadExistingAreaImages(area.areaId);
   };
 
-  const buildPayload = (): AreaRequest => ({
+  const closeWizard = () => {
+    Object.values(imagePreviewsRef.current).forEach((preview) =>
+      URL.revokeObjectURL(preview),
+    );
+    imagePreviewsRef.current = {};
+    setImagePreviews({});
+    setIsFormOpen(false);
+    setFormStep(0);
+  };
+
+  const handleWizardBack = () => {
+    if (formStep === 0) {
+      closeWizard();
+      return;
+    }
+    setFormStep((current) => current - 1);
+  };
+
+  const getValidationMessageForStep = (
+    validations: Array<{ field: string; message: string }>,
+    step: number,
+  ) => {
+    const stepFields = areaStepFields[step] ?? [];
+    const currentStepValidation = validations.find((validation) => {
+      const key = validation.field?.replace(/\s+/g, "").toLowerCase();
+      const field = key ? areaFieldMap[key] : undefined;
+      return field ? stepFields.includes(field) : false;
+    });
+
+    return currentStepValidation?.message || "";
+  };
+
+  const getAreaRequestErrorMessage = (error: unknown, fallback: string) => {
+    if (axios.isAxiosError(error)) {
+      const data = error.response?.data as
+        | {
+            validations?: Array<{ field?: string; message?: string }>;
+            friendlyMessage?: string;
+            message?: string;
+          }
+        | undefined;
+      const firstValidation = data?.validations?.find(
+        (validation) => validation.message?.trim(),
+      );
+
+      return (
+        firstValidation?.message ||
+        data?.friendlyMessage ||
+        data?.message ||
+        error.message ||
+        fallback
+      );
+    }
+
+    return error instanceof Error ? error.message : fallback;
+  };
+
+  const validateCurrentStep = async () => {
+    if (!selectedCondominium?.condominiumId) {
+      showError("Selecione um condominio antes de continuar.");
+      return false;
+    }
+
+    if (formStep === 0 && (!formData.name.trim() || !formData.type)) {
+      showError("Informe nome e tipo da area.");
+      return false;
+    }
+
+    setLoading(true);
+    try {
+      const payload = buildStepValidationPayload();
+      const { valid, validations } = editingArea
+        ? await areaService.validateAreaEdit(editingArea.areaId, payload)
+        : await areaService.validateArea(payload);
+      if (!valid && validations.length > 0) {
+        const message = getValidationMessageForStep(validations, formStep);
+        if (message) {
+          showError(message);
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      showError(getAreaRequestErrorMessage(error, "Erro ao validar area."));
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWizardNext = async () => {
+    const isValid = await validateCurrentStep();
+    if (!isValid) return;
+    setFormStep((current) => current + 1);
+  };
+
+  const toggleOperatingDay = (day: string) => {
+    setFormData((current) => {
+      const days = current.operatingDays
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      const nextDays = days.includes(day)
+        ? days.filter((item) => item !== day)
+        : [...days, day];
+
+      return {
+        ...current,
+        operatingDays: nextDays.join(","),
+      };
+    });
+  };
+
+  const handleAreaImageChange = (imageType: string, file: File | null) => {
+    setImagePreviews((current) => {
+      const previousPreview = current[imageType];
+      if (previousPreview) URL.revokeObjectURL(previousPreview);
+
+      const next = { ...current };
+      if (file) {
+        next[imageType] = URL.createObjectURL(file);
+      } else {
+        delete next[imageType];
+      }
+
+      imagePreviewsRef.current = next;
+      return next;
+    });
+
+    setFormData((current) => ({
+      ...current,
+      imageFiles: {
+        ...current.imageFiles,
+        [imageType]: file,
+      },
+    }));
+  };
+
+  const buildStepValidationPayload = (): AreaRequest => {
+    const payload = buildPayload(false);
+
+    if (formStep < 1) {
+      return {
+        ...payload,
+        operatingDays: "",
+        hasReservationPrice: false,
+        hasApprovalRequired: false,
+        hasFee: false,
+        feeAmount: 0,
+        hasDeposit: false,
+        depositAmount: 0,
+        hasAllowsGuests: false,
+        guestLimit: 0,
+      };
+    }
+
+    if (formStep < 2) {
+      return {
+        ...payload,
+        hasFee: false,
+        feeAmount: 0,
+        hasDeposit: false,
+        depositAmount: 0,
+        hasAllowsGuests: false,
+        guestLimit: 0,
+      };
+    }
+
+    if (formStep < 3) {
+      return {
+        ...payload,
+        hasAllowsGuests: false,
+        guestLimit: 0,
+      };
+    }
+
+    return payload;
+  };
+
+  const buildPayload = (commit: boolean): AreaRequest => ({
     name: formData.name.trim(),
     type: formData.type,
     sizeM2: toNumber(formData.sizeM2),
@@ -267,7 +563,7 @@ export default function ReservasTipo() {
     guestLimit: toNumber(formData.guestLimit),
     notes: formData.notes.trim(),
     condominiumId: selectedCondominium?.condominiumId || "",
-    commit: true,
+    commit,
   });
 
   const handleSave = async () => {
@@ -282,21 +578,29 @@ export default function ReservasTipo() {
 
     setLoading(true);
     try {
-      const payload = buildPayload();
+      const payload = buildPayload(true);
       const response = editingArea
         ? await areaService.updateArea(editingArea.areaId, payload)
         : await areaService.createArea(payload);
       const areaId = editingArea?.areaId || response.areaId;
 
-      if (formData.imageFile) {
-        await areaImageService.uploadAreaImage(areaId, formData.imageFile, "Main");
+      const selectedImages = Object.entries(formData.imageFiles).filter(
+        (entry): entry is [string, File] => Boolean(entry[1]),
+      );
+
+      if (selectedImages.length > 0) {
+        await Promise.all(
+          selectedImages.map(([imageType, file]) =>
+            areaImageService.uploadAreaImage(areaId, file, imageType),
+          ),
+        );
       }
 
-      setIsFormOpen(false);
+      closeWizard();
       showSuccess(editingArea ? "Area alterada com sucesso." : "Area criada com sucesso.");
       await loadAreas();
     } catch (error) {
-      showError(error instanceof Error ? error.message : "Erro ao salvar area.");
+      showError(getAreaRequestErrorMessage(error, "Erro ao salvar area."));
     } finally {
       setLoading(false);
     }
@@ -322,6 +626,378 @@ export default function ReservasTipo() {
     );
     return match ? getEnumOptionLabel(match) : String(value || "-");
   };
+
+  useEffect(()=>{
+    console.log(formData.type)
+  },[formData.type, formData])
+
+  const renderWizardStep = (formStep: number) => {
+    if (formStep === 0) {
+      return (
+        <Box className="area-wizard-grid">
+
+          <TextField
+            fullWidth
+            label={formData.name ? "" : "Nome"}
+            value={formData.name}
+            onChange={(event) =>
+              setFormData((current) => ({ ...current, name: event.target.value }))
+            }
+          />
+
+          <TextField
+            fullWidth
+            select
+            label={formData.type ? "" : "Tipo"}
+            value={formData.type == "1" ? areaTypes.find((f) => f.id == formData.type)?.value  : formData.type}
+            onChange={(event) =>
+              setFormData((current) => ({ ...current, type: event.target.value }))
+            }
+          >
+            <MenuItem value="" disabled>
+              Selecionar tipos
+            </MenuItem>
+            {areaTypes.map((type) => (
+              <MenuItem key={getEnumOptionValue(type)} value={getEnumOptionValue(type)}>
+                {getEnumOptionLabel(type)}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            fullWidth
+            sx={{height:100}}
+            multiline
+            minRows={1}
+            label={formData.notes ? "" : "Descrição"}
+            value={formData.notes}
+            onChange={(event) =>
+              setFormData((current) => ({ ...current, notes: event.target.value }))
+            }
+          />
+
+          <TextField
+            fullWidth
+            label={formData.sizeM2 ? "" : "Tamanho"}
+            value={formData.sizeM2}
+            onChange={(event) =>
+              setFormData((current) => ({ ...current, sizeM2: event.target.value }))
+            }
+            InputProps={{ endAdornment: <Typography color="text.secondary">m²</Typography> }}
+          />
+
+          <TextField
+            fullWidth
+            label={formData.capacityPeople ? "" : "Capacidade"}
+            value={formData.capacityPeople}
+            onChange={(event) =>
+              setFormData((current) => ({
+                ...current,
+                capacityPeople: event.target.value,
+              }))
+            }
+            InputProps={{
+              endAdornment: <Typography color="text.secondary">pessoas</Typography>,
+            }}
+          />
+        </Box>
+      );
+    }
+
+    if (formStep === 1) {
+      const selectedDays = formData.operatingDays.split(",").map((day) => day.trim());
+
+      return (
+        <Box className="area-wizard-grid">
+
+          <Box className="area-wizard-panel">
+            <Typography className="area-wizard-panel-title">Funcionamento</Typography>
+            <Grid container spacing={1.5}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Horário inicial"
+                  value={formData.startTime}
+                  onChange={(event) =>
+                    setFormData((current) => ({
+                      ...current,
+                      startTime: event.target.value,
+                    }))
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Horário final"
+                  value={formData.endTime}
+                  onChange={(event) =>
+                    setFormData((current) => ({ ...current, endTime: event.target.value }))
+                  }
+                />
+              </Grid>
+            </Grid>
+
+            <Typography className="area-wizard-label">Dias permitidos</Typography>
+            <Box className="area-days-row">
+              {weekDays.map((day) => (
+                <button
+                  key={day.key}
+                  type="button"
+                  className={selectedDays.includes(day.key) ? "selected" : ""}
+                  onClick={() => toggleOperatingDay(day.key)}
+                >
+                  {day.label}
+                </button>
+              ))}
+            </Box>
+
+            <Box className="area-switch-row">
+              <Typography>Precisa de reserva</Typography>
+              <Switch
+                checked={formData.hasReservationPrice}
+                onChange={(event) =>
+                  setFormData((current) => ({
+                    ...current,
+                    hasReservationPrice: event.target.checked,
+                  }))
+                }
+              />
+            </Box>
+            <Box className="area-switch-row">
+              <Typography>Necessita aprovação</Typography>
+              <Switch
+                checked={formData.hasApprovalRequired}
+                onChange={(event) =>
+                  setFormData((current) => ({
+                    ...current,
+                    hasApprovalRequired: event.target.checked,
+                  }))
+                }
+              />
+            </Box>
+          </Box>
+        </Box>
+      );
+    }
+
+    if (formStep === 2) {
+      return (
+        <Box className="area-wizard-grid">
+
+          <Box className="area-wizard-panel">
+            <Box className="area-switch-row">
+              <Typography className="area-wizard-panel-title">Tem taxa</Typography>
+              <Switch
+                checked={formData.hasFee}
+                onChange={(event) =>
+                  setFormData((current) => ({ ...current, hasFee: event.target.checked }))
+                }
+              />
+            </Box>
+            <TextField
+              fullWidth
+              label="Valor da taxa"
+              value={formData.feeAmount}
+              disabled={!formData.hasFee}
+              onChange={(event) =>
+                setFormData((current) => ({ ...current, feeAmount: event.target.value }))
+              }
+              InputProps={{ endAdornment: <Typography color="text.secondary">R$</Typography> }}
+            />
+
+            <Box className="area-switch-row">
+              <Typography className="area-wizard-panel-title">Tem caução</Typography>
+              <Switch
+                checked={formData.hasDeposit}
+                onChange={(event) =>
+                  setFormData((current) => ({
+                    ...current,
+                    hasDeposit: event.target.checked,
+                  }))
+                }
+              />
+            </Box>
+            <TextField
+              fullWidth
+              label="Valor da caução"
+              value={formData.depositAmount}
+              disabled={!formData.hasDeposit}
+              onChange={(event) =>
+                setFormData((current) => ({
+                  ...current,
+                  depositAmount: event.target.value,
+                }))
+              }
+              InputProps={{ endAdornment: <Typography color="text.secondary">R$</Typography> }}
+            />
+          </Box>
+        </Box>
+      );
+    }
+
+    if (formStep === 3) {
+      return (
+        <Box className="area-wizard-grid">
+
+          <Box className="area-wizard-panel">
+            <Box className="area-switch-row">
+              <Typography className="area-wizard-panel-title">
+                Permite convidados
+              </Typography>
+              <Switch
+                checked={formData.hasAllowsGuests}
+                onChange={(event) =>
+                  setFormData((current) => ({
+                    ...current,
+                    hasAllowsGuests: event.target.checked,
+                  }))
+                }
+              />
+            </Box>
+            <TextField
+              fullWidth
+              label="Limite de convidados"
+              value={formData.guestLimit}
+              disabled={!formData.hasAllowsGuests}
+              onChange={(event) =>
+                setFormData((current) => ({ ...current, guestLimit: event.target.value }))
+              }
+            />
+          </Box>
+        </Box>
+      );
+    }
+
+    return (
+      <Box className="area-wizard-grid">
+
+        {imageTypes.length === 0 ? (
+          <Box className="area-upload-empty">
+            <Box className="area-upload-icon">
+              <ImageOutlined />
+            </Box>
+            <Typography className="area-upload-title">
+              Nenhum tipo de imagem disponível
+            </Typography>
+            <Typography className="area-upload-hint">
+              Os tipos de imagem devem ser retornados pela API.
+            </Typography>
+          </Box>
+        ) : null}
+
+        <Box className="area-upload-grid">
+          {imageTypes.map((type, index) => {
+            const imageType = getEnumOptionValue(type);
+            const selectedFile = formData.imageFiles[imageType];
+            const previewUrl = imagePreviews[imageType];
+
+            return (
+              <Box
+                className={`area-upload-box ${index === 0 ? "main" : ""}`}
+                key={imageType}
+              >
+                {previewUrl ? (
+                  <Box className="area-upload-preview-card">
+                    <Box
+                      component="img"
+                      src={previewUrl}
+                      alt={getEnumOptionLabel(type)}
+                      className="area-upload-preview"
+                    />
+                    <Box className="area-upload-preview-footer">
+                      <Box className="area-upload-preview-copy">
+                        <Typography className="area-upload-title">
+                          {getEnumOptionLabel(type)}
+                        </Typography>
+                        <Typography className="area-upload-filename">
+                          {selectedFile?.name}
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        size="small"
+                        className="area-upload-remove"
+                        onClick={() => handleAreaImageChange(imageType, null)}
+                        aria-label="Remover imagem"
+                      >
+                        <Close fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                ) : (
+                  <Button component="label" variant="text" className="area-upload-trigger">
+                    <Box className="area-upload-icon">
+                      <ImageOutlined />
+                    </Box>
+                    <Typography className="area-upload-title">
+                      {getEnumOptionLabel(type)}
+                    </Typography>
+                    <Typography className="area-upload-hint">
+                      Toque para selecionar uma imagem
+                    </Typography>
+                    <input
+                      hidden
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) => {
+                        handleAreaImageChange(
+                          imageType,
+                          event.target.files?.[0] || null,
+                        );
+                        event.target.value = "";
+                      }}
+                    />
+                  </Button>
+                )}
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+    );
+  };
+
+  if (isFormOpen) {
+    return (
+      <>
+        <StepWizardCard
+          title="Registrar Área"
+          subtitle={areaWizardSteps[formStep]}
+          steps={areaWizardSteps}
+          activeStep={formStep}
+          showBack
+          onBack={handleWizardBack}
+          onClose={closeWizard}
+          width="min(760px, calc(100vw - 32px))"
+          disableContent={loading}
+          actions={
+            formStep === areaWizardSteps.length - 1 ? (
+              <Button variant="contained" onClick={() => void handleSave()} disabled={loading}>
+                {loading ? <CircularProgress size={20} /> : "Salvar"}
+              </Button>
+            ) : (
+              <Button variant="contained" onClick={() => void handleWizardNext()} disabled={loading}>
+                Avançar
+              </Button>
+            )
+          }
+        >
+          {renderWizardStep(formStep)}
+        </StepWizardCard>
+
+        <AppStateModal
+          open={appStateModal.open}
+          type={appStateModal.type}
+          title={appStateModal.title}
+          message={appStateModal.message}
+          detail={appStateModal.detail}
+          item={appStateModal.item}
+          onConfirm={handleClose}
+          onClose={handleClose}
+        />
+      </>
+    );
+  }
 
   return (
     <Box className="page-container">
@@ -494,242 +1170,6 @@ export default function ReservasTipo() {
           </Paper>
         </Paper>
       </Container>
-
-      <Dialog open={isFormOpen} onClose={() => setIsFormOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>{editingArea ? "Editar area" : "Nova area"}</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0 }}>
-            <Grid item xs={12} md={8}>
-              <TextField
-                fullWidth
-                label="Nome"
-                value={formData.name}
-                onChange={(event) =>
-                  setFormData((current) => ({ ...current, name: event.target.value }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                select
-                label="Tipo"
-                value={formData.type}
-                onChange={(event) =>
-                  setFormData((current) => ({ ...current, type: event.target.value }))
-                }
-              >
-                <MenuItem value="" disabled>
-                  Selecione
-                </MenuItem>
-                {areaTypes.map((type) => (
-                  <MenuItem key={getEnumOptionValue(type)} value={getEnumOptionValue(type)}>
-                    {getEnumOptionLabel(type)}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Tamanho m2"
-                value={formData.sizeM2}
-                onChange={(event) =>
-                  setFormData((current) => ({ ...current, sizeM2: event.target.value }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Capacidade"
-                value={formData.capacityPeople}
-                onChange={(event) =>
-                  setFormData((current) => ({
-                    ...current,
-                    capacityPeople: event.target.value,
-                  }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Inicio"
-                value={formData.startTime}
-                onChange={(event) =>
-                  setFormData((current) => ({ ...current, startTime: event.target.value }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Fim"
-                value={formData.endTime}
-                onChange={(event) =>
-                  setFormData((current) => ({ ...current, endTime: event.target.value }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Dias de funcionamento"
-                value={formData.operatingDays}
-                onChange={(event) =>
-                  setFormData((current) => ({
-                    ...current,
-                    operatingDays: event.target.value,
-                  }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.hasFee}
-                    onChange={(event) =>
-                      setFormData((current) => ({
-                        ...current,
-                        hasFee: event.target.checked,
-                      }))
-                    }
-                  />
-                }
-                label="Possui taxa"
-              />
-              <TextField
-                fullWidth
-                label="Valor taxa"
-                value={formData.feeAmount}
-                disabled={!formData.hasFee}
-                onChange={(event) =>
-                  setFormData((current) => ({ ...current, feeAmount: event.target.value }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.hasDeposit}
-                    onChange={(event) =>
-                      setFormData((current) => ({
-                        ...current,
-                        hasDeposit: event.target.checked,
-                      }))
-                    }
-                  />
-                }
-                label="Possui caucao"
-              />
-              <TextField
-                fullWidth
-                label="Valor caucao"
-                value={formData.depositAmount}
-                disabled={!formData.hasDeposit}
-                onChange={(event) =>
-                  setFormData((current) => ({
-                    ...current,
-                    depositAmount: event.target.value,
-                  }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.hasAllowsGuests}
-                    onChange={(event) =>
-                      setFormData((current) => ({
-                        ...current,
-                        hasAllowsGuests: event.target.checked,
-                      }))
-                    }
-                  />
-                }
-                label="Permite convidados"
-              />
-              <TextField
-                fullWidth
-                label="Limite convidados"
-                value={formData.guestLimit}
-                disabled={!formData.hasAllowsGuests}
-                onChange={(event) =>
-                  setFormData((current) => ({ ...current, guestLimit: event.target.value }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.hasApprovalRequired}
-                    onChange={(event) =>
-                      setFormData((current) => ({
-                        ...current,
-                        hasApprovalRequired: event.target.checked,
-                      }))
-                    }
-                  />
-                }
-                label="Exige aprovacao"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.hasReservationPrice}
-                    onChange={(event) =>
-                      setFormData((current) => ({
-                        ...current,
-                        hasReservationPrice: event.target.checked,
-                      }))
-                    }
-                  />
-                }
-                label="Possui preco de reserva"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Button component="label" variant="outlined" startIcon={<ImageOutlined />}>
-                {formData.imageFile ? formData.imageFile.name : "Imagem principal"}
-                <input
-                  hidden
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) =>
-                    setFormData((current) => ({
-                      ...current,
-                      imageFile: event.target.files?.[0] || null,
-                    }))
-                  }
-                />
-              </Button>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                label="Observacoes"
-                value={formData.notes}
-                onChange={(event) =>
-                  setFormData((current) => ({ ...current, notes: event.target.value }))
-                }
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsFormOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={() => void handleSave()} disabled={loading}>
-            {loading ? <CircularProgress size={20} /> : "Salvar"}
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <AppStateModal
         open={appStateModal.open}

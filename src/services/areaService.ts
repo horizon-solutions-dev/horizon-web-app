@@ -12,6 +12,27 @@ class AreaService {
   private baseUrl =
     "https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/areas";
 
+  private handleValidationError(error: unknown) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
+
+      const data = error.response?.data as
+        | { friendlyMessage?: string; message?: string }
+        | undefined;
+      const message = data?.friendlyMessage || data?.message || "";
+      if (error.response?.status === 404 && message.includes("Nada encontrado")) {
+        return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+      }
+    }
+
+    throw error;
+  }
+
   async createArea(area: AreaRequest) {
     return await apiClient.post<{ areaId: string }>(this.baseUrl, area);
   }
@@ -24,13 +45,19 @@ class AreaService {
       });
       return { valid: true, validations: [] as Array<{ field: string; message: string }> };
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 422) {
-        const data = error.response?.data as
-          | { validations?: Array<{ field: string; message: string }> }
-          | undefined;
-        return { valid: false, validations: data?.validations ?? [] };
-      }
-      throw error;
+      return this.handleValidationError(error);
+    }
+  }
+
+  async validateAreaEdit(id: string, area: AreaRequest) {
+    try {
+      await apiClient.put<{ areaId?: string }>(`${this.baseUrl}/${id}`, {
+        ...area,
+        commit: false,
+      });
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      return this.handleValidationError(error);
     }
   }
 

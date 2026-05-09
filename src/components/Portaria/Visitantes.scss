@@ -70,6 +70,19 @@
     font-weight: 700 !important;
   }
 
+  .visitante-notes-field {
+    .MuiInputBase-root {
+      align-items: flex-start;
+      min-height: 78px !important;
+    }
+
+    textarea {
+      min-height: 44px !important;
+      max-height: 44px !important;
+      overflow-y: auto !important;
+    }
+  }
+
   .visitante-search-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;

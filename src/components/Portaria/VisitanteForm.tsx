@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import {
   Alert,
   Box,
@@ -201,6 +202,31 @@ const getAreaIcon = (area: AreaResponse) => {
   if (text.includes("festa") || text.includes("salao") || text.includes("salão")) return <Celebration />;
   if (text.includes("garag") || text.includes("estacion")) return <DirectionsCar />;
   return <Security />;
+};
+
+const getRequestValidationMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as
+      | {
+          validations?: Array<{ field?: string; message?: string }>;
+          friendlyMessage?: string;
+          message?: string;
+        }
+      | undefined;
+    const firstValidation = data?.validations?.find(
+      (validation) => validation.message?.trim(),
+    );
+
+    return (
+      firstValidation?.message ||
+      data?.friendlyMessage ||
+      data?.message ||
+      error.message ||
+      fallback
+    );
+  }
+
+  return error instanceof Error ? error.message : fallback;
 };
 
 const mapUnitResult = async (unit: CondominiumUnit): Promise<UnitSearchResult> => {
@@ -507,6 +533,9 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       if (!formData.visitorReasonId) {
         nextErrors.visitorReasonId = "Selecione o motivo da visita.";
       }
+      if (!formData.notes.trim()) {
+        nextErrors.notes = "Observações obrigatórias.";
+      }
       if (!formData.releaseType) {
         nextErrors.releaseType = "Selecione o tipo de liberação.";
       }
@@ -540,7 +569,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     }));
     clearFieldError("destinationUnit");
     clearFieldError("selectedResidentId");
-    console.log(query, destinationQuery)
     if (!query) {
       setErrors((current) => ({
         ...current,
@@ -655,9 +683,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       setCloseAfterModal(true);
       showSuccess("Visitante cadastrado com sucesso.");
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro ao cadastrar visitante.";
-      showError(message);
+      showError(getRequestValidationMessage(error, "Erro ao cadastrar visitante."));
     } finally {
       setLoading(false);
     }
@@ -670,10 +696,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       onClose();
     }
   };
-
-  useEffect(()=>{
-    console.log(formData.visitorReasonId)
-  },[formData.visitorReasonId])
 
   const renderStepContent = (step: number) => {
     if (step === 0) {
@@ -947,17 +969,19 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
               </MenuItem>
             ))}
           </TextField>
-{/*           <TextField
-          sx={{
-            height:10
-          }}
+          <TextField
             fullWidth
             multiline
             minRows={2}
-            label={formData.notes ? "" : "Observacoes"}
+            maxRows={2}
+            size="small"
+            className="visitante-notes-field"
+            label={formData.notes ? "" : "Observações"}
             value={formData.notes}
             onChange={(event) => handleChange("notes", event.target.value)}
-          /> */}
+            error={Boolean(errors.notes)}
+            helperText={errors.notes}
+          />
           <Box className="visitante-option-list">
             <Box
               className={`visitante-option-card ${
