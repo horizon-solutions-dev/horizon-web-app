@@ -2,7 +2,6 @@ import axios from "axios";
 import { apiClient } from "./apiClient";
 import type {
   CreateVisitorRequest,
-  CreateVisitorResponse,
   CreateVisitorVisitRequest,
   CreateVisitorVisitResponse,
   FinishVisitorVisitResponse,
@@ -32,7 +31,7 @@ class VisitorService {
     formData.append("DocumentPhoto", visitor.documentPhoto);
     formData.append("Commit", String(visitor.commit));
 
-    return await apiClient.post<CreateVisitorResponse>(this.baseUrl, formData);
+    return await apiClient.post<string>(this.baseUrl, formData);
   }
 
   async validateVisitor(visitor: CreateVisitorRequest) {

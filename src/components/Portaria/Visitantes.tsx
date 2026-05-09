@@ -35,7 +35,7 @@ import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
-import VisitanteForm from "./VisitanteForm";
+import VisitanteForm, { type ExistingVisitorFormData } from "./VisitanteForm";
 import { visitorService } from "../../services/visitorService";
 import type { VisitorResponse } from "../../models/visitor.model";
 import {
@@ -48,6 +48,7 @@ import { formatCNPJ } from "../../shared/utils/funcoes";
 interface Visitor {
   id: string;
   fullName: string;
+  documentType?: number | string;
   document: string;
   email: string;
   phone: string;
@@ -58,6 +59,7 @@ interface Visitor {
   releasedBy: string;
   activeVisitId?: string;
   imageUrl?: string;
+  documentImageUrl?: string;
   accentColor: string;
 }
 
@@ -93,6 +95,14 @@ const getVisitorImageUrl = (visitor: VisitorResponse) => {
   return `data:${visitor.facePhotoContentType};base64,${visitor.facePhotoThumbnailFile}`;
 };
 
+const getVisitorDocumentImageUrl = (visitor: VisitorResponse) => {
+  if (!visitor.documentPhotoThumbnailFile || !visitor.documentPhotoContentType) {
+    return undefined;
+  }
+
+  return `data:${visitor.documentPhotoContentType};base64,${visitor.documentPhotoThumbnailFile}`;
+};
+
 const mapVisitorResponse = (
   visitor: VisitorResponse,
   condominiumName: string,
@@ -100,6 +110,7 @@ const mapVisitorResponse = (
 ): Visitor => ({
   id: visitor.visitorId,
   fullName: visitor.name || "-",
+  documentType: visitor.documentType,
   document: visitor.documentNumber || "-",
   email: visitor.email || "-",
   phone: visitor.phone || "-",
@@ -112,6 +123,7 @@ const mapVisitorResponse = (
   releasedBy: visitor.createdBy || "-",
   activeVisitId: visitor.visitorHistoryId,
   imageUrl: getVisitorImageUrl(visitor),
+  documentImageUrl: getVisitorDocumentImageUrl(visitor),
   accentColor: index % 2 === 0 ? "#edf7f0" : "#eef5ff",
 });
 
@@ -135,6 +147,8 @@ export default function Visitantes() {
   const [page, setPage] = useState(1);
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
+  const [existingVisitor, setExistingVisitor] =
+    useState<ExistingVisitorFormData | null>(null);
   const [selectedImage, setSelectedImage] = useState<{
     src: string;
     name: string;
@@ -246,7 +260,8 @@ export default function Visitantes() {
   );
 
   const handleFinishVisit = async (visitor: Visitor) => {
-    if (!visitor.activeVisitId) {
+    console.log(visitor)
+    if (!visitor.id) {
       showError(
         "Nao foi possivel finalizar.",
         "A listagem atual nao retornou o identificador da visita desse visitante.",
@@ -256,7 +271,7 @@ export default function Visitantes() {
 
     setLoading(true);
     try {
-      await visitorService.finishVisit(visitor.activeVisitId);
+      await visitorService.finishVisit(visitor.id);
       showSuccess("Visita finalizada com sucesso.");
       await loadVisitors(selectedCondominium, page);
     } catch (error) {
@@ -267,16 +282,54 @@ export default function Visitantes() {
       setLoading(false);
     }
   };
-  const handleNewVisit = (visitor: Visitor) => {
-    showSuccess(`Nova visita preparada para ${visitor.fullName}.`);
+  const handleNewVisit = async (visitor: Visitor) => {
+    setLoading(true);
+    try {
+      const response = await visitorService.getVisitorById(visitor.id);
+      setExistingVisitor({
+        id: response.visitorId || visitor.id,
+        fullName: response.name || visitor.fullName,
+        documentType: response.documentType || visitor.documentType,
+        document: response.documentNumber || visitor.document,
+        email: response.email || visitor.email,
+        phone: response.phone || visitor.phone,
+        visitorType: response.visitorTypeId || visitor.visitorType,
+        facePhotoUrl: getVisitorImageUrl(response) || visitor.imageUrl,
+        documentPhotoUrl:
+          getVisitorDocumentImageUrl(response) || visitor.documentImageUrl,
+      });
+      setIsCadastroOpen(true);
+    } catch (error) {
+      setExistingVisitor({
+        id: visitor.id,
+        fullName: visitor.fullName,
+        documentType: visitor.documentType,
+        document: visitor.document,
+        email: visitor.email,
+        phone: visitor.phone,
+        visitorType: visitor.visitorType,
+        facePhotoUrl: visitor.imageUrl,
+        documentPhotoUrl: visitor.documentImageUrl,
+      });
+      setIsCadastroOpen(true);
+      console.error(
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar dados do visitante.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreateVisitor = () => {
+    setExistingVisitor(null);
     setIsCadastroOpen(true);
   };
 
   const handleCloseForm = () => {
     setIsCadastroOpen(false);
+    setExistingVisitor(null);
   };
 
   const handleSaved = async (visitor: Visitor) => {
@@ -298,6 +351,7 @@ export default function Visitantes() {
             setLoading={setLoading}
             onClose={handleCloseForm}
             onSaved={handleSaved}
+            existingVisitor={existingVisitor}
           />
         ) : (
           <Paper elevation={3} sx={{ p: 3 }}>
@@ -594,7 +648,7 @@ export default function Visitantes() {
                           variant="outlined"
                           className="action-button-edit"
                           startIcon={<Add />}
-                          onClick={() => handleNewVisit(visitor)}
+                          onClick={() => void handleNewVisit(visitor)}
                         >
                           Nova Visita
                         </Button>

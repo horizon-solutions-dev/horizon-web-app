@@ -83,6 +83,18 @@ interface VisitorListItem {
   accentColor: string;
 }
 
+export interface ExistingVisitorFormData {
+  id: string;
+  fullName: string;
+  documentType?: number | string;
+  document: string;
+  email: string;
+  phone: string;
+  visitorType?: number | string;
+  facePhotoUrl?: string;
+  documentPhotoUrl?: string;
+}
+
 interface VisitanteFormProps {
   open: boolean;
   organizationName: string;
@@ -91,6 +103,7 @@ interface VisitanteFormProps {
   setLoading: (value: boolean) => void;
   onClose: () => void;
   onSaved: (visitor: VisitorListItem) => void | Promise<void>;
+  existingVisitor?: ExistingVisitorFormData | null;
 }
 
 const stepLabels = [
@@ -175,6 +188,37 @@ const getCurrentUserUnit = () => {
 const getDocumentTypeValue = (documentType: string) => {
   const option = documentTypeOptions.find((item) => item.value === documentType);
   return option ? documentTypeOptions.indexOf(option) + 1 : "";
+};
+
+const normalizeDocumentType = (documentType?: number | string) => {
+  if (documentType === undefined || documentType === null || documentType === "") {
+    return "cpf";
+  }
+
+  const value = String(documentType).trim().toLowerCase();
+  const byValue = documentTypeOptions.find((item) => item.value === value);
+  if (byValue) return byValue.value;
+
+  const numericIndex = Number(value);
+  if (!Number.isNaN(numericIndex) && documentTypeOptions[numericIndex - 1]) {
+    return documentTypeOptions[numericIndex - 1].value;
+  }
+
+  return "cpf";
+};
+
+const dataUrlToFile = (dataUrl: string, fileName: string) => {
+  const [metadata, content] = dataUrl.split(",");
+  const mimeMatch = metadata.match(/data:(.*?);base64/);
+  const contentType = mimeMatch?.[1] || "image/png";
+  const binary = atob(content || "");
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return new File([bytes], fileName, { type: contentType });
 };
 
 const getEnumOptionLabel = (option: VisitorEnum | string) => {
@@ -316,6 +360,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
   setLoading,
   onClose,
   onSaved,
+  existingVisitor = null,
 }) => {
   const { appStateModal, handleClose, showSuccess, showError } =
     useAppStateModal();
@@ -350,10 +395,18 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     setDestinationQuery("");
     setUnitSearched(false);
     setAreas([]);
-    setFacePhotoPreview(null);
-    setDocumentPhotoPreview(null);
-    setFormData(initialFormData(organizationName));
-  }, [open, organizationName]);
+    setFacePhotoPreview(existingVisitor?.facePhotoUrl || null);
+    setDocumentPhotoPreview(existingVisitor?.documentPhotoUrl || null);
+    setFormData({
+      ...initialFormData(organizationName),
+      visitorName: existingVisitor?.fullName || "",
+      documentType: normalizeDocumentType(existingVisitor?.documentType),
+      documentNumber: existingVisitor?.document || "",
+      phone: existingVisitor?.phone || "",
+      email: existingVisitor?.email || "",
+      visitorType: existingVisitor?.visitorType ? String(existingVisitor.visitorType) : "",
+    });
+  }, [open, organizationName, existingVisitor]);
 
   useEffect(() => {
     if (!open || !condominiumId) return;
@@ -407,7 +460,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
 
   useEffect(() => {
     if (!formData.facePhoto) {
-      setFacePhotoPreview(null);
       return;
     }
 
@@ -419,7 +471,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
 
   useEffect(() => {
     if (!formData.documentPhoto) {
-      setDocumentPhotoPreview(null);
       return;
     }
 
@@ -512,10 +563,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       if (!formData.visitorType) {
         nextErrors.visitorType = "Selecione o tipo de visitante.";
       }
-      if (!formData.facePhoto) {
+      if (!formData.facePhoto && !facePhotoPreview) {
         nextErrors.facePhoto = "Adicione a foto do rosto.";
       }
-      if (!formData.documentPhoto) {
+      if (!formData.documentPhoto && !documentPhotoPreview) {
         nextErrors.documentPhoto = "Adicione a foto do documento.";
       }
     }
@@ -621,7 +672,16 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     const nextErrors = validateStep(activeStep);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
-    if (!formData.facePhoto || !formData.documentPhoto || !unitSearchResult) return;
+    const facePhoto =
+      formData.facePhoto ||
+      (facePhotoPreview ? dataUrlToFile(facePhotoPreview, "face-photo.png") : null);
+    const documentPhoto =
+      formData.documentPhoto ||
+      (documentPhotoPreview
+        ? dataUrlToFile(documentPhotoPreview, "document-photo.png")
+        : null);
+
+    if (!facePhoto || !documentPhoto || !unitSearchResult) return;
 
     setLoading(true);
     try {
@@ -632,8 +692,8 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         phone: formData.phone.trim(),
         email: formData.email.trim(),
         visitorTypeId: formData.visitorType,
-        facePhoto: formData.facePhoto,
-        documentPhoto: formData.documentPhoto,
+        facePhoto,
+        documentPhoto,
         commit: true,
       });
 
@@ -658,7 +718,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       });
 
       const visitor: VisitorListItem = {
-        id: visitorResponse.visitorId,
+        id: visitorResponse,
         fullName: formData.visitorName.trim(),
         document: formData.documentNumber.trim(),
         email: formData.email.trim(),
@@ -674,14 +734,14 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         activeVisitId: visitResponse.visitorHistoryId,
         imageUrl: formData.facePhoto
           ? URL.createObjectURL(formData.facePhoto)
-          : undefined,
+          : facePhotoPreview || undefined,
         accentColor:
           accentColors[Math.floor(Math.random() * accentColors.length)],
       };
 
       await onSaved(visitor);
       setCloseAfterModal(true);
-      showSuccess("Visitante cadastrado com sucesso.");
+      showSuccess(existingVisitor ? "Visita registrada com sucesso." : "Visitante cadastrado com sucesso.");
     } catch (error) {
       showError(getRequestValidationMessage(error, "Erro ao cadastrar visitante."));
     } finally {
@@ -713,6 +773,8 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             label={formData.visitorName ? "" : "Nome do Visitante"}
             placeholder="Digite o nome completo"
             value={formData.visitorName}
+            disabled={Boolean(existingVisitor)}
+            InputProps={existingVisitor ? { readOnly: true } : undefined}
             onChange={(event) =>
               handleChange("visitorName", event.target.value)
             }
@@ -726,6 +788,8 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
                 select
                 label={formData.documentType ? "" : "Tipo de documento"}
                 value={formData.documentType}
+                disabled={Boolean(existingVisitor)}
+                InputProps={existingVisitor ? { readOnly: true } : undefined}
                 onChange={(event) => {
                   handleChange("documentType", event.target.value);
                   setFormData((current) => ({
@@ -751,6 +815,8 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
                 fullWidth
                 label={formData.documentNumber ? "" : "Documento"}
                 value={formData.documentNumber}
+                disabled={Boolean(existingVisitor)}
+                InputProps={existingVisitor ? { readOnly: true } : undefined}
                 onChange={(event) =>
                   handleChange("documentNumber", event.target.value)
                 }
@@ -789,6 +855,8 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             select
             label={formData.visitorType ? "" : "Tipo de Visitante"}
             value={formData.visitorType}
+            disabled={Boolean(existingVisitor)}
+            InputProps={existingVisitor ? { readOnly: true } : undefined}
             onChange={(event) => handleChange("visitorType", event.target.value)}
             error={Boolean(errors.visitorType)}
             helperText={errors.visitorType}
@@ -1091,7 +1159,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
   return (
     <>
       <StepWizardCard
-        title="Registrar Visitante"
+        title={existingVisitor ? "Registrar Visita" : "Registrar Visitante"}
         steps={stepLabels}
         activeStep={activeStep}
         showBack
