@@ -39,7 +39,7 @@ import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { useTranslation } from "react-i18next";
 import { formatCNPJ } from "../../shared/utils/funcoes";
 
-const Blocos: React.FC = () => {
+const EstruturaCondominio: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [activeView, setActiveView] = useState<"condominios" | "blocos">(
@@ -425,7 +425,7 @@ const Blocos: React.FC = () => {
                           startIcon={<SearchOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Visualizars Blocos
+                          Visualizars Estrutura do condomínio
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -658,7 +658,7 @@ const Blocos: React.FC = () => {
                               display: "flex",
                               gap: 1,
                               flexWrap: "wrap",
-                              mt: 2,
+                              mt: 3,
                             }}
                           >
                             <Button
@@ -722,4 +722,4 @@ const Blocos: React.FC = () => {
   );
 };
 
-export default Blocos;
+export default EstruturaCondominio;

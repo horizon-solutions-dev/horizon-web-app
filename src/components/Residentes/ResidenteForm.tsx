@@ -6,12 +6,18 @@ import {
   Button,
   TextField,
   MenuItem,
-  FormControlLabel,
   Checkbox,
   CircularProgress,
   Grid,
 } from "@mui/material";
-import { RuleSharp } from "@mui/icons-material";
+import {
+  AccountBalanceWallet,
+  CameraAlt,
+  EventAvailable,
+  HowToVote,
+  MeetingRoom,
+  RuleSharp,
+} from "@mui/icons-material";
 import {
   unitResidentService,
   type CondominiumUnitResident,
@@ -192,8 +198,12 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [documentPhotoFile, setDocumentPhotoFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [documentPhotoPreview, setDocumentPhotoPreview] = useState<
+    string | null
+  >(null);
   const isEditMode = Boolean(editResident);
 
   useEffect(() => {
@@ -207,6 +217,18 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
     return () => URL.revokeObjectURL(objectUrl);
   }, [coverFile]);
+
+  useEffect(() => {
+    if (!documentPhotoFile) {
+      setDocumentPhotoPreview(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(documentPhotoFile);
+    setDocumentPhotoPreview(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [documentPhotoFile]);
 
   useEffect(() => {
     if (!open) return;
@@ -236,6 +258,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setPhone("");
     setCreatedUserId("");
     setPhotoFile(null);
+    setDocumentPhotoFile(null);
     setCoverFile(null);
   }, [open, unitCodePreset, unitIdPreset]);
 
@@ -322,6 +345,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setEmail(dataEdit?.email || "");
       setPhone(formatPhone(dataEdit?.phone || ""));
       setPhotoFile(null);
+      setDocumentPhotoFile(null);
       return;
     }
 
@@ -348,6 +372,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     setEmail("");
     setPhone("");
     setPhotoFile(null);
+    setDocumentPhotoFile(null);
     setCoverFile(null);
   }, [open, unitCodePreset, unitIdPreset, isEditMode, editResident, dataEdit]);
   const handleChange = (
@@ -741,12 +766,40 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               userId: targetUserId,
             });
           }
+
+          if (
+            documentPhotoFile &&
+            condominiumIdPreset &&
+            formData.condominiumUnitId
+          ) {
+            await condominiumUnitImageService.uploadUnitImage({
+              imageType: 2,
+              contentFile: documentPhotoFile,
+              condominiumId: condominiumIdPreset,
+              condominiumUnitId: formData.condominiumUnitId,
+              userId: targetUserId,
+            });
+          }
         } else {
           // Upload resident photo after creation
           if (photoFile) {
             await condominiumUnitImageService.uploadUnitImage({
               imageType: 1,
               contentFile: photoFile,
+              condominiumId:
+                condominiumIdPreset ||
+                JSON.stringify(localStorage.getItem("condominiumId")),
+              condominiumUnitId:
+                formData.condominiumUnitId ||
+                JSON.stringify(localStorage.getItem("moradoresCondominiumId")),
+              userId: targetUserId,
+            });
+          }
+
+          if (documentPhotoFile) {
+            await condominiumUnitImageService.uploadUnitImage({
+              imageType: 2,
+              contentFile: documentPhotoFile,
               condominiumId:
                 condominiumIdPreset ||
                 JSON.stringify(localStorage.getItem("condominiumId")),
@@ -784,6 +837,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setPhone("");
       setCreatedUserId("");
       setPhotoFile(null);
+      setDocumentPhotoFile(null);
       setCoverFile(null);
       setErrors({});
       setActiveStep(0);
@@ -831,10 +885,187 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
   };
 
+  const permissionItems = [
+    {
+      key: "billingContact",
+      label: t("residenteForm.billingContact"),
+      checked: formData.billingContact,
+      icon: <AccountBalanceWallet fontSize="small" />,
+      color: "#17b26a",
+      background: "#dcfae6",
+    },
+    {
+      key: "canVote",
+      label: t("residenteForm.canVote"),
+      checked: formData.canVote,
+      icon: <HowToVote fontSize="small" />,
+      color: "#875bf7",
+      background: "#f0e8ff",
+    },
+    {
+      key: "canMakeReservations",
+      label: t("residenteForm.canMakeReservations"),
+      checked: formData.canMakeReservations,
+      icon: <EventAvailable fontSize="small" />,
+      color: "#f79009",
+      background: "#ffead5",
+    },
+    {
+      key: "hasGatehouseAccess",
+      label: t("residenteForm.hasGatehouseAccess"),
+      checked: formData.hasGatehouseAccess,
+      icon: <MeetingRoom fontSize="small" />,
+      color: "#06aed4",
+      background: "#cff9fe",
+    },
+  ] as const;
+
+  const renderSectionHeader = (
+    icon: React.ReactNode,
+    title: string,
+    description: string,
+  ) => (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+      <Box
+        sx={{
+          width: 36,
+          height: 36,
+          borderRadius: "8px",
+          backgroundColor: "#eff6ff",
+          color: "#1976d2",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {icon}
+      </Box>
+      <Box>
+        <Typography sx={{ fontWeight: 700, fontSize: 14, color: "#344054" }}>
+          {title}
+        </Typography>
+        <Typography sx={{ fontSize: 12, color: "#667085", lineHeight: 1.35 }}>
+          {description}
+        </Typography>
+      </Box>
+    </Box>
+  );
+
+  const renderPhotoUpload = ({
+    id,
+    title,
+    preview,
+    onFileChange,
+  }: {
+    id: string;
+    title: string;
+    preview: string | null;
+    onFileChange: (file: File | null) => void;
+  }) => (
+    <Box sx={{ minWidth: 0 }}>
+      <Typography
+        sx={{ mb: 1, fontSize: 12, fontWeight: 700, color: "#344054" }}
+      >
+        {title}
+      </Typography>
+      <Box
+        component="label"
+        htmlFor={id}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          onFileChange(e.dataTransfer.files?.[0] || null);
+        }}
+        sx={{
+          width: "100%",
+          aspectRatio: "4 / 3",
+          minHeight: 132,
+          borderRadius: "10px",
+          border: "1.5px dashed #93c5fd",
+          backgroundColor: "#f8fbff",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+          position: "relative",
+          transition: "border-color 0.2s ease, background-color 0.2s ease",
+          "&:hover": {
+            borderColor: "#1976d2",
+            backgroundColor: "#f1f8ff",
+          },
+        }}
+      >
+        {preview ? (
+          <>
+            <Box
+              component="img"
+              src={preview}
+              alt={title}
+              sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                left: 10,
+                bottom: 10,
+                borderRadius: "8px",
+                px: 1.25,
+                py: 0.75,
+                backgroundColor: "rgba(15, 23, 42, 0.78)",
+                color: "#fff",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              Trocar Foto
+            </Box>
+          </>
+        ) : (
+          <Box sx={{ textAlign: "center", px: 2 }}>
+            <Box
+              sx={{
+                width: 44,
+                height: 44,
+                mx: "auto",
+                mb: 1.25,
+                borderRadius: "50%",
+                backgroundColor: "#eff6ff",
+                color: "#1976d2",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CameraAlt fontSize="small" />
+            </Box>
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#344054" }}>
+              Adicionar Foto
+            </Typography>
+            <Typography sx={{ mt: 0.5, fontSize: 11, color: "#667085" }}>
+              ou arraste e solte aqui
+            </Typography>
+          </Box>
+        )}
+        <input
+          id={id}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => onFileChange(e.target.files?.[0] || null)}
+        />
+      </Box>
+      <Typography sx={{ mt: 0.75, fontSize: 10, color: "#667085" }}>
+        Formatos aceitos: JPG, PNG. Tamanho máximo: 5MB
+      </Typography>
+    </Box>
+  );
+
   const renderStepContent = (step: number) => {
     if (step === 0) {
       return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
           <TextField
             sx={{
               "& .MuiOutlinedInput-root": {
@@ -935,7 +1166,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
     if (step === 1) {
       return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2, mt: 1 }}>
           <Grid container spacing={1.2}>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -1047,172 +1278,119 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
 
     return (
-      /*   <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        
-
-        
-      </Box> */
-      <Grid item xs={12} md={6}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
         <Box
           sx={{
             border: "1px solid #e2e8f0",
             borderRadius: "12px",
             p: 2,
-            height: "100%",
             backgroundColor: "#fff",
           }}
         >
+          {renderSectionHeader(
+            <RuleSharp fontSize="small" />,
+            t("residenteForm.permissionsTitle"),
+            "Defina o que este morador pode fazer no sistema.",
+          )}
           <Box
             sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              mb: 0.5,
-            }}
-          >
-            <Box sx={{ color: "primary.main" }}>
-              <RuleSharp />
-            </Box>
-            <Typography sx={{ fontWeight: 700, fontSize: 18, lineHeight: 1 }}>
-              {t("residenteForm.permissionsTitle")}
-            </Typography>
-          </Box>
-          <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
-          <Box sx={{ display: "flex", flexDirection: "column" }}>
-            <FormControlLabel
-              sx={{ height: "25px" }}
-              control={
-                <Checkbox
-                  checked={Boolean(formData.billingContact)}
-                  onChange={(e) =>
-                    handleChange("billingContact", e.target.checked)
-                  }
-                />
-              }
-              label={t("residenteForm.billingContact")}
-            />
-            <FormControlLabel
-              sx={{ height: "25px" }}
-              control={
-                <Checkbox
-                  checked={Boolean(formData.canVote)}
-                  onChange={(e) => handleChange("canVote", e.target.checked)}
-                />
-              }
-              label={t("residenteForm.canVote")}
-            />
-            <FormControlLabel
-              sx={{ height: "25px" }}
-              control={
-                <Checkbox
-                  checked={Boolean(formData.canMakeReservations)}
-                  onChange={(e) =>
-                    handleChange("canMakeReservations", e.target.checked)
-                  }
-                />
-              }
-              label={t("residenteForm.canMakeReservations")}
-            />
-            <FormControlLabel
-              sx={{ height: "25px" }}
-              control={
-                <Checkbox
-                  checked={Boolean(formData.hasGatehouseAccess)}
-                  onChange={(e) =>
-                    handleChange("hasGatehouseAccess", e.target.checked)
-                  }
-                />
-              }
-              label={t("residenteForm.hasGatehouseAccess")}
-            />
-          </Box>
-        </Box>
-        <Typography variant="subtitle2" sx={{ mt: 2 }}>
-          {t("residenteForm.photoTitle")}
-        </Typography>
-        <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1 }} />
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            alignItems: { xs: "flex-start", md: "center" },
-            justifyContent: "space-between",
-            gap: 2,
-          }}
-        >
-          <Button
-            variant="outlined"
-            component="label"
-            size="small"
-            disableRipple
-            sx={{
-              minWidth: 152,
-              height: 38,
-              backgroundColor: "#FFF",
-              textTransform: "none",
-              fontSize: "14px",
-
-              "&:hover": {
-                backgroundColor: "#FFF",
-              },
-              "&:active": {
-                backgroundColor: "#FFF",
-              },
-              "&:focus": {
-                backgroundColor: "#FFF",
-              },
-            }}
-          >
-            Selecionar imagem
-            <input
-              id="morador-photo-input"
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                setCoverFile(file);
-                setPhotoFile(file);
-              }}
-            />
-          </Button>
-
-          <Box
-            sx={{
-              width: { xs: "100%", md: 240 },
-              height: 110,
+              mt: 1.5,
+              border: "1px solid #eef2f6",
               borderRadius: "10px",
-              border: "1px dashed #cbd5e1",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
               overflow: "hidden",
-              background: "#f8fafc",
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, minmax(220px, 1fr))'
             }}
           >
-            {coverPreview ? (
+            {permissionItems.map((item, index) => (
               <Box
-                component="img"
-                src={coverPreview}
-                alt="Prévia da imagem do condomínio"
-                sx={{ height: "200px", objectFit: "cover" }}
-              />
-            ) : (
-              <Typography
+                key={item.key}
                 sx={{
-                  color: "#94a3b8",
-                  fontSize: 12,
-                  px: 1,
-                  textAlign: "center",
+                  minHeight: 44,
+                  px: 1.5,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  borderBottom:
+                    index === permissionItems.length - 1
+                      ? "none"
+                      : "1px solid #eef2f6",
                 }}
               >
-                Nenhuma imagem selecionada
-              </Typography>
-            )}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                  <Box
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "7px",
+                      backgroundColor: item.background,
+                      color: item.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {item.icon}
+                  </Box>
+                  <Typography
+                    sx={{ fontSize: 13, fontWeight: 700, color: "#344054" }}
+                  >
+                    {item.label}
+                  </Typography>
+                </Box>
+                <Checkbox
+                  checked={Boolean(item.checked)}
+                  onChange={(e) => handleChange(item.key, e.target.checked)}
+                  sx={{ p: 0.5 }}
+                />
+              </Box>
+            ))}
           </Box>
         </Box>
-      </Grid>
+        <Box
+          sx={{
+            border: "1px solid #e2e8f0",
+            borderRadius: "12px",
+            p: 2,
+            backgroundColor: "#fff",
+          }}
+        >
+          {renderSectionHeader(
+            <CameraAlt fontSize="small" />,
+            t("residenteForm.photoTitle"),
+            "Adicione as fotos para identificação no sistema.",
+          )}
+
+          <Box
+            sx={{
+              mt: 1.5,
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gap: 2,
+              "& > :nth-of-type(n+3)": {
+                display: "none",
+              },
+            }}
+          >
+            {renderPhotoUpload({
+              id: "morador-photo-input",
+              title: "Foto de Perfil",
+              preview: coverPreview,
+              onFileChange: (file) => {
+                setCoverFile(file);
+                setPhotoFile(file);
+              },
+            })}
+            {renderPhotoUpload({
+              id: "morador-document-photo-input",
+              title: "Foto do Documento ou com Documento na Mão",
+              preview: documentPhotoPreview,
+              onFileChange: setDocumentPhotoFile,
+            })}
+
+          </Box>
+        </Box>
+      </Box>
     );
   };
 

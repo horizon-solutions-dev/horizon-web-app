@@ -41,7 +41,7 @@ import EncomendasNotificacao from "../components/Encomendas/EncomendasNotificaca
 
 import RouteNames from "./routeNames";
 import Veiculos from "../components/Veiculos/Veiculos";
-import Blocos from "../components/Blocos/Blocos";
+import EstruturaCondominio from "../components/Blocos/Blocos";
 import Unidades from "../components/Unidades/Unidades";
 import Residentes from "../components/Residentes/Residentes";
 import Organizacoes from "../components/Organizacoes/Organizacoes";
@@ -56,6 +56,10 @@ const router = createBrowserRouter([
 		path: "/",
 		element: <PublicRoute><LoginFlow /></PublicRoute>,
 	},
+				{
+				path: RouteNames.PrimeiroAcesso,
+				element: <PrimeiroAcessoWizard />,
+			},
 	
 	// Protected routes with MainLayout
 	{
@@ -150,7 +154,7 @@ const router = createBrowserRouter([
 			// Cadastros
 			{
 				path: RouteNames.CadastrosBlocos,
-				element: <Blocos />,
+				element: <EstruturaCondominio />,
 			},
 			{
 				path: RouteNames.CadastrosUnidades,
@@ -193,10 +197,6 @@ const router = createBrowserRouter([
 			{
 				path: RouteNames.ValidacaoAcesso,
 				element: <ValidacaoAcesso />,
-			},
-			{
-				path: RouteNames.PrimeiroAcesso,
-				element: <PrimeiroAcessoWizard />,
 			},
 		]
 	}

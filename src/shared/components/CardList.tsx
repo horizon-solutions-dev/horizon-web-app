@@ -47,6 +47,7 @@ interface CardListProps {
   onAddClick?: () => void;
   addLabel?: string;
   showTitle?: boolean;
+  showAddButton?: boolean;
   showFilters?: boolean;
   addButtonPlacement?: "header" | "toolbar";
   emptyImageLabel?: string;
@@ -71,6 +72,7 @@ export default function CardList({
   searchPlaceholder = "Buscar...",
   onSearchChange,
   onAddClick,
+  showAddButton = true,
   page = 1,
   totalPages = 1,
   onPageChange,
@@ -191,7 +193,7 @@ export default function CardList({
             </IconButton>
           </Tooltip>
         )}
-        {onAddClick && addButtonPlacement === "toolbar" && (
+        {showAddButton && onAddClick && addButtonPlacement === "toolbar" && (
           <Tooltip title="Clique aqui para Criar um novo Item">
             <IconButton
               onClick={onAddClick}

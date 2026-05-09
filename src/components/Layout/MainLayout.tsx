@@ -140,7 +140,7 @@ export default function MainLayout() {
     [RouteNames.EncomendasNotificacao]: { label: "Notificacao", parent: "Encomendas" },
     [RouteNames.ValidacaoAcesso]: { label: "Validacao de Acesso", parent: "Pendentes" },
 
-    [RouteNames.CadastrosBlocos]: { label: "Blocos", },
+    [RouteNames.CadastrosBlocos]: { label: "Estrutura do condomínio", },
     [RouteNames.CadastrosUnidades]: { label: "Unidades", },
     [RouteNames.CadastrosResidentes]: { label: "Moradores", },
     [RouteNames.CadastrosOrganizacoes]: { label: "Organizações", },

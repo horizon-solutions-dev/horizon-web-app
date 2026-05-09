@@ -7,6 +7,8 @@ import { IoIosArrowBack } from "react-icons/io";
 import Logo from "../../assets/logo.svg";
 import { AccountService } from "../../services/accountService";
 import "./password-recovery.scss";
+import { Box, Button, CircularProgress } from "@mui/material";
+import { StepWizardCard } from "../../shared/components";
 
 interface DefinePasswordProps {
   userId: string;
@@ -68,8 +70,21 @@ export default function DefinePassword({
       handler();
     }
   };
+  const steps = ["Definir senha"];
+
 
   return (
+          <StepWizardCard
+          
+            title={"Definir senha"}
+            steps={steps}
+            activeStep={0}
+            showBack={true}
+            onBack={()=>{}}
+            onClose={onBack}
+            disableContent={formik.isSubmitting}
+            width="720px">
+
     <div className="recovery-container">
       <div className="recovery-wrapper">
         <div className="recovery-card">
@@ -78,13 +93,13 @@ export default function DefinePassword({
               e.preventDefault();
               formik.handleSubmit();
             }}
-          >
+            >
             <button
               onClick={onBack}
               className="back-indicator"
               disabled={formik.isSubmitting}
               type="button"
-            >
+              >
               <IoIosArrowBack />
               <span>{t("login.back") || "Voltar"}</span>
             </button>
@@ -98,10 +113,6 @@ export default function DefinePassword({
             <h1 className="title">
               {t("recovery.definePasswordTitle") || "Definir Senha"}
             </h1>
-            <p className="subtitle-text">
-              {t("recovery.definePasswordDescription") ||
-                "Crie sua senha para concluir o cadastro"}
-            </p>
 
             <div className="input-wrapper">
               <input
@@ -113,12 +124,12 @@ export default function DefinePassword({
                 placeholder={t("recovery.newPassword") || "Nova Senha"}
                 className={`input-field ${
                   formik.touched.password && formik.errors.password
-                    ? "input-error"
-                    : ""
+                  ? "input-error"
+                  : ""
                 }`}
                 disabled={formik.isSubmitting}
                 autoFocus
-              />
+                />
               {formik.touched.password && formik.errors.password && (
                 <div className="error-message">{formik.errors.password}</div>
               )}
@@ -135,12 +146,12 @@ export default function DefinePassword({
                 className={`input-field ${
                   formik.touched.confirmPassword &&
                   formik.errors.confirmPassword
-                    ? "input-error"
-                    : ""
+                  ? "input-error"
+                  : ""
                 }`}
                 onKeyPress={(e) => handleKeyPress(e, () => formik.handleSubmit())}
                 disabled={formik.isSubmitting}
-              />
+                />
               {formik.touched.confirmPassword &&
                 formik.errors.confirmPassword && (
                   <div className="error-message">
@@ -148,32 +159,33 @@ export default function DefinePassword({
                   </div>
                 )}
             </div>
-
-            <div className="button-container">
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={formik.isSubmitting}
-              >
-                {formik.isSubmitting
-                  ? t("login.loading") || "Carregando..."
-                  : t("recovery.definePasswordAction") || "Definir Senha"}
-              </button>
-            </div>
+<Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            mt: 2,
+            pt: 2,
+          }}
+        >
+          <Button
+              sx={{
+                textTransform: "none",
+                backgroundColor: formik.isSubmitting ? "#ddd" : "#1976d2",
+              }}
+              variant="contained"
+              type={formik.isSubmitting ? "button" : "submit"}
+            >
+              {formik.isSubmitting ? (
+                <CircularProgress size={20} />
+              ) : (
+                "Concluir"
+              )}
+            </Button>
+            </Box>
           </form>
-
-          <div className="step-indicator">
-            {[1, 2, 3].map((stepNumber) => (
-              <div
-                key={stepNumber}
-                className={`step-dot ${
-                  stepNumber === 3 ? "active completed" : "completed"
-                }`}
-              />
-            ))}
-          </div>
         </div>
       </div>
     </div>
+            </StepWizardCard>
   );
 }
