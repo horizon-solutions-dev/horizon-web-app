@@ -220,7 +220,6 @@ export default function ReservasTipo() {
       );
       setAreas(response.items ?? []);
     } catch (error) {
-      showError(error instanceof Error ? error.message : "Erro ao carregar areas.");
     } finally {
       setLoading(false);
     }

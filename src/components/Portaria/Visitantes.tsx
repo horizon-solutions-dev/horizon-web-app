@@ -209,9 +209,9 @@ export default function Visitantes() {
       );
       setPage(response.paging?.pageNumber ?? pageNumber);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro ao carregar visitantes.";
-      showError(message);
+      console.error(
+        error instanceof Error ? error.message : "Erro ao carregar visitantes.",
+      );
     } finally {
       setLoading(false);
     }

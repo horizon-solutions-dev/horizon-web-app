@@ -2,6 +2,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  min-height: 100vh;
+  padding: 16px;
 }
 
 .step-wizard-card {
@@ -13,6 +15,8 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
 }
 
 .step-wizard-close {
@@ -179,6 +183,10 @@
 
 .step-wizard-content {
   margin-top: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 
   .MuiOutlinedInput-root {
     border-radius: 12px;
@@ -282,11 +290,10 @@
   // Container dos botões
   > div:last-child,
   .step-wizard-actions {
-    margin-top: 16px !important;
     display: flex !important;
     justify-content: center !important;
     gap: 12px !important;
-    margin-top: 6px !important;
+    margin-top: 18px !important;
   }
 }
 

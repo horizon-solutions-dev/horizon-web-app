@@ -3,8 +3,6 @@ import {
   Alert,
   Box,
   Button,
-  Checkbox,
-  Chip,
   CircularProgress,
   Grid,
   MenuItem,
@@ -13,16 +11,21 @@ import {
   Typography,
 } from "@mui/material";
 import {
+  Article,
   Badge,
+  DirectionsCar,
+  FitnessCenter,
   HowToReg,
-  MarkunreadMailbox,
-  Phone,
+  LocationOn,
+  Person,
+  Pool,
+  Search,
   Security,
+  Celebration,
 } from "@mui/icons-material";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
-import { blockService, type CondominiumBlock } from "../../services/blockService";
 import { unitResidentService } from "../../services/unitResidentService";
 import { unitService, type CondominiumUnit } from "../../services/unitService";
 import { visitorService } from "../../services/visitorService";
@@ -116,7 +119,7 @@ const accentColors = ["#edf7f0", "#eef5ff", "#fcf0f6", "#fff3e0"];
 const initialFormData = (organizationName: string): VisitorFormData => ({
   organizationName,
   visitorName: "",
-  documentType: "",
+  documentType: "cpf",
   documentNumber: "",
   phone: "",
   email: "",
@@ -180,7 +183,24 @@ const getEnumOptionLabel = (option: VisitorEnum | string) => {
 
 const getEnumOptionValue = (option: VisitorEnum | string) => {
   if (typeof option === "string") return option;
-  return String(option.value || option.id);
+  return String(option.id || option.value);
+};
+
+const normalizeUnitSearchTerm = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+const getAreaIcon = (area: AreaResponse) => {
+  const text = `${area.name} ${area.type}`.toLowerCase();
+  if (text.includes("pisc")) return <Pool />;
+  if (text.includes("academ") || text.includes("fitness")) return <FitnessCenter />;
+  if (text.includes("festa") || text.includes("salao") || text.includes("salão")) return <Celebration />;
+  if (text.includes("garag") || text.includes("estacion")) return <DirectionsCar />;
+  return <Security />;
 };
 
 const mapUnitResult = async (unit: CondominiumUnit): Promise<UnitSearchResult> => {
@@ -210,6 +230,8 @@ const FileUploadField = ({
   previewUrl,
   inputId,
   onChange,
+  icon,
+  showTitle = false,
 }: {
   label: string;
   description: string;
@@ -217,9 +239,13 @@ const FileUploadField = ({
   previewUrl: string | null;
   inputId: string;
   onChange: (file: File | null) => void;
+  icon?: React.ReactNode;
+  showTitle?: boolean;
 }) => (
   <Box className="visitante-upload-card">
-    <Typography className="visitante-section-title">{label}</Typography>
+    {showTitle ? (
+      <Typography className="visitante-section-title">{label}</Typography>
+    ) : null}
     <Box className="visitante-upload-box">
       <input
         id={inputId}
@@ -241,7 +267,7 @@ const FileUploadField = ({
         ) : (
           <>
             <Box className="visitante-upload-icon">
-              <Badge />
+              {icon || <Badge />}
             </Box>
             <Typography className="visitante-upload-label">
               {file ? file.name : `Adicionar ${label.toLowerCase()}`}
@@ -275,9 +301,11 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [unitSearchResult, setUnitSearchResult] =
     useState<UnitSearchResult | null>(null);
+  const [unitSearchResults, setUnitSearchResults] = useState<UnitSearchResult[]>(
+    [],
+  );
+  const [destinationQuery, setDestinationQuery] = useState("");
   const [unitSearched, setUnitSearched] = useState(false);
-  const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
-  const [units, setUnits] = useState<CondominiumUnit[]>([]);
   const [areas, setAreas] = useState<AreaResponse[]>([]);
   const [destinationLoading, setDestinationLoading] = useState(false);
   const [visitorTypes, setVisitorTypes] = useState<VisitorEnum[]>([]);
@@ -292,8 +320,9 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     setActiveStep(0);
     setErrors({});
     setUnitSearchResult(null);
+    setUnitSearchResults([]);
+    setDestinationQuery("");
     setUnitSearched(false);
-    setUnits([]);
     setAreas([]);
     setFacePhotoPreview(null);
     setDocumentPhotoPreview(null);
@@ -320,32 +349,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         }));
       } catch (error) {
         setAreas([]);
-        showError(error instanceof Error ? error.message : "Erro ao carregar areas.");
       }
     };
 
     void loadAreas();
-  }, [open, condominiumId]);
-
-  useEffect(() => {
-    if (!open || !condominiumId) return;
-
-    const loadBlocks = async () => {
-      setDestinationLoading(true);
-      try {
-        const response = await blockService.getBlocks(condominiumId, 1, 100);
-        setBlocks(response.items ?? []);
-      } catch (error) {
-        setBlocks([]);
-        const message =
-          error instanceof Error ? error.message : "Erro ao carregar blocos.";
-        showError(message);
-      } finally {
-        setDestinationLoading(false);
-      }
-    };
-
-    void loadBlocks();
   }, [open, condominiumId]);
 
   useEffect(() => {
@@ -359,10 +366,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         ]);
         setVisitorTypes(types ?? []);
         setVisitorReasons(reasons ?? []);
-        setFormData((current) => ({
+ /*        setFormData((current) => ({
           ...current,
           visitorReasonId: current.visitorReasonId || String(reasons?.[0]?.value ?? reasons?.[0]?.id ?? ""),
-        }));
+        })); */
       } catch {
         setVisitorTypes([]);
         setVisitorReasons([]);
@@ -488,15 +495,9 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     }
 
     if (step === 2) {
-      if (!formData.destinationBlock) {
-        nextErrors.destinationBlock = "Selecione o bloco de destino.";
-      }
-      if (!formData.destinationUnit.trim()) {
-        nextErrors.destinationUnit = "Selecione a unidade de destino.";
-      }
-      if (!unitSearchResult) {
-        nextErrors.destinationUnit = "Selecione uma unidade valida.";
-      } else if (!formData.selectedResidentId) {
+      if (!destinationQuery.trim() && !unitSearchResult) {
+        nextErrors.destinationUnit = "Digite a unidade e faça a busca.";
+      } else if (!unitSearchResult || !formData.selectedResidentId) {
         nextErrors.selectedResidentId =
           "Selecione com quem o visitante vai falar.";
       }
@@ -525,56 +526,44 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     setActiveStep((current) => current + 1);
   };
 
-  const handleBlockChange = async (blockId: string) => {
-    setFormData((current) => ({
-      ...current,
-      destinationBlock: blockId,
-      destinationUnit: "",
-      selectedResidentId: "",
-      releaseType: "",
-    }));
-    setUnitSearchResult(null);
-    setUnitSearched(false);
-    setUnits([]);
-    clearFieldError("destinationBlock");
-    clearFieldError("destinationUnit");
-
-    if (!blockId) return;
-
-    setDestinationLoading(true);
-    try {
-      const response = await unitService.getUnitsByBlock(blockId, 1, 100);
-      setUnits(response.items ?? []);
-    } catch (error) {
-      setUnits([]);
-      const message =
-        error instanceof Error ? error.message : "Erro ao carregar unidades.";
-      showError(message);
-    } finally {
-      setDestinationLoading(false);
-    }
-  };
-
-  const handleUnitChange = async (unitId: string) => {
-    setFormData((current) => ({
-      ...current,
-      destinationUnit: unitId,
-      selectedResidentId: "",
-      releaseType: "",
-    }));
-    setUnitSearchResult(null);
+  const handleDestinationSearch = async () => {
+    const query = normalizeUnitSearchTerm(destinationQuery);
     setUnitSearched(true);
+    setUnitSearchResult(null);
+    setUnitSearchResults([]);
+    setFormData((current) => ({
+      ...current,
+      destinationUnit: "",
+      destinationBlock: "",
+      selectedResidentId: "",
+      releaseType: "",
+    }));
     clearFieldError("destinationUnit");
-
-    const selectedUnit = units.find((unit) => unit.condominiumUnitId === unitId);
-    if (!selectedUnit) return;
+    clearFieldError("selectedResidentId");
+    console.log(query, destinationQuery)
+    if (!query) {
+      setErrors((current) => ({
+        ...current,
+        destinationUnit: "Digite a unidade para buscar.",
+      }));
+      return;
+    }
 
     setDestinationLoading(true);
     try {
-      const mappedUnit = await mapUnitResult(selectedUnit);
-      setUnitSearchResult(mappedUnit);
-      if (mappedUnit.residents.length === 0) {
-        showError("Nenhum morador encontrado para esta unidade.");
+      const response = await unitService.getUnitsByCondominium(condominiumId, 1, 100);
+      const matchedUnits = (response.items ?? []).filter((unit) =>
+        normalizeUnitSearchTerm(unit.unitCode || unit.condominiumUnitId).includes(query),
+      );
+      const mappedUnits = (await Promise.all(matchedUnits.map(mapUnitResult))).filter(
+        (unit) => unit.residents.length > 0,
+      );
+      setUnitSearchResults(mappedUnits);
+      if (mappedUnits.length === 0) {
+        setErrors((current) => ({
+          ...current,
+          selectedResidentId: "Nenhum morador encontrado para esta unidade.",
+        }));
       }
     } catch (error) {
       const message =
@@ -583,6 +572,21 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     } finally {
       setDestinationLoading(false);
     }
+  };
+
+  const handleResidentSelect = (
+    unit: UnitSearchResult,
+    resident: ResidentContactOption,
+  ) => {
+    setUnitSearchResult(unit);
+    setFormData((current) => ({
+      ...current,
+      destinationUnit: unit.id,
+      selectedResidentId: resident.id,
+      releaseType: "",
+    }));
+    clearFieldError("destinationUnit");
+    clearFieldError("selectedResidentId");
   };
 
   const handleSubmit = async () => {
@@ -606,7 +610,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       });
 
       const visitResponse = await visitorService.createVisit({
-        entryAt: new Date().toISOString(),
+        entryAt: new Date().toISOString().split("T")[0],
         exitAt: null,
         releasedByResident: formData.releaseType === "resident",
         typeVisitorReasonId: formData.visitorReasonId,
@@ -666,6 +670,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       onClose();
     }
   };
+
+  useEffect(()=>{
+    console.log(formData.visitorReasonId)
+  },[formData.visitorReasonId])
 
   const renderStepContent = (step: number) => {
     if (step === 0) {
@@ -779,6 +787,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             file={formData.facePhoto}
             previewUrl={facePhotoPreview}
             inputId="visitante-face-photo"
+            icon={<Person />}
             onChange={(file) => {
               setFormData((current) => ({ ...current, facePhoto: file }));
               clearFieldError("facePhoto");
@@ -796,6 +805,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             file={formData.documentPhoto}
             previewUrl={documentPhotoPreview}
             inputId="visitante-document-photo"
+            icon={<Article />}
             onChange={(file) => {
               setFormData((current) => ({ ...current, documentPhoto: file }));
               clearFieldError("documentPhoto");
@@ -816,56 +826,34 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           <Typography className="visitante-section-title">
             Unidade destino
           </Typography>
-          <Grid container spacing={1.5}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                select
-                label={formData.destinationBlock ? "" : "Bloco"}
-                value={formData.destinationBlock}
-                onChange={(event) => void handleBlockChange(event.target.value)}
-                error={Boolean(errors.destinationBlock)}
-                helperText={errors.destinationBlock}
-                disabled={destinationLoading}
-              >
-                <MenuItem value="" disabled>
-                  Selecione
-                </MenuItem>
-                {blocks.map((block) => (
-                  <MenuItem
-                    key={block.condominiumBlockId}
-                    value={block.condominiumBlockId}
-                  >
-                    {block.name || block.code || block.condominiumBlockId}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                select
-                label={formData.destinationUnit ? "" : "Unidade"}
-                value={formData.destinationUnit}
-                onChange={(event) => void handleUnitChange(event.target.value)}
-                error={Boolean(errors.destinationUnit)}
-                helperText={errors.destinationUnit}
-                disabled={!formData.destinationBlock || destinationLoading}
-              >
-                <MenuItem value="" disabled>
-                  Selecione
-                </MenuItem>
-                {units.map((unit) => (
-                  <MenuItem
-                    key={unit.condominiumUnitId}
-                    value={unit.condominiumUnitId}
-                  >
-                    {unit.unitCode || unit.condominiumUnitId}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-          </Grid>
+          <Box className="visitante-destination-search">
+            <TextField
+              fullWidth
+              label={destinationQuery ? "" : "Apto 101"}
+              value={destinationQuery}
+              onChange={(event) => {
+                setDestinationQuery(event.target.value);
+                clearFieldError("destinationUnit");
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void handleDestinationSearch();
+                }
+              }}
+              error={Boolean(errors.destinationUnit)}
+              helperText={errors.destinationUnit}
+              disabled={destinationLoading}
+            />
+            <Button
+              variant="contained"
+              onClick={() => void handleDestinationSearch()}
+              disabled={destinationLoading}
+              startIcon={destinationLoading ? undefined : <Search />}
+            >
+              {destinationLoading ? <CircularProgress size={18} /> : "Buscar"}
+            </Button>
+          </Box>
 
           {destinationLoading ? (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -875,52 +863,49 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           ) : null}
 
           <Typography className="visitante-step-help">
-            Selecione o bloco e a unidade para localizar os moradores.
+            Digite a unidade e faça a busca para localizar os moradores.
           </Typography>
 
-          {unitSearchResult ? (
+          {unitSearchResults.length > 0 ? (
             <Box className="visitante-residents-list">
               <Typography className="visitante-section-title">
-                Moradores encontrados
+                Resultados
               </Typography>
-              {unitSearchResult.residents.map((resident) => (
-                <Box className="visitante-resident-card" key={resident.id}>
-                  <Box className="visitante-resident-main">
-                    <Box>
-                      <Typography className="visitante-resident-name">
-                        {resident.fullName}
-                      </Typography>
-                      <Box className="visitante-resident-line">
-                        <Phone sx={{ fontSize: 16 }} />
-                        <Typography>{resident.phone}</Typography>
+              <Box className="visitante-residents-scroll">
+                {unitSearchResults.flatMap((unit) =>
+                  unit.residents.map((resident) => (
+                    <Box
+                      className={`visitante-resident-card ${
+                        formData.selectedResidentId === resident.id
+                          ? "selected"
+                          : ""
+                      }`}
+                      key={`${unit.id}-${resident.id}`}
+                      onClick={() => handleResidentSelect(unit, resident)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          handleResidentSelect(unit, resident);
+                        }
+                      }}
+                    >
+                      <Box className="visitante-resident-icon">
+                        <LocationOn />
                       </Box>
-                      <Box className="visitante-resident-line">
-                        <MarkunreadMailbox sx={{ fontSize: 16 }} />
-                        <Typography>Interfone {resident.intercom}</Typography>
+                      <Box className="visitante-resident-copy">
+                        <Typography className="visitante-resident-name">
+                          {resident.fullName}
+                        </Typography>
+                        <Typography className="visitante-resident-unit">
+                          {unit.label}
+                        </Typography>
                       </Box>
                     </Box>
-                    <Checkbox
-                      checked={formData.selectedResidentId === resident.id}
-                      onChange={() =>
-                        setFormData((current) => ({
-                          ...current,
-                          selectedResidentId:
-                            current.selectedResidentId === resident.id
-                              ? ""
-                              : resident.id,
-                        }))
-                      }
-                    />
-                  </Box>
-                  <Chip
-                    label={resident.atHome ? "Tem gente em casa" : "Ninguém em casa"}
-                    color={resident.atHome ? "success" : "error"}
-                    variant="outlined"
-                    size="small"
-                    className="visitante-chip"
-                  />
-                </Box>
-              ))}
+                  )),
+                )}
+              </Box>
               {errors.selectedResidentId ? (
                 <Typography className="visitante-error-text">
                   {errors.selectedResidentId}
@@ -929,9 +914,9 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             </Box>
           ) : null}
 
-          {unitSearched && !unitSearchResult ? (
+          {unitSearched && !destinationLoading && unitSearchResults.length === 0 ? (
             <Alert severity="warning" className="visitante-alert">
-              Nenhum morador foi carregado para a unidade selecionada.
+              Nenhum morador foi encontrado para a unidade pesquisada.
             </Alert>
           ) : null}
 
@@ -956,23 +941,23 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             error={Boolean(errors.visitorReasonId)}
             helperText={errors.visitorReasonId}
           >
-            <MenuItem value="" disabled>
-              Selecione
-            </MenuItem>
             {visitorReasons.map((option) => (
               <MenuItem key={getEnumOptionValue(option)} value={getEnumOptionValue(option)}>
                 {getEnumOptionLabel(option)}
               </MenuItem>
             ))}
           </TextField>
-          <TextField
+{/*           <TextField
+          sx={{
+            height:10
+          }}
             fullWidth
             multiline
             minRows={2}
             label={formData.notes ? "" : "Observacoes"}
             value={formData.notes}
             onChange={(event) => handleChange("notes", event.target.value)}
-          />
+          /> */}
           <Box className="visitante-option-list">
             <Box
               className={`visitante-option-card ${
@@ -989,7 +974,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
                 <Typography className="visitante-option-title">
                   Manual Portaria
                 </Typography>
-                <Typography className="visitante-option-description">
+                <Typography sx={{textAlign:'left !important'}} className="visitante-option-description">
                   Liberação feita manualmente pela equipe da portaria.
                 </Typography>
               </Box>
@@ -1010,11 +995,11 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
               <Box className="visitante-option-icon resident">
                 <HowToReg />
               </Box>
-              <Box className="visitante-option-copy">
+              <Box  className="visitante-option-copy">
                 <Typography className="visitante-option-title">
                   Direto pelo Morador
                 </Typography>
-                <Typography className="visitante-option-description">
+                <Typography sx={{textAlign:'center'}} className="visitante-option-description">
                   Disponível apenas quando o usuário logado pertence à unidade
                   selecionada.
                 </Typography>
@@ -1028,7 +1013,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             </Typography>
           ) : null}
 
-          <Alert severity={residentCanManageAccess ? "success" : "info"}>
+          <Alert sx={{mb:2}} severity={residentCanManageAccess ? "success" : "info"}>
             {residentCanManageAccess
               ? "Usuário logado identificado como morador da unidade. A liberação direta está habilitada."
               : "Liberação direta pelo morador fica bloqueada até validar que o usuário logado pertence à unidade."}
@@ -1048,7 +1033,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             <Box className="visitante-access-card" key={area.areaId}>
               <Box className="visitante-access-copy">
                 <Box className="visitante-option-icon area">
-                  <Security />
+                  {getAreaIcon(area)}
                 </Box>
                 <Typography className="visitante-option-title">
                   {area.name}
@@ -1094,7 +1079,11 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           setActiveStep((current) => current - 1);
         }}
         onClose={onClose}
-        width={activeStep >= 2 ? "780px" : "650px"}
+        width={
+          activeStep >= 2
+            ? "min(820px, calc(100vw - 32px))"
+            : "min(650px, calc(100vw - 32px))"
+        }
         disableContent={loading}
         actions={
           activeStep === stepLabels.length - 1 ? (
