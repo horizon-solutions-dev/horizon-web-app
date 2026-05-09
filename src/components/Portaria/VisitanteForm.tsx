@@ -643,13 +643,13 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         releasedByResident: formData.releaseType === "resident",
         typeVisitorReasonId: formData.visitorReasonId,
         notes: formData.notes.trim(),
-        visitorId: visitorResponse.visitorId,
+        visitorId: visitorResponse,
         condominiumId,
         condominiumUnitId: unitSearchResult.id,
         condominiumUnitResidentId: formData.selectedResidentId,
         visitorAccessPermissions: Object.entries(formData.areaAccess).map(
           ([areaId, active]) => ({
-            visitorId: visitorResponse.visitorId,
+            visitorId: visitorResponse,
             areaId,
             active,
           }),
