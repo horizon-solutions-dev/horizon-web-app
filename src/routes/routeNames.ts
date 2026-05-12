@@ -1,101 +1,100 @@
 const CommonRoutes = {
   Login: "/",
   NotFound: "/not-found",
-  EsqueciSenha: "/esqueci-senha",
-  RecuperarSenha: "/recuperar-senha/:recoveryToken",
-  CriarConta: "/criar-conta",
-  PrimeiroAcesso: "/primeiro-acesso"
+  EsqueciSenha: "/forgot-password",
+  RecuperarSenha: "/recover-password/:recoveryToken",
+  CriarConta: "/create-account",
+  PrimeiroAcesso: "/first-access"
 };
 
 const CondominioRoutes = {
   Dashboard: "/dashboard",
-  
+
   // Reservas
-  Areas: "/reservas/areas",
-  ReservasTipo: "/reservas/tipo",
-  ReservasListagem: "/reservas/listagem",
-  ReservasCalendario: "/reservas/calendario",
-  ReservasDisponibilidade: "/reservas/disponibilidade",
-  
+  Areas: "/reservations/areas",
+  ReservasTipo: "/reservations/type",
+  ReservasListagem: "/reservations/list",
+  ReservasCalendario: "/reservations/calendar",
+  ReservasDisponibilidade: "/reservations/availability",
+
   // Financeiro - Boletos
-  FinanceiroBoletos: "/financeiro/boletos",
-  FinanceiroBoletosDownload: "/financeiro/boletos/download",
-  FinanceiroBoletosAnexos: "/financeiro/boletos/anexos",
-  
+  FinanceiroBoletos: "/finance/bills",
+  FinanceiroBoletosDownload: "/finance/bills/download",
+  FinanceiroBoletosAnexos: "/finance/bills/attachments",
+
   // Financeiro - Balancetes
-  FinanceiroBalancetes: "/financeiro/balancetes",
-  FinanceiroBalancetesDownload: "/financeiro/balancetes/download",
-  FinanceiroBalancetesRelatorio: "/financeiro/balancetes/relatorio",
-  
+  FinanceiroBalancetes: "/finance/trial-balances",
+  FinanceiroBalancetesDownload: "/finance/trial-balances/download",
+  FinanceiroBalancetesRelatorio: "/finance/trial-balances/report",
+
   // Financeiro - Despesas
-  FinanceiroDespesas: "/financeiro/despesas",
-  FinanceiroDespesasAnexo: "/financeiro/despesas/anexo",
-  
+  FinanceiroDespesas: "/finance/expenses",
+  FinanceiroDespesasAnexo: "/finance/expenses/attachment",
+
   // Portaria
-  PortariaUsuarios: "/portaria/usuarios",
-  PortariaVisitantes: "/portaria/visitantes",
-  PortariaLiberacao: "/portaria/liberacao",
-  PortariaRelatorios: "/portaria/relatorios",
-  
+  PortariaUsuarios: "/front-desk/users",
+  PortariaVisitantes: "/front-desk/visitors",
+  PortariaLiberacao: "/front-desk/access-release",
+  PortariaRelatorios: "/front-desk/reports",
+
   // Condominio
-  Condominio: "/condominio",
+  Condominio: "/condominium",
 
   // Cadastros
-  CadastrosBlocos: "/cadastros/blocos",
-  CadastrosUnidades: "/cadastros/unidades",
-  CadastrosResidentes: "/cadastros/moradores",
-  CadastrosOrganizacoes: "/cadastros/organizacoes",
-  CadastrosPerfis: "/cadastros/perfis",
-  
-  // Veículos
-  Veiculos: "/veiculos",
+  CadastrosBlocos: "/registrations/blocks",
+  CadastrosUnidades: "/registrations/units",
+  CadastrosResidentes: "/registrations/residents",
+  CadastrosOrganizacoes: "/registrations/organizations",
+  CadastrosPerfis: "/registrations/profiles",
+
+  // Veiculos
+  Veiculos: "/vehicles",
   // Fale Conosco
-  FaleConosco: "/fale-conosco",
-  
+  FaleConosco: "/contact-us",
+
   // Encomendas
-  EncomendasRecebimento: "/encomendas/recebimento",
-  EncomendasNotificacao: "/encomendas/notificacao",
-  ValidacaoAcesso: "/pendentes/validacao-acesso",
+  EncomendasRecebimento: "/packages/receiving",
+  EncomendasNotificacao: "/packages/notification",
+  ValidacaoAcesso: "/pending/access-validation",
 };
 
 const PersonalRoutes = {
-	LojaHome: "/loja/home",
-	LojaFinalizarCesta: "/loja/home/finalizacao",
-	LojaPesquisarCesta: "/loja/pesquisar",
-	LojaMinhasCompras: "/loja/minhas-compras",
-	LojaCheckout: "/loja/checkout",
-	LojaRefreshPayment: "/loja/home/refresh-payment/basket",
+  LojaHome: "/store/home",
+  LojaFinalizarCesta: "/store/home/checkout",
+  LojaPesquisarCesta: "/store/search",
+  LojaMinhasCompras: "/store/my-purchases",
+  LojaCheckout: "/store/checkout",
+  LojaRefreshPayment: "/store/home/refresh-payment/basket",
 };
 
 const AdminRoutes = {
-	AdminLogin: "/admin/login",
-	AdminEsqueciSenha: "/admin/esqueci-senha",
+  AdminLogin: "/admin/login",
+  AdminEsqueciSenha: "/admin/forgot-password",
 
-	AdminDashboard: "/admin/dashboard",
+  AdminDashboard: "/admin/dashboard",
 
-	AdminListaPerfil: "/admin/perfil",
-	AdminPerfilCadastro: "/admin/perfil/cadastro",
+  AdminListaPerfil: "/admin/profile",
+  AdminPerfilCadastro: "/admin/profile/create",
 
-	AdminListaEmpresa: "/admin/empresa",
-	AdminEmpresaCadastro: "/admin/empresa/cadastro",
+  AdminListaEmpresa: "/admin/company",
+  AdminEmpresaCadastro: "/admin/company/create",
 
-	AdminListaColaboradorCliente: "/admin/colaboradores-cliente",
-	AdminCadastroColaboradorCliente: "/admin/colaboradores-cliente/cadastro",
+  AdminListaColaboradorCliente: "/admin/customer-collaborators",
+  AdminCadastroColaboradorCliente: "/admin/customer-collaborators/create",
 
-	AdminListaProduto: "/admin/produto",
-	AdminProdutoCadastro: "/admin/produto/cadastro",
+  AdminListaProduto: "/admin/product",
+  AdminProdutoCadastro: "/admin/product/create",
 
-	AdminListaCesta: "/admin/cesta",
-	AdminCadastroCesta: "/admin/cesta/cadastro",
-	
-	AdminCestasCompradas: "/admin/compradas",
-	
+  AdminListaCesta: "/admin/basket",
+  AdminCadastroCesta: "/admin/basket/create",
+
+  AdminCestasCompradas: "/admin/purchased",
 };
 
 const RouteNames = {
   //common routes
   ...CommonRoutes,
-  //condominio routes
+  //condominium routes
   ...CondominioRoutes,
   //e-commerce routes
   ...PersonalRoutes,

@@ -187,6 +187,14 @@
     padding-right: 4px;
   }
 
+  .visitante-access-list {
+    border: 1px solid #eef2f6;
+    border-radius: 10px;
+    overflow: hidden;
+    padding-right: 0;
+    gap: 0;
+  }
+
   .visitante-residents-scroll {
     display: flex;
     flex-direction: column;
@@ -207,12 +215,12 @@
 
     &:hover,
     &:focus {
-      background: #67b3ff;
+      background: #e7f7ef;
       outline: none;
     }
 
     &.selected {
-      background: #67b3ff;
+      background: #d5f0e4;
       box-shadow: none;
     }
   }
@@ -229,6 +237,25 @@
   .visitante-resident-main,
   .visitante-access-card {
     justify-content: space-between;
+  }
+
+  .visitante-access-card {
+    min-height: 44px;
+    border: 0;
+    border-bottom: 1px solid #eef2f6;
+    border-radius: 0;
+    padding: 8px 12px;
+    background: #ffffff;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    .visitante-option-title {
+      font-size: 13px !important;
+      font-weight: 500 !important;
+      color: #344054;
+    }
   }
 
   .visitante-option-card,

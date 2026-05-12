@@ -20,7 +20,6 @@ import {
   Apartment,
   Article,
   Badge,
-  Business,
   Close,
   DeleteOutline,
   Email,
@@ -37,7 +36,7 @@ import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import VisitanteForm, { type ExistingVisitorFormData } from "./VisitanteForm";
 import { visitorService } from "../../services/visitorService";
-import type { VisitorResponse } from "../../models/visitor.model";
+import type { VisitorEnum, VisitorResponse } from "../../models/visitor.model";
 import {
   condominiumService,
   type Condominium,
@@ -52,6 +51,7 @@ interface Visitor {
   document: string;
   email: string;
   phone: string;
+  visitorTypeId?: number | string;
   visitorType: string;
   condominium: string;
   unit: string;
@@ -103,10 +103,87 @@ const getVisitorDocumentImageUrl = (visitor: VisitorResponse) => {
   return `data:${visitor.documentPhotoContentType};base64,${visitor.documentPhotoThumbnailFile}`;
 };
 
+const getVisitorTypeLabel = (visitor: VisitorResponse, visitorTypes: VisitorEnum[]) => {
+  if (visitor.visitorType?.trim()) {
+    return visitor.visitorType;
+  }
+
+  const visitorType = visitorTypes.find(
+    (type) =>
+      String(type.id) === String(visitor.visitorTypeId) ||
+      String(type.value) === String(visitor.visitorTypeId),
+  );
+
+  return visitorType?.description || visitorType?.value || "Visitante";
+};
+
+const stringifySearchValue = (value: unknown): string => {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return (
+      stringifySearchValue(record.unitCode) ||
+      stringifySearchValue(record.code) ||
+      stringifySearchValue(record.name) ||
+      stringifySearchValue(record.description) ||
+      stringifySearchValue(record.condominiumUnitId)
+    );
+  }
+
+  return "";
+};
+
+const getVisitorUnitLabel = (visitor: VisitorResponse) => {
+  const source = visitor as VisitorResponse & Record<string, unknown>;
+  const possibleUnitFields = [
+    source.unitCode,
+    source.apto,
+    source.apartment,
+    source.unidade,
+    source.destinationUnit,
+    source.condominiumUnitCode,
+    source.condominiumUnit,
+    source.condominiumUnitId,
+  ];
+
+  return (
+    possibleUnitFields.map(stringifySearchValue).find(Boolean) || "-"
+  );
+};
+
+const matchesVisitorSearch = (visitor: Visitor, search: string) => {
+  const normalizedSearch = search.trim().toLowerCase();
+  if (!normalizedSearch) return true;
+
+  const fields = [
+    visitor.fullName,
+    visitor.email,
+    visitor.document,
+    visitor.phone,
+    visitor.unit,
+  ];
+  const searchableText = fields.filter(Boolean).join(" ").toLowerCase();
+  const searchableDigits = fields
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\D/g, "");
+  const searchDigits = normalizedSearch.replace(/\D/g, "");
+
+  return (
+    searchableText.includes(normalizedSearch) ||
+    Boolean(searchDigits && searchableDigits.includes(searchDigits))
+  );
+};
+
 const mapVisitorResponse = (
   visitor: VisitorResponse,
   condominiumName: string,
   index: number,
+  visitorTypes: VisitorEnum[],
 ): Visitor => ({
   id: visitor.visitorId,
   fullName: visitor.name || "-",
@@ -114,13 +191,14 @@ const mapVisitorResponse = (
   document: visitor.documentNumber || "-",
   email: visitor.email || "-",
   phone: visitor.phone || "-",
-  visitorType: String(visitor.visitorTypeId || "Visitante"),
+  visitorTypeId: visitor.visitorTypeId,
+  visitorType: getVisitorTypeLabel(visitor, visitorTypes),
   condominium: condominiumName,
-  unit: "-",
+  unit: getVisitorUnitLabel(visitor),
   lastVisit: visitor.createdAt
     ? new Date(visitor.createdAt).toLocaleString("pt-BR")
     : "-",
-  releasedBy: visitor.createdBy || "-",
+  releasedBy: visitor.createdByName || visitor.createdBy || "-",
   activeVisitId: visitor.visitorHistoryId,
   imageUrl: getVisitorImageUrl(visitor),
   documentImageUrl: getVisitorDocumentImageUrl(visitor),
@@ -145,6 +223,7 @@ export default function Visitantes() {
   const [condoTotalPages, setCondoTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
+  const [visitorsTotalPages, setVisitorsTotalPages] = useState(1);
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [isCadastroOpen, setIsCadastroOpen] = useState(false);
   const [existingVisitor, setExistingVisitor] =
@@ -156,11 +235,11 @@ export default function Visitantes() {
   const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
 
   const filteredVisitors = visitors.filter((visitor) =>
-    visitor.fullName.toLowerCase().includes(searchTerm.trim().toLowerCase()),
+    matchesVisitorSearch(visitor, searchTerm),
   );
 
-  const condoPageSize = 6;
-  const pageSize = 6;
+  const condoPageSize = 4;
+  const pageSize = 4;
 
   const loadCondominiums = async (pageNumber = 1) => {
     setLoading(true);
@@ -211,17 +290,27 @@ export default function Visitantes() {
 
     setLoading(true);
     try {
-      const response = await visitorService.getVisitors(
-        condominium.condominiumId,
-        pageNumber,
-        pageSize,
-      );
+      const [response, visitorTypes] = await Promise.all([
+        visitorService.getVisitors(
+          condominium.condominiumId,
+          pageNumber,
+          pageSize,
+        ),
+        visitorService.getVisitorTypes(),
+      ]);
       setVisitors(
         (response.items ?? []).map((visitor, index) =>
-          mapVisitorResponse(visitor, condominium.name, index),
+          mapVisitorResponse(visitor, condominium.name, index, visitorTypes ?? []),
         ),
       );
       setPage(response.paging?.pageNumber ?? pageNumber);
+      setVisitorsTotalPages(
+        response.paging?.totalPages ??
+          Math.max(
+            1,
+            Math.ceil((response.paging?.total ?? response.items?.length ?? 0) / pageSize),
+          ),
+      );
     } catch (error) {
       console.error(
         error instanceof Error ? error.message : "Erro ao carregar visitantes.",
@@ -240,16 +329,12 @@ export default function Visitantes() {
     setVisitors([]);
     setSearchTerm("");
     setPage(1);
+    setVisitorsTotalPages(1);
     setActiveView("visitantes");
     await loadVisitors(condominium, 1);
   };
 
-  const totalPages = Math.max(1, Math.ceil(filteredVisitors.length / pageSize));
-  const currentPage = Math.min(page, totalPages);
-  const paginatedVisitors = filteredVisitors.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const currentPage = Math.min(page, visitorsTotalPages);
 
   const filteredCondominiums = condominiums.filter((condominium) =>
     [condominium.name, condominium.doc, condominium.city, condominium.state]
@@ -293,7 +378,7 @@ export default function Visitantes() {
         document: response.documentNumber || visitor.document,
         email: response.email || visitor.email,
         phone: response.phone || visitor.phone,
-        visitorType: response.visitorTypeId || visitor.visitorType,
+        visitorType: response.visitorTypeId || visitor.visitorTypeId || visitor.visitorType,
         facePhotoUrl: getVisitorImageUrl(response) || visitor.imageUrl,
         documentPhotoUrl:
           getVisitorDocumentImageUrl(response) || visitor.documentImageUrl,
@@ -307,7 +392,7 @@ export default function Visitantes() {
         document: visitor.document,
         email: visitor.email,
         phone: visitor.phone,
-        visitorType: visitor.visitorType,
+        visitorType: visitor.visitorTypeId || visitor.visitorType,
         facePhotoUrl: visitor.imageUrl,
         documentPhotoUrl: visitor.documentImageUrl,
       });
@@ -375,7 +460,11 @@ export default function Visitantes() {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+                  {activeView === "condominios" ? (
+                    <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
+                  ) : (
+                    <Person sx={{ fontSize: 36, color: "#1976d2" }} />
+                  )}
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -392,6 +481,8 @@ export default function Visitantes() {
                         setSelectedCondominium(null);
                         setVisitors([]);
                         setSearchTerm("");
+                        setPage(1);
+                        setVisitorsTotalPages(1);
                         return;
                       }
                       navigate("/dashboard");
@@ -483,7 +574,7 @@ export default function Visitantes() {
               <CardList
                 title="Visitantes"
                 showTitle={false}
-                searchPlaceholder="Buscar visitante..."
+                searchPlaceholder="Buscar por nome, email, documento, telefone ou apto..."
                 onSearchChange={(value) => {
                   setSearchTerm(value);
                   setPage(1);
@@ -493,18 +584,18 @@ export default function Visitantes() {
                 addButtonPlacement="toolbar"
                 emptyImageLabel={t("common.noImage")}
                 showFilters
-                showPagination={filteredVisitors.length > pageSize}
+                showPagination={true}
                 cardMaxHeight="none"
                 imageWidth={154}
                 imageHeight={112}
                 actionsMarginTop={2}
                 page={currentPage}
-                totalPages={totalPages}
+                totalPages={visitorsTotalPages}
                 onPageChange={(nextPage) => {
                   setPage(nextPage);
                   void loadVisitors(selectedCondominium, nextPage);
                 }}
-                items={paginatedVisitors.map((visitor) => {
+                items={filteredVisitors.map((visitor) => {
                   const badgeStyle = badgeStyles[visitor.visitorType] ?? {
                     color: "#355070",
                     backgroundColor: "#e8edf5",
@@ -526,7 +617,7 @@ export default function Visitantes() {
                     ),
                     subtitle: (
                       <Box
-                        sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                        sx={{ display: "flex", flexDirection: "column", gap:  0}}
                       >
                         <Box
                           sx={{
@@ -536,7 +627,7 @@ export default function Visitantes() {
                             color: "text.secondary",
                           }}
                         >
-                          <Badge sx={{ fontSize: 18 }} />
+                          <Badge sx={{ fontSize: 16 }} />
                           <Typography variant="body2">
                             {visitor.document}
                           </Typography>
@@ -579,14 +670,14 @@ export default function Visitantes() {
                     meta: (
                       <Box
                         sx={{
-                          mt: 2,
-                          p: 2,
-                          height: "100px",
+                          mt: 0,
+                          p: .05,
+                          height: "75px",
                           borderRadius: 2,
                           backgroundColor: "rgba(255, 255, 255, 0.55)",
                           display: "flex",
                           flexDirection: "column",
-                          gap: 0.75,
+                          gap: 0.1,
                         }}
                       >
                         <Box
@@ -603,7 +694,7 @@ export default function Visitantes() {
                         <Box
                           sx={{
                             display: "flex",
-                            gap: 2,
+                            gap: 1,
                             color: "text.secondary",
                             flexWrap: "wrap",
                           }}
@@ -727,6 +818,7 @@ export default function Visitantes() {
       </Dialog>
 
       <AppStateModal
+        showCancel={false}
         open={appStateModal.open}
         type={appStateModal.type}
         title={appStateModal.title}

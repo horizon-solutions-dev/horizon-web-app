@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type JSX } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type JSX } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   MdDashboard,
@@ -39,6 +39,7 @@ interface MenuItem {
   id: string;
   label: string;
   icon: JSX.Element;
+  iconColor?: string;
   path?: string;
   children?: MenuItem[];
   access?: AccessRequirement;
@@ -86,6 +87,7 @@ export default function MenuComponent({
       id: "dashboard",
       label: t("menu.dashboard"),
       icon: <MdDashboard />,
+      iconColor: "#38bdf8",
       path: RouteNames.Dashboard,
       access: { permissions: [APP_PERMISSIONS.DashboardView] },
     },
@@ -95,6 +97,7 @@ export default function MenuComponent({
             id: "cadastros-organizacoes",
             label: t("menu.organizations"),
             icon: <MdBusiness />,
+            iconColor: "#f59e0b",
             path: RouteNames.CadastrosOrganizacoes,
             access: { permissions: [APP_PERMISSIONS.OrganizationView] },
           },
@@ -104,6 +107,7 @@ export default function MenuComponent({
       id: "condominios",
       label: t("menu.condominiums"),
       icon: <MdApartment />,
+      iconColor: "#2563eb",
       path: RouteNames.Condominio,
       access: { permissions: [APP_PERMISSIONS.CondominiumView] },
     },
@@ -111,6 +115,7 @@ export default function MenuComponent({
       id: "cadastros-blocos",
       label: t("menu.blocks"),
       icon: <ViewModule />,
+      iconColor: "#8b5cf6",
       path: RouteNames.CadastrosBlocos,
       access: { permissions: [APP_PERMISSIONS.StructureView] },
     },
@@ -118,6 +123,7 @@ export default function MenuComponent({
       id: "cadastros-unidades",
       label: t("menu.units"),
       icon: <Home />,
+      iconColor: "#10b981",
       path: RouteNames.CadastrosUnidades,
       access: { permissions: [APP_PERMISSIONS.UnitView] },
     },
@@ -125,6 +131,7 @@ export default function MenuComponent({
       id: "cadastros-moradores",
       label: t("menu.residents"),
       icon: <People />,
+      iconColor: "#ec4899",
       path: RouteNames.CadastrosResidentes,
       access: { permissions: [APP_PERMISSIONS.ResidentView] },
     },
@@ -132,6 +139,7 @@ export default function MenuComponent({
       id: "cadastros-perfis",
       label: t("menu.profiles"),
       icon: <AssignmentInd />,
+      iconColor: "#6366f1",
       path: RouteNames.CadastrosPerfis,
       access: { permissions: [APP_PERMISSIONS.ProfileView] },
     },
@@ -139,11 +147,13 @@ export default function MenuComponent({
       id: "itens-pendentes",
       label: t("menu.pendingItems"),
       icon: <MdSettings />,
+      iconColor: "#94a3b8",
       children: [
         {
           id: "pendente-reservas",
           label: "Areas",
           icon: <MdEventAvailable />,
+          iconColor: "#14b8a6",
           path: RouteNames.Areas,
           access: { permissions: [APP_PERMISSIONS.ReservationView] },
         },
@@ -151,6 +161,7 @@ export default function MenuComponent({
           id: "pendente-financeiro",
           label: t("menu.financial"),
           icon: <MdAttachMoney />,
+          iconColor: "#22c55e",
           path: RouteNames.FinanceiroBoletos,
           access: { permissions: [APP_PERMISSIONS.FinancialView] },
         },
@@ -158,6 +169,7 @@ export default function MenuComponent({
           id: "pendente-portaria",
           label: t("menu.gatehouse"),
           icon: <MdSecurity />,
+          iconColor: "#f97316",
           path: RouteNames.PortariaUsuarios,
           access: { permissions: [APP_PERMISSIONS.GatehouseView] },
         },
@@ -165,6 +177,7 @@ export default function MenuComponent({
           id: "portaria-visitantes",
           label: "Visitantes",
           icon: <People />,
+          iconColor: "#ec4899",
           path: RouteNames.PortariaVisitantes,
           access: { permissions: [APP_PERMISSIONS.GatehouseView] },
         },
@@ -172,6 +185,7 @@ export default function MenuComponent({
           id: "pendente-veiculos",
           label: t("menu.vehicles"),
           icon: <MdDirectionsCar />,
+          iconColor: "#0ea5e9",
           path: RouteNames.Veiculos,
           access: { permissions: [APP_PERMISSIONS.VehicleView] },
         },
@@ -179,6 +193,7 @@ export default function MenuComponent({
           id: "pendente-encomendas",
           label: t("menu.deliveries"),
           icon: <MdLocalShipping />,
+          iconColor: "#a855f7",
           path: RouteNames.EncomendasRecebimento,
           access: { permissions: [APP_PERMISSIONS.DeliveryView] },
         },
@@ -186,12 +201,14 @@ export default function MenuComponent({
           id: "fale-conosco",
           label: t("menu.contactUs"),
           icon: <MdEmail />,
+          iconColor: "#06b6d4",
           path: RouteNames.FaleConosco,
         },
         {
           id: "pendente-validacao-acesso",
           label: t("menu.accessValidation"),
           icon: <MdSecurity />,
+          iconColor: "#ef4444",
           path: RouteNames.ValidacaoAcesso,
           access: { permissions: [APP_PERMISSIONS.PendingView] },
         },
@@ -331,7 +348,10 @@ export default function MenuComponent({
           <div
             className={`menu-item ${parentActive ? "parent-active" : ""} ${collapsed ? "collapsed" : ""}`}
             onClick={() => toggleExpand(item.id)}
-            style={{ paddingLeft: collapsed ? "0" : `${level * 16 + 16}px` }}
+            style={{
+              paddingLeft: collapsed ? "0" : `${level * 16 + 16}px`,
+              "--menu-icon-color": item.iconColor,
+            } as CSSProperties}
             title={collapsed ? item.label : undefined}
           >
             <span className="menu-icon">{item.icon}</span>
@@ -360,10 +380,13 @@ export default function MenuComponent({
         key={item.id}
         to={item.path || "#"}
         className={`menu-item ${itemIsActive ? "active" : ""} ${collapsed ? "collapsed" : ""}`}
-        style={{ paddingLeft: collapsed ? "0" : `${level * 16 + 16}px` }}
+        style={{
+          paddingLeft: collapsed ? "0" : `${level * 16 + 16}px`,
+          "--menu-icon-color": item.iconColor,
+        } as CSSProperties}
         title={collapsed ? item.label : undefined}
       >
-        {level === 0 ? <span className="menu-icon">{item.icon}</span> : null}
+        <span className="menu-icon">{item.icon}</span>
         {!collapsed ? <span className="menu-label">{item.label}</span> : null}
       </Link>
     );

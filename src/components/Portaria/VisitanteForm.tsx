@@ -1,30 +1,27 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
   Alert,
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   Grid,
   MenuItem,
-  Switch,
   TextField,
   Typography,
 } from "@mui/material";
 import {
-  Article,
-  Badge,
   DirectionsCar,
   FitnessCenter,
   HowToReg,
   LocationOn,
-  Person,
   Pool,
-  Search,
   Security,
   Celebration,
 } from "@mui/icons-material";
 import StepWizardCard from "../../shared/components/StepWizardCard";
+import ImageUploadField from "../../shared/components/ImageUploadField";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { unitResidentService } from "../../services/unitResidentService";
@@ -231,19 +228,11 @@ const getEnumOptionValue = (option: VisitorEnum | string) => {
   return String(option.id || option.value);
 };
 
-const normalizeUnitSearchTerm = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-
 const getAreaIcon = (area: AreaResponse) => {
   const text = `${area.name} ${area.type}`.toLowerCase();
   if (text.includes("pisc")) return <Pool />;
   if (text.includes("academ") || text.includes("fitness")) return <FitnessCenter />;
-  if (text.includes("festa") || text.includes("salao") || text.includes("salão")) return <Celebration />;
+  if (text.includes("festa") || text.includes("salao") || text.includes("salÃ£o")) return <Celebration />;
   if (text.includes("garag") || text.includes("estacion")) return <DirectionsCar />;
   return <Security />;
 };
@@ -293,65 +282,6 @@ const mapUnitResult = async (unit: CondominiumUnit): Promise<UnitSearchResult> =
   };
 };
 
-const FileUploadField = ({
-  label,
-  description,
-  file,
-  previewUrl,
-  inputId,
-  onChange,
-  icon,
-  showTitle = false,
-}: {
-  label: string;
-  description: string;
-  file: File | null;
-  previewUrl: string | null;
-  inputId: string;
-  onChange: (file: File | null) => void;
-  icon?: React.ReactNode;
-  showTitle?: boolean;
-}) => (
-  <Box className="visitante-upload-card">
-    {showTitle ? (
-      <Typography className="visitante-section-title">{label}</Typography>
-    ) : null}
-    <Box className="visitante-upload-box">
-      <input
-        id={inputId}
-        hidden
-        type="file"
-        accept="image/*"
-        onChange={(event) => onChange(event.target.files?.[0] || null)}
-      />
-      <label htmlFor={inputId} className="visitante-upload-trigger">
-        {previewUrl ? (
-          <Box className="visitante-upload-preview-wrapper">
-            <Box
-              component="img"
-              src={previewUrl}
-              alt={`Preview de ${label.toLowerCase()}`}
-              className="visitante-upload-preview"
-            />
-          </Box>
-        ) : (
-          <>
-            <Box className="visitante-upload-icon">
-              {icon || <Badge />}
-            </Box>
-            <Typography className="visitante-upload-label">
-              {file ? file.name : `Adicionar ${label.toLowerCase()}`}
-            </Typography>
-            <Typography className="visitante-upload-description">
-              {description}
-            </Typography>
-          </>
-        )}
-      </label>
-    </Box>
-  </Box>
-);
-
 const VisitanteForm: React.FC<VisitanteFormProps> = ({
   open,
   organizationName,
@@ -375,6 +305,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
   const [unitSearchResults, setUnitSearchResults] = useState<UnitSearchResult[]>(
     [],
   );
+  const [availableUnits, setAvailableUnits] = useState<CondominiumUnit[]>([]);
   const [destinationQuery, setDestinationQuery] = useState("");
   const [unitSearched, setUnitSearched] = useState(false);
   const [areas, setAreas] = useState<AreaResponse[]>([]);
@@ -411,11 +342,15 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
   useEffect(() => {
     if (!open || !condominiumId) return;
 
-    const loadAreas = async () => {
+    const loadCondominiumData = async () => {
       try {
-        const response = await areaService.getAreas(condominiumId, 1, 100);
-        const loadedAreas = response.items ?? [];
+        const [areasResponse, unitsResponse] = await Promise.all([
+          areaService.getAreas(condominiumId, 1, 100),
+          unitService.getUnitsByCondominium(condominiumId, 1, 100),
+        ]);
+        const loadedAreas = areasResponse.items ?? [];
         setAreas(loadedAreas);
+        setAvailableUnits(unitsResponse.items ?? []);
         setFormData((current) => ({
           ...current,
           areaAccess: loadedAreas.reduce<Record<string, boolean>>(
@@ -426,12 +361,13 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             {},
           ),
         }));
-      } catch (error) {
+      } catch {
         setAreas([]);
+        setAvailableUnits([]);
       }
     };
 
-    void loadAreas();
+    void loadCondominiumData();
   }, [open, condominiumId]);
 
   useEffect(() => {
@@ -460,6 +396,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
 
   useEffect(() => {
     if (!formData.facePhoto) {
+      if (!existingVisitor?.facePhotoUrl) setFacePhotoPreview(null);
       return;
     }
 
@@ -471,6 +408,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
 
   useEffect(() => {
     if (!formData.documentPhoto) {
+      if (!existingVisitor?.documentPhotoUrl) setDocumentPhotoPreview(null);
       return;
     }
 
@@ -607,7 +545,8 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
   };
 
   const handleDestinationSearch = async () => {
-    const query = normalizeUnitSearchTerm(destinationQuery);
+    const query = destinationQuery.trim().toLowerCase();
+
     setUnitSearched(true);
     setUnitSearchResult(null);
     setUnitSearchResults([]);
@@ -620,30 +559,50 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     }));
     clearFieldError("destinationUnit");
     clearFieldError("selectedResidentId");
+
     if (!query) {
       setErrors((current) => ({
         ...current,
-        destinationUnit: "Digite a unidade para buscar.",
+        destinationUnit: "Digite a unidade e faça a busca.",
+      }));
+      return;
+    }
+
+    const selectedUnit = availableUnits.find(
+      (unit) =>
+        unit.condominiumId === condominiumId &&
+        [unit.unitCode, unit.condominiumUnitId]
+          .filter(Boolean)
+          .some((value) => String(value).trim().toLowerCase() === query),
+    );
+
+    if (!selectedUnit) {
+      setErrors((current) => ({
+        ...current,
+        destinationUnit: "Unidade não encontrada neste condomínio.",
       }));
       return;
     }
 
     setDestinationLoading(true);
     try {
-      const response = await unitService.getUnitsByCondominium(condominiumId, 1, 100);
-      const matchedUnits = (response.items ?? []).filter((unit) =>
-        normalizeUnitSearchTerm(unit.unitCode || unit.condominiumUnitId).includes(query),
+      const mappedUnit = await mapUnitResult(selectedUnit);
+      setFormData((current) => ({
+        ...current,
+        destinationUnit: selectedUnit.condominiumUnitId,
+        destinationBlock: selectedUnit.condominiumBlockId || "",
+      }));
+      setDestinationQuery(
+        selectedUnit.unitCode || selectedUnit.condominiumUnitId || "",
       );
-      const mappedUnits = (await Promise.all(matchedUnits.map(mapUnitResult))).filter(
-        (unit) => unit.residents.length > 0,
-      );
-      setUnitSearchResults(mappedUnits);
-      if (mappedUnits.length === 0) {
+      if (mappedUnit.residents.length === 0) {
         setErrors((current) => ({
           ...current,
           selectedResidentId: "Nenhum morador encontrado para esta unidade.",
         }));
+        return;
       }
+      setUnitSearchResults([mappedUnit]);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar moradores.";
@@ -763,14 +722,13 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         <Box className="visitante-form-grid">
           <TextField
             fullWidth
-            label={formData.organizationName ? "" : "Organização"}
+            placeholder="Organização"
             value={formData.organizationName}
             disabled
             InputProps={{ readOnly: true }}
           />
           <TextField
             fullWidth
-            label={formData.visitorName ? "" : "Nome do Visitante"}
             placeholder="Digite o nome completo"
             value={formData.visitorName}
             disabled={Boolean(existingVisitor)}
@@ -813,7 +771,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label={formData.documentNumber ? "" : "Documento"}
+                placeholder="Documento"
                 value={formData.documentNumber}
                 disabled={Boolean(existingVisitor)}
                 InputProps={existingVisitor ? { readOnly: true } : undefined}
@@ -827,7 +785,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           </Grid>
           <TextField
             fullWidth
-            label={formData.phone ? "" : "Telefone"}
             placeholder="(00) 00000-0000"
             value={formData.phone}
             onChange={(event) => handleChange("phone", event.target.value)}
@@ -836,7 +793,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           />
           <TextField
             fullWidth
-            label={formData.email ? "" : "Email"}
             placeholder="email@exemplo.com"
             value={formData.email}
             onChange={(event) => handleChange("email", event.target.value)}
@@ -871,15 +827,16 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             ))}
           </TextField>
 
-          <FileUploadField
+          <ImageUploadField
             label="Foto do rosto"
             description="Toque para capturar ou enviar uma imagem"
-            file={formData.facePhoto}
+            fileName={formData.facePhoto?.name}
             previewUrl={facePhotoPreview}
-            inputId="visitante-face-photo"
-            icon={<Person />}
+            showTitle={false}
+            sx={{ p: 0, border: "none" }}
             onChange={(file) => {
               setFormData((current) => ({ ...current, facePhoto: file }));
+              if (!file) setFacePhotoPreview(null);
               clearFieldError("facePhoto");
             }}
           />
@@ -889,15 +846,16 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             </Typography>
           ) : null}
 
-          <FileUploadField
+          <ImageUploadField
             label="Foto do documento"
             description="Envie a frente ou imagem principal do documento"
-            file={formData.documentPhoto}
+            fileName={formData.documentPhoto?.name}
             previewUrl={documentPhotoPreview}
-            inputId="visitante-document-photo"
-            icon={<Article />}
+            showTitle={false}
+            sx={{ p: 0, border: "none" }}
             onChange={(file) => {
               setFormData((current) => ({ ...current, documentPhoto: file }));
+              if (!file) setDocumentPhotoPreview(null);
               clearFieldError("documentPhoto");
             }}
           />
@@ -916,14 +874,25 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           <Typography className="visitante-section-title">
             Unidade destino
           </Typography>
-          <Box className="visitante-destination-search">
+          <Box className="visitante-search-row">
             <TextField
               fullWidth
-              label={destinationQuery ? "" : "Apto 101"}
+              label={destinationQuery ? "" : "Unidade destino"}
               value={destinationQuery}
               onChange={(event) => {
                 setDestinationQuery(event.target.value);
+                setUnitSearched(false);
+                setUnitSearchResult(null);
+                setUnitSearchResults([]);
+                setFormData((current) => ({
+                  ...current,
+                  destinationUnit: "",
+                  destinationBlock: "",
+                  selectedResidentId: "",
+                  releaseType: "",
+                }));
                 clearFieldError("destinationUnit");
+                clearFieldError("selectedResidentId");
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
@@ -939,9 +908,8 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
               variant="contained"
               onClick={() => void handleDestinationSearch()}
               disabled={destinationLoading}
-              startIcon={destinationLoading ? undefined : <Search />}
             >
-              {destinationLoading ? <CircularProgress size={18} /> : "Buscar"}
+              Buscar
             </Button>
           </Box>
 
@@ -953,16 +921,16 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           ) : null}
 
           <Typography className="visitante-step-help">
-            Digite a unidade e faça a busca para localizar os moradores.
+            Selecione a unidade para localizar os moradores.
           </Typography>
 
-          {unitSearchResults.length > 0 ? (
+          {[...unitSearchResults,...unitSearchResults,...unitSearchResults,...unitSearchResults,...unitSearchResults].length > 0 ? (
             <Box className="visitante-residents-list">
               <Typography className="visitante-section-title">
                 Resultados
               </Typography>
-              <Box className="visitante-residents-scroll">
-                {unitSearchResults.flatMap((unit) =>
+              <Box className="visitante-residents-scroll" sx={{height: '200px'}}>
+                {[...unitSearchResults,...unitSearchResults,...unitSearchResults,...unitSearchResults,...unitSearchResults].flatMap((unit) =>
                   unit.residents.map((resident) => (
                     <Box
                       className={`visitante-resident-card ${
@@ -1004,7 +972,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             </Box>
           ) : null}
 
-          {unitSearched && !destinationLoading && unitSearchResults.length === 0 ? (
+          {unitSearched &&
+          !destinationLoading &&
+          unitSearchResults.length === 0 &&
+          !errors.destinationUnit ? (
             <Alert severity="warning" className="visitante-alert">
               Nenhum morador foi encontrado para a unidade pesquisada.
             </Alert>
@@ -1044,7 +1015,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             maxRows={2}
             size="small"
             className="visitante-notes-field"
-            label={formData.notes ? "" : "Observações"}
+            placeholder="Observações"
             value={formData.notes}
             onChange={(event) => handleChange("notes", event.target.value)}
             error={Boolean(errors.notes)}
@@ -1131,11 +1102,12 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
                   {area.name}
                 </Typography>
               </Box>
-              <Switch
+              <Checkbox
                 checked={Boolean(formData.areaAccess[area.areaId])}
                 onChange={(event) =>
                   handleAreaToggle(area.areaId, event.target.checked)
                 }
+                sx={{ p: 0.5 }}
               />
             </Box>
           ))}
@@ -1172,9 +1144,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         }}
         onClose={onClose}
         width={
-          activeStep >= 2
-            ? "min(820px, calc(100vw - 32px))"
-            : "min(650px, calc(100vw - 32px))"
+         "min(1090px, calc(100vw - 32px))"
         }
         disableContent={loading}
         actions={
@@ -1189,7 +1159,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           )
         }
       >
-        {renderStepContent(activeStep)}
+        {renderStepContent(2)}
       </StepWizardCard>
 
       <AppStateModal

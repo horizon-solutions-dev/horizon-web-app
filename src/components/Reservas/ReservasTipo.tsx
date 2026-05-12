@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import "./ReservasTipo.scss";
 import axios from "axios";
 import {
@@ -16,6 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import {
+  Apartment,
   Article,
   Close,
   DeleteOutline,
@@ -28,8 +29,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
+import ImageUploadField from "../../shared/components/ImageUploadField";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { areaImageService } from "../../services/areaImageService";
 import { areaService } from "../../services/areaService";
@@ -72,9 +75,9 @@ const emptyForm: AreaFormState = {
   hasReservationPrice: false,
   hasApprovalRequired: false,
   hasFee: false,
-  feeAmount: "0",
+  feeAmount: "0,00",
   hasDeposit: false,
-  depositAmount: "0",
+  depositAmount: "0,00",
   hasAllowsGuests: false,
   guestLimit: "0",
   notes: "",
@@ -95,13 +98,55 @@ const getStoredOrganizationName = () => {
   return localStorage.getItem("organizationName") || "";
 };
 
-const toNumber = (value: string) => Number(value.replace(",", ".")) || 0;
+const toNumber = (value: string) => {
+  const normalized = value.includes(",")
+    ? value.replace(/\./g, "").replace(",", ".")
+    : value;
+
+  return Number(normalized) || 0;
+};
+
+const formatCurrencyValue = (value: number) =>
+  new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+
+const formatCurrencyInput = (value: string, maxValue: number) => {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+
+  const amount = Math.min(Number(digits) / 100, maxValue);
+  return formatCurrencyValue(amount);
+};
 
 const getEnumOptionLabel = (option: AreaEnum) =>
   option.description || option.value || String(option.id);
 
 const getEnumOptionValue = (option?: AreaEnum) =>
   option ? String(option.value || option.id) : "";
+
+const normalizeEnumOptionValue = (
+  value: string | number | undefined,
+  options: AreaEnum[],
+) => {
+  const rawValue = String(value ?? "").trim();
+  if (!rawValue) return "";
+
+  const normalizedValue = rawValue.toLowerCase();
+  const matchingOption = options.find((option) => {
+    const candidates = [
+      option.id,
+      option.value,
+      option.description,
+      getEnumOptionValue(option),
+    ].map((candidate) => String(candidate ?? "").trim().toLowerCase());
+
+    return candidates.includes(normalizedValue);
+  });
+
+  return matchingOption ? getEnumOptionValue(matchingOption) : rawValue;
+};
 
 const areaWizardSteps = [
   "Dados principais",
@@ -155,6 +200,15 @@ const getAreaImageUrl = (area: AreaResponse) => {
   return `data:${area.contentType};base64,${area.thumbnailFile}`;
 };
 
+const limitText = (value: string, maxLength: number) =>
+  value.slice(0, maxLength);
+
+const limitInteger = (value: string, maxLength: number, maxValue: number) => {
+  const digits = value.replace(/\D/g, "").slice(0, maxLength);
+  if (!digits) return "";
+  return String(Math.min(Number(digits), maxValue));
+};
+
 const toFormState = (area: AreaResponse): AreaFormState => ({
   name: area.name || "",
   type: String(area.type || ""),
@@ -166,9 +220,9 @@ const toFormState = (area: AreaResponse): AreaFormState => ({
   hasReservationPrice: Boolean(area.hasReservationPrice),
   hasApprovalRequired: Boolean(area.hasApprovalRequired),
   hasFee: Boolean(area.hasFee),
-  feeAmount: String(area.feeAmount ?? 0),
+  feeAmount: formatCurrencyValue(area.feeAmount ?? 0),
   hasDeposit: Boolean(area.hasDeposit),
-  depositAmount: String(area.depositAmount ?? 0),
+  depositAmount: formatCurrencyValue(area.depositAmount ?? 0),
   hasAllowsGuests: Boolean(area.hasAllowsGuests),
   guestLimit: String(area.guestLimit ?? 0),
   notes: area.notes || "",
@@ -547,7 +601,7 @@ export default function ReservasTipo() {
 
   const buildPayload = (commit: boolean): AreaRequest => ({
     name: formData.name.trim(),
-    type: formData.type,
+    type: normalizeEnumOptionValue(formData.type, areaTypes),
     sizeM2: toNumber(formData.sizeM2),
     capacityPeople: toNumber(formData.capacityPeople),
     startTime: formData.startTime,
@@ -627,29 +681,28 @@ export default function ReservasTipo() {
     return match ? getEnumOptionLabel(match) : String(value || "-");
   };
 
-  useEffect(()=>{
-    console.log(formData.type)
-  },[formData.type, formData])
-
   const renderWizardStep = (formStep: number) => {
     if (formStep === 0) {
+      const selectedAreaType = normalizeEnumOptionValue(formData.type, areaTypes);
+
       return (
         <Box className="area-wizard-grid">
 
           <TextField
             fullWidth
-            label={formData.name ? "" : "Nome"}
+            placeholder="Nome"
             value={formData.name}
             onChange={(event) =>
-              setFormData((current) => ({ ...current, name: event.target.value }))
+              setFormData((current) => ({ ...current, name: limitText(event.target.value, 80) }))
             }
+            inputProps={{ maxLength: 80 }}
           />
 
           <TextField
             fullWidth
             select
             label={formData.type ? "" : "Tipo"}
-            value={formData.type == "1" ? areaTypes.find((f) => f.id == formData.type)?.value  : formData.type}
+            value={selectedAreaType}
             onChange={(event) =>
               setFormData((current) => ({ ...current, type: event.target.value }))
             }
@@ -666,36 +719,52 @@ export default function ReservasTipo() {
 
           <TextField
             fullWidth
-            sx={{height:100}}
+            sx={{height:100,padding: 0, maxHeight:100}}
             multiline
             minRows={1}
-            label={formData.notes ? "" : "Descrição"}
+            placeholder="Descrição"
             value={formData.notes}
+            maxRows={3}
             onChange={(event) =>
               setFormData((current) => ({ ...current, notes: event.target.value }))
             }
+            inputProps={{ maxLength: 240 }}
           />
 
           <TextField
             fullWidth
-            label={formData.sizeM2 ? "" : "Tamanho"}
+            placeholder="Tamanho"
             value={formData.sizeM2}
-            onChange={(event) =>
+            onChange={(event) =>  
+            {
+
+              let value = event.target.value;
+              
+              // aceita apenas nÃºmeros e ponto
+              value = value.replace(/[^0-9.]/g, '');
+              
+              // limita tamanho
+              if (value.length > 8) return;
               setFormData((current) => ({ ...current, sizeM2: event.target.value }))
             }
-            InputProps={{ endAdornment: <Typography color="text.secondary">m²</Typography> }}
+          }
+            type="number"
+            inputProps={{ min: 0, max: 99999, step: "0.01", inputMode: "decimal" }}
+            InputProps={{ endAdornment: <Typography color="text.secondary">mÂ²</Typography> }}
           />
 
           <TextField
             fullWidth
-            label={formData.capacityPeople ? "" : "Capacidade"}
+            placeholder="Capacidade"
             value={formData.capacityPeople}
             onChange={(event) =>
               setFormData((current) => ({
                 ...current,
-                capacityPeople: event.target.value,
+                capacityPeople: limitInteger(event.target.value, 4, 9999),
               }))
             }
+            type="number"
+            inputProps={{ min: 0, max: 9999, step: 1, inputMode: "numeric" }}
             InputProps={{
               endAdornment: <Typography color="text.secondary">pessoas</Typography>,
             }}
@@ -716,7 +785,7 @@ export default function ReservasTipo() {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Horário inicial"
+                  placeholder="Horário inicial"
                   value={formData.startTime}
                   onChange={(event) =>
                     setFormData((current) => ({
@@ -729,7 +798,7 @@ export default function ReservasTipo() {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Horário final"
+                  placeholder="Horário final"
                   value={formData.endTime}
                   onChange={(event) =>
                     setFormData((current) => ({ ...current, endTime: event.target.value }))
@@ -797,17 +866,22 @@ export default function ReservasTipo() {
             </Box>
             <TextField
               fullWidth
-              label="Valor da taxa"
+              placeholder="Valor da taxa"
               value={formData.feeAmount}
               disabled={!formData.hasFee}
+              sx={!formData.hasFee ? desabilitarCampos : {}}
               onChange={(event) =>
-                setFormData((current) => ({ ...current, feeAmount: event.target.value }))
+                setFormData((current) => ({
+                  ...current,
+                  feeAmount: formatCurrencyInput(event.target.value, 999999),
+                }))
               }
+              inputProps={{ inputMode: "numeric" }}
               InputProps={{ endAdornment: <Typography color="text.secondary">R$</Typography> }}
             />
 
             <Box className="area-switch-row">
-              <Typography className="area-wizard-panel-title">Tem caução</Typography>
+              <Typography className="area-wizard-panel-title">Tem cauÃ§Ã£o</Typography>
               <Switch
                 checked={formData.hasDeposit}
                 onChange={(event) =>
@@ -820,15 +894,17 @@ export default function ReservasTipo() {
             </Box>
             <TextField
               fullWidth
-              label="Valor da caução"
+              placeholder="Valor da caução"
               value={formData.depositAmount}
               disabled={!formData.hasDeposit}
+              sx={!formData.hasDeposit ? desabilitarCampos : {}}
               onChange={(event) =>
                 setFormData((current) => ({
                   ...current,
-                  depositAmount: event.target.value,
+                  depositAmount: formatCurrencyInput(event.target.value, 999999),
                 }))
               }
+              inputProps={{ inputMode: "numeric" }}
               InputProps={{ endAdornment: <Typography color="text.secondary">R$</Typography> }}
             />
           </Box>
@@ -857,12 +933,17 @@ export default function ReservasTipo() {
             </Box>
             <TextField
               fullWidth
-              label="Limite de convidados"
+              placeholder="Limite de convidados"
               value={formData.guestLimit}
               disabled={!formData.hasAllowsGuests}
               onChange={(event) =>
-                setFormData((current) => ({ ...current, guestLimit: event.target.value }))
+                setFormData((current) => ({
+                  ...current,
+                  guestLimit: limitInteger(event.target.value, 4, 9999),
+                }))
               }
+              type="number"
+              inputProps={{ min: 0, max: 9999, step: 1, inputMode: "numeric" }}
             />
           </Box>
         </Box>
@@ -886,69 +967,26 @@ export default function ReservasTipo() {
           </Box>
         ) : null}
 
-        <Box className="area-upload-grid">
-          {imageTypes.map((type, index) => {
+        <Box className="area-upload-grid" sx={{maxHeight: '500px'}}>
+          {imageTypes.map((type) => {
             const imageType = getEnumOptionValue(type);
             const selectedFile = formData.imageFiles[imageType];
             const previewUrl = imagePreviews[imageType];
 
             return (
-              <Box
-                className={`area-upload-box ${index === 0 ? "main" : ""}`}
+            <Box
                 key={imageType}
-              >
-                {previewUrl ? (
-                  <Box className="area-upload-preview-card">
-                    <Box
-                      component="img"
-                      src={previewUrl}
-                      alt={getEnumOptionLabel(type)}
-                      className="area-upload-preview"
-                    />
-                    <Box className="area-upload-preview-footer">
-                      <Box className="area-upload-preview-copy">
-                        <Typography className="area-upload-title">
-                          {getEnumOptionLabel(type)}
-                        </Typography>
-                        <Typography className="area-upload-filename">
-                          {selectedFile?.name}
-                        </Typography>
-                      </Box>
-                      <IconButton
-                        size="small"
-                        className="area-upload-remove"
-                        onClick={() => handleAreaImageChange(imageType, null)}
-                        aria-label="Remover imagem"
-                      >
-                        <Close fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                ) : (
-                  <Button component="label" variant="text" className="area-upload-trigger">
-                    <Box className="area-upload-icon">
-                      <ImageOutlined />
-                    </Box>
-                    <Typography className="area-upload-title">
-                      {getEnumOptionLabel(type)}
-                    </Typography>
-                    <Typography className="area-upload-hint">
-                      Toque para selecionar uma imagem
-                    </Typography>
-                    <input
-                      hidden
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) => {
-                        handleAreaImageChange(
-                          imageType,
-                          event.target.files?.[0] || null,
-                        );
-                        event.target.value = "";
-                      }}
-                    />
-                  </Button>
-                )}
+              > 
+                <ImageUploadField
+                  label={getEnumOptionLabel(type)}
+                  previewUrl={previewUrl}
+                  fileName={selectedFile?.name}
+                  height={150}
+                  emptyLabel="Selecionar imagem"
+                  description="Formatos aceitos: JPG, PNG."
+                  onChange={(file) => handleAreaImageChange(imageType, file)}
+                  sx={{ height: "280px" }}
+                />
               </Box>
             );
           })}
@@ -968,12 +1006,12 @@ export default function ReservasTipo() {
           showBack
           onBack={handleWizardBack}
           onClose={closeWizard}
-          width="min(760px, calc(100vw - 32px))"
+          width="min(1060px, calc(100vw - 32px))"
           disableContent={loading}
           actions={
             formStep === areaWizardSteps.length - 1 ? (
               <Button variant="contained" onClick={() => void handleSave()} disabled={loading}>
-                {loading ? <CircularProgress size={20} /> : "Salvar"}
+                {loading ? <CircularProgress size={20} /> : "Concluir"}
               </Button>
             ) : (
               <Button variant="contained" onClick={() => void handleWizardNext()} disabled={loading}>
@@ -1023,7 +1061,11 @@ export default function ReservasTipo() {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Place sx={{ fontSize: 36, color: "#1976d2" }} />
+                {activeView === "condominios" ? (
+                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
+                ) : (
+                  <Place sx={{ fontSize: 36, color: "#1976d2" }} />
+                )}
                 <Typography variant="h5" fontWeight="bold" sx={{ fontSize: 26 }}>
                   {organizationName}
                 </Typography>
@@ -1172,6 +1214,7 @@ export default function ReservasTipo() {
       </Container>
 
       <AppStateModal
+      showCancel={false}
         open={appStateModal.open}
         type={appStateModal.type}
         title={appStateModal.title}

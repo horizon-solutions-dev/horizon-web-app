@@ -14,7 +14,7 @@ import {
   Close,
   DeleteOutline,
   EditOutlined,
-  Groups2Outlined,
+  Apartment,
   BadgeOutlined,
   EmailOutlined,
   PhoneOutlined,
@@ -193,10 +193,10 @@ const Residentes: React.FC = () => {
       const response = blockId
         ? await unitService.getUnitsByBlock(blockId, pageNumber, unitPageSize)
         : await unitService.getUnitsByCondominium(
-            condominiumId,
-            pageNumber,
-            unitPageSize,
-          );
+          condominiumId,
+          pageNumber,
+          unitPageSize,
+        );
       const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
@@ -470,7 +470,7 @@ const Residentes: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <People sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -538,7 +538,7 @@ const Residentes: React.FC = () => {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Groups2Outlined sx={{ fontSize: 36, color: "#1976d2" }} />
+                <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
                 <Box>
                   <Typography
                     variant="h5"
@@ -551,7 +551,7 @@ const Residentes: React.FC = () => {
                     items={[
                       organizationName || t("common.organization"),
                       selectedCondominium?.name ||
-                        t("moradores.selectedCondominium"),
+                      t("moradores.selectedCondominium"),
                       t("common.units"),
                     ]}
                   />
@@ -647,7 +647,14 @@ const Residentes: React.FC = () => {
                     </Typography>
                   ),
                   actions: (
-                    <Box sx={{ display: "flex", gap: 1 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        flexWrap: "wrap",
+                        mt: 3,
+                      }}
+                    >
                       <Button
                         size="small"
                         variant="outlined"
@@ -685,6 +692,7 @@ const Residentes: React.FC = () => {
                     : undefined
                 }
                 unitIdPreset={selectedUnit?.condominiumUnitId}
+                unitOptions={units}
                 condominiumNamePreset={selectedCondominium?.name}
                 blockNamePreset={
                   blocks.find(
@@ -708,7 +716,7 @@ const Residentes: React.FC = () => {
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <Groups2Outlined sx={{ fontSize: 36, color: "#1976d2" }} />
+                    <People sx={{ fontSize: 36, color: "#1976d2" }} />
                     <Box>
                       <Typography
                         variant="h5"
@@ -721,7 +729,7 @@ const Residentes: React.FC = () => {
                         items={[
                           organizationName || t("common.organization"),
                           selectedCondominium?.name ||
-                            t("moradores.selectedCondominium"),
+                          t("moradores.selectedCondominium"),
                           selectedUnit?.unitCode || t("moradores.selectedUnit"),
                           t("common.residents"),
                         ]}
@@ -941,8 +949,8 @@ const Residentes: React.FC = () => {
                                     variant="body2"
                                     color="text.secondary"
                                   >
-                                    {residentType} | <MeetingRoom sx={{fontSize:14}}/>{" "}{residentUnit} |{" "}
-                                    <ViewModule sx={{fontSize:14}}/>{" "}{residentBlock}
+                                    {residentType} | <MeetingRoom sx={{ fontSize: 14 }} />{" "}{residentUnit} |{" "}
+                                    <ViewModule sx={{ fontSize: 14 }} />{" "}{residentBlock}
                                   </Typography>
                                 </Box>
                               </Box>

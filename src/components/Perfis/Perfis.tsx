@@ -104,10 +104,18 @@ const Perfis: React.FC = () => {
               </Box>
             ),
             actions: (
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 1,
+                  flexWrap: "wrap",
+                  mt: 3,
+                }}
+              >
                 <Button
                   size="small"
                   variant="outlined"
+                  className="action-button-edit"
                   startIcon={<EditOutlined />}
                   disabled
                 >
@@ -116,7 +124,7 @@ const Perfis: React.FC = () => {
                 <Button
                   size="small"
                   variant="outlined"
-                  color="error"
+                  className="action-button-delete"
                   startIcon={<DeleteOutline />}
                   onClick={() => void handleDelete(profile)}
                 >
@@ -156,7 +164,7 @@ const Perfis: React.FC = () => {
                 showFilters={true}
                 showPagination={false}
                 haveImage={false}
-                actionsMarginTop={1.5}
+                actionsMarginTop={0}
                 items={items}
               />
             </>

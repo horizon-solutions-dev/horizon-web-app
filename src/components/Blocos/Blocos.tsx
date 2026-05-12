@@ -14,6 +14,7 @@ import {
 import {
   DeleteOutline,
   EditOutlined,
+  Apartment,
   Close,
   ViewModule,
   Article,
@@ -309,7 +310,7 @@ const EstruturaCondominio: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"

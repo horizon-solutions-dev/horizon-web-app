@@ -13,10 +13,10 @@ import {
 import {
   DeleteOutline,
   EditOutlined,
+  Apartment,
   Close,
   MeetingRoom,
   ViewModule,
-  Home,
   LocationOn,
   Article,
   SearchOutlined,
@@ -419,7 +419,7 @@ const Unidades: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Home sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -646,7 +646,11 @@ const Unidades: React.FC = () => {
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
+                    {selectedBlockId ? (
+                      <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
+                    ) : (
+                      <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
+                    )}
                     <Box>
                       <Typography
                         variant="h5"

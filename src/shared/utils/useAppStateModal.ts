@@ -34,7 +34,7 @@ export const useAppStateModal = () => {
     title: "",
     message: "",
     detail: "",
-    showCancel: true,
+    showCancel: false,
   });
 
   const handleClose = useCallback(() => {
@@ -49,6 +49,7 @@ export const useAppStateModal = () => {
       message,
       detail,
       item: "",
+      showCancel: false,
     });
   }, []);
 
@@ -60,6 +61,7 @@ export const useAppStateModal = () => {
       message,
       detail,
       item: "",
+      showCancel: false,
     });
   }, []);
 
@@ -86,6 +88,7 @@ export const useAppStateModal = () => {
       message: "Por favor, faca login novamente para continuar usando o sistema.",
       detail: "Sua sessao expirou por inatividade.",
       item: "",
+      showCancel: false,
     });
   }, []);
 
@@ -97,6 +100,7 @@ export const useAppStateModal = () => {
       message: state.message,
       detail: state.detail,
       item: state.item,
+      showCancel: state.showCancel,
     },
     handleClose,
     showSuccess,

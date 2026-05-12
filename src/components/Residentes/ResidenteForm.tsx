@@ -23,6 +23,7 @@ import {
   type CondominiumUnitResident,
   type CondominiumUnitResidentRequest,
 } from "../../services/unitResidentService";
+import type { CondominiumUnit, UnitType } from "../../services/unitService";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
@@ -49,6 +50,7 @@ interface ResidenteFormProps {
   blockNamePreset?: string;
   unitIdPreset?: string;
   unitCodePreset?: string;
+  unitOptions?: CondominiumUnit[];
   editResident?: CondominiumUnitResident | null;
   editUserId?: string;
   residentImageUrl?: string; // NOVA PROP
@@ -143,6 +145,18 @@ const normalizePhoneToE164 = (phone: string) => {
   return `+55${digits}`;
 };
 
+const parseDatePickerValue = (value?: string | null) => {
+  if (!value) return null;
+
+  const parsed = moment(
+    value,
+    [moment.ISO_8601, "YYYY-MM-DD", "DD/MM/YYYY"],
+    true,
+  );
+
+  return parsed.isValid() ? parsed.toDate() : null;
+};
+
 const ResidenteForm: React.FC<ResidenteFormProps> = ({
   open,
   onClose,
@@ -154,6 +168,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   blockNamePreset,
   unitIdPreset,
   unitCodePreset,
+  unitOptions = [],
   editResident,
   editUserId,
   residentImageUrl,
@@ -299,6 +314,50 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   }, [open, isEditMode, editUserId, residentImageUrl]);
 
   const [dataEdit, setDataEdit] = useState<AccountResponse>();
+  const selectedUnitOption = unitOptions.find(
+    (option) => option.condominiumUnitId === formData.condominiumUnitId,
+  );
+
+  const getUnitOptionLabel = (option: CondominiumUnit) =>
+    option.unitCode || option.condominiumUnitId;
+
+  const normalizeUnitType = (value: UnitType) => {
+    const normalized = String(value || "");
+    if (normalized === "1" || normalized.toLowerCase() === "owner") {
+      return "Owner";
+    }
+    if (normalized === "2" || normalized.toLowerCase() === "tenant") {
+      return "Tenant";
+    }
+    return formData.unitType;
+  };
+
+  const getSelectedUnitTypeValue = () => {
+    const normalizedFormValue = normalizeUnitType(formData.unitType!);
+    if (normalizedFormValue === "Owner" || normalizedFormValue === "Tenant") {
+      return normalizedFormValue;
+    }
+
+    return unit == 1 || unit === "1" ? "Owner" : "Tenant";
+  };
+
+  const handleUnitChange = (unitId: string) => {
+    const nextUnit = unitOptions.find(
+      (option) => option.condominiumUnitId === unitId,
+    );
+    setFormData((prev) => ({
+      ...prev,
+      condominiumUnitId: unitId,
+      unitType: nextUnit ? normalizeUnitType(nextUnit.unitType!) : prev.unitType,
+    }));
+    if (errors.condominiumUnitId) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.condominiumUnitId;
+        return next;
+      });
+    }
+  };
 
   useEffect(() => {
     if (!open || !isEditMode || !editUserId) {
@@ -756,6 +815,31 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             phone: normalizePhoneToE164(phone),
           });
 
+          if (!editResident?.condominiumUnitResidentId) {
+            throw new Error("Morador nao encontrado para edicao.");
+          }
+
+          await unitResidentService.updateResident(
+            editResident.condominiumUnitResidentId,
+            {
+              condominiumUnitId: formData.condominiumUnitId,
+              userId: targetUserId,
+              fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
+              docType: documentType,
+              doc: documentNumber.replace(/\D/g, ""),
+              email: email.trim(),
+              phone: normalizePhoneToE164(phone),
+              unitType: formData.unitType,
+              startDate: formData.startDate,
+              endDate: formData.endDate || formData.startDate,
+              billingContact: formData.billingContact,
+              canVote: formData.canVote,
+              canMakeReservations: formData.canMakeReservations,
+              hasGatehouseAccess: formData.hasGatehouseAccess,
+              commit: true,
+            },
+          );
+
           // Atualizar a imagem se uma nova foi selecionada
           if (photoFile && condominiumIdPreset && formData.condominiumUnitId) {
             await condominiumUnitImageService.uploadUnitImage({
@@ -979,8 +1063,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         }}
         sx={{
           width: "100%",
-          aspectRatio: "4 / 3",
-          minHeight: 132,
+          maxHeight: 132,
+                    minHeight: 132,
+
           borderRadius: "10px",
           border: "1.5px dashed #93c5fd",
           backgroundColor: "#f8fbff",
@@ -1056,6 +1141,31 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           onChange={(e) => onFileChange(e.target.files?.[0] || null)}
         />
       </Box>
+      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
+        <Button variant="contained" component="label" size="small" sx={{ textTransform: "none" }}>
+          {preview ? "Trocar foto" : "Adicionar foto"}
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              onFileChange(e.target.files?.[0] || null);
+              e.target.value = "";
+            }}
+          />
+        </Button>
+        {preview ? (
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            sx={{ textTransform: "none" }}
+            onClick={() => onFileChange(null)}
+          >
+            Remover
+          </Button>
+        ) : null}
+      </Box>
       <Typography sx={{ mt: 0.75, fontSize: 10, color: "#667085" }}>
         Formatos aceitos: JPG, PNG. Tamanho máximo: 5MB
       </Typography>
@@ -1096,12 +1206,33 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 height: 46,
               },
             }}
-            value={unitCodePreset || "-"}
+            select
+            label={formData.condominiumUnitId ? "" : "Unidade"}
+            value={formData.condominiumUnitId}
+            onChange={(e) => handleUnitChange(e.target.value)}
+            error={Boolean(errors.condominiumUnitId)}
+            helperText={errors.condominiumUnitId}
             fullWidth
-            disabled
-            tabIndex={-1}
-            InputProps={{ readOnly: true }}
-          />
+          >
+            {unitOptions.length === 0 && formData.condominiumUnitId ? (
+              <MenuItem value={formData.condominiumUnitId}>
+                {unitCodePreset || "-"}
+              </MenuItem>
+            ) : null}
+            {unitOptions.map((option) => (
+              <MenuItem
+                key={option.condominiumUnitId}
+                value={option.condominiumUnitId}
+              >
+                {getUnitOptionLabel(option)}
+              </MenuItem>
+            ))}
+            {formData.condominiumUnitId && !selectedUnitOption && unitOptions.length > 0 ? (
+              <MenuItem value={formData.condominiumUnitId}>
+                {unitCodePreset || formData.condominiumUnitId}
+              </MenuItem>
+            ) : null}
+          </TextField>
           <Box sx={{ display: "flex", gap: 1 }}>
             <TextField
               sx={{
@@ -1110,9 +1241,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 },
               }}
               select
-              disabled
               label={formData.unitType ? "" : "Tipo de unidade"}
-              value={unit == 1 ? "Owner" : "Tenant"}
+              value={getSelectedUnitTypeValue()}
+              onChange={(e) => handleChange("unitType", e.target.value)}
               error={Boolean(errors.unitType)}
               helperText={errors.unitType}
               fullWidth
@@ -1131,15 +1262,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                     height: "46px !important",
                   },
                 }}
-                disabled={isEditMode}
                 label={t("residenteForm.residenceStart")}
-                value={
-                  isEditMode
-                    ? new Date(`${editResident?.startDate}`)
-                    : formData.startDate
-                      ? new Date(`${formData.startDate}T00:00:00`)
-                      : null
-                }
+                value={parseDatePickerValue(formData.startDate)}
                 onChange={(newValue) =>
                   handleChange(
                     "startDate",
@@ -1176,7 +1300,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   },
                 }}
                 fullWidth
-                label={firstName ? "" : t("residenteForm.firstName")}
+                placeholder={t("residenteForm.firstName")}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 error={Boolean(errors.firstName)}
@@ -1192,7 +1316,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   },
                 }}
                 fullWidth
-                label={lastName ? "" : t("residenteForm.lastName")}
+                placeholder={t("residenteForm.lastName")}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 error={Boolean(errors.lastName)}
@@ -1234,7 +1358,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   },
                 }}
                 fullWidth
-                label={documentNumber ? "" : t("residenteForm.document")}
+                placeholder={t("residenteForm.document")}
                 value={documentNumber}
                 onChange={(e) => handleDocumentChange(e.target.value)}
                 error={Boolean(errors.documentNumber)}
@@ -1251,7 +1375,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               },
             }}
             fullWidth
-            label={email ? "" : t("residenteForm.email")}
+            placeholder={t("residenteForm.email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             error={Boolean(errors.email)}
@@ -1266,7 +1390,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               },
             }}
             fullWidth
-            label={phone ? "" : t("residenteForm.phone")}
+            placeholder={t("residenteForm.phone")}
             value={phone}
             onChange={(e) => setPhone(formatPhone(e.target.value))}
             error={Boolean(errors.phone)}
@@ -1333,7 +1457,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                     {item.icon}
                   </Box>
                   <Typography
-                    sx={{ fontSize: 13, fontWeight: 700, color: "#344054" }}
+                    sx={{ fontSize: 13, fontWeight: 500, color: "#344054" }}
                   >
                     {item.label}
                   </Typography>

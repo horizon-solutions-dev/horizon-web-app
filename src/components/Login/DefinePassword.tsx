@@ -77,9 +77,9 @@ export default function DefinePassword({
           <StepWizardCard
           
             title={"Definir senha"}
-            steps={steps}
+            steps={[]}
             activeStep={0}
-            showBack={true}
+            showBack={false}
             onBack={()=>{}}
             onClose={onBack}
             disableContent={formik.isSubmitting}
@@ -94,16 +94,6 @@ export default function DefinePassword({
               formik.handleSubmit();
             }}
             >
-            <button
-              onClick={onBack}
-              className="back-indicator"
-              disabled={formik.isSubmitting}
-              type="button"
-              >
-              <IoIosArrowBack />
-              <span>{t("login.back") || "Voltar"}</span>
-            </button>
-
             <div className="step-header">
               <div className="logo">
                 <img src={Logo} alt="Logo" />

@@ -22,7 +22,7 @@ export default function WarningErrorModal({
   imageSrc,
   imageAlt,
   imageSlot,
-  confirmLabel = "Ok",
+  confirmLabel = "Tentar Novamente",
   onConfirm,
   onClose,
 }: WarningErrorModalProps) {

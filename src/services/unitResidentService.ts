@@ -50,6 +50,18 @@ class UnitResidentService {
     }
   }
 
+  async updateResident(id: string, resident: CondominiumUnitResidentRequest) {
+    try {
+      return await apiClient.put<{ condominiumUnitResidentId: string }>(
+        `${this.baseUrl}/${id}`,
+        resident
+      );
+    } catch (error) {
+      console.error('Erro ao atualizar morador:', error);
+      throw error;
+    }
+  }
+
   async validateResident(resident: CondominiumUnitResidentRequest) {
     try {
       await apiClient.post<{ condominiumUnitResidentId?: string }>(this.baseUrl, resident);

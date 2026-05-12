@@ -37,6 +37,7 @@ import {
 } from "../../services/condominiumImageService";
 import { organizationService } from "../../services/organizationService";
 import { AppStateModal } from "../../shared/components/AppStateModal";
+import ImageUploadField from "../../shared/components/ImageUploadField";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
@@ -530,13 +531,16 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     event.target.value = "";
   };
 
-  const handleFacadeFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleFacadeImageChange = (file: File | null) => {
     revokePreview(facadePreview);
+    if (!file) {
+      setFacadeFile(null);
+      setFacadePreview(null);
+      return;
+    }
+
     setFacadeFile(file);
     setFacadePreview(URL.createObjectURL(file));
-    event.target.value = "";
   };
 
   const handleOtherFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -568,6 +572,25 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       if (match) revokePreview(match.preview);
       return prev.filter((item) => item.id !== id);
     });
+  };
+
+  const handleReplaceOtherImage = (id: string, file: File | null) => {
+    if (!file) {
+      handleRemoveOtherImage(id);
+      return;
+    }
+
+    setOtherImages((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        revokePreview(item.preview);
+        return {
+          ...item,
+          file,
+          preview: URL.createObjectURL(file),
+        };
+      }),
+    );
   };
 
   const uploadImages = async (condominiumId: string) => {
@@ -807,7 +830,18 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.5 }} />
           <Grid container spacing={1.5}>
             <Grid item xs={12} md={4}>{renderUploadCard("Documento", "Selecionar arquivo", documentPreview, handleDocumentFileChange, ".pdf,image/*")}</Grid>
-            <Grid item xs={12} md={4}>{renderUploadCard("Fachada", "Selecionar imagem", previewFacade, handleFacadeFileChange)}</Grid>
+            <Grid item xs={12} md={4}>
+              <ImageUploadField
+                label="Fachada"
+                previewUrl={previewFacade}
+                fileName={facadeFile?.name}
+                height={140}
+                emptyLabel="Selecionar imagem"
+                description="Formatos aceitos: JPG, PNG."
+                onChange={handleFacadeImageChange}
+                sx={{ minHeight: 220 }}
+              />
+            </Grid>
             <Grid item xs={12} md={4}>
               <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 1.5, minHeight: 220 }}>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
@@ -816,11 +850,17 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                 </Box>
                 <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 1 }}>
                   {otherImages.map((image) => (
-                    <Box key={image.id} sx={{ position: "relative", border: "1px dashed #cbd5e1", borderRadius: "12px", overflow: "hidden" }}>
-                      <IconButton size="small" onClick={() => handleRemoveOtherImage(image.id)} sx={{ position: "absolute", top: 4, right: 4, backgroundColor: "#ffffffcc" }}><CloseOutlined fontSize="small" /></IconButton>
-                      <Box component="img" src={image.preview} alt={image.label} sx={{ width: "100%", height: 84, objectFit: "cover" }} />
-                      <Typography sx={{ px: 1, py: 0.75, fontSize: 12, textAlign: "center" }}>{image.label}</Typography>
-                    </Box>
+                    <ImageUploadField
+                      key={image.id}
+                      label={image.label}
+                      previewUrl={image.preview}
+                      fileName={image.file.name}
+                      height={84}
+                      showTitle={false}
+                      description=""
+                      changeLabel="Trocar"
+                      onChange={(file) => handleReplaceOtherImage(image.id, file)}
+                    />
                   ))}
                   {
                     otherImages.length < 2 && (

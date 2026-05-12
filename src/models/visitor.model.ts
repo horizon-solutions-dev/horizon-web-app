@@ -30,6 +30,7 @@ export interface VisitorResponse {
   phone: string;
   email: string;
   visitorTypeId?: number | string;
+  visitorType?: string;
   facePhoto?: string;
   facePhotoContentType?: string;
   facePhotoThumbnailFile?: string;
@@ -39,6 +40,10 @@ export interface VisitorResponse {
   active?: boolean;
   createdAt?: string;
   createdBy?: string;
+  createdByName?: string;
+  updatedAt?: string;
+  updatedBy?: string;
+  updatedByName?: string;
   visitorHistoryId?: string;
 }
 
