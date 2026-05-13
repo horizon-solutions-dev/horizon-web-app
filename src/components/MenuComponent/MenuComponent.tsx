@@ -144,19 +144,27 @@ export default function MenuComponent({
       access: { permissions: [APP_PERMISSIONS.ProfileView] },
     },
     {
+      id: "areas",
+      label: "Areas",
+      icon: <MdEventAvailable />,
+      iconColor: "#14b8a6",
+      path: RouteNames.Areas,
+      access: { permissions: [APP_PERMISSIONS.ReservationView] },
+    },
+    {
+      id: "visitantes",
+      label: "Visitantes",
+      icon: <People />,
+      iconColor: "#ec4899",
+      path: RouteNames.PortariaVisitantes,
+      access: { permissions: [APP_PERMISSIONS.GatehouseView] },
+    },
+    {
       id: "itens-pendentes",
       label: t("menu.pendingItems"),
       icon: <MdSettings />,
       iconColor: "#94a3b8",
       children: [
-        {
-          id: "pendente-reservas",
-          label: "Areas",
-          icon: <MdEventAvailable />,
-          iconColor: "#14b8a6",
-          path: RouteNames.Areas,
-          access: { permissions: [APP_PERMISSIONS.ReservationView] },
-        },
         {
           id: "pendente-financeiro",
           label: t("menu.financial"),
@@ -171,14 +179,6 @@ export default function MenuComponent({
           icon: <MdSecurity />,
           iconColor: "#f97316",
           path: RouteNames.PortariaUsuarios,
-          access: { permissions: [APP_PERMISSIONS.GatehouseView] },
-        },
-        {
-          id: "portaria-visitantes",
-          label: "Visitantes",
-          icon: <People />,
-          iconColor: "#ec4899",
-          path: RouteNames.PortariaVisitantes,
           access: { permissions: [APP_PERMISSIONS.GatehouseView] },
         },
         {

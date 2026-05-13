@@ -14,7 +14,6 @@ import {
   Close,
   DeleteOutline,
   EditOutlined,
-  Apartment,
   BadgeOutlined,
   EmailOutlined,
   PhoneOutlined,
@@ -22,10 +21,11 @@ import {
   LocationOn,
   Article,
   SearchOutlined,
-  MeetingRoom,
   ViewModule,
   Person,
+  Home,
 } from "@mui/icons-material";
+import { MdApartment } from "react-icons/md";
 import {
   unitResidentService,
   type CondominiumUnitResident,
@@ -49,7 +49,6 @@ import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { useTranslation } from "react-i18next";
 import { formatCNPJ, formatDoc } from "../../shared/utils/funcoes";
-import Allocation from "../../assets/allocation.png";
 
 const condoPageSize = 4;
 const unitPageSize = 6;
@@ -95,6 +94,7 @@ const Residentes: React.FC = () => {
   const [residentsTotalPages, setResidentsTotalPages] = useState(1);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+
   const [editingResident, setEditingResident] =
     useState<CondominiumUnitResident | null>(null);
   const [loading, setLoading] = useState(false);
@@ -470,7 +470,7 @@ const Residentes: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <MdApartment style={{ fontSize: 36, color: "#1976d2" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -491,7 +491,7 @@ const Residentes: React.FC = () => {
               </Container>
               <Box>
                 <BreadcrumbTrail
-                  items={[t("common.organization"), t("common.condominiums")]}
+                  items={[ t("common.condominiums")]}
                 />
               </Box>
             </Box>
@@ -538,7 +538,7 @@ const Residentes: React.FC = () => {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
+                <Home sx={{ fontSize: 36, color: "#1976d2" }} />
                 <Box>
                   <Typography
                     variant="h5"
@@ -549,7 +549,7 @@ const Residentes: React.FC = () => {
                   </Typography>
                   <BreadcrumbTrail
                     items={[
-                      organizationName || t("common.organization"),
+                    
                       selectedCondominium?.name ||
                       t("moradores.selectedCondominium"),
                       t("common.units"),
@@ -629,12 +629,9 @@ const Residentes: React.FC = () => {
                   ),
                   meta: (
                     <Typography variant="caption" color="text.secondary">
-                      <Box
-                        component="img"
-                        src={Allocation}
+                      <ViewModule
                         sx={{
-                          width: 16,
-                          height: 16,
+                          fontSize: 14,
                           mr: 0.5,
                           verticalAlign: "middle",
                         }}
@@ -727,7 +724,7 @@ const Residentes: React.FC = () => {
                       </Typography>
                       <BreadcrumbTrail
                         items={[
-                          organizationName || t("common.organization"),
+                         
                           selectedCondominium?.name ||
                           t("moradores.selectedCondominium"),
                           selectedUnit?.unitCode || t("moradores.selectedUnit"),
@@ -949,7 +946,7 @@ const Residentes: React.FC = () => {
                                     variant="body2"
                                     color="text.secondary"
                                   >
-                                    {residentType} | <MeetingRoom sx={{ fontSize: 14 }} />{" "}{residentUnit} |{" "}
+                                    {residentType} | <Home sx={{ fontSize: 14 }} />{" "}{residentUnit} |{" "}
                                     <ViewModule sx={{ fontSize: 14 }} />{" "}{residentBlock}
                                   </Typography>
                                 </Box>

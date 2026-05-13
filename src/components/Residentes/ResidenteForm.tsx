@@ -1090,22 +1090,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               alt={title}
               sx={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
-            <Box
-              sx={{
-                position: "absolute",
-                left: 10,
-                bottom: 10,
-                borderRadius: "8px",
-                px: 1.25,
-                py: 0.75,
-                backgroundColor: "rgba(15, 23, 42, 0.78)",
-                color: "#fff",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Trocar Foto
-            </Box>
           </>
         ) : (
           <Box sx={{ textAlign: "center", px: 2 }}>
@@ -1552,7 +1536,6 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             <>
               <StepWizardCard
                 title={t("residenteForm.title")}
-                subtitle={STEPS[activeStep]}
                 steps={STEPS}
                 activeStep={activeStep}
                 showBack={true}

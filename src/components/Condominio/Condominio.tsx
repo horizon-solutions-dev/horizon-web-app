@@ -372,7 +372,7 @@ const CondominioPage: React.FC = () => {
               </Container>
               <Box>
                 <BreadcrumbTrail
-                  items={[t("common.organization"), t("common.condominiums")]}
+                  items={[t("common.condominiums")]}
                 />
               </Box>
             </Box>

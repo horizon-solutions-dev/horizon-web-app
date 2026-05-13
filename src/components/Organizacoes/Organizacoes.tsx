@@ -242,7 +242,7 @@ const Organizacoes: React.FC = () => {
                   >
                     {organizationName}
                   </Typography>
-                  <BreadcrumbTrail items={["Organização", "Organizações"]} />
+                  <BreadcrumbTrail items={[ "Organizações"]} />
                 </Box>
               </Box>
               <Tooltip title="Clique aqui para Fechar a janela">

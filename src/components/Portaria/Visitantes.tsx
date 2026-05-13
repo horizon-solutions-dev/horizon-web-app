@@ -497,7 +497,7 @@ export default function Visitantes() {
               <Box>
                 <BreadcrumbTrail
                   items={[
-                    t("common.organization"),
+                    
                     selectedCondominium?.name || "Condominios",
                     "Visitantes",
                   ]}

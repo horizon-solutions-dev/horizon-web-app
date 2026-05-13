@@ -14,13 +14,13 @@ import {
 import {
   DeleteOutline,
   EditOutlined,
-  Apartment,
   Close,
   ViewModule,
   Article,
   LocationOn,
   SearchOutlined,
 } from "@mui/icons-material";
+import { MdApartment } from "react-icons/md";
 import {
   blockService,
   type CondominiumBlock,
@@ -310,7 +310,7 @@ const EstruturaCondominio: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <MdApartment style={{ fontSize: 36, color: "#1976d2" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -331,7 +331,7 @@ const EstruturaCondominio: React.FC = () => {
               </Container>
               <Box>
                 <BreadcrumbTrail
-                  items={[t("common.organization"), t("common.condominiums")]}
+                  items={[t("common.condominiums")]}
                 />
               </Box>
             </Box>

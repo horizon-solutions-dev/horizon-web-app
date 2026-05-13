@@ -34,7 +34,7 @@ class AreaService {
   }
 
   async createArea(area: AreaRequest) {
-    return await apiClient.post<{ areaId: string }>(this.baseUrl, area);
+    return await apiClient.post< string >(this.baseUrl, area);
   }
 
   async validateArea(area: AreaRequest) {
@@ -62,7 +62,7 @@ class AreaService {
   }
 
   async updateArea(id: string, area: AreaRequest) {
-    return await apiClient.put<{ areaId: string }>(`${this.baseUrl}/${id}`, area);
+    return await apiClient.put< string >(`${this.baseUrl}/${id}`, area);
   }
 
   async deleteArea(id: string) {

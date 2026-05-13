@@ -84,6 +84,11 @@ const emptyForm: AreaFormState = {
   imageFiles: {},
 };
 
+const AREA_SIZE_MAX = 99999.99;
+const PEOPLE_MAX = 999;
+const GUEST_LIMIT_MAX = 999;
+const MONEY_MAX = 9999.99;
+
 const getStoredOrganizationName = () => {
   const stored = localStorage.getItem("condominium");
   if (stored) {
@@ -106,6 +111,12 @@ const toNumber = (value: string) => {
   return Number(normalized) || 0;
 };
 
+const clampNumber = (value: number, maxValue: number) =>
+  Math.min(Math.max(value, 0), maxValue);
+
+const toLimitedNumber = (value: string, maxValue: number) =>
+  clampNumber(toNumber(value), maxValue);
+
 const formatCurrencyValue = (value: number) =>
   new Intl.NumberFormat("pt-BR", {
     minimumFractionDigits: 2,
@@ -118,6 +129,21 @@ const formatCurrencyInput = (value: string, maxValue: number) => {
 
   const amount = Math.min(Number(digits) / 100, maxValue);
   return formatCurrencyValue(amount);
+};
+
+const limitDecimalInput = (
+  value: string,
+  maxValue: number,
+  decimalPlaces = 2,
+) => {
+  const normalized = value.replace(",", ".").replace(/[^\d.]/g, "");
+  const [integerPart = "", ...decimalParts] = normalized.split(".");
+  const decimalPart = decimalParts.join("").slice(0, decimalPlaces);
+  const nextValue = decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+
+  if (!nextValue) return "";
+
+  return String(clampNumber(Number(nextValue) || 0, maxValue));
 };
 
 const getEnumOptionLabel = (option: AreaEnum) =>
@@ -602,19 +628,23 @@ export default function ReservasTipo() {
   const buildPayload = (commit: boolean): AreaRequest => ({
     name: formData.name.trim(),
     type: normalizeEnumOptionValue(formData.type, areaTypes),
-    sizeM2: toNumber(formData.sizeM2),
-    capacityPeople: toNumber(formData.capacityPeople),
+    sizeM2: toLimitedNumber(formData.sizeM2, AREA_SIZE_MAX),
+    capacityPeople: toLimitedNumber(formData.capacityPeople, PEOPLE_MAX),
     startTime: formData.startTime,
     endTime: formData.endTime,
     operatingDays: formData.operatingDays.trim(),
     hasReservationPrice: formData.hasReservationPrice,
     hasApprovalRequired: formData.hasApprovalRequired,
     hasFee: formData.hasFee,
-    feeAmount: toNumber(formData.feeAmount),
+    feeAmount: formData.hasFee ? toLimitedNumber(formData.feeAmount, MONEY_MAX) : 0,
     hasDeposit: formData.hasDeposit,
-    depositAmount: toNumber(formData.depositAmount),
+    depositAmount: formData.hasDeposit
+      ? toLimitedNumber(formData.depositAmount, MONEY_MAX)
+      : 0,
     hasAllowsGuests: formData.hasAllowsGuests,
-    guestLimit: toNumber(formData.guestLimit),
+    guestLimit: formData.hasAllowsGuests
+      ? toLimitedNumber(formData.guestLimit, GUEST_LIMIT_MAX)
+      : 0,
     notes: formData.notes.trim(),
     condominiumId: selectedCondominium?.condominiumId || "",
     commit,
@@ -636,7 +666,7 @@ export default function ReservasTipo() {
       const response = editingArea
         ? await areaService.updateArea(editingArea.areaId, payload)
         : await areaService.createArea(payload);
-      const areaId = editingArea?.areaId || response.areaId;
+      const areaId = editingArea?.areaId || response;
 
       const selectedImages = Object.entries(formData.imageFiles).filter(
         (entry): entry is [string, File] => Boolean(entry[1]),
@@ -728,29 +758,31 @@ export default function ReservasTipo() {
             onChange={(event) =>
               setFormData((current) => ({ ...current, notes: event.target.value }))
             }
-            inputProps={{ maxLength: 240 }}
+            inputProps={{ maxLength: 90 }}
           />
 
           <TextField
             fullWidth
             placeholder="Tamanho"
             value={formData.sizeM2}
-            onChange={(event) =>  
-            {
+            onChange={(event) =>{
+              let value = event.target.value
+                            value = value.replace(/[^0-9.]/g, '');
 
-              let value = event.target.value;
-              
-              // aceita apenas nÃºmeros e ponto
-              value = value.replace(/[^0-9.]/g, '');
-              
-              // limita tamanho
-              if (value.length > 8) return;
-              setFormData((current) => ({ ...current, sizeM2: event.target.value }))
+              if(value.length > 5) return
+              setFormData((current) => ({
+                ...current,
+                sizeM2: limitDecimalInput(event.target.value, AREA_SIZE_MAX),
+              }))
             }
-          }
-            type="number"
-            inputProps={{ min: 0, max: 99999, step: "0.01", inputMode: "decimal" }}
-            InputProps={{ endAdornment: <Typography color="text.secondary">mÂ²</Typography> }}
+            }
+            inputProps={{
+              min: 0,
+              max: AREA_SIZE_MAX,
+              step: "0.01",
+              inputMode: "numeric"
+            }}
+            InputProps={{ endAdornment: <Typography color="text.secondary">m²</Typography> }}
           />
 
           <TextField
@@ -760,11 +792,15 @@ export default function ReservasTipo() {
             onChange={(event) =>
               setFormData((current) => ({
                 ...current,
-                capacityPeople: limitInteger(event.target.value, 4, 9999),
+                capacityPeople: limitInteger(
+                  event.target.value,
+                  3,
+                  PEOPLE_MAX,
+                ),
               }))
             }
             type="number"
-            inputProps={{ min: 0, max: 9999, step: 1, inputMode: "numeric" }}
+            inputProps={{ min: 0, max: PEOPLE_MAX, step: 1, inputMode: "numeric" }}
             InputProps={{
               endAdornment: <Typography color="text.secondary">pessoas</Typography>,
             }}
@@ -873,7 +909,7 @@ export default function ReservasTipo() {
               onChange={(event) =>
                 setFormData((current) => ({
                   ...current,
-                  feeAmount: formatCurrencyInput(event.target.value, 999999),
+                  feeAmount: formatCurrencyInput(event.target.value, MONEY_MAX),
                 }))
               }
               inputProps={{ inputMode: "numeric" }}
@@ -901,7 +937,10 @@ export default function ReservasTipo() {
               onChange={(event) =>
                 setFormData((current) => ({
                   ...current,
-                  depositAmount: formatCurrencyInput(event.target.value, 999999),
+                  depositAmount: formatCurrencyInput(
+                    event.target.value,
+                    MONEY_MAX,
+                  ),
                 }))
               }
               inputProps={{ inputMode: "numeric" }}
@@ -939,11 +978,11 @@ export default function ReservasTipo() {
               onChange={(event) =>
                 setFormData((current) => ({
                   ...current,
-                  guestLimit: limitInteger(event.target.value, 4, 9999),
+                  guestLimit: limitInteger(event.target.value, 3, GUEST_LIMIT_MAX),
                 }))
               }
               type="number"
-              inputProps={{ min: 0, max: 9999, step: 1, inputMode: "numeric" }}
+              inputProps={{ min: 0, max: GUEST_LIMIT_MAX, step: 1, inputMode: "numeric" }}
             />
           </Box>
         </Box>
@@ -1090,7 +1129,7 @@ export default function ReservasTipo() {
             </Container>
             <BreadcrumbTrail
               items={[
-                "Organizacao",
+                
                 selectedCondominium?.name || "Condominios",
                 "Areas",
               ]}

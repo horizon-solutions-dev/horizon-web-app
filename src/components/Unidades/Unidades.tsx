@@ -13,15 +13,15 @@ import {
 import {
   DeleteOutline,
   EditOutlined,
-  Apartment,
   Close,
-  MeetingRoom,
   ViewModule,
   LocationOn,
   Article,
   SearchOutlined,
   Person,
+  Home,
 } from "@mui/icons-material";
+import { MdApartment } from "react-icons/md";
 import {
   unitService,
   type CondominiumUnit,
@@ -419,7 +419,7 @@ const Unidades: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <MdApartment style={{ fontSize: 36, color: "#1976d2" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -440,7 +440,7 @@ const Unidades: React.FC = () => {
               </Container>
               <Box>
                 <BreadcrumbTrail
-                  items={[t("common.organization"), t("common.condominiums")]}
+                  items={[ t("common.condominiums")]}
                 />
               </Box>
             </Box>
@@ -647,7 +647,7 @@ const Unidades: React.FC = () => {
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                     {selectedBlockId ? (
-                      <MeetingRoom sx={{ fontSize: 36, color: "#1976d2" }} />
+                      <Home sx={{ fontSize: 36, color: "#1976d2" }} />
                     ) : (
                       <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
                     )}

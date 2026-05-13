@@ -522,15 +522,19 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     }
   };
 
-  const handleDocumentFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    revokePreview(documentPreview);
+
+
+  const handleDocumentFileChange = (file: File | null) => {
+    revokePreview(facadePreview);
+    if (!file) {
+    setDocumentFile(file);
+      setDocumentPreview(null);
+      return;
+    }
+
     setDocumentFile(file);
     setDocumentPreview(URL.createObjectURL(file));
-    event.target.value = "";
   };
-
   const handleFacadeImageChange = (file: File | null) => {
     revokePreview(facadePreview);
     if (!file) {
@@ -788,12 +792,12 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         <Grid container spacing={1.5}>
           <Grid item xs={12} md={6}>
             <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 2, height: "100%" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <ApartmentOutlined sx={{ color: "#2563eb", fontSize: 20 }} />
                 <Typography sx={{ fontWeight: 700, fontSize: 18 }}>Estrutura do Condomínio</Typography>
               </Box>
               <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", }}>
                 <FormControlLabel control={<Checkbox checked={formData.hasBlocks} onChange={(e) => handleChange("hasBlocks", e.target.checked)} size="small" />} label="Possui blocos" />
                 <FormControlLabel control={<Checkbox checked={formData.hasPowerByBlock} onChange={(e) => handleChange("hasPowerByBlock", e.target.checked)} size="small" />} label="Energia por bloco" />
                 <FormControlLabel control={<Checkbox checked={formData.hasGasByBlock} onChange={(e) => handleChange("hasGasByBlock", e.target.checked)} size="small" />} label="Gas por bloco" />
@@ -822,15 +826,27 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           </Grid>
         </Grid>
 
-        <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 2 }}>
+        <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 2, height:'250px',overflow: 'scroll' }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
             <PhotoOutlined sx={{ color: "#4f46e5", fontSize: 20 }} />
             <Typography sx={{ fontWeight: 700, fontSize: 18 }}>Imagens do Condominio</Typography>
           </Box>
           <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.5 }} />
           <Grid container spacing={1.5}>
-            <Grid item xs={12} md={4}>{renderUploadCard("Documento", "Selecionar arquivo", documentPreview, handleDocumentFileChange, ".pdf,image/*")}</Grid>
             <Grid item xs={12} md={4}>
+              <ImageUploadField
+                label="Documento"
+                previewUrl={documentPreview}
+                fileName={documentFile?.name}
+                height={140}
+                emptyLabel="Selecionar arquivo"
+                description="Formatos aceitos: JPG, PNG."
+                onChange={handleDocumentFileChange}
+                sx={{ minHeight: 220 }}
+              />
+
+              </Grid>
+            <Grid item xs={12} md={4} >
               <ImageUploadField
                 label="Fachada"
                 previewUrl={previewFacade}
@@ -848,8 +864,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   <Typography sx={{ fontWeight: 700, fontSize: 16 }}>Outros</Typography>
                   <IconButton size="small" onClick={() => setImageTypeDialogOpen(true)} disabled={imageTypesLoading}><AddOutlined /></IconButton>
                 </Box>
-                <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 1 }}>
-                  {otherImages.map((image) => (
+                <Box sx={{ display:'flex', flexDirection:'column',gap: 1 }}>
+                                    {otherImages.map((image) => (
                     <ImageUploadField
                       key={image.id}
                       label={image.label}
@@ -862,16 +878,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       onChange={(file) => handleReplaceOtherImage(image.id, file)}
                     />
                   ))}
-                  {
-                    otherImages.length < 2 && (
-                      <>
-                      <Box onClick={() => setImageTypeDialogOpen(true)} sx={{ border: "1px dashed #cbd5e1", borderRadius: "12px", minHeight: 120, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 1, color: "#2563eb", cursor: "pointer", backgroundColor: "#f8fafc" }}>
-                    <AddOutlined sx={{ fontSize: 36 }} />
-                    <Typography>Adicionar</Typography>
-                  </Box>
-                      </>
-                    )
-                  }
+
                 </Box>
                 {imageTypesError ? <Typography sx={{ color: "#d32f2f", fontSize: 12, mt: 1 }}>{imageTypesError}</Typography> : null}
               </Box>
@@ -897,7 +904,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         disableContent={loading}
       >
         <div className="condominio-form">{renderStepContent(activeStep)}</div>
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 1.5, pt: 1.5 }}>
+        <Box sx={{ display: "flex", justifyContent: "center",  }}>
           {activeStep === steps.length - 1 ? (
             <Button sx={{ textTransform: "none" }} variant="contained" color="primary" onClick={handleSubmit} disabled={loading}>
               {loading ? <CircularProgress size={20} /> : t("common.finish")}
@@ -927,7 +934,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   border: "1px dashed #cbd5e1",
                   borderRadius: "16px",
                   p: 2,
-                  minHeight: 140,
+                  minHeight: 125,
                   cursor: "pointer",
                   "&:hover": { borderColor: "#2563eb", boxShadow: "0 10px 24px rgba(37,99,235,0.08)" },
                 }}

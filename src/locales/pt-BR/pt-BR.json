@@ -2,7 +2,7 @@
   "login": {
     "title": "Entrar",
     "passwordTitle": "Inserir senha",
-    "companyTitle": "Selecionar condominio",
+    "companyTitle": "Selecionar condomínio",
     "emailPlaceholder": "Email",
     "passwordPlaceholder": "Senha",
     "next": "Avançar",
@@ -14,8 +14,8 @@
     "cannotAccess": "Não consegue acessar sua conta?",
     "back": "Voltar",
     "loading": "Entrando...",
-    "loadingCondominiums": "Carregando condominios...",
-    "noCondominiums": "Nenhum condominio disponivel."
+    "loadingCondominiums": "Carregando condomínios...",
+    "noCondominiums": "Nenhum condomínio disponivel."
   },
   "recovery": {
     "title": "Recuperar Senha",
@@ -59,7 +59,7 @@
     "special": "Um caractere especial (!@#$%^&*)"
   },
   "toast": {
-    "loginSuccess": "Login realizado com sucesso no condominio: {{company}}",
+    "loginSuccess": "Login realizado com sucesso no condomínio: {{company}}",
     "loginError": "Erro ao realizar login. Tente novamente.",
     "recoveryCodeSent": "Código de verificação enviado para seu e-mail",
     "codeVerified": "Código verificado com sucesso",
@@ -74,7 +74,7 @@
     "emailInvalid": "Email inválido",
     "emailRequired": "Email é obrigatório",
     "passwordRequired": "Senha é obrigatória",
-    "companyRequired": "Selecione um condominio",
+    "companyRequired": "Selecione um condomínio",
     "codeLength": "O código deve ter 6 dígitos",
     "codeRequired": "Código é obrigatório",
     "passwordMinLength": "Mínimo 8 caracteres",
@@ -112,7 +112,7 @@
     "noCode": "Sem código",
     "unknown": "Desconhecido",
     "organization": "Organização",
-    "condominiums": "Condôminios",
+    "condominiums": "Condominios",
     "blocks": "Estrutura do condomínio",
     "units": "Unidades",
     "residents": "Moradores",
@@ -121,7 +121,7 @@
     "owner": "Proprietário",
     "tenant": "Inquilino",
     "closeTooltip": "Clique aqui para Fechar a janela",
-    "viewCondominiums": "Visualizar Condôminios",
+    "viewCondominiums": "Visualizar Condominios",
     "viewBlocks": "Visualizar Estrutura do condomínio",
     "viewUnits": "Visualizar Unidades",
     "viewResidents": "Visualizar Moradores",
@@ -132,7 +132,7 @@
   "menu": {
     "dashboard": "Dashboard",
     "organizations": "Organizações",
-    "condominiums": "Condôminios",
+    "condominiums": "Condominios",
     "blocks": "Estrutura do condomínio",
     "units": "Unidades",
     "residents": "Moradores",
@@ -146,10 +146,10 @@
     "deliveries": "Encomendas",
     "contactUs": "Fale Conosco",
     "accessValidation": "Validar acesso",
-    "switchCondominium": "Trocar condominio",
-    "switchCondominiumTitle": "Selecionar condominio",
-    "switchCondominiumDescription": "Escolha qual condominio deseja carregar agora.",
-    "switchError": "Erro ao carregar condominios."
+    "switchCondominium": "Trocar condomínio",
+    "switchCondominiumTitle": "Selecionar condomínio",
+    "switchCondominiumDescription": "Escolha qual condomínio deseja carregar agora.",
+    "switchError": "Erro ao carregar condomínios."
   },
   "blocos": {
     "title": "Estrutura do condomínio",
@@ -161,9 +161,9 @@
     "deleteImageAlt": "Remover estrutura do condomínio",
     "deleteSuccess": "estrutura do condomínio \"{{name}}\" excluído com sucesso!",
     "deleteError": "Erro ao excluir estrutura do condomíni.",
-    "condominiumsList": "Condôminios da organização",
+    "condominiumsList": "Condominios da organização",
     "blocksList": "Estrutura do condomínio",
-    "selectedCondominium": "Condominio selecionado"
+    "selectedCondominium": "Condomínio selecionado"
   },
   "blocoForm": {
     "createTitle": "Criar estrutura do condomínio",
@@ -180,23 +180,23 @@
     "saveError": "Erro ao salvar estrutura do condomínio."
   },
   "condominio": {
-    "title": "Condôminios",
+    "title": "Condominios",
     "searchPlaceholder": "Buscar condomínio...",
     "notFound": "Nenhum condomínio encontrado para esta organização.",
     "loadError": "Erro ao carregar condomínios.",
-    "condominiumsList": "Condominios da organizacão",
-    "selectedCondominiums": "Condôminios"
+    "condominiumsList": "condomínios da organizacão",
+    "selectedCondominiums": "Condominios"
   },
   "condominioForm": {
-    "createTitle": "Criar Condôminio",
-    "editTitle": "Editar Condôminio",
+    "createTitle": "Criar Condominio",
+    "editTitle": "Editar Condominio",
     "step0": "Informações Básicas",
     "step1": "Endereço",
     "step2": "Configurações e Rateio",
     "namePlaceholder": "Digite o nome do condomínio",
-    "nameRequired": "Nome do Condôminio é obrigatório.",
+    "nameRequired": "Nome do Condominio é obrigatório.",
     "cnpjInvalid": "CNPJ inválido.",
-    "typeRequired": "Tipo de Condôminio é obrigatório.",
+    "typeRequired": "Tipo de Condominio é obrigatório.",
     "unitCountRequired": "Quantidade de Unidades deve ser maior que 0.",
     "zipInvalid": "CEP inválido.",
     "addressRequired": "Logradouro é obrigatório.",
@@ -210,8 +210,8 @@
     "allocationLoadError": "Erro ao carregar tipos de alocação.",
     "validationError": "Erro ao validar condomínio.",
     "duplicateCnpj": "Já existe um condomínio com este CNPJ.",
-    "createSuccess": "Condôminio \"{{name}}\" criado com sucesso!",
-    "updateSuccess": "Condôminio \"{{name}}\" atualizado com sucesso!",
+    "createSuccess": "Condominio \"{{name}}\" criado com sucesso!",
+    "updateSuccess": "Condominio \"{{name}}\" atualizado com sucesso!",
     "createError": "Erro ao criar condomínio!",
     "updateError": "Erro ao atualizar condomínio!",
     "coverUploadError": "Erro ao enviar imagem de capa."
@@ -224,10 +224,10 @@
     "noCondominiumsFound": "Nenhum condomínio encontrado para esta organização.",
     "deleteConfirm": "Deseja excluir a unidade {{code}}?",
     "deleteUnavailable": "Exclusão ainda não está disponível.",
-    "condominiumsList": "Condôminios da organização",
+    "condominiumsList": "Condominios da organização",
     "blocksList": "Estrutura do condomínio",
     "unitsList": "Unidades do condomínio",
-    "selectedCondominium": "Condominio selecionado"
+    "selectedCondominium": "condomínio selecionado"
   },
   "unidadeForm": {
     "createTitle": "Criar unidade",
@@ -245,7 +245,7 @@
     "updateSuccess": "Unidade atualizada com sucesso.",
     "saveError": "Erro ao salvar unidade.",
     "allocationLoadError": "Erro ao carregar tipos de alocação.",
-    "selectedCondominium": "Condôminio selecionado",
+    "selectedCondominium": "Condominio selecionado",
     "selectedBlock": "Estrutura do condomínio selecionado"
   },
   "moradores": {
@@ -256,16 +256,16 @@
     "noCondominiumsFound": "Nenhum condomínio encontrado.",
     "selectUnit": "Selecione uma unidade.",
     "selectUnitForResident": "Selecione uma unidade para cadastrar moradores.",
-    "loadCondominiumsError": "Erro ao carregar condominios.",
+    "loadCondominiumsError": "Erro ao carregar condomínios.",
     "loadUnitsError": "Erro ao carregar unidades.",
     "loadResidentsError": "Erro ao carregar moradores.",
     "periodLabel": "Período: {{start}} - {{end}}",
-    "condominiumsList": "Condominios da organização",
-    "unitsList": "Unidades do condominio",
+    "condominiumsList": "condomínios da organização",
+    "unitsList": "Unidades do condomínio",
     "residentsList": "Moradores",
     "unknownBlock": "Estrutura do condomínio desconhecido",
     "noCode": "Sem codigo",
-    "selectedCondominium": "Condominio selecionado",
+    "selectedCondominium": "Condomínio selecionado",
     "selectedUnit": "Unidade selecionada"
   },
   "residenteForm": {

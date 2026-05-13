@@ -116,7 +116,7 @@ export default function MainLayout() {
     [RouteNames.Veiculos]: { label: "Veiculos" },
     [RouteNames.FaleConosco]: { label: "Fale Conosco" },
 
-    [RouteNames.Areas]: { label: "Areas", parent: "Reservas" },
+    [RouteNames.Areas]: { label: "Areas" },
     [RouteNames.ReservasTipo]: { label: "Tipo de Reserva", parent: "Reservas" },
     [RouteNames.ReservasListagem]: { label: "Listagem", parent: "Reservas" },
     [RouteNames.ReservasCalendario]: { label: "Calendario", parent: "Reservas" },
@@ -132,7 +132,7 @@ export default function MainLayout() {
     [RouteNames.FinanceiroDespesasAnexo]: { label: "Anexos", parent: "Financeiro / Despesas" },
 
     [RouteNames.PortariaUsuarios]: { label: "Usuarios", parent: "Portaria" },
-    [RouteNames.PortariaVisitantes]: { label: "Visitantes", parent: "Portaria" },
+    [RouteNames.PortariaVisitantes]: { label: "Visitantes" },
     [RouteNames.PortariaLiberacao]: { label: "Liberacao", parent: "Portaria" },
     [RouteNames.PortariaRelatorios]: { label: "Relatorios", parent: "Portaria" },
 

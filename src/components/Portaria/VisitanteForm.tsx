@@ -19,6 +19,7 @@ import {
   Pool,
   Security,
   Celebration,
+  SearchOutlined,
 } from "@mui/icons-material";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import ImageUploadField from "../../shared/components/ImageUploadField";
@@ -263,11 +264,17 @@ const getRequestValidationMessage = (error: unknown, fallback: string) => {
 };
 
 const mapUnitResult = async (unit: CondominiumUnit): Promise<UnitSearchResult> => {
-  const residentsResponse = await unitResidentService.getResidents(
-    unit.condominiumUnitId,
-    1,
-    50,
-  );
+  let residentsResponse;
+
+  try {
+    residentsResponse = await unitResidentService.getResidents(
+      unit.condominiumUnitId,
+      1,
+      50,
+    );
+  } catch {
+    residentsResponse = { items: [] };
+  }
 
   return {
     id: unit.condominiumUnitId,
@@ -568,24 +575,39 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       return;
     }
 
-    const selectedUnit = availableUnits.find(
-      (unit) =>
-        unit.condominiumId === condominiumId &&
-        [unit.unitCode, unit.condominiumUnitId]
-          .filter(Boolean)
-          .some((value) => String(value).trim().toLowerCase() === query),
-    );
-
-    if (!selectedUnit) {
-      setErrors((current) => ({
-        ...current,
-        destinationUnit: "Unidade não encontrada neste condomínio.",
-      }));
-      return;
-    }
-
     setDestinationLoading(true);
     try {
+      let selectedUnit = availableUnits.find(
+        (unit) =>
+          unit.condominiumId === condominiumId &&
+          [unit.unitCode, unit.condominiumUnitId]
+            .filter(Boolean)
+            .some((value) => String(value).trim().toLowerCase() === query),
+      );
+
+      if (!selectedUnit) {
+        const unitsResponse = await unitService.getUnitsByCondominium(
+          condominiumId,
+          1,
+          500,
+        );
+        const loadedUnits = unitsResponse.items ?? [];
+        setAvailableUnits(loadedUnits);
+        selectedUnit = loadedUnits.find((unit) =>
+          [unit.unitCode, unit.condominiumUnitId]
+            .filter(Boolean)
+            .some((value) => String(value).trim().toLowerCase() === query),
+        );
+      }
+
+      if (!selectedUnit) {
+        setErrors((current) => ({
+          ...current,
+          destinationUnit: "Unidade não encontrada neste condomínio.",
+        }));
+        return;
+      }
+
       const mappedUnit = await mapUnitResult(selectedUnit);
       setFormData((current) => ({
         ...current,
@@ -606,7 +628,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar moradores.";
-      showError(message);
+      setErrors((current) => ({
+        ...current,
+        selectedResidentId: message,
+      }));
     } finally {
       setDestinationLoading(false);
     }
@@ -832,8 +857,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             description="Toque para capturar ou enviar uma imagem"
             fileName={formData.facePhoto?.name}
             previewUrl={facePhotoPreview}
-            showTitle={false}
-            sx={{ p: 0, border: "none" }}
             onChange={(file) => {
               setFormData((current) => ({ ...current, facePhoto: file }));
               if (!file) setFacePhotoPreview(null);
@@ -851,8 +874,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             description="Envie a frente ou imagem principal do documento"
             fileName={formData.documentPhoto?.name}
             previewUrl={documentPhotoPreview}
-            showTitle={false}
-            sx={{ p: 0, border: "none" }}
             onChange={(file) => {
               setFormData((current) => ({ ...current, documentPhoto: file }));
               if (!file) setDocumentPhotoPreview(null);
@@ -905,9 +926,11 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
               disabled={destinationLoading}
             />
             <Button
-              variant="contained"
+              variant="outlined"
+              className="action-button-edit"
+              startIcon={<SearchOutlined />}
               onClick={() => void handleDestinationSearch()}
-              disabled={destinationLoading}
+              disabled={destinationLoading || !destinationQuery.trim()}
             >
               Buscar
             </Button>
@@ -924,13 +947,13 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             Selecione a unidade para localizar os moradores.
           </Typography>
 
-          {[...unitSearchResults,...unitSearchResults,...unitSearchResults,...unitSearchResults,...unitSearchResults].length > 0 ? (
+          {unitSearchResults.length > 0 ? (
             <Box className="visitante-residents-list">
               <Typography className="visitante-section-title">
-                Resultados
+                Moradores
               </Typography>
               <Box className="visitante-residents-scroll" sx={{height: '200px'}}>
-                {[...unitSearchResults,...unitSearchResults,...unitSearchResults,...unitSearchResults,...unitSearchResults].flatMap((unit) =>
+                {unitSearchResults.flatMap((unit) =>
                   unit.residents.map((resident) => (
                     <Box
                       className={`visitante-resident-card ${
@@ -1115,7 +1138,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
 
         {areas.length === 0 ? (
           <Alert severity="info">
-            Nenhuma area cadastrada para este condominio.
+            Nenhuma area cadastrada para este condomínio.
           </Alert>
         ) : null}
 
@@ -1153,13 +1176,24 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
               {loading ? <CircularProgress size={20} /> : "Concluir"}
             </Button>
           ) : (
-            <Button variant="contained" onClick={handleNext} disabled={loading}>
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              disabled={
+                loading ||
+                (activeStep === 2 &&
+                  (!unitSearched ||
+                    destinationLoading ||
+                    !unitSearchResult ||
+                    !formData.selectedResidentId))
+              }
+            >
               {loading ? <CircularProgress size={20} /> : "Avançar"}
             </Button>
           )
         }
       >
-        {renderStepContent(2)}
+        {renderStepContent(activeStep)}
       </StepWizardCard>
 
       <AppStateModal

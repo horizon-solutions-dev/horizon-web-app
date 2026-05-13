@@ -1,6 +1,11 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Box, Button, Typography, type SxProps, type Theme } from "@mui/material";
-import { CloudUploadOutlined, DeleteOutline, ImageOutlined } from "@mui/icons-material";
+import {
+  CameraAlt,
+  DeleteOutline,
+  EditOutlined,
+  InfoOutlined,
+} from "@mui/icons-material";
 
 interface ImageUploadFieldProps {
   label: string;
@@ -33,8 +38,14 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   sx,
   onChange,
 }) => {
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const hasPreview = Boolean(previewUrl);
   const buttonText = changeLabel || (hasPreview ? "Trocar" : emptyLabel);
+
+  const openFilePicker = () => {
+    if (disabled) return;
+    inputRef.current?.click();
+  };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -54,33 +65,73 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
     <Box
       sx={{
         border: "1px solid #e2e8f0",
-        borderRadius: "8px",
-        p: 1.5,
+        borderRadius: "12px",
+        p: 2,
         minWidth: 0,
+        backgroundColor: "#fff",
         ...sx,
       }}
     >
       {showTitle ? (
-        <Typography sx={{ mb: 1, fontSize: 13, fontWeight: 700, color: "#344054" }}>
-          {label}
-        </Typography>
+        <Box sx={{ display: "flex", gap: 1.5, mb: 2, alignItems: "center" }}>
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: "8px",
+              backgroundColor: "#edf4ff",
+              color: "#0b74de",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <CameraAlt sx={{ fontSize: 20 }} />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#1f2a44" }}>
+              {label}
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: "#52627a" }}>
+              {description}
+            </Typography>
+          </Box>
+        </Box>
       ) : null}
 
       <Box
+        role="button"
+        tabIndex={disabled ? -1 : 0}
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
+        onClick={openFilePicker}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openFilePicker();
+          }
+        }}
         sx={{
           width: "100%",
           height,
-          borderRadius: "8px",
-          border: "1.5px dashed #cbd5e1",
-          backgroundColor: disabled ? "#f1f5f9" : "#f8fafc",
+          borderRadius: "10px",
+          border: "1.5px dashed #93c5fd",
+          backgroundColor: disabled ? "#f1f5f9" : "#ffffff",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           overflow: "hidden",
           position: "relative",
           color: "#64748b",
+          cursor: disabled ? "not-allowed" : "pointer",
+          transition: "border-color 0.2s ease, background-color 0.2s ease",
+          "&:hover": disabled
+            ? undefined
+            : {
+                borderColor: "#2563eb",
+                backgroundColor: "#f8fbff",
+              },
         }}
       >
         {previewUrl ? (
@@ -88,19 +139,47 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             component="img"
             src={previewUrl}
             alt={label}
-            sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+            sx={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              backgroundColor: "#f8fafc",
+            }}
           />
         ) : (
           <Box sx={{ textAlign: "center", px: 2 }}>
-            <ImageOutlined sx={{ fontSize: 38, color: "#2563eb", mb: 0.75 }} />
-            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#344054" }}>
-              {emptyLabel}
+            <Box
+              sx={{
+                width: 58,
+                height: 58,
+                borderRadius: "50%",
+                mx: "auto",
+                mb: 1.5,
+                backgroundColor: "#edf4ff",
+                color: "#0b74de",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CameraAlt sx={{ fontSize: 26 }} />
+            </Box>
+            <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#273b60" }}>
+              Clique ou arraste para adicionar
             </Typography>
             <Typography sx={{ mt: 0.5, fontSize: 11, color: "#667085" }}>
-              {description}
+              JPG ou PNG até 5MB
             </Typography>
           </Box>
         )}
+        <input
+          ref={inputRef}
+          hidden
+          type="file"
+          accept={accept}
+          onChange={handleInputChange}
+          disabled={disabled}
+        />
       </Box>
 
       {fileName ? (
@@ -119,33 +198,47 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         </Typography>
       ) : null}
 
-      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
-        <Button
-          variant="contained"
-          component="label"
-          size="small"
-          disabled={disabled}
-          startIcon={<CloudUploadOutlined />}
-          sx={{ textTransform: "none", height: '32px !important' }}
-        >
-          {buttonText}
-          <input hidden type="file" accept={accept} onChange={handleInputChange} />
-        </Button>
-
-        {hasPreview ? (
+      {hasPreview ? (
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
           <Button
-          className="action-button-delete"
+            variant="outlined"
+            className="action-button-edit"
+            size="small"
+            disabled={disabled}
+            startIcon={<EditOutlined />}
+            onClick={openFilePicker}
+            sx={{ textTransform: "none", height: "32px !important" }}
+          >
+            {buttonText}
+          </Button>
+          <Button
+            className="action-button-delete"
             variant="outlined"
             color="error"
             size="small"
             disabled={disabled}
             startIcon={<DeleteOutline />}
             onClick={() => onChange(null)}
-            sx={{ textTransform: "none", height: '45px !important' }}
+            sx={{ textTransform: "none", height: "32px !important" }}
           >
-            {removeLabel}
+            {removeLabel === "Remover" ? "Excluir" : removeLabel}
           </Button>
-        ) : null}
+        </Box>
+      ) : null}
+
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.75,
+          mt: 1.5,
+          color: "#667085",
+        }}
+      >
+        <InfoOutlined sx={{ fontSize: 15 }} />
+        <Typography sx={{ fontSize: 11 }}>
+          Formatos aceitos: JPG, PNG&nbsp;&nbsp;•&nbsp;&nbsp;Tamanho máximo: 5MB
+        </Typography>
       </Box>
     </Box>
   );
