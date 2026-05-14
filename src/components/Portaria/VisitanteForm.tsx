@@ -7,11 +7,13 @@ import {
   Checkbox,
   CircularProgress,
   Grid,
+  Grid2,
   MenuItem,
   TextField,
   Typography,
 } from "@mui/material";
 import {
+  BadgeOutlined,
   DirectionsCar,
   FitnessCenter,
   HowToReg,
@@ -19,6 +21,7 @@ import {
   Pool,
   Security,
   Celebration,
+  PersonOutline,
   SearchOutlined,
 } from "@mui/icons-material";
 import StepWizardCard from "../../shared/components/StepWizardCard";
@@ -31,7 +34,7 @@ import { visitorService } from "../../services/visitorService";
 import { areaService } from "../../services/areaService";
 import type { AreaResponse } from "../../models/area.model";
 import type { VisitorEnum } from "../../models/visitor.model";
-
+import Face from '../../assets/face.png';
 interface ResidentContactOption {
   id: string;
   fullName: string;
@@ -242,10 +245,10 @@ const getRequestValidationMessage = (error: unknown, fallback: string) => {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as
       | {
-          validations?: Array<{ field?: string; message?: string }>;
-          friendlyMessage?: string;
-          message?: string;
-        }
+        validations?: Array<{ field?: string; message?: string }>;
+        friendlyMessage?: string;
+        message?: string;
+      }
       | undefined;
     const firstValidation = data?.validations?.find(
       (validation) => validation.message?.trim(),
@@ -388,10 +391,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         ]);
         setVisitorTypes(types ?? []);
         setVisitorReasons(reasons ?? []);
- /*        setFormData((current) => ({
-          ...current,
-          visitorReasonId: current.visitorReasonId || String(reasons?.[0]?.value ?? reasons?.[0]?.id ?? ""),
-        })); */
+        /*        setFormData((current) => ({
+                 ...current,
+                 visitorReasonId: current.visitorReasonId || String(reasons?.[0]?.value ?? reasons?.[0]?.id ?? ""),
+               })); */
       } catch {
         setVisitorTypes([]);
         setVisitorReasons([]);
@@ -851,40 +854,53 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
               </MenuItem>
             ))}
           </TextField>
+          <Grid2 container justifyContent={'space-around'}>
+            <Grid item xs={12} md={4}>
+              <ImageUploadField
+                sx={{ maxWidth: '333px' }}
+                height={140}
+                label={`Foto do rosto`}
+                icon={<PersonOutline />}
+                showIcon
+                description="Toque para capturar ou enviar uma imagem"
+                fileName={formData.facePhoto?.name}
+                previewUrl={facePhotoPreview}
+                onChange={(file) => {
+                  setFormData((current) => ({ ...current, facePhoto: file }));
+                  if (!file) setFacePhotoPreview(null);
+                  clearFieldError("facePhoto");
+                }}
+              />
+              {errors.facePhoto ? (
+                <Typography className="visitante-error-text">
+                  {errors.facePhoto}
+                </Typography>
+              ) : null}
+            </Grid>
+            <Grid item xs={12} md={4}>
 
-          <ImageUploadField
-            label="Foto do rosto"
-            description="Toque para capturar ou enviar uma imagem"
-            fileName={formData.facePhoto?.name}
-            previewUrl={facePhotoPreview}
-            onChange={(file) => {
-              setFormData((current) => ({ ...current, facePhoto: file }));
-              if (!file) setFacePhotoPreview(null);
-              clearFieldError("facePhoto");
-            }}
-          />
-          {errors.facePhoto ? (
-            <Typography className="visitante-error-text">
-              {errors.facePhoto}
-            </Typography>
-          ) : null}
-
-          <ImageUploadField
-            label="Foto do documento"
-            description="Envie a frente ou imagem principal do documento"
-            fileName={formData.documentPhoto?.name}
-            previewUrl={documentPhotoPreview}
-            onChange={(file) => {
-              setFormData((current) => ({ ...current, documentPhoto: file }));
-              if (!file) setDocumentPhotoPreview(null);
-              clearFieldError("documentPhoto");
-            }}
-          />
-          {errors.documentPhoto ? (
-            <Typography className="visitante-error-text">
-              {errors.documentPhoto}
-            </Typography>
-          ) : null}
+              <ImageUploadField
+                sx={{ maxWidth: '333px' }}
+                height={140}
+                label="Foto do documento"
+                icon={<BadgeOutlined />}
+                showIcon
+                description="Envie a frente ou imagem principal do documento"
+                fileName={formData.documentPhoto?.name}
+                previewUrl={documentPhotoPreview}
+                onChange={(file) => {
+                  setFormData((current) => ({ ...current, documentPhoto: file }));
+                  if (!file) setDocumentPhotoPreview(null);
+                  clearFieldError("documentPhoto");
+                }}
+              />
+              {errors.documentPhoto ? (
+                <Typography className="visitante-error-text">
+                  {errors.documentPhoto}
+                </Typography>
+              ) : null}
+            </Grid>
+          </Grid2>
         </Box>
       );
     }
@@ -952,15 +968,14 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
               <Typography className="visitante-section-title">
                 Moradores
               </Typography>
-              <Box className="visitante-residents-scroll" sx={{height: '200px'}}>
+              <Box className="visitante-residents-scroll" sx={{ height: '200px' }}>
                 {unitSearchResults.flatMap((unit) =>
                   unit.residents.map((resident) => (
                     <Box
-                      className={`visitante-resident-card ${
-                        formData.selectedResidentId === resident.id
-                          ? "selected"
-                          : ""
-                      }`}
+                      className={`visitante-resident-card ${formData.selectedResidentId === resident.id
+                        ? "selected"
+                        : ""
+                        }`}
                       key={`${unit.id}-${resident.id}`}
                       onClick={() => handleResidentSelect(unit, resident)}
                       role="button"
@@ -996,9 +1011,9 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           ) : null}
 
           {unitSearched &&
-          !destinationLoading &&
-          unitSearchResults.length === 0 &&
-          !errors.destinationUnit ? (
+            !destinationLoading &&
+            unitSearchResults.length === 0 &&
+            !errors.destinationUnit ? (
             <Alert severity="warning" className="visitante-alert">
               Nenhum morador foi encontrado para a unidade pesquisada.
             </Alert>
@@ -1046,9 +1061,8 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           />
           <Box className="visitante-option-list">
             <Box
-              className={`visitante-option-card ${
-                formData.releaseType === "manual" ? "selected" : ""
-              }`}
+              className={`visitante-option-card ${formData.releaseType === "manual" ? "selected" : ""
+                }`}
               onClick={() =>
                 setFormData((current) => ({ ...current, releaseType: "manual" }))
               }
@@ -1060,16 +1074,15 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
                 <Typography className="visitante-option-title">
                   Manual Portaria
                 </Typography>
-                <Typography sx={{textAlign:'left !important'}} className="visitante-option-description">
+                <Typography sx={{ textAlign: 'left !important' }} className="visitante-option-description">
                   Liberação feita manualmente pela equipe da portaria.
                 </Typography>
               </Box>
             </Box>
 
             <Box
-              className={`visitante-option-card ${
-                formData.releaseType === "resident" ? "selected" : "disabled"
-              }`}
+              className={`visitante-option-card ${formData.releaseType === "resident" ? "selected" : "disabled"
+                }`}
               onClick={() => {
                 setFormData((current) => ({
                   ...current,
@@ -1081,11 +1094,11 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
               <Box className="visitante-option-icon resident">
                 <HowToReg />
               </Box>
-              <Box  className="visitante-option-copy">
+              <Box className="visitante-option-copy">
                 <Typography className="visitante-option-title">
                   Direto pelo Morador
                 </Typography>
-                <Typography sx={{textAlign:'center'}} className="visitante-option-description">
+                <Typography sx={{ textAlign: 'center' }} className="visitante-option-description">
                   Disponível apenas quando o usuário logado pertence à unidade
                   selecionada.
                 </Typography>
@@ -1099,7 +1112,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             </Typography>
           ) : null}
 
-          <Alert sx={{mb:2}} severity={residentCanManageAccess ? "success" : "info"}>
+          <Alert sx={{ mb: 2 }} severity={residentCanManageAccess ? "success" : "info"}>
             {residentCanManageAccess
               ? "Usuário logado identificado como morador da unidade. A liberação direta está habilitada."
               : "Liberação direta pelo morador fica bloqueada até validar que o usuário logado pertence à unidade."}
@@ -1193,7 +1206,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           )
         }
       >
-        {renderStepContent(activeStep)}
+        {renderStepContent(1)}
       </StepWizardCard>
 
       <AppStateModal

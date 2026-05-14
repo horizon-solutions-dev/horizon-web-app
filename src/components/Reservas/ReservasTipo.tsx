@@ -18,14 +18,19 @@ import {
 import {
   Apartment,
   Article,
+  AccessTime,
+  CategoryOutlined,
   Close,
   DeleteOutline,
   EditOutlined,
+  FactCheckOutlined,
+  GroupsOutlined,
   ImageOutlined,
   LocationOn,
-  Place,
+  PaidOutlined,
   SearchOutlined,
 } from "@mui/icons-material";
+import { MdEventAvailable } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
@@ -362,34 +367,48 @@ export default function ReservasTipo() {
     try {
       const types = await areaImageService.getAreaImageTypes();
       setImageTypes(types);
+      return types;
     } catch {
       setImageTypes([]);
+      return [];
     }
   };
 
-  const loadExistingAreaImages = async (areaId: string) => {
+  const getAreaImagePreview = async (areaImageId: string) => {
+    const image = await areaImageService.getAreaImageById(areaImageId);
+    if (!image.contentFile || !image.contentType) return null;
+
+    return `data:${image.contentType};base64,${image.contentFile}`;
+  };
+
+  const loadExistingAreaImages = async (areaId: string, types = imageTypes) => {
     try {
-      const images = await areaImageService.getAreaImages(areaId);
+      const resolvedTypes = types.length > 0 ? types : await loadAreaImageTypes();
       const entries = await Promise.all(
-        images.map(async (image) => {
-          if (!image.imageType) return null;
+        resolvedTypes.map(async (type) => {
+          try {
+            const imageType = getEnumOptionValue(type);
+            if (!imageType) return null;
 
-          if (image.contentFile && image.contentType) {
-            return [
-              String(image.imageType),
-              `data:${image.contentType};base64,${image.contentFile}`,
-            ] as const;
+            const images = await areaImageService.getAreaImages(areaId, imageType);
+            const image = images[0];
+            if (!image?.areaImageId) {
+              return null;
+            }
+
+            const previewUrl =
+              image.contentFile && image.contentType
+                ? `data:${image.contentType};base64,${image.contentFile}`
+                : await getAreaImagePreview(image.areaImageId);
+
+            return previewUrl ? ([imageType, previewUrl] as const) : null;
+          } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 404) {
+              return null;
+            }
+            console.error("Erro ao carregar imagem da area por tipo:", error);
+            return null;
           }
-
-          const downloaded = await areaImageService.downloadAreaImage(
-            image.areaImageId,
-          );
-          if (!downloaded.contentFile || !downloaded.contentType) return null;
-
-          return [
-            String(image.imageType),
-            `data:${downloaded.contentType};base64,${downloaded.contentFile}`,
-          ] as const;
         }),
       );
       const previews = entries.reduce<Record<string, string>>((acc, entry) => {
@@ -463,7 +482,10 @@ export default function ReservasTipo() {
     imagePreviewsRef.current = {};
     setImagePreviews({});
     setIsFormOpen(true);
-    void loadExistingAreaImages(area.areaId);
+    void (async () => {
+      const types = await loadAreaImageTypes();
+      await loadExistingAreaImages(area.areaId, types);
+    })();
   };
 
   const closeWizard = () => {
@@ -1027,7 +1049,7 @@ export default function ReservasTipo() {
           </Box>
         ) : null}
 
-        <Box className="area-upload-grid" sx={{maxHeight: '500px'}}>
+        <Box className="area-upload-grid" sx={{maxHeight: '450px'}}>
           {imageTypes.map((type) => {
             const imageType = getEnumOptionValue(type);
             const selectedFile = formData.imageFiles[imageType];
@@ -1122,9 +1144,9 @@ export default function ReservasTipo() {
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 {activeView === "condominios" ? (
-                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
+            <Apartment sx={{ fontSize: 36, color: "#2563eb" }} />
                 ) : (
-                  <Place sx={{ fontSize: 36, color: "#1976d2" }} />
+                  <MdEventAvailable style={{ fontSize: 36, color: "#14b8a6" }} />
                 )}
                 <Typography variant="h5" fontWeight="bold" sx={{ fontSize: 26 }}>
                   {organizationName}
@@ -1238,17 +1260,38 @@ export default function ReservasTipo() {
                 items={filteredAreas.map((area, index) => ({
                   id: area.areaId,
                   title: area.name,
-                  badge: getTypeLabel(area.type),
                   subtitle: (
-                    <Typography variant="body2" color="text.secondary">
-                      Capacidade: {area.capacityPeople || 0} pessoas | {area.startTime} - {area.endTime}
-                    </Typography>
-                  ),
-                  meta: (
-                    <Typography variant="caption" color="text.secondary">
-                      {area.hasFee ? `Taxa: R$ ${area.feeAmount || 0}` : "Sem taxa"} |{" "}
-                      {area.hasApprovalRequired ? "Exige aprovacao" : "Sem aprovacao"}
-                    </Typography>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.35 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {getTypeLabel(area.type)}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+                        <GroupsOutlined sx={{ fontSize: 16, color: "#14b8a6" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          Capacidade: {area.capacityPeople || 0} pessoas
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+                        <AccessTime sx={{ fontSize: 16, color: "#14b8a6" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {area.startTime} - {area.endTime}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+                        <PaidOutlined sx={{ fontSize: 16, color: "#14b8a6" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {area.hasFee ? `Taxa: R$ ${area.feeAmount || 0}` : "Sem taxa"}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+                        <FactCheckOutlined sx={{ fontSize: 16, color: "#14b8a6" }} />
+                        <Typography variant="body2" color="text.secondary">
+                          {area.hasApprovalRequired ? "Exige aprovacao" : "Sem aprovacao"}
+                        </Typography>
+                      </Box>
+                    </Box>
                   ),
                   actions: (
                     <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>

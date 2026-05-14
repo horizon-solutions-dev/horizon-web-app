@@ -419,7 +419,7 @@ const Unidades: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <MdApartment style={{ fontSize: 36, color: "#1976d2" }} />
+            <MdApartment style={{ fontSize: 36, color: "#2563eb" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -649,9 +649,9 @@ const Unidades: React.FC = () => {
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                     {selectedBlockId ? (
-                      <Home sx={{ fontSize: 36, color: "#1976d2" }} />
+              <Home sx={{ fontSize: 36, color: "#10b981" }} />
                     ) : (
-                      <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
+              <ViewModule sx={{ fontSize: 36, color: "#8b5cf6" }} />
                     )}
                     <Box>
                       <Typography

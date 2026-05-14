@@ -4,11 +4,12 @@ import {
   CameraAlt,
   DeleteOutline,
   EditOutlined,
-  InfoOutlined,
 } from "@mui/icons-material";
 
 interface ImageUploadFieldProps {
   label: string;
+  icon?: React.ReactNode;
+  showIcon?: boolean;
   description?: string;
   previewUrl?: string | null;
   fileName?: string | null;
@@ -25,6 +26,8 @@ interface ImageUploadFieldProps {
 
 const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   label,
+  icon,
+  showIcon = false,
   description = "Formatos aceitos: JPG, PNG.",
   previewUrl,
   fileName,
@@ -74,27 +77,27 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
     >
       {showTitle ? (
         <Box sx={{ display: "flex", gap: 1.5, mb: 2, alignItems: "center" }}>
-          <Box
-            sx={{
-              width: 36,
-              height: 36,
-              borderRadius: "8px",
-              backgroundColor: "#edf4ff",
-              color: "#0b74de",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <CameraAlt sx={{ fontSize: 20 }} />
-          </Box>
+          {showIcon ? (
+            <Box
+              sx={{
+                width: 34,
+                height: 34,
+                borderRadius: "10px",
+                backgroundColor: "#edf4ff",
+                color: "#2563eb",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                "& .MuiSvgIcon-root": { fontSize: 20 },
+              }}
+            >
+              {icon || <CameraAlt sx={{ fontSize: 20 }} />}
+            </Box>
+          ) : null}
           <Box sx={{ minWidth: 0 }}>
             <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#1f2a44" }}>
               {label}
-            </Typography>
-            <Typography sx={{ fontSize: 12, color: "#52627a" }}>
-              {description}
             </Typography>
           </Box>
         </Box>
@@ -226,20 +229,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         </Box>
       ) : null}
 
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.75,
-          mt: 1.5,
-          color: "#667085",
-        }}
-      >
-        <InfoOutlined sx={{ fontSize: 15 }} />
-        <Typography sx={{ fontSize: 11 }}>
-          Formatos aceitos: JPG, PNG&nbsp;&nbsp;•&nbsp;&nbsp;Tamanho máximo: 5MB
-        </Typography>
-      </Box>
+
     </Box>
   );
 };

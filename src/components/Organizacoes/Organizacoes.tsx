@@ -233,7 +233,7 @@ const Organizacoes: React.FC = () => {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+          <Business sx={{ fontSize: 36, color: "#f59e0b" }} />
                 <Box>
                   <Typography
                     variant="h5"

@@ -23,6 +23,7 @@ import {
   Close,
   Home,
   People,
+  PersonPinCircle,
   ViewModule,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
@@ -154,7 +155,7 @@ export default function MenuComponent({
     {
       id: "visitantes",
       label: "Visitantes",
-      icon: <People />,
+      icon: <PersonPinCircle />,
       iconColor: "#ec4899",
       path: RouteNames.PortariaVisitantes,
       access: { permissions: [APP_PERMISSIONS.GatehouseView] },

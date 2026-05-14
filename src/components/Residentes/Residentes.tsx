@@ -470,7 +470,7 @@ const Residentes: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <MdApartment style={{ fontSize: 36, color: "#1976d2" }} />
+            <MdApartment style={{ fontSize: 36, color: "#2563eb" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -539,7 +539,7 @@ const Residentes: React.FC = () => {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Home sx={{ fontSize: 36, color: "#1976d2" }} />
+            <Home sx={{ fontSize: 36, color: "#10b981" }} />
                 <Box>
                   <Typography
                     variant="h5"
@@ -714,7 +714,7 @@ const Residentes: React.FC = () => {
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <People sx={{ fontSize: 36, color: "#1976d2" }} />
+            <People sx={{ fontSize: 36, color: "#ec4899" }} />
                     <Box>
                       <Typography
                         variant="h5"

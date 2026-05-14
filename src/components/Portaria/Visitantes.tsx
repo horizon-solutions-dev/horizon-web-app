@@ -25,6 +25,7 @@ import {
   Email,
   LocationOn,
   Person,
+  PersonPinCircle,
   Phone,
   Schedule,
   SearchOutlined,
@@ -482,9 +483,9 @@ export default function Visitantes() {
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                   {activeView === "condominios" ? (
-                    <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
+            <Apartment sx={{ fontSize: 36, color: "#2563eb" }} />
                   ) : (
-                    <Person sx={{ fontSize: 36, color: "#1976d2" }} />
+            <PersonPinCircle sx={{ fontSize: 36, color: "#ec4899" }} />
                   )}
                   <Typography
                     variant="h5"
