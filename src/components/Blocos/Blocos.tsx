@@ -329,7 +329,7 @@ const EstruturaCondominio: React.FC = () => {
                   </IconButton>
                 </Tooltip>
               </Container>
-              <Box>
+              <Box sx={{ alignSelf: "stretch", pl: "48px" }}>
                 <BreadcrumbTrail
                   items={[t("common.condominiums")]}
                 />
@@ -346,6 +346,7 @@ const EstruturaCondominio: React.FC = () => {
                 <CardList
                   title="Condôminios da organização"
                   showTitle={false}
+                  variant="condominiumSelection"
                   searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}
                   onAddClick={undefined}
@@ -440,6 +441,7 @@ const EstruturaCondominio: React.FC = () => {
                 <CardList
                   title="Condôminios da organização"
                   showTitle={false}
+                  variant="condominiumSelection"
                   searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}
                   onAddClick={undefined}

@@ -39,6 +39,7 @@ import { areaService } from "../../services/areaService";
 import {
   condominiumService,
   type Condominium,
+  type CondominiumTypeEnum,
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import type { AreaEnum, AreaRequest, AreaResponse } from "../../models/area.model";
@@ -265,6 +266,9 @@ export default function ReservasTipo() {
   );
   const [loading, setLoading] = useState(false);
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
+  const [condominiumTypes, setCondominiumTypes] = useState<
+    CondominiumTypeEnum[]
+  >([]);
   const [selectedCondominium, setSelectedCondominium] =
     useState<Condominium | null>(null);
   const [areas, setAreas] = useState<AreaResponse[]>([]);
@@ -328,6 +332,22 @@ export default function ReservasTipo() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadCondominiumTypes = async () => {
+    try {
+      const data = await condominiumService.getCondominiumTypes();
+      setCondominiumTypes(data ?? []);
+    } catch {
+      setCondominiumTypes([]);
+    }
+  };
+
+  const getCondominiumTypeLabel = (value: string | number) => {
+    const match = condominiumTypes.find(
+      (type) => type.id === value || type.value === value,
+    );
+    return match?.description || match?.value || String(value || "-");
   };
 
   const loadAreaTypes = async () => {
@@ -407,6 +427,7 @@ export default function ReservasTipo() {
 
   useEffect(() => {
     void loadCondominiums();
+    void loadCondominiumTypes();
     void loadAreaTypes();
     void loadAreaImageTypes();
   }, []);
@@ -1127,13 +1148,15 @@ export default function ReservasTipo() {
                 </IconButton>
               </Tooltip>
             </Container>
-            <BreadcrumbTrail
-              items={[
-                
-                selectedCondominium?.name || "Condominios",
-                "Areas",
-              ]}
-            />
+            <Box sx={{ alignSelf: "stretch", pl: "48px" }}>
+              <BreadcrumbTrail
+                items={
+                  activeView === "condominios"
+                    ? ["Condominios"]
+                    : [selectedCondominium?.name || "Condominios", "Areas"]
+                }
+              />
+            </Box>
           </Box>
 
           <Paper variant="outlined" sx={{ p: 2 }}>
@@ -1148,6 +1171,7 @@ export default function ReservasTipo() {
               <CardList
                 title="Condominios"
                 showTitle={false}
+                variant="condominiumSelection"
                 searchPlaceholder="Buscar condominio..."
                 onSearchChange={setSearchTerm}
                 onAddClick={undefined}
@@ -1159,7 +1183,7 @@ export default function ReservasTipo() {
                   id: condominium.condominiumId,
                   title: condominium.name,
                   subtitle: (
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.35 }}>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
                         <Article sx={{ fontSize: 16 }} />
                         <Typography variant="body2" color="text.secondary">
@@ -1170,6 +1194,11 @@ export default function ReservasTipo() {
                         <LocationOn sx={{ fontSize: 16 }} />
                         <Typography variant="body2" color="text.secondary">
                           {condominium.city} - {condominium.state}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {getCondominiumTypeLabel(condominium.condominiumType)}
                         </Typography>
                       </Box>
                     </Box>

@@ -489,7 +489,7 @@ const Residentes: React.FC = () => {
                   </IconButton>
                 </Tooltip>
               </Container>
-              <Box>
+              <Box sx={{ alignSelf: "stretch", pl: "48px" }}>
                 <BreadcrumbTrail
                   items={[ t("common.condominiums")]}
                 />
@@ -506,6 +506,7 @@ const Residentes: React.FC = () => {
                 <CardList
                   title={t("moradores.condominiumsList")}
                   showTitle={false}
+                  variant="condominiumSelection"
                   searchPlaceholder={t(
                     "moradores.searchCondominiumPlaceholder",
                   )}

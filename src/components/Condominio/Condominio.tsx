@@ -277,7 +277,7 @@ const CondominioPage: React.FC = () => {
       ),
       imageUrl: getCondominiumImageUrl(condominium),
       actions: (
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 3 }}>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           <Button
             size="small"
             variant="outlined"
@@ -370,7 +370,7 @@ const CondominioPage: React.FC = () => {
                   </IconButton>
                 </Tooltip>
               </Container>
-              <Box>
+              <Box sx={{ alignSelf: "stretch", pl: "48px" }}>
                 <BreadcrumbTrail
                   items={[t("common.condominiums")]}
                 />
@@ -398,6 +398,7 @@ const CondominioPage: React.FC = () => {
                     showAddButton={data.orgType == 1}
                     title={t("condominio.condominiumsList")}
                     showTitle={false}
+                    variant="condominiumSelection"
                     searchPlaceholder={t("condominio.searchPlaceholder")}
                     onSearchChange={setSearchText}
                     onAddClick={handleOpenCreate}
@@ -406,9 +407,6 @@ const CondominioPage: React.FC = () => {
                     emptyImageLabel={t("common.noImage")}
                     showFilters={true}
                     showPagination={true}
-                    cardMaxHeight="none"
-                    imageWidth={145}
-                    imageHeight={90}
                     actionsMarginTop={0.5}
                     page={listPage}
                     totalPages={totalPages}

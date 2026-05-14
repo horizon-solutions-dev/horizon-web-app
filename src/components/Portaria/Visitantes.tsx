@@ -40,6 +40,7 @@ import type { VisitorEnum, VisitorResponse } from "../../models/visitor.model";
 import {
   condominiumService,
   type Condominium,
+  type CondominiumTypeEnum,
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import { formatCNPJ } from "../../shared/utils/funcoes";
@@ -216,6 +217,9 @@ export default function Visitantes() {
     () => getStoredOrganizationName() || "Organização",
   );
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
+  const [condominiumTypes, setCondominiumTypes] = useState<
+    CondominiumTypeEnum[]
+  >([]);
   const [selectedCondominium, setSelectedCondominium] =
     useState<Condominium | null>(null);
   const [condoSearchTerm, setCondoSearchTerm] = useState("");
@@ -240,6 +244,22 @@ export default function Visitantes() {
 
   const condoPageSize = 4;
   const pageSize = 4;
+
+  const loadCondominiumTypes = async () => {
+    try {
+      const data = await condominiumService.getCondominiumTypes();
+      setCondominiumTypes(data ?? []);
+    } catch {
+      setCondominiumTypes([]);
+    }
+  };
+
+  const getCondominiumTypeLabel = (value: string | number) => {
+    const match = condominiumTypes.find(
+      (type) => type.id === value || type.value === value,
+    );
+    return match?.description || match?.value || String(value || "-");
+  };
 
   const loadCondominiums = async (pageNumber = 1) => {
     setLoading(true);
@@ -322,6 +342,7 @@ export default function Visitantes() {
 
   useEffect(() => {
     void loadCondominiums(1);
+    void loadCondominiumTypes();
   }, []);
 
   const handleSelectCondominium = async (condominium: Condominium) => {
@@ -494,13 +515,13 @@ export default function Visitantes() {
                   </IconButton>
                 </Tooltip>
               </Container>
-              <Box>
+              <Box sx={{ alignSelf: "stretch", pl: "48px" }}>
                 <BreadcrumbTrail
-                  items={[
-                    
-                    selectedCondominium?.name || "Condominios",
-                    "Visitantes",
-                  ]}
+                  items={
+                    activeView === "condominios"
+                      ? ["Condominios"]
+                      : [selectedCondominium?.name || "Condominios", "Visitantes"]
+                  }
                 />
               </Box>
             </Box>
@@ -510,6 +531,7 @@ export default function Visitantes() {
                 <CardList
                   title="Condominios"
                   showTitle={false}
+                  variant="condominiumSelection"
                   searchPlaceholder="Buscar condominio..."
                   onSearchChange={(value) => {
                     setCondoSearchTerm(value);
@@ -530,7 +552,7 @@ export default function Visitantes() {
                     id: condominium.condominiumId,
                     title: condominium.name,
                     subtitle: (
-                      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.35 }}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
                           <Article sx={{ fontSize: 16 }} />
                           <Typography variant="body2" color="text.secondary">
@@ -541,6 +563,11 @@ export default function Visitantes() {
                           <LocationOn sx={{ fontSize: 16 }} />
                           <Typography variant="body2" color="text.secondary">
                             {condominium.city} - {condominium.state}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {getCondominiumTypeLabel(condominium.condominiumType)}
                           </Typography>
                         </Box>
                       </Box>

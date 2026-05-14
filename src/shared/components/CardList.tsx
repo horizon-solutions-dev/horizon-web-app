@@ -60,6 +60,7 @@ interface CardListProps {
   haveImage?: boolean;
   imageHeight?: number;
   actionsMarginTop?: number;
+  variant?: "default" | "condominiumSelection";
 }
 
 export default function CardList({
@@ -86,7 +87,16 @@ export default function CardList({
   imageHeight = 80,
   actionsMarginTop = 1,
   haveImage = true,
+  variant = "default",
 }: CardListProps) {
+  const isCondominiumSelection = variant === "condominiumSelection";
+  const resolvedCardMaxHeight = isCondominiumSelection ? "none" : cardMaxHeight;
+  const resolvedImageWidth = isCondominiumSelection ? 134 : imageWidth;
+  const resolvedImageHeight = isCondominiumSelection ? 96 : imageHeight;
+  const resolvedActionsMarginTop = isCondominiumSelection
+    ? 2.25
+    : actionsMarginTop;
+
   return (
     <Fragment>
       {showTitle ? (
@@ -242,19 +252,25 @@ export default function CardList({
               <Paper
                 elevation={0}
                 sx={{
-                  p: 2,
-                  borderRadius: 3,
+                  p: isCondominiumSelection ? 2.25 : 2,
+                  borderRadius: isCondominiumSelection ? 2 : 3,
                   background: item.accentColor || "#f6f7fb",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
                   gap: 2,
-                  maxHeight: cardMaxHeight,
+                  minHeight: isCondominiumSelection ? 172 : undefined,
+                  maxHeight: resolvedCardMaxHeight,
                 }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Box
-                    sx={{ display: "flex", alignItems: "center", gap: 1, mb: "12px" }}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: isCondominiumSelection ? 1.75 : "12px",
+                    }}
                   >
                     <Typography
                       variant="subtitle1"
@@ -296,7 +312,9 @@ export default function CardList({
                     )
                   ) : null}
                   {item.actions ? (
-                    <Box sx={{ mt: actionsMarginTop }}>{item.actions}</Box>
+                    <Box sx={{ mt: resolvedActionsMarginTop }}>
+                      {item.actions}
+                    </Box>
                   ) : null}
                 </Box>
                 {
@@ -305,8 +323,8 @@ export default function CardList({
                   role={item.onImageClick ? "button" : undefined}
                   tabIndex={item.onImageClick ? 0 : undefined}
                   sx={{
-                    width: imageWidth,
-                    height: imageHeight,
+                    width: resolvedImageWidth,
+                    height: resolvedImageHeight,
                     borderRadius: 2,
                     background: "#fff",
                     display: "flex",

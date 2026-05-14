@@ -438,7 +438,7 @@ const Unidades: React.FC = () => {
                   </IconButton>
                 </Tooltip>
               </Container>
-              <Box>
+              <Box sx={{ alignSelf: "stretch", pl: "48px" }}>
                 <BreadcrumbTrail
                   items={[ t("common.condominiums")]}
                 />
@@ -455,6 +455,7 @@ const Unidades: React.FC = () => {
                 <CardList
                   title={t("unidades.condominiumsList")}
                   showTitle={false}
+                  variant="condominiumSelection"
                   searchPlaceholder={t("unidades.searchCondominiumPlaceholder")}
                   onSearchChange={setSearchText}
                   onAddClick={undefined}
@@ -508,6 +509,7 @@ const Unidades: React.FC = () => {
                 <CardList
                   title="Condôminios da organização"
                   showTitle={false}
+                  variant="condominiumSelection"
                   searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}
                   onAddClick={undefined}
