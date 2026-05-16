@@ -306,7 +306,7 @@ const Organizacoes: React.FC = () => {
                               <PlaceOutlined
                                 sx={{
                                   fontSize: 14,
-                                  mr: 0.5,
+                                  mr: '5px',
                                   verticalAlign: "middle",
                                 }}
                               />
@@ -317,7 +317,7 @@ const Organizacoes: React.FC = () => {
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 0.7,
+                                gap: '5px',
                               }}
                             >
                               <Article sx={{ fontSize: 14 }} />

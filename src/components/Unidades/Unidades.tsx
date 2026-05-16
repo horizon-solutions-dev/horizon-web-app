@@ -546,7 +546,7 @@ const Unidades: React.FC = () => {
                             sx={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 0.7,
+                              gap: '4px',
                             }}
                           >
                             <Article sx={{ fontSize: 14 }} />
@@ -558,7 +558,7 @@ const Unidades: React.FC = () => {
                             sx={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 0.7,
+                              gap: '4px',
                             }}
                           >
                             <LocationOn sx={{ fontSize: 14 }} />
@@ -820,7 +820,7 @@ const Unidades: React.FC = () => {
                                   <Person
                                     sx={{
                                       fontSize: 14,
-                                      mr: 0.5,
+                                      mr: '8px',
                                       verticalAlign: "middle",
                                     }}
                                   />{" "}
@@ -839,7 +839,7 @@ const Unidades: React.FC = () => {
                           ),
                           meta: (
                             <>
-                              <ViewModule />{" "}
+                              <ViewModule sx={{ fontSize: 20 }}/>{" "}
                               {blocks.find(
                                 (b) =>
                                   b.condominiumBlockId ===

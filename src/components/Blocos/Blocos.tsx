@@ -478,7 +478,7 @@ const EstruturaCondominio: React.FC = () => {
                             sx={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 0.7,
+                              gap: '4px',
                             }}
                           >
                             <Article sx={{ fontSize: 14 }} />
@@ -490,7 +490,7 @@ const EstruturaCondominio: React.FC = () => {
                             sx={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 0.7,
+                              gap: '4px',
                             }}
                           >
                             <LocationOn sx={{ fontSize: 14 }} />

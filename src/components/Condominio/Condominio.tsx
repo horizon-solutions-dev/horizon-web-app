@@ -256,13 +256,13 @@ const CondominioPage: React.FC = () => {
       title: condominium.name,
       subtitle: (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.35 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap:'4px' }}>
             <Article sx={{ fontSize: 14 }} />
             <Typography variant="body2" color="text.secondary">
               {formatCNPJ(condominium.doc) || "-"}
             </Typography>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: '4px' }}>
             <LocationOn sx={{ fontSize: 14 }} />
             <Typography variant="body2" color="text.secondary">
               {condominium.city} - {condominium.state}
