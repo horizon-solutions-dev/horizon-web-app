@@ -46,7 +46,7 @@ const getInitialStage = (): WizardStage => {
 export default function PrimeiroAcessoWizard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const isFirstAccess = searchParams.get("primeiro") === "1";
+  const isFirstAccess = searchParams.get("first") === "1";
 
   const [stage, setStage] = useState<WizardStage>(getInitialStage);
   const [busy, setBusy] = useState(false);

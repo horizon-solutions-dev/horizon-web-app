@@ -568,11 +568,6 @@ const EstruturaCondominio: React.FC = () => {
                       </Typography>
                       <BreadcrumbTrail
                         items={[
-                          localStorage.getItem("condominium")
-                            ? JSON.parse(
-                                localStorage.getItem("condominium") || "{}",
-                              )?.name
-                            : {},
                           selectedCondominium?.name ||
                             t("blocos.selectedCondominium"),
                           t("common.blocks"),

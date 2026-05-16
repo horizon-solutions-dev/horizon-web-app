@@ -192,7 +192,7 @@ export default function MultiStepLogin() {
       const session = await authenticateCreatedAccount();
 
       if (destination === "setup") {
-        navigate(`${RouteNames.PrimeiroAcesso}?primeiro=1`);
+        navigate(`${RouteNames.PrimeiroAcesso}?first=1`);
         return;
       }
 
