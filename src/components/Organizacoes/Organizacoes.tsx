@@ -317,10 +317,10 @@ const Organizacoes: React.FC = () => {
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: '5px',
+                                gap: '7px',
                               }}
                             >
-                              <Article sx={{ fontSize: 14 }} />
+                              <Article sx={{ fontSize: 13 }} />
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
