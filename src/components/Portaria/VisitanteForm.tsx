@@ -106,7 +106,7 @@ interface VisitanteFormProps {
   loading: boolean;
   setLoading: (value: boolean) => void;
   onClose: () => void;
-  onSaved: (visitor: VisitorListItem) => void | Promise<void>;
+  onSaved: (visitor:  any ) => Promise<void> | Promise<void>;
   existingVisitor?: ExistingVisitorFormData | null;
 }
 

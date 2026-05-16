@@ -1,12 +1,13 @@
 import { apiClient } from "./apiClient";
 
-export type UnitImageType = 1 | 2 | 3 | 4;
+export type UnitImageType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type UnitImageTypeQuery = UnitImageType | string;
 
 export interface CondominiumUnitImage {
   condominiumUnitImageId: string;
   imageType: UnitImageType;
   contentType: string;
-  contentFile: string;
+  contentFile?: string;
   condominiumId: string;
   condominiumUnitId: string;
   userId: string;
@@ -76,7 +77,7 @@ class CondominiumUnitImageService {
   async getUnitImages(
     condominiumId: string,
     condominiumUnitId: string,
-    imageType?: UnitImageType,
+    imageType?: UnitImageTypeQuery,
   ) {
     const params = new URLSearchParams({
       CondominiumId: condominiumId,

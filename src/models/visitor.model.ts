@@ -79,3 +79,9 @@ export interface CreateVisitorVisitResponse {
 export interface FinishVisitorVisitResponse {
   visitorHistoryId: string;
 }
+
+export interface FinishVisitorVisitRequest {
+  exitAt: string;
+  typeVisitorReasonId: string | number;
+  notes?: string;
+}

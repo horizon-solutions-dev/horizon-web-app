@@ -296,23 +296,86 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
     void dataUser(editUserId);
 
-    // Se tiver uma imagem, carregar a prévia
+    // Fallback visual enquanto as imagens completas da unidade sao carregadas.
     if (residentImageUrl) {
-      // Converter a URL base64 para um objeto File (opcional, mas útil para consistência)
-      fetch(residentImageUrl)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const file = new File([blob], "resident-photo.jpg", {
-            type: blob.type,
-          });
-          setPhotoFile(file);
-          setCoverPreview(residentImageUrl);
-        })
-        .catch((error) => {
-          console.error("Erro ao carregar imagem do morador:", error);
-        });
+      setCoverPreview(residentImageUrl);
     }
   }, [open, isEditMode, editUserId, residentImageUrl]);
+
+  useEffect(() => {
+    if (
+      !open ||
+      !isEditMode ||
+      !editUserId ||
+      !condominiumIdPreset ||
+      !editResident?.condominiumUnitId
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const toPreviewUrl = (contentType?: string, contentFile?: string) => {
+      if (!contentType || !contentFile) return null;
+      return `data:${contentType};base64,${contentFile}`;
+    };
+
+    const loadExistingResidentImages = async () => {
+      try {
+        const imageTypes = await condominiumUnitImageService.getUnitImageTypes();
+
+        for (const imageType of imageTypes) {
+          const images = await condominiumUnitImageService.getUnitImages(
+            condominiumIdPreset,
+            editResident.condominiumUnitId,
+            imageType.value,
+          );
+
+          const residentImage = images.find(
+            (image) => image.userId === editUserId,
+          );
+
+          if (!residentImage) continue;
+
+          const imageDetail =
+            await condominiumUnitImageService.getUnitImageById(
+              residentImage.condominiumUnitImageId,
+            );
+
+          if (cancelled) return;
+
+          const previewUrl = toPreviewUrl(
+            imageDetail.contentType,
+            imageDetail.contentFile,
+          );
+
+          if (!previewUrl) continue;
+
+          if (imageType.value === "Profile") {
+            setCoverPreview(previewUrl);
+          }
+
+          if (imageType.value === "Document") {
+            setDocumentPhotoPreview(previewUrl);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar imagens do morador:", error);
+      }
+    };
+
+    void loadExistingResidentImages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    open,
+    isEditMode,
+    editUserId,
+    condominiumIdPreset,
+    editResident?.condominiumUnitId,
+  ]);
 
   const [dataEdit, setDataEdit] = useState<AccountResponse>();
   const selectedUnitOption = unitOptions.find(
@@ -820,26 +883,28 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             throw new Error("Morador nao encontrado para edicao.");
           }
 
-          await unitResidentService.updateResident(
-            editResident.condominiumUnitResidentId,
-            {
-              condominiumUnitId: formData.condominiumUnitId,
-              userId: targetUserId,
-              fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
-              docType: documentType,
-              doc: documentNumber.replace(/\D/g, ""),
-              email: email.trim(),
-              phone: normalizePhoneToE164(phone),
-              unitType: formData.unitType,
-              startDate: formData.startDate,
-              endDate: formData.endDate || formData.startDate,
-              billingContact: formData.billingContact,
-              canVote: formData.canVote,
-              canMakeReservations: formData.canMakeReservations,
-              hasGatehouseAccess: formData.hasGatehouseAccess,
-              commit: true,
-            },
-          );
+                  const residentResponse = await unitResidentService.createResident({
+          condominiumUnitId: formData.condominiumUnitId,
+          userId: targetUserId,
+          fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
+          docType: documentType,
+          doc: documentNumber.replace(/\D/g, ""),
+          email: email.trim(),
+          phone: normalizePhoneToE164(phone),
+          unitType: formData.unitType,
+          startDate: formData.startDate,
+          endDate: formData.startDate,
+          billingContact: formData.billingContact,
+          canVote: formData.canVote,
+          canMakeReservations: formData.canMakeReservations,
+          hasGatehouseAccess: formData.hasGatehouseAccess,
+          commit: true,
+        });
+        onCreated?.({
+          residentId: residentResponse,
+          userId: targetUserId,
+          label: `${firstName.trim()} ${lastName.trim()}`.trim(),
+        });
 
           // Atualizar a imagem se uma nova foi selecionada
           if (photoFile && condominiumIdPreset && formData.condominiumUnitId) {

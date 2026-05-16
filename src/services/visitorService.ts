@@ -4,6 +4,7 @@ import type {
   CreateVisitorRequest,
   CreateVisitorVisitRequest,
   CreateVisitorVisitResponse,
+  FinishVisitorVisitRequest,
   FinishVisitorVisitResponse,
   VisitorEnum,
   VisitorPagedResponse,
@@ -82,9 +83,10 @@ class VisitorService {
     );
   }
 
-  async finishVisit(id: string) {
+  async finishVisit(id: string, visit: FinishVisitorVisitRequest) {
     return await apiClient.patch<FinishVisitorVisitResponse>(
       `${this.baseUrl}/visits/${id}/finish`,
+      visit,
     );
   }
 }

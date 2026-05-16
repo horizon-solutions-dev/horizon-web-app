@@ -8,10 +8,13 @@ import {
   CircularProgress,
   Container,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
+  MenuItem,
   Paper,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -57,8 +60,8 @@ interface Visitor {
   condominium: string;
   unit: string;
   lastVisit: string;
-  visitStart: string;
-  visitEnd: string;
+  entryAt: string;
+  exitAt: string;
   finished: boolean;
   releasedBy: string;
   activeVisitId?: string;
@@ -159,8 +162,9 @@ const getVisitorUnitLabel = (visitor: VisitorResponse) => {
   );
 };
 
-const formatVisitDate = (value?: string | null) =>
-  value ? new Date(value).toLocaleString("pt-BR") : "-";
+const formatVisitDate = (value?: string | null) =>{
+  return value ? new Date(value).toLocaleString("pt-BR") : "-";
+}
 
 const matchesVisitorSearch = (visitor: Visitor, search: string) => {
   const normalizedSearch = search.trim().toLowerCase();
@@ -203,8 +207,8 @@ const mapVisitorResponse = (
   condominium: condominiumName,
   unit: getVisitorUnitLabel(visitor),
   lastVisit: formatVisitDate(visitor.entryAt || visitor.createdAt),
-  visitStart: formatVisitDate(visitor.entryAt),
-  visitEnd: formatVisitDate(visitor.exitAt),
+  entryAt: formatVisitDate(visitor.entryAt),
+  exitAt: formatVisitDate(visitor.exitAt),
   finished: Boolean(visitor.finished),
   releasedBy: visitor.createdByName || visitor.createdBy || "-",
   activeVisitId: visitor.visitorHistoryId,
@@ -243,6 +247,10 @@ export default function Visitantes() {
     src: string;
     name: string;
   } | null>(null);
+  const [finishVisitTarget, setFinishVisitTarget] = useState<Visitor | null>(null);
+  const [finishVisitReasonId, setFinishVisitReasonId] = useState("");
+  const [finishVisitNotes, setFinishVisitNotes] = useState("");
+  const [visitorReasons, setVisitorReasons] = useState<VisitorEnum[]>([]);
   const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
 
   const filteredVisitors = visitors.filter((visitor) =>
@@ -350,6 +358,9 @@ export default function Visitantes() {
   useEffect(() => {
     void loadCondominiums(1);
     void loadCondominiumTypes();
+    void visitorService.getVisitorReasons().then(setVisitorReasons).catch(() => {
+      setVisitorReasons([]);
+    });
   }, []);
 
   const handleSelectCondominium = async (condominium: Condominium) => {
@@ -372,9 +383,20 @@ export default function Visitantes() {
       .includes(condoSearchTerm.trim().toLowerCase()),
   );
 
-  const handleFinishVisit = async (visitor: Visitor) => {
-    console.log(visitor)
-    if (!visitor.id) {
+  const handleOpenFinishVisit = (visitor: Visitor) => {
+    setFinishVisitTarget(visitor);
+    setFinishVisitReasonId("");
+    setFinishVisitNotes("");
+  };
+
+  const handleCloseFinishVisit = () => {
+    setFinishVisitTarget(null);
+    setFinishVisitReasonId("");
+    setFinishVisitNotes("");
+  };
+
+  const handleFinishVisit = async () => {
+    if (!finishVisitTarget?.activeVisitId) {
       showError(
         "Nao foi possivel finalizar.",
         "A listagem atual nao retornou o identificador da visita desse visitante.",
@@ -382,10 +404,20 @@ export default function Visitantes() {
       return;
     }
 
+    if (!finishVisitReasonId) {
+      showError("Selecione o motivo da visita para finalizar.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await visitorService.finishVisit(visitor.id);
+      await visitorService.finishVisit(finishVisitTarget.activeVisitId, {
+        exitAt: new Date().toISOString(),
+        typeVisitorReasonId: finishVisitReasonId,
+        notes: finishVisitNotes.trim(),
+      });
       showSuccess("Visita finalizada com sucesso.");
+      handleCloseFinishVisit();
       await loadVisitors(selectedCondominium, page);
     } catch (error) {
       const message =
@@ -744,7 +776,7 @@ export default function Visitantes() {
                           >
                             <Schedule sx={{ fontSize: 18 }} />
                             <Typography variant="body2">
-                              Inicio da visita: {visitor.visitStart}
+                              Início da visita: {visitor.entryAt}
                             </Typography>
                           </Box>
                           <Box
@@ -758,7 +790,7 @@ export default function Visitantes() {
                           >
                             <Schedule sx={{ fontSize: 18 }} />
                             <Typography variant="body2">
-                              Fim da visita: {visitor.visitEnd}
+                              Fim da visita: {visitor.exitAt}
                             </Typography>
                           </Box>
                         </Box>
@@ -777,24 +809,17 @@ export default function Visitantes() {
                         >
                           Nova Visita
                         </Button>
-                        {visitor.finished ? (
-                          <Chip
-                            label="Visita finalizada"
-                            size="small"
-                            color="success"
-                            variant="outlined"
-                          />
-                        ) : (
+                        {!visitor.finished &&
                           <Button
                             size="small"
                             variant="outlined"
                             className="action-button-delete"
                             startIcon={<DeleteOutline />}
-                            onClick={() => handleFinishVisit(visitor)}
+                            onClick={() => handleOpenFinishVisit(visitor)}
                           >
                             Finalizar visita
                           </Button>
-                        )}
+                        }
                       </Box>
                     ),
                     imageUrl: visitor.imageUrl,
@@ -818,6 +843,50 @@ export default function Visitantes() {
           </Paper>
         )}
       </Container>
+
+      <Dialog
+        open={Boolean(finishVisitTarget)}
+        onClose={handleCloseFinishVisit}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Finalizar visita</DialogTitle>
+        <DialogContent sx={{ pt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+          <TextField
+            select
+            fullWidth
+            placeholder="Motivo da visita"
+            value={finishVisitReasonId}
+            onChange={(event) => setFinishVisitReasonId(event.target.value)}
+          >
+            {visitorReasons.map((reason) => (
+              <MenuItem key={String(reason.id)} value={String(reason.value || reason.id)}>
+                {reason.description || reason.value}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            label="Observacoes"
+            value={finishVisitNotes}
+            onChange={(event) => setFinishVisitNotes(event.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button className="action-button-delete" onClick={handleCloseFinishVisit}>Cancelar</Button>
+          <Button
+                                  className="action-button-edit"
+
+            variant="contained"
+            onClick={() => void handleFinishVisit()}
+            disabled={loading}
+          >
+            Finalizar
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={Boolean(selectedImage)}
