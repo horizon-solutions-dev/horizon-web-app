@@ -20,7 +20,6 @@ import {
   PhotoOutlined,
   AddOutlined,
   CloseOutlined,
-  DescriptionOutlined,
   ImageOutlined,
 } from "@mui/icons-material";
 import {
@@ -718,47 +717,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     if (propagate) onClose();
   };
 
-  const renderUploadCard = (
-    title: string,
-    buttonLabel: string,
-    preview: string | undefined | null,
-    onChange: (event: React.ChangeEvent<HTMLInputElement>) => void,
-    accept = "image/*",
-  ) => (
-    <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 1.5, minHeight: 220 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-        <PhotoOutlined sx={{ color: "#2563eb", fontSize: 20 }} />
-        <Typography sx={{ fontWeight: 700, fontSize: 16 }}>{title}</Typography>
-      </Box>
-      <Box
-        sx={{
-          borderRadius: "12px",
-          border: "1px dashed #cbd5e1",
-          minHeight: 140,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          background: "#f8fafc",
-          mb: 1.5,
-        }}
-      >
-        {preview ? (
-          <Box component="img" src={preview} alt={title} sx={{ width: "100%", height: 140, objectFit: "cover" }} />
-        ) : (
-          <Box sx={{ textAlign: "center", color: "#64748b" }}>
-            {accept === "image/*" ? <ImageOutlined sx={{ fontSize: 40 }} /> : <DescriptionOutlined sx={{ fontSize: 40 }} />}
-            <Typography variant="body2">Nenhum arquivo selecionado</Typography>
-          </Box>
-        )}
-      </Box>
-      <Button variant="contained" component="label" sx={{ textTransform: "none" }}>
-        {buttonLabel}
-        <input hidden type="file" accept={accept} onChange={onChange} />
-      </Button>
-    </Box>
-  );
-
   const renderStepContent = (step: number) => {
     if (step === 0) {
       return (
@@ -791,10 +749,10 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12} md={6}>
-            <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 2, height: "100%" }}>
+            <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: '6px', height: "100%" }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <ApartmentOutlined sx={{ color: "#2563eb", fontSize: 20 }} />
-                <Typography sx={{ fontWeight: 700, fontSize: 18 }}>Estrutura do Condomínio</Typography>
+                <Typography sx={{ fontWeight: 700, fontSize: 14 }}>Estrutura do Condomínio</Typography>
               </Box>
               <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", }}>
@@ -806,10 +764,10 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             </Box>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 2, height: "100%" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+            <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: '6px', height: "100%" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <TuneOutlined sx={{ color: "#16a34a", fontSize: 20 }} />
-                <Typography sx={{ fontWeight: 700, fontSize: 18 }}>Configurações do Condomínio</Typography>
+                <Typography sx={{ fontWeight: 700, fontSize: 14 }}>Configurações do Condomínio</Typography>
               </Box>
               <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
@@ -826,10 +784,10 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
           </Grid>
         </Grid>
 
-        <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 2, height:'250px',overflow: 'scroll' }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+        <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <PhotoOutlined sx={{ color: "#4f46e5", fontSize: 20 }} />
-            <Typography sx={{ fontWeight: 700, fontSize: 18 }}>Imagens do Condominio</Typography>
+            <Typography sx={{ fontWeight: 700, fontSize: 14 }}>Imagens do Condominio</Typography>
           </Box>
           <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.5 }} />
           <Grid container spacing={1.5}>
@@ -859,7 +817,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               />
             </Grid>
             <Grid item xs={12} md={4}>
-              <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 1.5, minHeight: 220 }}>
+              <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 1.5,height:'100%' }}>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
                   <Typography sx={{ fontWeight: 700, fontSize: 16 }}>Outros</Typography>
                   <IconButton size="small" onClick={() => setImageTypeDialogOpen(true)} disabled={imageTypesLoading}><AddOutlined /></IconButton>
@@ -943,7 +901,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   <AddOutlined />
                 </Box>
                 <ImageOutlined sx={{ fontSize: 40, color: "#2563eb", mb: 1.5 }} />
-                <Typography sx={{ fontSize: 18, fontWeight: 500 }}>{type.description || type.value}</Typography>
+                <Typography sx={{ fontSize: 14, fontWeight: 500 }}>{type.description || type.value}</Typography>
               </Box>
             ))}
           </Box>

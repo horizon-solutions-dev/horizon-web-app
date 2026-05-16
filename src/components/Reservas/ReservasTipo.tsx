@@ -23,12 +23,12 @@ import {
   Close,
   DeleteOutline,
   EditOutlined,
-  FactCheckOutlined,
   GroupsOutlined,
   ImageOutlined,
   LocationOn,
   PaidOutlined,
   SearchOutlined,
+  Pool,
 } from "@mui/icons-material";
 import { MdEventAvailable } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
@@ -90,6 +90,34 @@ const emptyForm: AreaFormState = {
   imageFiles: {},
 };
 
+const formatOperatingTimeInput = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 6);
+
+  let hh = digits.slice(0, 2);
+  let mm = digits.slice(2, 4);
+  let ss = digits.slice(4, 6);
+
+  // valida hora
+  if (hh.length === 2) {
+    const hour = Math.min(Number(hh), 23);
+    hh = hour.toString().padStart(2, "0");
+  }
+
+  // valida minuto
+  if (mm.length === 2) {
+    const minute = Math.min(Number(mm), 59);
+    mm = minute.toString().padStart(2, "0");
+  }
+
+  // valida segundo
+  if (ss.length === 2) {
+    const second = Math.min(Number(ss), 59);
+    ss = second.toString().padStart(2, "0");
+  }
+
+  return [hh, mm, ss].filter(Boolean).join(":");
+};
+
 const AREA_SIZE_MAX = 99999.99;
 const PEOPLE_MAX = 999;
 const GUEST_LIMIT_MAX = 999;
@@ -137,20 +165,8 @@ const formatCurrencyInput = (value: string, maxValue: number) => {
   return formatCurrencyValue(amount);
 };
 
-const limitDecimalInput = (
-  value: string,
-  maxValue: number,
-  decimalPlaces = 2,
-) => {
-  const normalized = value.replace(",", ".").replace(/[^\d.]/g, "");
-  const [integerPart = "", ...decimalParts] = normalized.split(".");
-  const decimalPart = decimalParts.join("").slice(0, decimalPlaces);
-  const nextValue = decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
-
-  if (!nextValue) return "";
-
-  return String(clampNumber(Number(nextValue) || 0, maxValue));
-};
+const formatDecimalInput = (value: string, maxValue: number) =>
+  formatCurrencyInput(value, maxValue);
 
 const getEnumOptionLabel = (option: AreaEnum) =>
   option.description || option.value || String(option.id);
@@ -244,7 +260,10 @@ const limitInteger = (value: string, maxLength: number, maxValue: number) => {
 const toFormState = (area: AreaResponse): AreaFormState => ({
   name: area.name || "",
   type: String(area.type || ""),
-  sizeM2: String(area.sizeM2 ?? ""),
+  sizeM2:
+    area.sizeM2 === null || area.sizeM2 === undefined
+      ? ""
+      : formatCurrencyValue(area.sizeM2),
   capacityPeople: String(area.capacityPeople ?? ""),
   startTime: area.startTime || "08:00:00",
   endTime: area.endTime || "22:00:00",
@@ -524,10 +543,10 @@ export default function ReservasTipo() {
     if (axios.isAxiosError(error)) {
       const data = error.response?.data as
         | {
-            validations?: Array<{ field?: string; message?: string }>;
-            friendlyMessage?: string;
-            message?: string;
-          }
+          validations?: Array<{ field?: string; message?: string }>;
+          friendlyMessage?: string;
+          message?: string;
+        }
         | undefined;
       const firstValidation = data?.validations?.find(
         (validation) => validation.message?.trim(),
@@ -552,7 +571,7 @@ export default function ReservasTipo() {
     }
 
     if (formStep === 0 && (!formData.name.trim() || !formData.type)) {
-      showError("Informe nome e tipo da area.");
+      showError("Informe nome e tipo da área.");
       return false;
     }
 
@@ -572,7 +591,7 @@ export default function ReservasTipo() {
 
       return true;
     } catch (error) {
-      showError(getAreaRequestErrorMessage(error, "Erro ao validar area."));
+      showError(getAreaRequestErrorMessage(error, "Erro ao validar área."));
       return false;
     } finally {
       setLoading(false);
@@ -695,11 +714,11 @@ export default function ReservasTipo() {
 
   const handleSave = async () => {
     if (!selectedCondominium?.condominiumId) {
-      showError("Selecione um condominio antes de salvar a area.");
+      showError("Selecione um condominio antes de salvar a área.");
       return;
     }
     if (!formData.name.trim() || !formData.type) {
-      showError("Informe nome e tipo da area.");
+      showError("Informe nome e tipo da área.");
       return;
     }
 
@@ -724,24 +743,24 @@ export default function ReservasTipo() {
       }
 
       closeWizard();
-      showSuccess(editingArea ? "Area alterada com sucesso." : "Area criada com sucesso.");
+      showSuccess(editingArea ? "Área alterada com sucesso." : "Área criada com sucesso.");
       await loadAreas();
     } catch (error) {
-      showError(getAreaRequestErrorMessage(error, "Erro ao salvar area."));
+      showError(getAreaRequestErrorMessage(error, "Erro ao salvar área."));
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (area: AreaResponse) => {
-    if (!window.confirm(`Deseja excluir a area ${area.name}?`)) return;
+    if (!window.confirm(`Deseja excluir a área ${area.name}?`)) return;
     setLoading(true);
     try {
       await areaService.deleteArea(area.areaId);
-      showSuccess("Area excluida com sucesso.");
+      showSuccess("Área excluida com sucesso.");
       await loadAreas();
     } catch (error) {
-      showError(error instanceof Error ? error.message : "Erro ao excluir area.");
+      showError(error instanceof Error ? error.message : "Erro ao excluir área.");
     } finally {
       setLoading(false);
     }
@@ -792,7 +811,7 @@ export default function ReservasTipo() {
 
           <TextField
             fullWidth
-            sx={{height:100,padding: 0, maxHeight:100}}
+            sx={{ height: 100, padding: 0, maxHeight: 100 }}
             multiline
             minRows={1}
             placeholder="Descrição"
@@ -808,16 +827,11 @@ export default function ReservasTipo() {
             fullWidth
             placeholder="Tamanho"
             value={formData.sizeM2}
-            onChange={(event) =>{
-              let value = event.target.value
-                            value = value.replace(/[^0-9.]/g, '');
-
-              if(value.length > 5) return
+            onChange={(event) =>
               setFormData((current) => ({
                 ...current,
-                sizeM2: limitDecimalInput(event.target.value, AREA_SIZE_MAX),
+                sizeM2: formatDecimalInput(event.target.value, AREA_SIZE_MAX),
               }))
-            }
             }
             inputProps={{
               min: 0,
@@ -842,8 +856,13 @@ export default function ReservasTipo() {
                 ),
               }))
             }
-            type="number"
-            inputProps={{ min: 0, max: PEOPLE_MAX, step: 1, inputMode: "numeric" }}
+            inputProps={{
+              min: 0,
+              max: PEOPLE_MAX,
+              step: 1,
+              inputMode: "numeric",
+              pattern: "[0-9]*",
+            }}
             InputProps={{
               endAdornment: <Typography color="text.secondary">pessoas</Typography>,
             }}
@@ -869,9 +888,10 @@ export default function ReservasTipo() {
                   onChange={(event) =>
                     setFormData((current) => ({
                       ...current,
-                      startTime: event.target.value,
+                      startTime: formatOperatingTimeInput(event.target.value),
                     }))
                   }
+                  inputProps={{ inputMode: "numeric", maxLength: 8 }}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -880,8 +900,12 @@ export default function ReservasTipo() {
                   placeholder="Horário final"
                   value={formData.endTime}
                   onChange={(event) =>
-                    setFormData((current) => ({ ...current, endTime: event.target.value }))
+                    setFormData((current) => ({
+                      ...current,
+                      endTime: formatOperatingTimeInput(event.target.value),
+                    }))
                   }
+                  inputProps={{ inputMode: "numeric", maxLength: 8 }}
                 />
               </Grid>
             </Grid>
@@ -938,8 +962,13 @@ export default function ReservasTipo() {
               <Typography className="area-wizard-panel-title">Tem taxa</Typography>
               <Switch
                 checked={formData.hasFee}
-                onChange={(event) =>
-                  setFormData((current) => ({ ...current, hasFee: event.target.checked }))
+                onChange={(event) => {
+                  if (event.target.checked) {
+                    setFormData((current) => ({ ...current, hasFee: event.target.checked }))
+                  } else {
+                    setFormData((current) => ({ ...current, hasFee: event.target.checked, feeAmount: formatCurrencyInput(event.target.value, MONEY_MAX), }))
+                  }
+                }
                 }
               />
             </Box>
@@ -948,7 +977,7 @@ export default function ReservasTipo() {
               placeholder="Valor da taxa"
               value={formData.feeAmount}
               disabled={!formData.hasFee}
-              sx={!formData.hasFee ? desabilitarCampos : {}}
+              sx={!formData.hasFee ? desabilitarCampos :  undefined }
               onChange={(event) =>
                 setFormData((current) => ({
                   ...current,
@@ -956,18 +985,32 @@ export default function ReservasTipo() {
                 }))
               }
               inputProps={{ inputMode: "numeric" }}
-              InputProps={{ endAdornment: <Typography color="text.secondary">R$</Typography> }}
+              InputProps={{
+                endAdornment: (
+                  <Typography color={formData.hasFee ? "text.primary" : "text.secondary"}>
+                    R$
+                  </Typography>
+                ),
+              }}
             />
 
             <Box className="area-switch-row">
-              <Typography className="area-wizard-panel-title">Tem cauÃ§Ã£o</Typography>
+              <Typography className="area-wizard-panel-title">Tem caução</Typography>
               <Switch
                 checked={formData.hasDeposit}
-                onChange={(event) =>
-                  setFormData((current) => ({
-                    ...current,
-                    hasDeposit: event.target.checked,
-                  }))
+                onChange={(event) => {
+                  if (event.target.checked) {
+                    setFormData((current) => ({
+                      ...current,
+                      hasDeposit: event.target.checked,
+                    }))
+                  } else {
+                    setFormData((current) => ({ ...current, hasDeposit: event.target.checked, depositAmount: formatCurrencyInput(
+                    event.target.value,
+                    MONEY_MAX,
+                  ), }))
+                  }
+                }
                 }
               />
             </Box>
@@ -976,7 +1019,7 @@ export default function ReservasTipo() {
               placeholder="Valor da caução"
               value={formData.depositAmount}
               disabled={!formData.hasDeposit}
-              sx={!formData.hasDeposit ? desabilitarCampos : {}}
+              sx={!formData.hasDeposit ? desabilitarCampos :  undefined }
               onChange={(event) =>
                 setFormData((current) => ({
                   ...current,
@@ -987,7 +1030,13 @@ export default function ReservasTipo() {
                 }))
               }
               inputProps={{ inputMode: "numeric" }}
-              InputProps={{ endAdornment: <Typography color="text.secondary">R$</Typography> }}
+              InputProps={{
+                endAdornment: (
+                  <Typography color={formData.hasDeposit ? "text.primary" : "text.secondary"}>
+                    R$
+                  </Typography>
+                ),
+              }}
             />
           </Box>
         </Box>
@@ -1005,24 +1054,39 @@ export default function ReservasTipo() {
               </Typography>
               <Switch
                 checked={formData.hasAllowsGuests}
-                onChange={(event) =>
-                  setFormData((current) => ({
-                    ...current,
-                    hasAllowsGuests: event.target.checked,
-                  }))
+                onChange={(event) => {
+                  console.log(event.target.checked)
+                  if (event.target.checked) {
+
+                    setFormData((current) => ({
+                      ...current,
+                      hasAllowsGuests: event.target.checked,
+                    }))
+                  } else {
+                    setFormData((current) => ({
+                      ...current,
+                      hasAllowsGuests: event.target.checked,
+                      guestLimit: limitInteger(event.target.value, 0, GUEST_LIMIT_MAX),
+                    }))
+
+                  }
+                }
                 }
               />
             </Box>
             <TextField
+              sx={!formData.hasAllowsGuests ? desabilitarCampos :  undefined }
+
               fullWidth
               placeholder="Limite de convidados"
               value={formData.guestLimit}
               disabled={!formData.hasAllowsGuests}
-              onChange={(event) =>
+              onChange={(event) => {
                 setFormData((current) => ({
                   ...current,
                   guestLimit: limitInteger(event.target.value, 3, GUEST_LIMIT_MAX),
                 }))
+              }
               }
               type="number"
               inputProps={{ min: 0, max: GUEST_LIMIT_MAX, step: 1, inputMode: "numeric" }}
@@ -1049,25 +1113,25 @@ export default function ReservasTipo() {
           </Box>
         ) : null}
 
-        <Box className="area-upload-grid" sx={{maxHeight: '450px'}}>
+        <Box className="area-upload-grid">
           {imageTypes.map((type) => {
             const imageType = getEnumOptionValue(type);
             const selectedFile = formData.imageFiles[imageType];
             const previewUrl = imagePreviews[imageType];
 
             return (
-            <Box
+              <Box
                 key={imageType}
-              > 
+              >
                 <ImageUploadField
                   label={getEnumOptionLabel(type)}
                   previewUrl={previewUrl}
                   fileName={selectedFile?.name}
-                  height={150}
+                  height={90}
                   emptyLabel="Selecionar imagem"
                   description="Formatos aceitos: JPG, PNG."
                   onChange={(file) => handleAreaImageChange(imageType, file)}
-                  sx={{ height: "280px" }}
+                  sx={{ minHeight: "210px" }}
                 />
               </Box>
             );
@@ -1088,7 +1152,7 @@ export default function ReservasTipo() {
           showBack
           onBack={handleWizardBack}
           onClose={closeWizard}
-          width="min(1060px, calc(100vw - 32px))"
+          width="min(1200px, calc(100vw - 32px))"
           disableContent={loading}
           actions={
             formStep === areaWizardSteps.length - 1 ? (
@@ -1144,9 +1208,9 @@ export default function ReservasTipo() {
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 {activeView === "condominios" ? (
-            <Apartment sx={{ fontSize: 36, color: "#2563eb" }} />
+                  <Apartment sx={{ fontSize: 36, color: "#2563eb" }} />
                 ) : (
-                  <MdEventAvailable style={{ fontSize: 36, color: "#14b8a6" }} />
+                  <Pool style={{ fontSize: 36, color: "#14b8a6" }} />
                 )}
                 <Typography variant="h5" fontWeight="bold" sx={{ fontSize: 26 }}>
                   {organizationName}
@@ -1175,7 +1239,7 @@ export default function ReservasTipo() {
                 items={
                   activeView === "condominios"
                     ? ["Condominios"]
-                    : [selectedCondominium?.name || "Condominios", "Areas"]
+                    : [selectedCondominium?.name || "Condominios", "Áreas"]
                 }
               />
             </Box>
@@ -1233,7 +1297,7 @@ export default function ReservasTipo() {
                       startIcon={<SearchOutlined />}
                       onClick={() => void handleSelectCondominium(condominium)}
                     >
-                      Ver areas
+                        Ver áreas
                     </Button>
                   ),
                   imageUrl:
@@ -1245,9 +1309,9 @@ export default function ReservasTipo() {
               />
             ) : (
               <CardList
-                title="Areas"
+                title="Áreas"
                 showTitle={false}
-                searchPlaceholder="Buscar area..."
+                searchPlaceholder="Buscar área..."
                 onSearchChange={setSearchTerm}
                 onAddClick={openCreate}
                 addButtonPlacement="toolbar"
@@ -1270,7 +1334,7 @@ export default function ReservasTipo() {
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
                         <GroupsOutlined sx={{ fontSize: 16, color: "#14b8a6" }} />
                         <Typography variant="body2" color="text.secondary">
-                          Capacidade: {area.capacityPeople || 0} pessoas
+                          {area.capacityPeople || 0} pessoas
                         </Typography>
                       </Box>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
@@ -1282,13 +1346,7 @@ export default function ReservasTipo() {
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
                         <PaidOutlined sx={{ fontSize: 16, color: "#14b8a6" }} />
                         <Typography variant="body2" color="text.secondary">
-                          {area.hasFee ? `Taxa: R$ ${area.feeAmount || 0}` : "Sem taxa"}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
-                        <FactCheckOutlined sx={{ fontSize: 16, color: "#14b8a6" }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {area.hasApprovalRequired ? "Exige aprovacao" : "Sem aprovacao"}
+                          {area.hasFee ? `R$ ${area.feeAmount || 0}` : "Sem taxa"}
                         </Typography>
                       </Box>
                     </Box>
@@ -1325,7 +1383,7 @@ export default function ReservasTipo() {
       </Container>
 
       <AppStateModal
-      showCancel={false}
+        showCancel={false}
         open={appStateModal.open}
         type={appStateModal.type}
         title={appStateModal.title}

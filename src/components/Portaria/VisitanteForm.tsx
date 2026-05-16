@@ -78,6 +78,9 @@ interface VisitorListItem {
   condominium: string;
   unit: string;
   lastVisit: string;
+  visitStart: string;
+  visitEnd: string;
+  finished: boolean;
   releasedBy: string;
   activeVisitId?: string;
   imageUrl?: string;
@@ -714,6 +717,9 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         condominium: organizationName,
         unit: unitSearchResult?.label || formData.destinationUnit.trim(),
         lastVisit: new Date().toLocaleString("pt-BR"),
+        visitStart: new Date().toLocaleString("pt-BR"),
+        visitEnd: "-",
+        finished: false,
         releasedBy:
           formData.releaseType === "resident" && selectedResident
             ? selectedResident.fullName
@@ -1206,7 +1212,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           )
         }
       >
-        {renderStepContent(1)}
+        {renderStepContent(activeStep)}
       </StepWizardCard>
 
       <AppStateModal

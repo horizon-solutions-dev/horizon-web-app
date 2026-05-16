@@ -24,8 +24,7 @@ import {
   DeleteOutline,
   Email,
   LocationOn,
-  Person,
-  PersonPinCircle,
+  SupervisedUserCircle,
   Phone,
   Schedule,
   SearchOutlined,
@@ -58,6 +57,9 @@ interface Visitor {
   condominium: string;
   unit: string;
   lastVisit: string;
+  visitStart: string;
+  visitEnd: string;
+  finished: boolean;
   releasedBy: string;
   activeVisitId?: string;
   imageUrl?: string;
@@ -157,6 +159,9 @@ const getVisitorUnitLabel = (visitor: VisitorResponse) => {
   );
 };
 
+const formatVisitDate = (value?: string | null) =>
+  value ? new Date(value).toLocaleString("pt-BR") : "-";
+
 const matchesVisitorSearch = (visitor: Visitor, search: string) => {
   const normalizedSearch = search.trim().toLowerCase();
   if (!normalizedSearch) return true;
@@ -197,9 +202,10 @@ const mapVisitorResponse = (
   visitorType: getVisitorTypeLabel(visitor, visitorTypes),
   condominium: condominiumName,
   unit: getVisitorUnitLabel(visitor),
-  lastVisit: visitor.createdAt
-    ? new Date(visitor.createdAt).toLocaleString("pt-BR")
-    : "-",
+  lastVisit: formatVisitDate(visitor.entryAt || visitor.createdAt),
+  visitStart: formatVisitDate(visitor.entryAt),
+  visitEnd: formatVisitDate(visitor.exitAt),
+  finished: Boolean(visitor.finished),
   releasedBy: visitor.createdByName || visitor.createdBy || "-",
   activeVisitId: visitor.visitorHistoryId,
   imageUrl: getVisitorImageUrl(visitor),
@@ -485,7 +491,7 @@ export default function Visitantes() {
                   {activeView === "condominios" ? (
             <Apartment sx={{ fontSize: 36, color: "#2563eb" }} />
                   ) : (
-            <PersonPinCircle sx={{ fontSize: 36, color: "#ec4899" }} />
+            <SupervisedUserCircle sx={{ fontSize: 36, color: "#f97316" }} />
                   )}
                   <Typography
                     variant="h5"
@@ -738,7 +744,7 @@ export default function Visitantes() {
                           >
                             <Schedule sx={{ fontSize: 18 }} />
                             <Typography variant="body2">
-                              Ultima visita: {visitor.lastVisit}
+                              Inicio da visita: {visitor.visitStart}
                             </Typography>
                           </Box>
                           <Box
@@ -750,9 +756,9 @@ export default function Visitantes() {
                               flex: "1 1 220px",
                             }}
                           >
-                            <Person sx={{ fontSize: 18 }} />
+                            <Schedule sx={{ fontSize: 18 }} />
                             <Typography variant="body2">
-                              Liberado por: {visitor.releasedBy}
+                              Fim da visita: {visitor.visitEnd}
                             </Typography>
                           </Box>
                         </Box>
@@ -771,15 +777,24 @@ export default function Visitantes() {
                         >
                           Nova Visita
                         </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          className="action-button-delete"
-                          startIcon={<DeleteOutline />}
-                          onClick={() => handleFinishVisit(visitor)}
-                        >
-                          Finalizar visita
-                        </Button>
+                        {visitor.finished ? (
+                          <Chip
+                            label="Visita finalizada"
+                            size="small"
+                            color="success"
+                            variant="outlined"
+                          />
+                        ) : (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            className="action-button-delete"
+                            startIcon={<DeleteOutline />}
+                            onClick={() => handleFinishVisit(visitor)}
+                          >
+                            Finalizar visita
+                          </Button>
+                        )}
                       </Box>
                     ),
                     imageUrl: visitor.imageUrl,

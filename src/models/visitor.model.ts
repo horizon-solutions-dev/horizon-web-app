@@ -37,6 +37,9 @@ export interface VisitorResponse {
   documentPhoto?: string;
   documentPhotoContentType?: string;
   documentPhotoThumbnailFile?: string;
+  entryAt?: string;
+  exitAt?: string | null;
+  finished?: boolean;
   active?: boolean;
   createdAt?: string;
   createdBy?: string;

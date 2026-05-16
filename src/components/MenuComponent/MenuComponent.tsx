@@ -23,7 +23,8 @@ import {
   Close,
   Home,
   People,
-  PersonPinCircle,
+  Pool,
+  SupervisedUserCircle,
   ViewModule,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
@@ -146,8 +147,8 @@ export default function MenuComponent({
     },
     {
       id: "areas",
-      label: "Areas",
-      icon: <MdEventAvailable />,
+      label: "Áreas",
+      icon: <Pool />,
       iconColor: "#14b8a6",
       path: RouteNames.Areas,
       access: { permissions: [APP_PERMISSIONS.ReservationView] },
@@ -155,8 +156,8 @@ export default function MenuComponent({
     {
       id: "visitantes",
       label: "Visitantes",
-      icon: <PersonPinCircle />,
-      iconColor: "#ec4899",
+      icon: <SupervisedUserCircle />,
+      iconColor: "#f97316",
       path: RouteNames.PortariaVisitantes,
       access: { permissions: [APP_PERMISSIONS.GatehouseView] },
     },

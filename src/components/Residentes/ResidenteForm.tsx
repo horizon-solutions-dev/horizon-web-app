@@ -25,6 +25,7 @@ import {
 } from "../../services/unitResidentService";
 import type { CondominiumUnit, UnitType } from "../../services/unitService";
 import { AppStateModal } from "../../shared/components/AppStateModal";
+import ImageUploadField from "../../shared/components/ImageUploadField";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { AccountService } from "../../services/accountService";
@@ -1047,113 +1048,18 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     preview: string | null;
     onFileChange: (file: File | null) => void;
   }) => (
-    <Box sx={{ minWidth: 0 }}>
-      <Typography
-        sx={{ mb: 1, fontSize: 12, fontWeight: 700, color: "#344054" }}
-      >
-        {title}
-      </Typography>
-      <Box
-        component="label"
-        htmlFor={id}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
-          onFileChange(e.dataTransfer.files?.[0] || null);
-        }}
-        sx={{
-          width: "100%",
-          maxHeight: 132,
-                    minHeight: 132,
-
-          borderRadius: "10px",
-          border: "1.5px dashed #93c5fd",
-          backgroundColor: "#f8fbff",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          position: "relative",
-          transition: "border-color 0.2s ease, background-color 0.2s ease",
-          "&:hover": {
-            borderColor: "#1976d2",
-            backgroundColor: "#f1f8ff",
-          },
-        }}
-      >
-        {preview ? (
-          <>
-            <Box
-              component="img"
-              src={preview}
-              alt={title}
-              sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </>
-        ) : (
-          <Box sx={{ textAlign: "center", px: 2 }}>
-            <Box
-              sx={{
-                width: 44,
-                height: 44,
-                mx: "auto",
-                mb: 1.25,
-                borderRadius: "50%",
-                backgroundColor: "#eff6ff",
-                color: "#1976d2",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <CameraAlt fontSize="small" />
-            </Box>
-            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#344054" }}>
-              Adicionar Foto
-            </Typography>
-            <Typography sx={{ mt: 0.5, fontSize: 11, color: "#667085" }}>
-              ou arraste e solte aqui
-            </Typography>
-          </Box>
-        )}
-        <input
-          id={id}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => onFileChange(e.target.files?.[0] || null)}
-        />
-      </Box>
-      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
-        <Button variant="contained" component="label" size="small" sx={{ textTransform: "none" }}>
-          {preview ? "Trocar foto" : "Adicionar foto"}
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => {
-              onFileChange(e.target.files?.[0] || null);
-              e.target.value = "";
-            }}
-          />
-        </Button>
-        {preview ? (
-          <Button
-            variant="outlined"
-            color="error"
-            size="small"
-            sx={{ textTransform: "none" }}
-            onClick={() => onFileChange(null)}
-          >
-            Remover
-          </Button>
-        ) : null}
-      </Box>
-      <Typography sx={{ mt: 0.75, fontSize: 10, color: "#667085" }}>
-        Formatos aceitos: JPG, PNG. Tamanho máximo: 5MB
-      </Typography>
-    </Box>
+    <ImageUploadField
+      label={title}
+      previewUrl={preview}
+      fileName={
+        id === "morador-photo-input"
+          ? coverFile?.name || photoFile?.name
+          : documentPhotoFile?.name
+      }
+      height={95}
+      emptyLabel="Adicionar foto"
+      onChange={onFileChange}
+    />
   );
 
   const renderStepContent = (step: number) => {
@@ -1491,7 +1397,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             })}
             {renderPhotoUpload({
               id: "morador-document-photo-input",
-              title: "Foto do Documento ou com Documento na Mão",
+              title: "Foto do Documento",
               preview: documentPhotoPreview,
               onFileChange: setDocumentPhotoFile,
             })}
@@ -1527,6 +1433,30 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       </Button>
     );
   };
+
+  useEffect(() => {
+  const aplicarEstilo = () => {
+    const elementos = document.querySelectorAll(
+      '.step-wizard-card > div:last-child, .step-wizard-card .step-wizard-actions'
+    );
+
+    elementos.forEach((elemento) => {
+      (elemento as HTMLElement).style.marginTop = '0px';
+    });
+  };
+
+  aplicarEstilo();
+
+  return () => {
+    const elementos = document.querySelectorAll(
+      '.step-wizard-card > div:last-child, .step-wizard-card .step-wizard-actions'
+    );
+
+    elementos.forEach((elemento) => {
+      (elemento as HTMLElement).style.removeProperty('margin-top');
+    });
+  };
+}, []);
 
   return (
     <>

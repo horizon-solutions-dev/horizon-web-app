@@ -80,8 +80,7 @@
   .close-button,
   .MuiIconButton-root[aria-label="Fechar"],
   .MuiIconButton-root[aria-label="Voltar"],
-  .MuiIconButton-root:has(.MuiSvgIcon-root[data-testid="CloseIcon"]),
-  .MuiBox-root:first-child > .MuiIconButton-root:last-child {
+  .MuiIconButton-root:has(.MuiSvgIcon-root[data-testid="CloseIcon"]) {
     width: 40px !important;
     height: 40px !important;
     background: white !important;

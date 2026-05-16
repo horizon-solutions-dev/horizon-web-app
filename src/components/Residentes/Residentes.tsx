@@ -886,7 +886,6 @@ const Residentes: React.FC = () => {
                                     variant="body2"
                                     color="text.secondary"
                                   >
-                                    {getDocTypeLabel(resident.docType)}:{" "}
                                     {formatDoc(resident.doc, resident.docType)}
                                   </Typography>
                                 </Box>

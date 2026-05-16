@@ -193,9 +193,9 @@ export default function CardList({
                 color: "#666",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  borderColor: "#1976d2",
-                  color: "#1976d2",
-                  backgroundColor: "rgba(25, 118, 210, 0.04)",
+                  borderColor: "#1976d2 !important",
+                  color: "#1976d2 !important",
+                  backgroundColor: "rgba(25, 118, 210, 0.04) !important",
                 },
               }}
             >
@@ -215,9 +215,9 @@ export default function CardList({
                 color: "#666",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  borderColor: "#d32f2f",
-                  color: "#d32f2f",
-                  backgroundColor: "rgba(211, 47, 47, 0.04)",
+                  borderColor: "#1976d2 !important",
+                  color: "#1976d2 !important",
+                  backgroundColor: "rgba(25, 118, 210, 0.04) !important",
                 },
               }}
             >

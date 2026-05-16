@@ -79,7 +79,7 @@
   border: 0;
   border-right: 1px solid #dbe4f0;
   background: #f8fbff;
-  color: #6f7d92;
+  color: #9ca3af;
   height: 34px;
   font-weight: 700;
   cursor: pointer;
@@ -91,7 +91,7 @@
 
 .area-days-row button.selected {
   background: #1976d2;
-  color: #fff;
+  color: #1a1a2e;
 }
 
 .area-switch-row {
@@ -112,8 +112,6 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-  overflow-y: auto;
-  padding-right: 4px;
 }
 
 .area-upload-empty {
@@ -276,6 +274,5 @@ textarea {
 
   .area-upload-grid {
     grid-template-columns: 1fr;
-    max-height: min(520px, 56vh);
   }
 }

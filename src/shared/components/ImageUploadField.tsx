@@ -28,7 +28,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   label,
   icon,
   showIcon = false,
-  description = "Formatos aceitos: JPG, PNG.",
+  description,
   previewUrl,
   fileName,
   accept = "image/*",
@@ -96,7 +96,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             </Box>
           ) : null}
           <Box sx={{ minWidth: 0 }}>
-            <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#1f2a44" }}>
+            <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#1f2a44" }}>
               {label}
             </Typography>
           </Box>
@@ -143,8 +143,8 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             src={previewUrl}
             alt={label}
             sx={{
-              width: "100%",
-              height: "100%",
+              width: "254px",
+              height: "132px",
               objectFit: "contain",
               backgroundColor: "#f8fafc",
             }}
@@ -170,9 +170,6 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#273b60" }}>
               Clique ou arraste para adicionar
             </Typography>
-            <Typography sx={{ mt: 0.5, fontSize: 11, color: "#667085" }}>
-              JPG ou PNG até 5MB
-            </Typography>
           </Box>
         )}
         <input
@@ -185,11 +182,15 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         />
       </Box>
 
-      {fileName ? (
+      <Typography sx={{ mt: 0.75, fontSize: 11, color: "#667085" }}>
+        {description || "JPG ou PNG ate 5MB"}
+      </Typography>
+
+{/*       {fileName ? (
         <Typography
           title={fileName}
           sx={{
-            mt: 0.75,
+            mt: 0.25,
             fontSize: 11,
             color: "#667085",
             overflow: "hidden",
@@ -199,7 +200,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         >
           {fileName}
         </Typography>
-      ) : null}
+      ) : null} */}
 
       {hasPreview ? (
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
