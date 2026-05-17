@@ -20,6 +20,7 @@ import {
   LocationOn,
   SearchOutlined,
 } from "@mui/icons-material";
+import { MdApartment } from "react-icons/md";
 import {
   blockService,
   type CondominiumBlock,
@@ -39,7 +40,7 @@ import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
 import { useTranslation } from "react-i18next";
 import { formatCNPJ } from "../../shared/utils/funcoes";
 
-const Blocos: React.FC = () => {
+const EstruturaCondominio: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [activeView, setActiveView] = useState<"condominios" | "blocos">(
@@ -309,7 +310,7 @@ const Blocos: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
+            <MdApartment style={{ fontSize: 36, color: "#2563eb" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -328,9 +329,9 @@ const Blocos: React.FC = () => {
                   </IconButton>
                 </Tooltip>
               </Container>
-              <Box>
+              <Box sx={{ alignSelf: "stretch", pl: "48px" }}>
                 <BreadcrumbTrail
-                  items={[t("common.organization"), t("common.condominiums")]}
+                  items={[t("common.condominiums")]}
                 />
               </Box>
             </Box>
@@ -345,6 +346,7 @@ const Blocos: React.FC = () => {
                 <CardList
                   title="Condôminios da organização"
                   showTitle={false}
+                  variant="condominiumSelection"
                   searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}
                   onAddClick={undefined}
@@ -425,7 +427,7 @@ const Blocos: React.FC = () => {
                           startIcon={<SearchOutlined />}
                           onClick={() => handleSelectCondominium(condominium)}
                         >
-                          Visualizars Blocos
+                          Visualizars Estrutura do condomínio
                         </Button>
                       ),
                       accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
@@ -439,6 +441,7 @@ const Blocos: React.FC = () => {
                 <CardList
                   title="Condôminios da organização"
                   showTitle={false}
+                  variant="condominiumSelection"
                   searchPlaceholder="Buscar condomínio..."
                   onSearchChange={setSearchText}
                   onAddClick={undefined}
@@ -475,7 +478,7 @@ const Blocos: React.FC = () => {
                             sx={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 0.7,
+                              gap: '4px',
                             }}
                           >
                             <Article sx={{ fontSize: 14 }} />
@@ -487,7 +490,7 @@ const Blocos: React.FC = () => {
                             sx={{
                               display: "flex",
                               alignItems: "center",
-                              gap: 0.7,
+                              gap: '4px',
                             }}
                           >
                             <LocationOn sx={{ fontSize: 14 }} />
@@ -554,7 +557,7 @@ const Blocos: React.FC = () => {
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <ViewModule sx={{ fontSize: 36, color: "#1976d2" }} />
+            <ViewModule sx={{ fontSize: 36, color: "#8b5cf6" }} />
                     <Box>
                       <Typography
                         variant="h5"
@@ -565,11 +568,6 @@ const Blocos: React.FC = () => {
                       </Typography>
                       <BreadcrumbTrail
                         items={[
-                          localStorage.getItem("condominium")
-                            ? JSON.parse(
-                                localStorage.getItem("condominium") || "{}",
-                              )?.name
-                            : {},
                           selectedCondominium?.name ||
                             t("blocos.selectedCondominium"),
                           t("common.blocks"),
@@ -658,7 +656,7 @@ const Blocos: React.FC = () => {
                               display: "flex",
                               gap: 1,
                               flexWrap: "wrap",
-                              mt: 2,
+                              mt: 3,
                             }}
                           >
                             <Button
@@ -722,4 +720,4 @@ const Blocos: React.FC = () => {
   );
 };
 
-export default Blocos;
+export default EstruturaCondominio;

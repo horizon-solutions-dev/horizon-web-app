@@ -2,15 +2,32 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
+  Button,
   CircularProgress,
   Container,
   Paper,
   Typography,
 } from "@mui/material";
+import {
+  BadgeOutlined,
+  DeleteOutline,
+  EditOutlined,
+  Fingerprint,
+} from "@mui/icons-material";
 import CardList from "../../shared/components/CardList";
 import { profileService, type Profile } from "../../services/profileService";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
+
+const getProfileInitials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .filter((word) => !["de", "da", "do", "das", "dos"].includes(word.toLowerCase()))
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
 
 const Perfis: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -18,6 +35,7 @@ const Perfis: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const { appStateModal, handleClose, showError } = useAppStateModal();
+
   const loadProfiles = async () => {
     setLoading(true);
     setError(null);
@@ -38,6 +56,22 @@ const Perfis: React.FC = () => {
     loadProfiles();
   }, []);
 
+  const handleDelete = async (profile: Profile) => {
+    if (!window.confirm(`Deseja excluir o perfil ${profile.name}?`)) return;
+
+    setLoading(true);
+    try {
+      await profileService.deleteProfile(profile.profileId);
+      await loadProfiles();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Erro ao excluir perfil.";
+      showError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const items = useMemo(
     () =>
       profiles
@@ -47,21 +81,60 @@ const Perfis: React.FC = () => {
             .toLowerCase()
             .includes(searchText.toLowerCase()),
         )
-        .map((profile, index) => ({
-          id: String(profile.profileId),
-          title: profile.name,
-          subtitle: (
-            <Typography variant="body2" color="text.secondary">
-            {profile.code}
-            </Typography>
-          ),
-          meta: (
-            <Typography variant="caption" color="text.secondary">
-              {profile.profileId}
-            </Typography>
-          ),
-          accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
-        })),
+        .map((profile, index) => {
+          const initials = getProfileInitials(profile.name);
+
+          return {
+            id: String(profile.profileId),
+            title: `${profile.name} (${initials})`,
+            subtitle: (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                <BadgeOutlined sx={{ fontSize: 18, color: "#1976d2" }} />
+                <Typography variant="body2" color="text.secondary">
+                  Sigla: {initials}
+                </Typography>
+              </Box>
+            ),
+            meta: (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, mt: 0.5 }}>
+                <Fingerprint sx={{ fontSize: 18, color: "#64748b" }} />
+                <Typography variant="caption" color="text.secondary">
+                  Id: {profile.profileId}
+                </Typography>
+              </Box>
+            ),
+            actions: (
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 1,
+                  flexWrap: "wrap",
+                  mt: 3,
+                }}
+              >
+                <Button
+                  size="small"
+                  variant="outlined"
+                  className="action-button-edit"
+                  startIcon={<EditOutlined />}
+                  disabled
+                >
+                  Editar
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  className="action-button-delete"
+                  startIcon={<DeleteOutline />}
+                  onClick={() => void handleDelete(profile)}
+                >
+                  Excluir
+                </Button>
+              </Box>
+            ),
+            accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
+          };
+        }),
     [profiles, searchText],
   );
 
@@ -90,6 +163,8 @@ const Perfis: React.FC = () => {
                 emptyImageLabel="Sem imagem"
                 showFilters={true}
                 showPagination={false}
+                haveImage={false}
+                actionsMarginTop={0}
                 items={items}
               />
             </>

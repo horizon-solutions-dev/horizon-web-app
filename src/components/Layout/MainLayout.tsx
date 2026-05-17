@@ -26,22 +26,22 @@ export default function MainLayout() {
      const path = location.pathname;
      const titleMap: { [key: string]: string } = {
        '/dashboard': 'Dashboard',
-       '/condominio': 'Condôminio',
-       '/reservas/tipo': 'Tipo de Reserva',
-       '/reservas/listagem': 'Listagem de Reservas',
-       '/reservas/calendario': 'Calendário de Reservas',
-       '/reservas/disponibilidade': 'Disponibilidade',
-       '/financeiro/boletos': 'Boletos',
-       '/financeiro/balancetes': 'Balancetes',
-       '/financeiro/despesas': 'Despesas',
-       '/portaria/usuarios': 'Usuários da Portaria',
-       '/portaria/liberacao': 'Liberação de Acesso',
-       '/portaria/relatorios': 'Relatórios da Portaria',
-       '/moradores': 'Moradores',
-       '/veiculos': 'Veículos',
-       '/fale-conosco': 'Fale Conosco',
-       '/encomendas/recebimento': 'Recebimento de Encomendas',
-       '/encomendas/notificacao': 'Notificação de Encomendas',
+       '/condominium': 'Condôminio',
+       '/reservations/type': 'Tipo de Reserva',
+       '/reservations/list': 'Listagem de Reservas',
+       '/reservations/calendar': 'Calendário de Reservas',
+       '/reservations/availability': 'Disponibilidade',
+       '/finance/bills': 'Boletos',
+       '/finance/trial-balances': 'Balancetes',
+       '/finance/expenses': 'Despesas',
+       '/front-desk/users': 'Usuários da Portaria',
+       '/front-desk/access-release': 'Liberação de Acesso',
+       '/front-desk/reports': 'Relatórios da Portaria',
+       '/residents': 'Moradores',
+       '/vehicles': 'Veículos',
+       '/contact-us': 'Fale Conosco',
+       '/packages/receiving': 'Recebimento de Encomendas',
+       '/packages/notification': 'Notificação de Encomendas',
      };
      return titleMap[path] || 'Dashboard';
    }; */
@@ -116,6 +116,7 @@ export default function MainLayout() {
     [RouteNames.Veiculos]: { label: "Veiculos" },
     [RouteNames.FaleConosco]: { label: "Fale Conosco" },
 
+    [RouteNames.Areas]: { label: "Areas" },
     [RouteNames.ReservasTipo]: { label: "Tipo de Reserva", parent: "Reservas" },
     [RouteNames.ReservasListagem]: { label: "Listagem", parent: "Reservas" },
     [RouteNames.ReservasCalendario]: { label: "Calendario", parent: "Reservas" },
@@ -131,6 +132,7 @@ export default function MainLayout() {
     [RouteNames.FinanceiroDespesasAnexo]: { label: "Anexos", parent: "Financeiro / Despesas" },
 
     [RouteNames.PortariaUsuarios]: { label: "Usuarios", parent: "Portaria" },
+    [RouteNames.PortariaVisitantes]: { label: "Visitantes" },
     [RouteNames.PortariaLiberacao]: { label: "Liberacao", parent: "Portaria" },
     [RouteNames.PortariaRelatorios]: { label: "Relatorios", parent: "Portaria" },
 
@@ -138,7 +140,7 @@ export default function MainLayout() {
     [RouteNames.EncomendasNotificacao]: { label: "Notificacao", parent: "Encomendas" },
     [RouteNames.ValidacaoAcesso]: { label: "Validacao de Acesso", parent: "Pendentes" },
 
-    [RouteNames.CadastrosBlocos]: { label: "Blocos", },
+    [RouteNames.CadastrosBlocos]: { label: "Estrutura do condomínio", },
     [RouteNames.CadastrosUnidades]: { label: "Unidades", },
     [RouteNames.CadastrosResidentes]: { label: "Moradores", },
     [RouteNames.CadastrosOrganizacoes]: { label: "Organizações", },

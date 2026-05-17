@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState, type JSX } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type JSX } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   MdDashboard,
-  MdEventAvailable,
   MdAttachMoney,
   MdSecurity,
   MdDirectionsCar,
@@ -23,6 +22,8 @@ import {
   Close,
   Home,
   People,
+  Pool,
+  SupervisedUserCircle,
   ViewModule,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
@@ -31,13 +32,18 @@ import {
   organizationService,
   type OrganizationMeResponse,
 } from "../../services/organizationService";
+import type { AccessRequirement } from "../../rbac/types";
+import { APP_PERMISSIONS } from "../../rbac/types";
+import { useAuth } from "../../contexts/useAuth";
 
 interface MenuItem {
   id: string;
   label: string;
   icon: JSX.Element;
+  iconColor?: string;
   path?: string;
   children?: MenuItem[];
+  access?: AccessRequirement;
 }
 
 interface MenuComponentProps {
@@ -62,109 +68,167 @@ export default function MenuComponent({
 }: MenuComponentProps) {
   const location = useLocation();
   const { t } = useTranslation();
+  const { canAccess } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [organizationName, setOrganizationName] = useState<string>("");
   const [activeOrganizationId, setActiveOrganizationId] = useState("");
+  const [activeOrganizationType, setActiveOrganizationType] = useState<
+    number | null
+  >(null);
   const [availableOrganizations, setAvailableOrganizations] = useState<
     OrganizationMeResponse[]
   >([]);
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const [isSwitchingListLoading, setIsSwitchingListLoading] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
+  const canManageOrganizations = activeOrganizationType === 1;
 
   const menuItems: MenuItem[] = [
     {
       id: "dashboard",
       label: t("menu.dashboard"),
       icon: <MdDashboard />,
+      iconColor: "#38bdf8",
       path: RouteNames.Dashboard,
+      access: { permissions: [APP_PERMISSIONS.DashboardView] },
     },
-    {
-      id: "cadastros-organizacoes",
-      label: t("menu.organizations"),
-      icon: <MdBusiness />,
-      path: RouteNames.CadastrosOrganizacoes,
-    },
+    ...(canManageOrganizations
+      ? [
+          {
+            id: "cadastros-organizacoes",
+            label: t("menu.organizations"),
+            icon: <MdBusiness />,
+            iconColor: "#f59e0b",
+            path: RouteNames.CadastrosOrganizacoes,
+            access: { permissions: [APP_PERMISSIONS.OrganizationView] },
+          },
+        ]
+      : []),
     {
       id: "condominios",
       label: t("menu.condominiums"),
       icon: <MdApartment />,
+      iconColor: "#2563eb",
       path: RouteNames.Condominio,
+      access: { permissions: [APP_PERMISSIONS.CondominiumView] },
     },
     {
       id: "cadastros-blocos",
       label: t("menu.blocks"),
       icon: <ViewModule />,
+      iconColor: "#8b5cf6",
       path: RouteNames.CadastrosBlocos,
+      access: { permissions: [APP_PERMISSIONS.StructureView] },
     },
     {
       id: "cadastros-unidades",
       label: t("menu.units"),
       icon: <Home />,
+      iconColor: "#10b981",
       path: RouteNames.CadastrosUnidades,
+      access: { permissions: [APP_PERMISSIONS.UnitView] },
     },
     {
       id: "cadastros-moradores",
       label: t("menu.residents"),
       icon: <People />,
+      iconColor: "#ec4899",
       path: RouteNames.CadastrosResidentes,
+      access: { permissions: [APP_PERMISSIONS.ResidentView] },
     },
     {
       id: "cadastros-perfis",
       label: t("menu.profiles"),
       icon: <AssignmentInd />,
+      iconColor: "#6366f1",
       path: RouteNames.CadastrosPerfis,
+      access: { permissions: [APP_PERMISSIONS.ProfileView] },
+    },
+    {
+      id: "areas",
+      label: "Áreas",
+      icon: <Pool />,
+      iconColor: "#14b8a6",
+      path: RouteNames.Areas,
+      access: { permissions: [APP_PERMISSIONS.ReservationView] },
+    },
+    {
+      id: "visitantes",
+      label: "Visitantes",
+      icon: <SupervisedUserCircle />,
+      iconColor: "#f97316",
+      path: RouteNames.PortariaVisitantes,
+      access: { permissions: [APP_PERMISSIONS.GatehouseView] },
     },
     {
       id: "itens-pendentes",
       label: t("menu.pendingItems"),
       icon: <MdSettings />,
+      iconColor: "#94a3b8",
       children: [
-        {
-          id: "pendente-reservas",
-          label: t("menu.reservations"),
-          icon: <MdEventAvailable />,
-          path: RouteNames.ReservasTipo,
-        },
         {
           id: "pendente-financeiro",
           label: t("menu.financial"),
           icon: <MdAttachMoney />,
+          iconColor: "#22c55e",
           path: RouteNames.FinanceiroBoletos,
+          access: { permissions: [APP_PERMISSIONS.FinancialView] },
         },
         {
           id: "pendente-portaria",
           label: t("menu.gatehouse"),
           icon: <MdSecurity />,
+          iconColor: "#f97316",
           path: RouteNames.PortariaUsuarios,
+          access: { permissions: [APP_PERMISSIONS.GatehouseView] },
         },
         {
           id: "pendente-veiculos",
           label: t("menu.vehicles"),
           icon: <MdDirectionsCar />,
+          iconColor: "#0ea5e9",
           path: RouteNames.Veiculos,
+          access: { permissions: [APP_PERMISSIONS.VehicleView] },
         },
         {
           id: "pendente-encomendas",
           label: t("menu.deliveries"),
           icon: <MdLocalShipping />,
+          iconColor: "#a855f7",
           path: RouteNames.EncomendasRecebimento,
+          access: { permissions: [APP_PERMISSIONS.DeliveryView] },
         },
         {
           id: "fale-conosco",
           label: t("menu.contactUs"),
           icon: <MdEmail />,
+          iconColor: "#06b6d4",
           path: RouteNames.FaleConosco,
         },
         {
           id: "pendente-validacao-acesso",
           label: t("menu.accessValidation"),
           icon: <MdSecurity />,
+          iconColor: "#ef4444",
           path: RouteNames.ValidacaoAcesso,
+          access: { permissions: [APP_PERMISSIONS.PendingView] },
         },
       ],
+      access: { permissions: [APP_PERMISSIONS.PendingView] },
     },
   ];
+
+  const canRenderMenuItem = (item: MenuItem): boolean => {
+    if (!canAccess(item.access)) {
+      return false;
+    }
+
+    if (!item.children?.length) {
+      return true;
+    }
+
+    return item.children.some((child) => canRenderMenuItem(child));
+  };
 
   useEffect(() => {
     const loadOrganization = () => {
@@ -174,6 +238,7 @@ export default function MenuComponent({
           storedOrganization.name || storedOrganization.legalName || "",
         );
         setActiveOrganizationId(storedOrganization.organizationId || "");
+        setActiveOrganizationType(Number(storedOrganization.orgType ?? 0));
         return;
       }
 
@@ -181,6 +246,7 @@ export default function MenuComponent({
       const organizationId = localStorage.getItem("organizationId") || "";
       setOrganizationName(fallback);
       setActiveOrganizationId(organizationId);
+      setActiveOrganizationType(null);
     };
 
     loadOrganization();
@@ -283,7 +349,10 @@ export default function MenuComponent({
           <div
             className={`menu-item ${parentActive ? "parent-active" : ""} ${collapsed ? "collapsed" : ""}`}
             onClick={() => toggleExpand(item.id)}
-            style={{ paddingLeft: collapsed ? "0" : `${level * 16 + 16}px` }}
+            style={{
+              paddingLeft: collapsed ? "0" : `${level * 16 + 16}px`,
+              "--menu-icon-color": item.iconColor,
+            } as CSSProperties}
             title={collapsed ? item.label : undefined}
           >
             <span className="menu-icon">{item.icon}</span>
@@ -298,7 +367,9 @@ export default function MenuComponent({
           </div>
           {!collapsed && isExpanded ? (
             <div className="menu-submenu">
-              {item.children?.map((child) => renderMenuItem(child, level + 1))}
+              {item.children
+                ?.filter((child) => canRenderMenuItem(child))
+                .map((child) => renderMenuItem(child, level + 1))}
             </div>
           ) : null}
         </div>
@@ -310,10 +381,13 @@ export default function MenuComponent({
         key={item.id}
         to={item.path || "#"}
         className={`menu-item ${itemIsActive ? "active" : ""} ${collapsed ? "collapsed" : ""}`}
-        style={{ paddingLeft: collapsed ? "0" : `${level * 16 + 16}px` }}
+        style={{
+          paddingLeft: collapsed ? "0" : `${level * 16 + 16}px`,
+          "--menu-icon-color": item.iconColor,
+        } as CSSProperties}
         title={collapsed ? item.label : undefined}
       >
-        {level === 0 ? <span className="menu-icon">{item.icon}</span> : null}
+        <span className="menu-icon">{item.icon}</span>
         {!collapsed ? <span className="menu-label">{item.label}</span> : null}
       </Link>
     );
@@ -370,7 +444,9 @@ export default function MenuComponent({
         </button>
 
         <nav className="menu-nav">
-          {menuItems.map((item) => renderMenuItem(item))}
+          {menuItems
+            .filter((item) => canRenderMenuItem(item))
+            .map((item) => renderMenuItem(item))}
         </nav>
       </div>
 

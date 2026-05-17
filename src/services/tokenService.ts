@@ -1,5 +1,10 @@
 import { jwtDecode } from 'jwt-decode';
 import type { AuthTokenPayload } from '../models/user.model';
+import {
+  buildAuthorizationSnapshot,
+  normalizeRole,
+} from '../rbac/authorization';
+import { APP_ROLES } from '../rbac/types';
 
 export class TokenService {
   /**
@@ -27,17 +32,41 @@ export class TokenService {
     }
 
     const decoded = this.decodeToken(token);
-    console.log("Decoded token:", decoded);
     if (!decoded) {
       return null;
     }
 
-    // Retornar objeto com estrutura UserInfo baseada nos dados do token
+    const normalizedRoles = this.getRolesFromToken(decoded);
+    const authorization = buildAuthorizationSnapshot(normalizedRoles);
+
     return {
       name: decoded.Fullname || decoded.Name || 'Usuário',
       email: decoded.Doc || '',
-      role: 'Usuário'
+      role: normalizedRoles[0] || APP_ROLES.Resident,
+      profileCode: decoded.ProfileCode,
+      roles: authorization.roles,
+      permissions: authorization.permissions,
     };
+  }
+
+  static getRolesFromToken(decoded: AuthTokenPayload): Array<(typeof APP_ROLES)[keyof typeof APP_ROLES]> {
+    const rawRoles = Array.isArray(decoded.Roles)
+      ? decoded.Roles
+      : typeof decoded.Roles === 'string'
+        ? decoded.Roles.split(',')
+        : decoded.Role
+          ? [decoded.Role]
+          : [];
+
+    const normalizedRoles = rawRoles
+      .map((role) => normalizeRole(role))
+      .filter((role): role is (typeof APP_ROLES)[keyof typeof APP_ROLES] => Boolean(role));
+
+    if (normalizedRoles.length > 0) {
+      return normalizedRoles;
+    }
+
+    return [APP_ROLES.Resident];
   }
 
   /**

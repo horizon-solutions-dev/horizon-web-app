@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import BackspaceOutlinedIcon from "@mui/icons-material/BackspaceOutlined";
+import Logo from "../../assets/logo.svg";
 import { useNavigate } from "react-router-dom";
 import RouteNames from "../../routes/routeNames";
 import { verificationService } from "../../services/verificationService";
@@ -35,10 +36,9 @@ interface ValidacaoAcessoProps {
 
 export default function ValidacaoAcesso({
   onValidated,
-  onBack,
-  title = "Confirmar acesso",
-  subtitle = "Digite o código numérico para continuar a autenticação.",
-  submitLabel = "Validar código",
+  title = "Validar código",
+  subtitle = "Digite o código numérico enviado para continuar a autenticação.",
+  submitLabel = "Confirmar código",
 }: ValidacaoAcessoProps) {
   const navigate = useNavigate();
   const [code, setCode] = useState("");
@@ -46,7 +46,7 @@ export default function ValidacaoAcesso({
   const [loading, setLoading] = useState(false);
 
   const digits = useMemo(
-    () => Array.from({ length: CODE_LENGTH }, (_, i) => code[i] || ""),
+    () => Array.from({ length: CODE_LENGTH }, (_, index) => code[index] || ""),
     [code],
   );
 
@@ -70,7 +70,7 @@ export default function ValidacaoAcesso({
 
   const validateCode = async () => {
     if (code.length !== CODE_LENGTH) {
-      setErrorMessage("Informe o código completo com 6 dígitos.");
+      setErrorMessage(`Informe o código completo com ${CODE_LENGTH} dígitos.`);
       return;
     }
 
@@ -117,37 +117,29 @@ export default function ValidacaoAcesso({
   };
 
   return (
-    <Box className="av-page">
-      <Container className="container-max">
-        <Paper elevation={0} className="av-card">
-          {onBack ? (
-            <Button
-              variant="text"
-              onClick={onBack}
-              disabled={loading}
-              sx={{
-                alignSelf: "flex-start",
-                textTransform: "none",
-                mb: 1,
-                color: "#6b7280",
-              }}
-            >
-              Voltar
-            </Button>
-          ) : null}
-
-          <Box className="av-icon-aqui">
-            <LockOutlinedIcon className="av-icon__lock" />
+    <Box className="validation-access-page">
+      <Container maxWidth="sm" className="validation-access-container">
+        <Paper elevation={0} className="validation-access-card">
+          <Box className="validation-access-logo">
+            <img src={Logo} alt="Horizon" />
           </Box>
 
-          <Typography className="av-title">{title}</Typography>
-          <Typography className="av-subtitle">{subtitle}</Typography>
+          <Box className="validation-access-lock">
+            <LockOutlinedIcon />
+          </Box>
 
-          <Box className="av-digits">
-            {digits.map((digit, i) => (
+          <Typography className="validation-access-title">{title}</Typography>
+          <Typography className="validation-access-subtitle">
+            {subtitle}
+          </Typography>
+
+          <Box className="validation-access-digits">
+            {digits.map((digit, index) => (
               <Box
-                key={i}
-                className={`av-digit ${digit ? "av-digit--filled" : ""}`}
+                key={index}
+                className={`validation-access-digit ${
+                  digit ? "validation-access-digit--filled" : ""
+                }`}
               >
                 {digit}
               </Box>
@@ -155,7 +147,9 @@ export default function ValidacaoAcesso({
           </Box>
 
           <Typography
-            className={`av-status ${errorMessage ? "av-status--error" : ""}`}
+            className={`validation-access-status ${
+              errorMessage ? "validation-access-status--error" : ""
+            }`}
           >
             {errorMessage
               ? errorMessage
@@ -164,11 +158,11 @@ export default function ValidacaoAcesso({
                 : "\u00A0"}
           </Typography>
 
-          <Box className="av-keypad">
+          <Box className="validation-access-keypad">
             {keypadKeys.map((key) => (
               <Button
                 key={key}
-                className="av-key"
+                className="validation-access-key"
                 onClick={() => appendDigit(key)}
                 disabled={loading}
               >
@@ -177,21 +171,23 @@ export default function ValidacaoAcesso({
             ))}
 
             <Button
-              className="av-key av-key--action"
+              className="validation-access-key validation-access-key--action"
               onClick={clearCode}
               disabled={loading}
             >
               Limpar
             </Button>
+
             <Button
-              className="av-key"
+              className="validation-access-key"
               onClick={() => appendDigit("0")}
               disabled={loading}
             >
               0
             </Button>
+
             <Button
-              className="av-key av-key--action"
+              className="validation-access-key validation-access-key--action"
               onClick={removeDigit}
               disabled={loading}
             >
@@ -201,7 +197,7 @@ export default function ValidacaoAcesso({
 
           <Button
             fullWidth
-            className="av-submit"
+            className="validation-access-submit"
             onClick={validateCode}
             disabled={loading || code.length !== CODE_LENGTH}
           >

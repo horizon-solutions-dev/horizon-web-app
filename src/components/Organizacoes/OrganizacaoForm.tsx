@@ -19,10 +19,13 @@ import {
 } from "../../services/organizationService";
 import { AuthService } from "../../services/authService";
 import { TokenService } from "../../services/tokenService";
+import { useNavigate } from "react-router-dom";
+import RouteNames from "../../routes/routeNames";
 import "./Organizacoes.scss";
 
 interface OrganizacaoFormProps {
   open: boolean;
+  full?: boolean;
   editingOrganization: Organization | null;
   onClose: () => void;
   onSaved: () => void | Promise<void>;
@@ -31,6 +34,13 @@ interface OrganizacaoFormProps {
   typesError: string | null;
   loading: boolean;
   setLoading: (loading: boolean) => void;
+  firstAccessMode?: boolean;
+  onCreated?: (payload: {
+    organizationId: string;
+    orgType: number;
+    label: string;
+  }) => void;
+  onCompleted?: () => void;
 }
 
 const initialForm: OrganizationRequest = {
@@ -82,6 +92,7 @@ const stateRegex = /^[A-Z]{2}$/;
 
 const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   open,
+  full,
   editingOrganization,
   onClose,
   onSaved,
@@ -89,7 +100,11 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   typesLoading,
   loading,
   setLoading,
+  firstAccessMode = false,
+  onCreated,
+  onCompleted,
 }) => {
+  const navigate = useNavigate();
   const { appStateModal, handleClose, showSuccess, showError } =
     useAppStateModal();
   const [closeAfterModal, setCloseAfterModal] = useState(false);
@@ -165,6 +180,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   if (!open) return null;
 
   const handleChange = (field: keyof OrganizationRequest, value: string) => {
+    console.log(value)
     let nextValue = value;
     if (field === "doc") nextValue = formatCNPJ(value);
     if (field === "phone") nextValue = formatPhone(value);
@@ -381,6 +397,22 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
           profileId: 1,
           owner: true,
         });
+        localStorage.setItem("organizationId", organizationId);
+        localStorage.setItem("onboardingOrgType", String(payload.orgType ?? ""));
+
+        onCreated?.({
+          organizationId,
+          orgType: Number(payload.orgType || 0),
+          label: payload.name.trim(),
+        });
+
+        if (firstAccessMode) {
+          onCompleted?.();
+          onSaved();
+          return;
+        }
+
+        setCloseAfterModal(true);
         showSuccess("Organização criada com sucesso.");
       }
     } catch (error) {
@@ -405,7 +437,18 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
     handleClose();
     if (closeAfterModal) {
       setCloseAfterModal(false);
-      onClose();
+      if (!firstAccessMode) {
+        onClose();
+        navigate(RouteNames.Condominio, {
+          state: {
+            openCreate: true,
+            onboarding: true,
+            orgType: Number(formData.orgType || 0),
+          },
+        });
+      } else {
+        onCompleted?.();
+      }
     }
     onSaved();
   };
@@ -413,6 +456,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   return (
     <>
       <StepWizardCard
+        full={full}
         title={editingOrganization ? "Editar Organizacao" : "Criar Organizacao"}
         subtitle={steps[activeStep]}
         steps={steps}
@@ -422,6 +466,8 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
         backLabel="Voltar"
         onClose={onClose}
         disableContent={loading}
+        width={firstAccessMode ? "720px" : "650px"}
+        fullScreen={firstAccessMode}
       >
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {activeStep === 0 ? (

@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   Dialog,
   DialogActions,
@@ -91,7 +91,7 @@ export default function AppStateModal({
   detail,
   confirmLabel,
   cancelLabel = "Cancelar",
-  showCancel = true,
+  showCancel,
   showClose = true,
   isLoading = false,
   customIcon,
@@ -102,7 +102,51 @@ export default function AppStateModal({
 }: AppStateModalProps) {
   const config = getModalConfig(type);
   const isDelete = type === "delete";
+  const shouldShowCancel = type === "error" ? false : (showCancel ?? true);
   const finalConfirmLabel = confirmLabel || config.defaultConfirmLabel;
+  const [surfaceCenter, setSurfaceCenter] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setSurfaceCenter(null);
+      return;
+    }
+
+    const updateSurfaceCenter = () => {
+      const candidates = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          ".step-wizard-card, .MuiDialog-paper:not(.app-state-modal-paper)",
+        ),
+      ).filter((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      });
+
+      const surface = candidates[candidates.length - 1];
+      if (!surface) {
+        setSurfaceCenter(null);
+        return;
+      }
+
+      const rect = surface.getBoundingClientRect();
+      setSurfaceCenter({
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      });
+    };
+
+    updateSurfaceCenter();
+    window.addEventListener("resize", updateSurfaceCenter);
+    window.addEventListener("scroll", updateSurfaceCenter, true);
+
+    return () => {
+      window.removeEventListener("resize", updateSurfaceCenter);
+      window.removeEventListener("scroll", updateSurfaceCenter, true);
+    };
+  }, [open]);
 
   const handleConfirm = async () => {
     await onConfirm();
@@ -125,7 +169,17 @@ export default function AppStateModal({
       maxWidth="xs"
       fullWidth
       PaperProps={{
+        className: "app-state-modal-paper",
         sx: {
+          ...(surfaceCenter
+            ? {
+                position: "fixed",
+                left: surfaceCenter.x,
+                top: surfaceCenter.y,
+                transform: "translate(-50%, -50%)",
+                m: 0,
+              }
+            : {}),
           borderRadius: isDelete ? "26px" : "12px",
           boxShadow: isDelete
             ? "0 20px 50px rgba(15, 23, 42, 0.25)"
@@ -295,7 +349,7 @@ export default function AppStateModal({
           pb: isDelete ? 3 : 2,
           px: isDelete ? 4 : 3,
           gap: 1,
-          flexDirection: showCancel ? "row" : "column",
+          flexDirection: shouldShowCancel ? "row" : "column",
           "& button": {
             textTransform: "none",
             fontSize: "14px",
@@ -303,13 +357,13 @@ export default function AppStateModal({
           },
         }}
       >
-        {showCancel && (
+        {shouldShowCancel && (
           <Button
             variant="outlined"
             onClick={handleCancel}
             disabled={isLoading}
             sx={{
-              flex: showCancel ? 1 : undefined,
+              flex: shouldShowCancel ? 1 : undefined,
               backgroundColor: isDelete ? "#edeef1" : "#F1F3F5",
               color: isDelete ? "#323841" : "#495057",
               borderColor: isDelete ? "#e3e5ea" : "#DEE2E6",
@@ -339,7 +393,7 @@ export default function AppStateModal({
           disabled={isLoading}
           loading={isLoading}
           sx={{
-            flex: showCancel ? 1 : undefined,
+            flex: shouldShowCancel ? 1 : undefined,
             background: isDelete
               ? "linear-gradient(135deg, #ff2f2f 0%, #ef2626 100%)"
               : config.accentColor,

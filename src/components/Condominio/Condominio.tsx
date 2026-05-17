@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Condominio.scss";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
@@ -37,6 +37,7 @@ import { formatCNPJ } from "../../shared/utils/funcoes";
 
 const CondominioPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
@@ -189,6 +190,16 @@ const CondominioPage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const state = location.state as { openCreate?: boolean } | null;
+    if (!state?.openCreate) return;
+
+    setEditingCondominium(null);
+    setImageSelected(null);
+    setIsCadastroOpen(true);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
+
   const getCondominiumTypeLabel = (value: string | number) => {
     const match = condominiumTypes.find(
       (type) => type.id === value || type.value === value,
@@ -213,7 +224,9 @@ const CondominioPage: React.FC = () => {
     setImageSelected(null);
     setIsCadastroOpen(true);
   };
-
+  const data =  JSON.parse(localStorage.getItem("dataCondominium")!)
+  console.log('aaaa',data)
+  console.log("aquio")
   const handleCloseForm = () => {
     setIsCadastroOpen(false);
     setEditingCondominium(null);
@@ -243,13 +256,13 @@ const CondominioPage: React.FC = () => {
       title: condominium.name,
       subtitle: (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.35 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap:'4px' }}>
             <Article sx={{ fontSize: 14 }} />
             <Typography variant="body2" color="text.secondary">
               {formatCNPJ(condominium.doc) || "-"}
             </Typography>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: '4px' }}>
             <LocationOn sx={{ fontSize: 14 }} />
             <Typography variant="body2" color="text.secondary">
               {condominium.city} - {condominium.state}
@@ -264,7 +277,7 @@ const CondominioPage: React.FC = () => {
       ),
       imageUrl: getCondominiumImageUrl(condominium),
       actions: (
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 3 }}>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           <Button
             size="small"
             variant="outlined"
@@ -334,7 +347,7 @@ const CondominioPage: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Apartment sx={{ fontSize: 36, color: "#1976d2" }} />
+            <Apartment sx={{ fontSize: 36, color: "#2563eb" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -357,9 +370,9 @@ const CondominioPage: React.FC = () => {
                   </IconButton>
                 </Tooltip>
               </Container>
-              <Box>
+              <Box sx={{ alignSelf: "stretch", pl: "48px" }}>
                 <BreadcrumbTrail
-                  items={[t("common.organization"), t("common.condominiums")]}
+                  items={[t("common.condominiums")]}
                 />
               </Box>
             </Box>
@@ -382,8 +395,10 @@ const CondominioPage: React.FC = () => {
                     </Typography>
                   ) : null}
                   <CardList
+                    showAddButton={data.orgType == 1}
                     title={t("condominio.condominiumsList")}
                     showTitle={false}
+                    variant="condominiumSelection"
                     searchPlaceholder={t("condominio.searchPlaceholder")}
                     onSearchChange={setSearchText}
                     onAddClick={handleOpenCreate}
@@ -392,9 +407,6 @@ const CondominioPage: React.FC = () => {
                     emptyImageLabel={t("common.noImage")}
                     showFilters={true}
                     showPagination={true}
-                    cardMaxHeight="none"
-                    imageWidth={145}
-                    imageHeight={90}
                     actionsMarginTop={0.5}
                     page={listPage}
                     totalPages={totalPages}

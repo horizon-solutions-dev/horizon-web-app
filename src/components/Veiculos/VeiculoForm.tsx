@@ -145,6 +145,7 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
               onChange={(e) => handleChange('marca', e.target.value)}
               error={!!errors.marca}
               helperText={errors.marca}
+              placeholder="Marca"
             />
           </Grid>
 
@@ -160,6 +161,7 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
               onChange={(e) => handleChange('modelo', e.target.value)}
               error={!!errors.modelo}
               helperText={errors.modelo}
+              placeholder="Modelo"
             />
           </Grid>
 
@@ -175,6 +177,7 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
               onChange={(e) => handleChange('cor', e.target.value)}
               error={!!errors.cor}
               helperText={errors.cor}
+              placeholder="Cor"
             />
           </Grid>
 
@@ -189,6 +192,7 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
               type="number"
               value={formData.ano}
               onChange={(e) => handleChange('ano', e.target.value)}
+              placeholder="Ano"
             />
           </Grid>
         </Grid>

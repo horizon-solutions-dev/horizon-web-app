@@ -22,6 +22,9 @@ interface BlocoFormProps {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   condominiumIdPreset?: string;
+  firstAccessMode?: boolean;
+  onCreated?: (payload: { blockId: string; label: string }) => void;
+  onCompleted?: () => void;
 }
 
 const BlocoForm: React.FC<BlocoFormProps> = ({
@@ -32,6 +35,9 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
   loading,
   setLoading,
   condominiumIdPreset,
+  firstAccessMode = false,
+  onCreated,
+  onCompleted,
 }) => {
   const { t } = useTranslation();
   const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
@@ -113,7 +119,11 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
         await blockService.updateBlock(editingId, formData);
         showSuccess(t("blocoForm.updateSuccess"));
       } else {
-        await blockService.createBlock(formData);
+        const response = await blockService.createBlock(formData);
+        onCreated?.({
+          blockId: response.condominiumBlockId,
+          label: formData.name.trim(),
+        });
         showSuccess(t("blocoForm.createSuccess"));
       }
       setFormData({
@@ -142,7 +152,11 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
     onSaved();
     if (closeAfterModal) {
       setCloseAfterModal(false);
-      onClose();
+      if (!firstAccessMode) {
+        onClose();
+      } else {
+        onCompleted?.();
+      }
     }
   };
 

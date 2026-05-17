@@ -3,7 +3,7 @@ import { apiClient } from './apiClient';
 export type ImageType = 
   | 'AccessControl' 
   | 'Banner' 
-  | 'ConventionDocument' 
+  | 'Complementary' 
   | 'Facade' 
   | 'Coworking' 
   | 'Damage' 
@@ -49,7 +49,7 @@ export interface CondominiumImage {
 }
 
 export interface CondominiumImageUpload {
-  imageType: ImageType;
+  imageType: any;
   contentFile: File;
   condominiumId: string;
 }

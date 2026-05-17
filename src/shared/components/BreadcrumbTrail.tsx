@@ -35,7 +35,6 @@ export default function BreadcrumbTrail({ items }: BreadcrumbTrailProps) {
                 fontSize: "12px",
                 fontWeight: isLast ? 800 : 400,
                 color: isLast ? "primary.main" : "#454D54", 
-                fontFamily: "sans-serif",
               }}
             >
               {item}

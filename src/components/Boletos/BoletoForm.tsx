@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -11,14 +11,11 @@ import {
   Typography,
   MenuItem,
   IconButton,
-  Paper
 } from '@mui/material';
-import { useDropzone } from 'react-dropzone';
 import {
   Close,
-  CloudUpload,
-  Delete,
 } from '@mui/icons-material';
+import ImageUploadField from '../../shared/components/ImageUploadField';
 import './Boletos.scss';
 
 interface Boleto {
@@ -86,34 +83,24 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
     setErrors({});
   }, [boleto, open]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
+  const handleImageChange = (file: File | null) => {
+    if (!file) {
+      setFormData(prev => ({ ...prev, imagem: null }));
+      return;
+    }
+
       const reader = new FileReader();
       reader.onload = () => {
         setFormData(prev => ({ ...prev, imagem: reader.result as string }));
       };
       reader.readAsDataURL(file);
-    }
-  }, []);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
-    },
-    maxFiles: 1
-  });
+  };
 
   const handleChange = (field: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
-  };
-
-  const handleRemoveImage = () => {
-    setFormData(prev => ({ ...prev, imagem: null }));
   };
 
   const validate = () => {
@@ -319,37 +306,14 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
           </Grid>
 
           <Grid item xs={12}>
-            {formData.imagem ? (
-              <Paper className="image-preview-container">
-                <Box className="image-preview">
-                  <img src={formData.imagem} alt="Preview do boleto" />
-                </Box>
-                <Box className="image-actions">
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<Delete />}
-                    onClick={handleRemoveImage}
-                  >
-                    Remover Imagem
-                  </Button>
-                </Box>
-              </Paper>
-            ) : (
-              <Paper
-                {...getRootProps()}
-                className={`dropzone ${isDragActive ? 'active' : ''}`}
-              >
-                <input {...getInputProps()} />
-                <CloudUpload className="dropzone-icon" />
-                <Typography variant="h6" className="dropzone-title">
-                  {isDragActive ? 'Solte a imagem aqui' : 'Arraste uma imagem ou clique para selecionar'}
-                </Typography>
-                <Typography variant="body2" className="dropzone-text">
-                  Formatos aceitos: PNG, JPG, JPEG, GIF
-                </Typography>
-              </Paper>
-            )}
+            <ImageUploadField
+              label="Imagem do boleto"
+              previewUrl={formData.imagem}
+              height={220}
+              emptyLabel="Selecionar imagem"
+              description="Formatos aceitos: PNG, JPG, JPEG, GIF"
+              onChange={handleImageChange}
+            />
           </Grid>
         </Grid>
       </DialogContent>
@@ -359,7 +323,7 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
           Cancelar
         </Button>
         <Button onClick={handleSubmit} variant="contained" className="save-button">
-          {boleto ? 'Atualizar' : 'Salvar'}
+          {boleto ? 'Atualizar' : 'Concluir'}
         </Button>
       </DialogActions>
     </Dialog>

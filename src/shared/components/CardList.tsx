@@ -6,6 +6,7 @@ import {
   TextField,
   IconButton,
   Button,
+  Chip,
   Grid,
   Pagination,
   PaginationItem,
@@ -24,9 +25,11 @@ import {
 export interface CardListItem {
   id: string;
   title: string;
+  badge?: React.ReactNode;
   subtitle?: React.ReactNode;
   meta?: React.ReactNode;
   imageUrl?: string;
+  onImageClick?: () => void;
   actions?: React.ReactNode;
   accentColor?: string;
   toolTip?: string;
@@ -44,6 +47,7 @@ interface CardListProps {
   onAddClick?: () => void;
   addLabel?: string;
   showTitle?: boolean;
+  showAddButton?: boolean;
   showFilters?: boolean;
   addButtonPlacement?: "header" | "toolbar";
   emptyImageLabel?: string;
@@ -56,6 +60,8 @@ interface CardListProps {
   haveImage?: boolean;
   imageHeight?: number;
   actionsMarginTop?: number;
+  variant?: "default" | "condominiumSelection";
+  dense?: boolean;
 }
 
 export default function CardList({
@@ -68,6 +74,7 @@ export default function CardList({
   searchPlaceholder = "Buscar...",
   onSearchChange,
   onAddClick,
+  showAddButton = true,
   page = 1,
   totalPages = 1,
   onPageChange,
@@ -81,7 +88,17 @@ export default function CardList({
   imageHeight = 80,
   actionsMarginTop = 1,
   haveImage = true,
+  variant = "default",
+  dense = false,
 }: CardListProps) {
+  const isCondominiumSelection = variant === "condominiumSelection";
+  const resolvedCardMaxHeight = isCondominiumSelection ? "none" : cardMaxHeight;
+  const resolvedImageWidth = isCondominiumSelection ? 134 : imageWidth;
+  const resolvedImageHeight = isCondominiumSelection ? 96 : imageHeight;
+  const resolvedActionsMarginTop = isCondominiumSelection
+    ? 2.25
+    : actionsMarginTop;
+
   return (
     <Fragment>
       {showTitle ? (
@@ -149,7 +166,14 @@ export default function CardList({
         </Box>
       ) : null}
 
-      <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: dense ? 1.5 : 2,
+          alignItems: "center",
+          mb: dense ? 1.5 : 2,
+        }}
+      >
         <TextField
           fullWidth
           placeholder={searchPlaceholder}
@@ -178,9 +202,9 @@ export default function CardList({
                 color: "#666",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  borderColor: "#1976d2",
-                  color: "#1976d2",
-                  backgroundColor: "rgba(25, 118, 210, 0.04)",
+                  borderColor: "#1976d2 !important",
+                  color: "#1976d2 !important",
+                  backgroundColor: "rgba(25, 118, 210, 0.04) !important",
                 },
               }}
             >
@@ -188,7 +212,7 @@ export default function CardList({
             </IconButton>
           </Tooltip>
         )}
-        {onAddClick && addButtonPlacement === "toolbar" && (
+        {showAddButton && onAddClick && addButtonPlacement === "toolbar" && (
           <Tooltip title="Clique aqui para Criar um novo Item">
             <IconButton
               onClick={onAddClick}
@@ -200,9 +224,9 @@ export default function CardList({
                 color: "#666",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  borderColor: "#d32f2f",
-                  color: "#d32f2f",
-                  backgroundColor: "rgba(211, 47, 47, 0.04)",
+                  borderColor: "#1976d2 !important",
+                  color: "#1976d2 !important",
+                  backgroundColor: "rgba(25, 118, 210, 0.04) !important",
                 },
               }}
             >
@@ -212,7 +236,7 @@ export default function CardList({
         )}
       </Box>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={dense ? 1.5 : 2}>
         {items.length === 0 ? (
           <Grid item xs={12}>
             <Box
@@ -237,24 +261,47 @@ export default function CardList({
               <Paper
                 elevation={0}
                 sx={{
-                  p: 2,
-                  borderRadius: 3,
+                  p: isCondominiumSelection ? 2.25 : dense ? 1.5 : 2,
+                  borderRadius: isCondominiumSelection ? 2 : 3,
                   background: item.accentColor || "#f6f7fb",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  gap: 2,
-                  maxHeight: cardMaxHeight,
+                  gap: dense ? 1.5 : 2,
+                  minHeight: isCondominiumSelection ? 172 : undefined,
+                  maxHeight: resolvedCardMaxHeight,
                 }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 600, mb:'12px' }}
-                    noWrap
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: isCondominiumSelection ? 1.75 : dense ? 1 : "12px",
+                    }}
                   >
-                    {item.title}
-                  </Typography>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 600, minWidth: 0 }}
+                      noWrap
+                    >
+                      {item.title}
+                    </Typography>
+                    {item.badge ? (
+                      typeof item.badge === "string" ? (
+                        <Chip
+                          label={item.badge}
+                          size="small"
+                          sx={{ fontWeight: 600, flexShrink: 0, backgroundColor: '#f6f7fb' }}
+                        />
+                      ) : (
+                        <Box sx={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+                          {item.badge}
+                        </Box>
+                      )
+                    ) : null}
+                  </Box>
                   {item.subtitle ? (
                     typeof item.subtitle === "string" ? (
                       <Typography variant="body2" color="text.secondary" noWrap>
@@ -274,21 +321,33 @@ export default function CardList({
                     )
                   ) : null}
                   {item.actions ? (
-                    <Box sx={{ mt: actionsMarginTop }}>{item.actions}</Box>
+                    <Box sx={{ mt: resolvedActionsMarginTop }}>
+                      {item.actions}
+                    </Box>
                   ) : null}
                 </Box>
                 {
                   haveImage && (
                 <Box
+                  role={item.onImageClick ? "button" : undefined}
+                  tabIndex={item.onImageClick ? 0 : undefined}
                   sx={{
-                    width: imageWidth,
-                    height: imageHeight,
+                    width: resolvedImageWidth,
+                    height: resolvedImageHeight,
                     borderRadius: 2,
                     background: "#fff",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     overflow: "hidden",
+                    cursor: item.onImageClick ? "pointer" : "default",
+                  }}
+                  onClick={item.onImageClick}
+                  onKeyDown={(event) => {
+                    if (item.onImageClick && (event.key === "Enter" || event.key === " ")) {
+                      event.preventDefault();
+                      item.onImageClick();
+                    }
                   }}
                 >
                   {item.imageUrl ? (
@@ -321,7 +380,7 @@ export default function CardList({
       </Grid>
 
       {showPagination ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: dense ? 2 : 3 }}>
           <Pagination
             page={page}
             count={Math.max(1, totalPages)}

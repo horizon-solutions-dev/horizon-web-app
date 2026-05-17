@@ -5,6 +5,8 @@ import type {
   UpdateAccountRequest,
   AccountResponse,
   ChangePasswordRequest,
+  SetPasswordRequest,
+  SetPasswordResponse,
   TypesDoc,
 } from '../models/api.model';
 import axios from 'axios';
@@ -60,6 +62,13 @@ export class AccountService {
    */
   static async changePassword(payload: ChangePasswordRequest): Promise<CreateAccountResponse> {
     return apiClient.put<CreateAccountResponse>(`${BASE_PATH}/me/password`, payload);
+  }
+
+  /**
+   * Define a senha inicial do usuario apos a confirmacao do codigo
+   */
+  static async setPassword(payload: SetPasswordRequest): Promise<SetPasswordResponse> {
+    return apiClient.post<SetPasswordResponse>(`${BASE_PATH}/password`, payload);
   }
 
   /**

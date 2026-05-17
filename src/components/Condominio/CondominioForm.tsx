@@ -20,7 +20,6 @@ import {
   PhotoOutlined,
   AddOutlined,
   CloseOutlined,
-  DescriptionOutlined,
   ImageOutlined,
 } from "@mui/icons-material";
 import {
@@ -37,6 +36,7 @@ import {
 } from "../../services/condominiumImageService";
 import { organizationService } from "../../services/organizationService";
 import { AppStateModal } from "../../shared/components/AppStateModal";
+import ImageUploadField from "../../shared/components/ImageUploadField";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
@@ -56,11 +56,14 @@ interface CondominioFormProps {
   physicalStructuresError: string | null;
   loading: boolean;
   setLoading: (loading: boolean) => void;
+  firstAccessMode?: boolean;
+  onCreated?: (payload: { condominiumId: string; label: string }) => void;
+  onCompleted?: () => void;
 }
 
 type ImageUploadItem = {
   id: string;
-  file: File;
+  file: File | null;
   imageType: ImageType;
   label: string;
   preview: string;
@@ -73,7 +76,7 @@ const DEFAULT_PHYSICAL_STRUCTURES: PhysicalStructureEnum[] = [
 ];
 
 const EXCLUDED_OTHER_IMAGE_TYPES = new Set([
-  "ConventionDocument",
+  "Complementary",
   "Facade",
   "Thumbnail",
   "Banner",
@@ -94,6 +97,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   physicalStructuresError,
   loading,
   setLoading,
+  firstAccessMode = false,
+  onCreated,
+  onCompleted,
 }) => {
   const { t } = useTranslation();
   const { appStateModal, handleClose, showSuccess, showError } =
@@ -160,6 +166,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     (type) => !EXCLUDED_OTHER_IMAGE_TYPES.has(type.value),
   );
 
+  const toImagePreviewUrl = (contentType?: string, contentFile?: string) =>
+    contentType && contentFile
+      ? `data:${contentType};base64,${contentFile}`
+      : null;
+
   const formatCNPJ = (value: string) => {
     const numbers = value.replace(/\D/g, "");
     if (numbers.length === 0) return "";
@@ -173,6 +184,16 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       /(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/,
       "$1.$2.$3/$4-$5",
     );
+  };
+
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, "").slice(0, 11);
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 6) return numbers.replace(/(\d{2})(\d+)/, "($1) $2");
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+    }
+    return numbers.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
   };
 
   const formatCEP = (value: string) => {
@@ -244,6 +265,79 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     loadImageTypes();
   }, []);
 
+  const loadExistingImages = async (condominiumId: string) => {
+    if (imageTypes.length === 0) return;
+
+    const requestedTypes = imageTypes.map((type) => type.value as ImageType);
+    const imageLists = await Promise.all(
+      requestedTypes.map(async (imageType) => {
+        try {
+          const images = await condominiumImageService.getCondominiumImages(
+            condominiumId,
+            imageType,
+          );
+          return images.map((image) => ({ ...image, imageType }));
+        } catch {
+          return [];
+        }
+      }),
+    );
+
+    const imageDetails = await Promise.all(
+      imageLists.flat().map(async (image) => {
+        try {
+          const detail = await condominiumImageService.getCondominiumImageById(
+            image.condominiumImageId,
+          );
+          return {
+            imageType: image.imageType,
+            detail,
+          };
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    const loadedOtherImages: ImageUploadItem[] = [];
+    let loadedDocumentPreview: string | null = null;
+    let loadedFacadePreview: string | null = null;
+
+    imageDetails.forEach((item) => {
+      if (!item) return;
+      const preview = toImagePreviewUrl(
+        item.detail.contentType,
+        item.detail.contentFile,
+      );
+      if (!preview) return;
+
+      if (item.imageType === "Complementary") {
+        loadedDocumentPreview ??= preview;
+        return;
+      }
+
+      if (item.imageType === "Facade") {
+        loadedFacadePreview ??= preview;
+        return;
+      }
+
+      if (EXCLUDED_OTHER_IMAGE_TYPES.has(item.imageType)) return;
+
+      const imageType = imageTypes.find((type) => type.value === item.imageType);
+      loadedOtherImages.push({
+        id: item.detail.condominiumImageId,
+        file: null,
+        imageType: item.imageType,
+        label: imageType?.description || item.imageType,
+        preview,
+      });
+    });
+
+    setDocumentPreview(loadedDocumentPreview);
+    setFacadePreview(loadedFacadePreview ?? imageSelected);
+    setOtherImages(loadedOtherImages);
+  };
+
   useEffect(() => {
     if (!open) return;
     setActiveStep(0);
@@ -267,8 +361,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         name: editingCondominium.name,
         doc: formatCNPJ(editingCondominium.doc || ""),
         email: editingCondominium.email || "",
-        phone: editingCondominium.phone || "",
-        mobilePhone: editingCondominium.mobilePhone || "",
+        phone: formatPhone(editingCondominium.phone || ""),
+        mobilePhone: formatPhone(editingCondominium.mobilePhone || ""),
         address: editingCondominium.address,
         addressNumber: editingCondominium.addressNumber,
         complement: editingCondominium.complement || "",
@@ -287,7 +381,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         hasGasByBlock: editingCondominium.hasGasByBlock,
         commit: true,
       });
-      setFacadePreview(imageSelected);
+      void loadExistingImages(editingCondominium.condominiumId);
       return;
     }
 
@@ -297,7 +391,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       organizationId: localStorage.getItem("organizationId") || "",
     });
     setFacadePreview(imageSelected);
-  }, [open, editingCondominium, imageSelected, condominiumTypes, physicalStructureTypes]);
+  }, [open, editingCondominium, imageSelected, condominiumTypes, physicalStructureTypes, imageTypes]);
 
   useEffect(() => () => resetImages(), []);
 
@@ -306,6 +400,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const handleChange = (field: string, value: unknown) => {
     let processedValue = value;
     if (field === "doc") processedValue = formatCNPJ(String(value));
+    if (field === "phone" || field === "mobilePhone") {
+      processedValue = formatPhone(String(value));
+    }
     if (field === "zipCode") processedValue = formatCEP(String(value));
     setFormData((prev) => ({ ...prev, [field]: processedValue }));
     if (errors[field]) {
@@ -421,6 +518,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const buildPayload = (commit: boolean): CondominiumRequest => ({
     ...formData,
     doc: formData.doc.replace(/\D/g, ""),
+    phone: formData.phone?.replace(/\D/g, ""),
+    mobilePhone: formData.mobilePhone?.replace(/\D/g, ""),
     zipCode: formData.zipCode.replace(/\D/g, ""),
     condominiumType: normalizeCondominiumTypeValue(formData.condominiumType),
     physicalStructureId: normalizePhysicalStructureValue(formData.physicalStructureId || ""),
@@ -515,22 +614,29 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     }
   };
 
-  const handleDocumentFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    revokePreview(documentPreview);
+
+
+  const handleDocumentFileChange = (file: File | null) => {
+    revokePreview(facadePreview);
+    if (!file) {
+    setDocumentFile(file);
+      setDocumentPreview(null);
+      return;
+    }
+
     setDocumentFile(file);
     setDocumentPreview(URL.createObjectURL(file));
-    event.target.value = "";
   };
-
-  const handleFacadeFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleFacadeImageChange = (file: File | null) => {
     revokePreview(facadePreview);
+    if (!file) {
+      setFacadeFile(null);
+      setFacadePreview(null);
+      return;
+    }
+
     setFacadeFile(file);
     setFacadePreview(URL.createObjectURL(file));
-    event.target.value = "";
   };
 
   const handleOtherFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -564,10 +670,29 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     });
   };
 
+  const handleReplaceOtherImage = (id: string, file: File | null) => {
+    if (!file) {
+      handleRemoveOtherImage(id);
+      return;
+    }
+
+    setOtherImages((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        revokePreview(item.preview);
+        return {
+          ...item,
+          file,
+          preview: URL.createObjectURL(file),
+        };
+      }),
+    );
+  };
+
   const uploadImages = async (condominiumId: string) => {
     if (documentFile) {
       await condominiumImageService.uploadCondominiumImage({
-        imageType: "ConventionDocument",
+        imageType: "Complementary",
         contentFile: documentFile,
         condominiumId,
       });
@@ -580,6 +705,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       });
     }
     for (const image of otherImages) {
+      if (!image.file) continue;
       await condominiumImageService.uploadCondominiumImage({
         imageType: image.imageType,
         contentFile: image.file,
@@ -624,6 +750,13 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       const condominiumId = response || editingId || "";
       if (condominiumId) await uploadImages(condominiumId);
 
+      if (!editingId && condominiumId) {
+        onCreated?.({
+          condominiumId,
+          label: formData.name.trim(),
+        });
+      }
+
       showSuccess(
         editingId
           ? t("condominioForm.updateSuccess", { name: formData.name })
@@ -631,7 +764,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       );
 
       setCloseAfterModal(true);
-      handleCloseWizard(false);
+      if (!firstAccessMode) {
+        handleCloseWizard(false);
+      }
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         setErrors({ doc: t("condominioForm.duplicateCnpj") });
@@ -655,7 +790,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     await onSaved();
     if (closeAfterModal) {
       setCloseAfterModal(false);
-      onClose();
+      if (!firstAccessMode) {
+        onClose();
+      } else {
+        onCompleted?.();
+      }
     }
   };
 
@@ -671,47 +810,6 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     resetImages();
     if (propagate) onClose();
   };
-
-  const renderUploadCard = (
-    title: string,
-    buttonLabel: string,
-    preview: string | undefined | null,
-    onChange: (event: React.ChangeEvent<HTMLInputElement>) => void,
-    accept = "image/*",
-  ) => (
-    <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 1.5, minHeight: 220 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-        <PhotoOutlined sx={{ color: "#2563eb", fontSize: 20 }} />
-        <Typography sx={{ fontWeight: 700, fontSize: 16 }}>{title}</Typography>
-      </Box>
-      <Box
-        sx={{
-          borderRadius: "12px",
-          border: "1px dashed #cbd5e1",
-          minHeight: 140,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          background: "#f8fafc",
-          mb: 1.5,
-        }}
-      >
-        {preview ? (
-          <Box component="img" src={preview} alt={title} sx={{ width: "100%", height: 140, objectFit: "cover" }} />
-        ) : (
-          <Box sx={{ textAlign: "center", color: "#64748b" }}>
-            {accept === "image/*" ? <ImageOutlined sx={{ fontSize: 40 }} /> : <DescriptionOutlined sx={{ fontSize: 40 }} />}
-            <Typography variant="body2">Nenhum arquivo selecionado</Typography>
-          </Box>
-        )}
-      </Box>
-      <Button variant="contained" component="label" sx={{ textTransform: "none" }}>
-        {buttonLabel}
-        <input hidden type="file" accept={accept} onChange={onChange} />
-      </Button>
-    </Box>
-  );
 
   const renderStepContent = (step: number) => {
     if (step === 0) {
@@ -745,13 +843,13 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         <Grid container spacing={1.5}>
           <Grid item xs={12} md={6}>
-            <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 2, height: "100%" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+            <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: '6px', height: "100%" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <ApartmentOutlined sx={{ color: "#2563eb", fontSize: 20 }} />
-                <Typography sx={{ fontWeight: 700, fontSize: 18 }}>Estrutura do Condomínio</Typography>
+                <Typography sx={{ fontWeight: 700, fontSize: 14 }}>Estrutura do Condomínio</Typography>
               </Box>
               <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", }}>
                 <FormControlLabel control={<Checkbox checked={formData.hasBlocks} onChange={(e) => handleChange("hasBlocks", e.target.checked)} size="small" />} label="Possui blocos" />
                 <FormControlLabel control={<Checkbox checked={formData.hasPowerByBlock} onChange={(e) => handleChange("hasPowerByBlock", e.target.checked)} size="small" />} label="Energia por bloco" />
                 <FormControlLabel control={<Checkbox checked={formData.hasGasByBlock} onChange={(e) => handleChange("hasGasByBlock", e.target.checked)} size="small" />} label="Gas por bloco" />
@@ -760,10 +858,10 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             </Box>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 2, height: "100%" }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+            <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: '6px', height: "100%" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <TuneOutlined sx={{ color: "#16a34a", fontSize: 20 }} />
-                <Typography sx={{ fontWeight: 700, fontSize: 18 }}>Configurações do Condomínio</Typography>
+                <Typography sx={{ fontWeight: 700, fontSize: 14 }}>Configurações do Condomínio</Typography>
               </Box>
               <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.25 }} />
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
@@ -781,38 +879,58 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         </Grid>
 
         <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <PhotoOutlined sx={{ color: "#4f46e5", fontSize: 20 }} />
-            <Typography sx={{ fontWeight: 700, fontSize: 18 }}>Imagens do Condominio</Typography>
+            <Typography sx={{ fontWeight: 700, fontSize: 14 }}>Imagens do Condominio</Typography>
           </Box>
           <Box sx={{ borderBottom: "1px solid #e2e8f0", mb: 1.5 }} />
           <Grid container spacing={1.5}>
-            <Grid item xs={12} md={4}>{renderUploadCard("Documento", "Selecionar arquivo", documentPreview, handleDocumentFileChange, ".pdf,image/*")}</Grid>
-            <Grid item xs={12} md={4}>{renderUploadCard("Fachada", "Selecionar imagem", previewFacade, handleFacadeFileChange)}</Grid>
             <Grid item xs={12} md={4}>
-              <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 1.5, minHeight: 220 }}>
+              <ImageUploadField
+                label="Documento"
+                previewUrl={documentPreview}
+                fileName={documentFile?.name}
+                height={140}
+                emptyLabel="Selecionar arquivo"
+                description="Formatos aceitos: JPG, PNG."
+                onChange={handleDocumentFileChange}
+                sx={{ minHeight: 220 }}
+              />
+
+              </Grid>
+            <Grid item xs={12} md={4} >
+              <ImageUploadField
+                label="Fachada"
+                previewUrl={previewFacade}
+                fileName={facadeFile?.name}
+                height={140}
+                emptyLabel="Selecionar imagem"
+                description="Formatos aceitos: JPG, PNG."
+                onChange={handleFacadeImageChange}
+                sx={{ minHeight: 220 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 1.5,height:'100%' }}>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
                   <Typography sx={{ fontWeight: 700, fontSize: 16 }}>Outros</Typography>
                   <IconButton size="small" onClick={() => setImageTypeDialogOpen(true)} disabled={imageTypesLoading}><AddOutlined /></IconButton>
                 </Box>
-                <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 1 }}>
-                  {otherImages.map((image) => (
-                    <Box key={image.id} sx={{ position: "relative", border: "1px dashed #cbd5e1", borderRadius: "12px", overflow: "hidden" }}>
-                      <IconButton size="small" onClick={() => handleRemoveOtherImage(image.id)} sx={{ position: "absolute", top: 4, right: 4, backgroundColor: "#ffffffcc" }}><CloseOutlined fontSize="small" /></IconButton>
-                      <Box component="img" src={image.preview} alt={image.label} sx={{ width: "100%", height: 84, objectFit: "cover" }} />
-                      <Typography sx={{ px: 1, py: 0.75, fontSize: 12, textAlign: "center" }}>{image.label}</Typography>
-                    </Box>
+                <Box sx={{ display:'flex', flexDirection:'column',gap: 1 }}>
+                                    {otherImages.map((image) => (
+                    <ImageUploadField
+                      key={image.id}
+                      label={image.label}
+                      previewUrl={image.preview}
+                      fileName={image.file?.name}
+                      height={84}
+                      showTitle={false}
+                      description=""
+                      changeLabel="Trocar"
+                      onChange={(file) => handleReplaceOtherImage(image.id, file)}
+                    />
                   ))}
-                  {
-                    otherImages.length < 2 && (
-                      <>
-                      <Box onClick={() => setImageTypeDialogOpen(true)} sx={{ border: "1px dashed #cbd5e1", borderRadius: "12px", minHeight: 120, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 1, color: "#2563eb", cursor: "pointer", backgroundColor: "#f8fafc" }}>
-                    <AddOutlined sx={{ fontSize: 36 }} />
-                    <Typography>Adicionar</Typography>
-                  </Box>
-                      </>
-                    )
-                  }
+
                 </Box>
                 {imageTypesError ? <Typography sx={{ color: "#d32f2f", fontSize: 12, mt: 1 }}>{imageTypesError}</Typography> : null}
               </Box>
@@ -838,7 +956,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         disableContent={loading}
       >
         <div className="condominio-form">{renderStepContent(activeStep)}</div>
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 1.5, pt: 1.5 }}>
+        <Box sx={{ display: "flex", justifyContent: "center",  }}>
           {activeStep === steps.length - 1 ? (
             <Button sx={{ textTransform: "none" }} variant="contained" color="primary" onClick={handleSubmit} disabled={loading}>
               {loading ? <CircularProgress size={20} /> : t("common.finish")}
@@ -868,7 +986,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   border: "1px dashed #cbd5e1",
                   borderRadius: "16px",
                   p: 2,
-                  minHeight: 140,
+                  minHeight: 125,
                   cursor: "pointer",
                   "&:hover": { borderColor: "#2563eb", boxShadow: "0 10px 24px rgba(37,99,235,0.08)" },
                 }}
@@ -877,7 +995,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                   <AddOutlined />
                 </Box>
                 <ImageOutlined sx={{ fontSize: 40, color: "#2563eb", mb: 1.5 }} />
-                <Typography sx={{ fontSize: 18, fontWeight: 500 }}>{type.description || type.value}</Typography>
+                <Typography sx={{ fontSize: 14, fontWeight: 500 }}>{type.description || type.value}</Typography>
               </Box>
             ))}
           </Box>

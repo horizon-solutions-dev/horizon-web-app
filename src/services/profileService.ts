@@ -18,6 +18,15 @@ class ProfileService {
       throw error;
     }
   }
+
+  async deleteProfile(profileId: number | string) {
+    try {
+      return await apiClient.delete<void>(`${this.baseUrl}/${profileId}`);
+    } catch (error) {
+      console.error('Erro ao excluir perfil:', error);
+      throw error;
+    }
+  }
 }
 
 export const profileService = new ProfileService();

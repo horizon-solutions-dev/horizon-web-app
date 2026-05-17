@@ -7,6 +7,7 @@ import {
   TextField,
   MenuItem,
   CircularProgress,
+  Typography,
 } from "@mui/material";
 import {
   unitService,
@@ -36,6 +37,14 @@ interface UnidadeFormProps {
   condominiumNamePreset?: string;
   blockId: string;
   blockNamePreset?: string;
+  firstAccessMode?: boolean;
+  onCreated?: (payload: {
+    unitId: any;
+    label: string;
+    condominiumBlockId: string;
+    unitType: string | number;
+  }) => void;
+  onCompleted?: () => void;
 }
 
 type FormErrors = {
@@ -78,6 +87,9 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   condominiumNamePreset,
   blockId,
   blockNamePreset,
+  firstAccessMode = false,
+  onCreated,
+  onCompleted,
 }) => {
   const { appStateModal, handleClose, showSuccess, showError } =
     useAppStateModal();
@@ -99,6 +111,35 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
     () => condominiumNamePreset || t("unidadeForm.selectedCondominium"),
     [condominiumNamePreset, t],
   );
+  const toNumber = (value: string) => {
+    const normalized = value.includes(",")
+      ? value.replace(/\./g, "").replace(",", ".")
+      : value;
+
+    return Number(normalized) || 0;
+  };
+
+  const formatCurrencyValue = (value: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+
+  const formatCurrencyInput = (value: string, maxValue: number) => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) return "";
+
+    const amount = Math.min(Number(digits) / 100, maxValue);
+    return formatCurrencyValue(amount);
+  };
+
+  const formatStoredCurrencyValue = (value?: string | number) => {
+    if (value === undefined || value === null || String(value).trim() === "") {
+      return "";
+    }
+
+    return formatCurrencyValue(toNumber(String(value)));
+  };
 
   const resolvedBlockName = useMemo(
     () => blockNamePreset || t("unidadeForm.selectedBlock"),
@@ -121,7 +162,9 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           editingUnit.allocationType,
           allocationTypes,
         ),
-        allocationTypeValue: editingUnit.allocationTypeValue ?? "",
+        allocationTypeValue: formatStoredCurrencyValue(
+          editingUnit.allocationTypeValue,
+        ),
       });
       return;
     }
@@ -212,7 +255,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!validate()) return;
+    if (!validate() && firstAccessMode == false) return;
 
     setLoading(true);
     try {
@@ -222,22 +265,22 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
           formData.allocationType,
           allocationTypes,
         ),
-        allocationTypeValue: Number(formData.allocationTypeValue),
+        allocationTypeValue: toNumber(String(formData.allocationTypeValue)),
         commit: true,
       };
 
       const { valid, validations } = editingId
         ? await unitService.validateUnitEdit(
-            {
-              ...payload,
-              commit: false,
-            },
-            editingUnit?.condominiumUnitId || "",
-          )
-        : await unitService.validateUnit({
+          {
             ...payload,
             commit: false,
-          });
+          },
+          editingUnit?.condominiumUnitId || "",
+        )
+        : await unitService.validateUnit({
+          ...payload,
+          commit: false,
+        });
 
       if (!valid && validations.length > 0) {
         if (applyBackendValidationErrors(validations)) {
@@ -249,7 +292,13 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
         await unitService.updateUnit(editingId, payload);
         showSuccess(t("unidadeForm.updateSuccess"));
       } else {
-        await unitService.createUnit(payload);
+        const response = await unitService.createUnit(payload);
+        onCreated?.({
+          unitId: response,
+          label: formData.unitCode.trim(),
+          condominiumBlockId: payload.condominiumBlockId,
+          unitType: payload.unitType,
+        });
         showSuccess(t("unidadeForm.createSuccess"));
       }
 
@@ -275,7 +324,11 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
 
     if (closeAfterModal) {
       setCloseAfterModal(false);
-      onClose();
+      if (!firstAccessMode) {
+        onClose();
+      } else {
+        onCompleted?.();
+      }
     }
   };
 
@@ -386,8 +439,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
               },
             }}
             select
-            value={formData.unitType || ""}
-                        onChange={(e) => handleChange("unitType", e.target.value)}
+            value={formData.unitType == "Owner" ? "1" : "2"}
+            onChange={(e) => handleChange("unitType", e.target.value)}
 
             fullWidth
             error={Boolean(errors.unitType)}
@@ -405,7 +458,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
               handleChange(
                 "allocationType",
                 normalizeAllocationTypeValue(e.target.value, allocationTypes) ||
-                  "",
+                "",
               )
             }
             error={Boolean(errors.allocationType)}
@@ -435,15 +488,27 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
               },
             }}
             fullWidth
-            type="number"
             value={formData.allocationTypeValue ?? ""}
-            onChange={(e) =>
-              handleChange("allocationTypeValue", e.target.value)
+            onChange={(event) => {
+              let value = event.target.value;
+                            // aceita apenas nÃºmeros e ponto
+              value = value.replace(/[^0-9.]/g, '');
+              
+              // limita tamanho
+              if (value.length > 9) return;
+              handleChange(
+                "allocationTypeValue",
+                formatCurrencyInput(event.target.value, 999999),
+              )
+            }
             }
             error={Boolean(errors.allocationTypeValue)}
             helperText={errors.allocationTypeValue}
             placeholder={t("unidadeForm.allocationTypeValuePlaceholder")}
-            inputProps={{ min: 0, step: "any" }}
+            inputProps={{ inputMode: "numeric" }}
+            InputProps={{
+              endAdornment: <Typography color="text.secondary">R$</Typography>,
+            }}
           />
         </Box>
       </StepWizardCard>

@@ -199,6 +199,7 @@ const Organizacoes: React.FC = () => {
   };
   const nameStorage = localStorage.getItem("condominium");
   const dataParse = nameStorage ? JSON.parse(nameStorage) : null;
+  const canManageOrganizations = Number(dataParse?.orgType ?? 0) === 2;
   const orgName =
     organizations?.find((o) => o.organizationId === dataParse?.organizationId)
       ?.name || dataParse?.name;
@@ -232,7 +233,7 @@ const Organizacoes: React.FC = () => {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Business sx={{ fontSize: 36, color: "#1976d2" }} />
+          <Business sx={{ fontSize: 36, color: "#f59e0b" }} />
                 <Box>
                   <Typography
                     variant="h5"
@@ -241,7 +242,7 @@ const Organizacoes: React.FC = () => {
                   >
                     {organizationName}
                   </Typography>
-                  <BreadcrumbTrail items={["Organização", "Organizações"]} />
+                  <BreadcrumbTrail items={[ "Organizações"]} />
                 </Box>
               </Box>
               <Tooltip title="Clique aqui para Fechar a janela">
@@ -264,6 +265,7 @@ const Organizacoes: React.FC = () => {
               ) : (
                 <>
                   <CardList
+                  
                     haveImage={false}
                     title="Organizações"
                     showTitle={false}
@@ -272,6 +274,7 @@ const Organizacoes: React.FC = () => {
                       setSearchText(value);
                       setListPage(1);
                     }}
+                    showAddButton={canManageOrganizations}
                     onAddClick={handleOpenCreate}
                     addLabel="Novo"
                     addButtonPlacement="toolbar"
@@ -282,6 +285,7 @@ const Organizacoes: React.FC = () => {
                     onPageChange={setListPage}
                     items={paginatedOrganizations.map(
                       (organization, index) => ({
+                        badge: "teste",
                         id: organization.organizationId,
                         title: organization.name || "Sem nome",
                         meta: getOrgTypeLabel(organization.orgType),
@@ -302,7 +306,7 @@ const Organizacoes: React.FC = () => {
                               <PlaceOutlined
                                 sx={{
                                   fontSize: 14,
-                                  mr: 0.5,
+                                  mr: '5px',
                                   verticalAlign: "middle",
                                 }}
                               />
@@ -313,10 +317,10 @@ const Organizacoes: React.FC = () => {
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 0.7,
+                                gap: '7px',
                               }}
                             >
-                              <Article sx={{ fontSize: 14 }} />
+                              <Article sx={{ fontSize: 13 }} />
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
@@ -334,7 +338,7 @@ const Organizacoes: React.FC = () => {
                               display: "flex",
                               gap: 1,
                               flexWrap: "wrap",
-                              mt: 2,
+                              mt: 3,
                             }}
                           >
                             <Button

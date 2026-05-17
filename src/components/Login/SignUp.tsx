@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -7,7 +7,6 @@ import {
   Container,
   MenuItem,
   TextField,
-  Typography,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import type {
@@ -22,7 +21,7 @@ import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 
 interface SignUpProps {
   onBack: () => void;
-  onSuccess: (payload: { email: string }) => void;
+  onSuccess: (payload: { email: string; userId: string }) => void;
 }
 
 type SignUpFormData = {
@@ -39,7 +38,7 @@ const steps = ["Informações iniciais", "Contato"];
 const initialFormData: SignUpFormData = {
   name: "",
   surname: "",
-  docType: "",
+  docType: "CompanyTaxDoc",
   doc: "",
   email: "",
   phone: "",
@@ -230,15 +229,13 @@ const normalizePhoneToE164 = (phone: string) => {
 
 export default function SignUp({ onBack, onSuccess }: SignUpProps) {
   const { t } = useTranslation();
-  const { appStateModal, handleClose, showSuccess, showError } =
-    useAppStateModal();
+  const { appStateModal, handleClose, showError } = useAppStateModal();
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<SignUpFormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [docTypes, setDocTypes] = useState<TypesDoc[]>(fallbackDocTypes);
   const [typesLoading, setTypesLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [closeAfterModal, setCloseAfterModal] = useState(false);
   const notTrue = false
   useEffect(() => {
     const loadTypes = async () => {
@@ -260,11 +257,6 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
       loadTypes();
     }
   }, []);
-
-  const currentDocType = useMemo(
-    () => docTypes.find((type) => type.value === formData.docType),
-    [docTypes, formData.docType],
-  );
 
   const handleChange = (field: keyof SignUpFormData, value: string) => {
     let nextValue = value;
@@ -433,12 +425,11 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
 
     setIsSubmitting(true);
     try {
-      await AccountService.createAccount(payload);
-      setCloseAfterModal(true);
-      showSuccess(
-        t("toast.accountCreated") ||
-          "Conta criada com sucesso! Faça login com suas credenciais.",
-      );
+      const createdUserId = await AccountService.createAccount(payload);
+      onSuccess({
+        email: formData.email.trim(),
+        userId: createdUserId,
+      });
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 422) {
         const responseData = error.response.data as
@@ -466,24 +457,17 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
     }
   };
 
-  const handleModalClose = () => {
-    handleClose();
-    if (closeAfterModal) {
-      setCloseAfterModal(false);
-      onSuccess({ email: formData.email.trim() });
-    }
-  };
-
   return (
-    <Box className="page-container">
+    <Box className="page-container" sx={{
+          height: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+    }}>
       <Container maxWidth="xl">
       <StepWizardCard
+      
         title={t("signup.title") || "Criar Conta"}
-        subtitle={
-          activeStep === 0
-            ? t("signup.stepInitial") || steps[0]
-            : t("signup.stepContact") || steps[1]
-        }
         steps={steps}
         activeStep={activeStep}
         showBack={true}
@@ -493,7 +477,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
         disableContent={isSubmitting}
         width="720px"
         actions={
-          <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
+          <Box sx={{ display: "flex", justifyContent: "center", width: "100%", mt:2 }}>
             {activeStep === steps.length - 1 ? (
               <Button
                 variant="contained"
@@ -526,15 +510,6 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {activeStep === 0 ? (
             <>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ textAlign: "center", mb: 0.5 }}
-              >
-                {t("signup.description") ||
-                  "Preencha os dados abaixo para criar sua conta"}
-              </Typography>
-
               <TextField
                 fullWidth
                 placeholder={t("signup.name") || "Nome"}
@@ -600,16 +575,6 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
             </>
           ) : (
             <>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ textAlign: "center", mb: 0.5 }}
-              >
-                {currentDocType?.description
-                  ? `Documento selecionado: ${currentDocType.description}`
-                  : t("signup.contactDescription") ||
-                    "Informe os dados de contato para finalizar o cadastro"}
-              </Typography>
 
               <TextField
                 fullWidth
@@ -643,8 +608,8 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
         message={appStateModal.message}
         detail={appStateModal.detail}
         item={appStateModal.item}
-        onConfirm={handleModalClose}
-        onClose={handleModalClose}
+        onConfirm={handleClose}
+        onClose={handleClose}
         showCancel={false}
       />
     </Container>

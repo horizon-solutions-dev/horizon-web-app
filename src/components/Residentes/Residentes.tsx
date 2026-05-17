@@ -14,7 +14,6 @@ import {
   Close,
   DeleteOutline,
   EditOutlined,
-  Groups2Outlined,
   BadgeOutlined,
   EmailOutlined,
   PhoneOutlined,
@@ -22,10 +21,11 @@ import {
   LocationOn,
   Article,
   SearchOutlined,
-  MeetingRoom,
   ViewModule,
   Person,
+  Home,
 } from "@mui/icons-material";
+import { MdApartment } from "react-icons/md";
 import {
   unitResidentService,
   type CondominiumUnitResident,
@@ -49,7 +49,6 @@ import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import { useTranslation } from "react-i18next";
 import { formatCNPJ, formatDoc } from "../../shared/utils/funcoes";
-import Allocation from "../../assets/allocation.png";
 
 const condoPageSize = 4;
 const unitPageSize = 6;
@@ -95,6 +94,7 @@ const Residentes: React.FC = () => {
   const [residentsTotalPages, setResidentsTotalPages] = useState(1);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+
   const [editingResident, setEditingResident] =
     useState<CondominiumUnitResident | null>(null);
   const [loading, setLoading] = useState(false);
@@ -193,10 +193,10 @@ const Residentes: React.FC = () => {
       const response = blockId
         ? await unitService.getUnitsByBlock(blockId, pageNumber, unitPageSize)
         : await unitService.getUnitsByCondominium(
-            condominiumId,
-            pageNumber,
-            unitPageSize,
-          );
+          condominiumId,
+          pageNumber,
+          unitPageSize,
+        );
       const normalized = response?.items ?? [];
       const computedTotalPages =
         response?.paging?.totalPages ??
@@ -398,12 +398,6 @@ const Residentes: React.FC = () => {
     return value;
   };
 
-  const getDocTypeLabel = (value?: string | number) => {
-    if (value === 1 || value === "1") return "CPF";
-    if (value === 2 || value === "2") return "CNPJ";
-    if (value === 3 || value === "3") return "PASS";
-    return "DOC";
-  };
 
   const formatResidentPhone = (phone?: string) => {
     if (!phone) return "-";
@@ -470,7 +464,7 @@ const Residentes: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <People sx={{ fontSize: 36, color: "#1976d2" }} />
+            <MdApartment style={{ fontSize: 36, color: "#2563eb" }} />
                   <Typography
                     variant="h5"
                     fontWeight="bold"
@@ -489,9 +483,9 @@ const Residentes: React.FC = () => {
                   </IconButton>
                 </Tooltip>
               </Container>
-              <Box>
+              <Box sx={{ alignSelf: "stretch", pl: "48px" }}>
                 <BreadcrumbTrail
-                  items={[t("common.organization"), t("common.condominiums")]}
+                  items={[ t("common.condominiums")]}
                 />
               </Box>
             </Box>
@@ -506,6 +500,7 @@ const Residentes: React.FC = () => {
                 <CardList
                   title={t("moradores.condominiumsList")}
                   showTitle={false}
+                  variant="condominiumSelection"
                   searchPlaceholder={t(
                     "moradores.searchCondominiumPlaceholder",
                   )}
@@ -538,7 +533,7 @@ const Residentes: React.FC = () => {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Groups2Outlined sx={{ fontSize: 36, color: "#1976d2" }} />
+            <Home sx={{ fontSize: 36, color: "#10b981" }} />
                 <Box>
                   <Typography
                     variant="h5"
@@ -549,9 +544,9 @@ const Residentes: React.FC = () => {
                   </Typography>
                   <BreadcrumbTrail
                     items={[
-                      organizationName || t("common.organization"),
+                    
                       selectedCondominium?.name ||
-                        t("moradores.selectedCondominium"),
+                      t("moradores.selectedCondominium"),
                       t("common.units"),
                     ]}
                   />
@@ -619,7 +614,7 @@ const Residentes: React.FC = () => {
                       <Person
                         sx={{
                           fontSize: 14,
-                          mr: 0.5,
+                          mr: '8px',
                           verticalAlign: "middle",
                         }}
                       />
@@ -629,12 +624,9 @@ const Residentes: React.FC = () => {
                   ),
                   meta: (
                     <Typography variant="caption" color="text.secondary">
-                      <Box
-                        component="img"
-                        src={Allocation}
+                      <ViewModule
                         sx={{
-                          width: 16,
-                          height: 16,
+                          fontSize: 14,
                           mr: 0.5,
                           verticalAlign: "middle",
                         }}
@@ -647,7 +639,14 @@ const Residentes: React.FC = () => {
                     </Typography>
                   ),
                   actions: (
-                    <Box sx={{ display: "flex", gap: 1 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        flexWrap: "wrap",
+                        mt: 3,
+                      }}
+                    >
                       <Button
                         size="small"
                         variant="outlined"
@@ -685,6 +684,7 @@ const Residentes: React.FC = () => {
                     : undefined
                 }
                 unitIdPreset={selectedUnit?.condominiumUnitId}
+                unitOptions={units}
                 condominiumNamePreset={selectedCondominium?.name}
                 blockNamePreset={
                   blocks.find(
@@ -708,7 +708,7 @@ const Residentes: React.FC = () => {
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                    <Groups2Outlined sx={{ fontSize: 36, color: "#1976d2" }} />
+            <People sx={{ fontSize: 36, color: "#ec4899" }} />
                     <Box>
                       <Typography
                         variant="h5"
@@ -719,9 +719,9 @@ const Residentes: React.FC = () => {
                       </Typography>
                       <BreadcrumbTrail
                         items={[
-                          organizationName || t("common.organization"),
+                         
                           selectedCondominium?.name ||
-                            t("moradores.selectedCondominium"),
+                          t("moradores.selectedCondominium"),
                           selectedUnit?.unitCode || t("moradores.selectedUnit"),
                           t("common.residents"),
                         ]}
@@ -826,7 +826,7 @@ const Residentes: React.FC = () => {
                               >
                                 <Box
                                   sx={{
-                                    mt: 2,
+                                    mt: 3,
                                     display: "flex",
                                     gap: 1,
                                     flexWrap: "wrap",
@@ -880,7 +880,6 @@ const Residentes: React.FC = () => {
                                     variant="body2"
                                     color="text.secondary"
                                   >
-                                    {getDocTypeLabel(resident.docType)}:{" "}
                                     {formatDoc(resident.doc, resident.docType)}
                                   </Typography>
                                 </Box>
@@ -928,21 +927,22 @@ const Residentes: React.FC = () => {
                                   sx={{
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 0.7,
+                                    gap: '8px',
                                   }}
                                 >
                                   <Person
                                     sx={{
                                       fontSize: 16,
                                       color: "text.secondary",
+                                      mr: '-2px'
                                     }}
                                   />
                                   <Typography
                                     variant="body2"
                                     color="text.secondary"
                                   >
-                                    {residentType} | <MeetingRoom sx={{fontSize:14}}/>{" "}{residentUnit} |{" "}
-                                    <ViewModule sx={{fontSize:14}}/>{" "}{residentBlock}
+                                    {residentType} | <Home sx={{ fontSize: 14 }} />{" "}{residentUnit} |{" "}
+                                    <ViewModule sx={{ fontSize: 20 }} />{" "}{residentBlock}
                                   </Typography>
                                 </Box>
                               </Box>

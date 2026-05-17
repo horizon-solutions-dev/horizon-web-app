@@ -3,8 +3,8 @@ import { CheckCircle, Close } from "@mui/icons-material";
 import "./StepWizardCard.scss";
 import { IoChevronBack } from "react-icons/io5";
 import { Tooltip, IconButton, Box } from "@mui/material";
-import '../../index.scss'
-import Logo from '../../assets/logo.svg'
+import "../../index.scss";
+import Logo from "../../assets/logo.svg";
 interface StepWizardCardProps {
   title: string;
   subtitle?: string;
@@ -20,6 +20,9 @@ interface StepWizardCardProps {
   showLogo?: boolean;
   width?: string;
   disableContent?: boolean;
+  fullScreen?: boolean;
+  full?: boolean;
+  className?: string;
 }
 
 export default function StepWizardCard({
@@ -35,12 +38,17 @@ export default function StepWizardCard({
   backLabel = "Voltar",
   onClose,
   showLogo = true,
-  width = '650px',
+  width = "650px",
   disableContent = true,
+  fullScreen = false,
+  full,
+  className,
 }: StepWizardCardProps) {
   return (
-    <div className="step-wizard">
-      <Box className="step-wizard-card" sx={{width}}>
+    <div
+      className={`step-wizard ${fullScreen ? "step-wizard fullscreen" : ""} ${full ? 'full' : ""}`}
+    >
+      <Box className={`step-wizard-card ${className || ""}`.trim()} sx={{ width }}>
         {showBack && onBack ? (
           <button className="step-wizard-back" type="button" onClick={onBack}>
             <IoChevronBack />
@@ -50,7 +58,6 @@ export default function StepWizardCard({
         {onClose ? (
           <Box className="step-wizard-close">
             <Tooltip title="Clique aqui para Fechar a janela">
-
               <IconButton
                 color="error"
                 onClick={() => {
@@ -71,7 +78,9 @@ export default function StepWizardCard({
 
         <h1 className="step-wizard-title">{title}</h1>
         {subtitle ? (
-          <div className={subtitleClassName || "step-wizard-subtitle"}>{subtitle}</div>
+          <div className={subtitleClassName || "step-wizard-subtitle"}>
+            {subtitle}
+          </div>
         ) : null}
 
         <div className="step-wizard-content">

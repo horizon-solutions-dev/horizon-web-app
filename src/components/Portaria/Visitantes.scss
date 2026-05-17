@@ -1,0 +1,506 @@
+.visitantes-container {
+  width: 100% !important;
+
+  & > .MuiContainer-root {
+    max-width: 1400px !important;
+    padding: 0 !important;
+
+    & > .MuiPaper-root {
+      border-radius: 20px !important;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08) !important;
+      padding: 24px !important;
+      background: white !important;
+      border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    }
+  }
+
+  .close-button,
+  .MuiIconButton-root[aria-label="Fechar"] {
+    width: 40px !important;
+    height: 40px !important;
+    background: white !important;
+    border: 2px solid #e0e4e8 !important;
+    border-radius: 10px !important;
+    color: #666 !important;
+    transition: all 0.2s ease !important;
+
+    &:hover {
+      background: white !important;
+      border-color: #ef4444 !important;
+      color: #ef4444 !important;
+    }
+
+    .MuiSvgIcon-root {
+      font-size: 20px !important;
+      color: inherit !important;
+    }
+  }
+
+  .action-button-edit {
+    border-color: #15a36b !important;
+    color: #15a36b !important;
+    font-weight: 600 !important;
+
+    &:hover {
+      border-color: #108b5a !important;
+      background: rgba(21, 163, 107, 0.06) !important;
+    }
+  }
+
+  .action-button-delete {
+    font-weight: 600 !important;
+  }
+
+  .action-button-edit.Mui-disabled,
+  .action-button-delete.Mui-disabled {
+    color: #98a2b3 !important;
+    border-color: #d0d5dd !important;
+    background: #f2f4f7 !important;
+    opacity: 1 !important;
+
+    .MuiSvgIcon-root {
+      color: #98a2b3 !important;
+    }
+  }
+
+  .action-button-manage {
+    min-width: 140px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    background: white !important;
+    color: #1976d2 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    text-transform: none !important;
+    padding: 0 12px !important;
+    border: 2px solid #1976d2 !important;
+    box-shadow: 0 2px 6px rgba(25, 118, 210, 0.15) !important;
+    transition: all 0.2s ease !important;
+
+    .MuiSvgIcon-root {
+      color: #1976d2 !important;
+      font-size: 16px !important;
+    }
+
+    &:hover {
+      background: rgba(25, 118, 210, 0.1) !important;
+      border-color: #1565c0 !important;
+      color: #1565c0 !important;
+      box-shadow: 0 3px 10px rgba(25, 118, 210, 0.25) !important;
+
+      .MuiSvgIcon-root {
+        color: #1565c0 !important;
+      }
+    }
+  }
+
+  .visitante-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .visitante-step-help {
+    color: #8a94a6;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-top: -4px;
+  }
+
+  .visitante-section-title {
+    color: #46526a;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+  }
+
+  .visitante-notes-field {
+    .MuiInputBase-root {
+      align-items: flex-start;
+      min-height: 78px !important;
+    }
+
+    textarea {
+      min-height: 44px !important;
+      max-height: 44px !important;
+      overflow-y: auto !important;
+    }
+  }
+
+  .visitante-search-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+
+    .MuiButton-root {
+      height: 43px !important;
+      align-self: center;
+    }
+  }
+
+  .visitante-destination-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 158px;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .visitante-upload-card,
+  .visitante-residents-list,
+  .visitante-access-list,
+  .visitante-option-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .visitante-access-step {
+    gap: 12px;
+  }
+
+  .visitante-section-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+  }
+
+  .visitante-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .visitante-section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1976d2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .visitante-section-card-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #344054;
+  }
+
+  .visitante-section-card-description {
+    font-size: 12px !important;
+    color: #667085;
+    line-height: 1.35 !important;
+  }
+
+  .visitor-release-step {
+    .visitante-form-grid {
+      gap: 10px;
+    }
+
+    .visitante-notes-field {
+      .MuiInputBase-root {
+        min-height: 68px !important;
+      }
+
+      textarea {
+        min-height: 34px !important;
+        max-height: 34px !important;
+      }
+    }
+
+    .visitante-option-list {
+      gap: 10px;
+    }
+
+    .visitante-option-card {
+      padding: 12px 16px;
+    }
+
+    .visitante-option-icon {
+      width: 42px;
+      height: 42px;
+    }
+
+    .MuiAlert-root {
+      margin-bottom: 0 !important;
+      padding-top: 7px;
+      padding-bottom: 7px;
+    }
+  }
+
+  .visitante-upload-box {
+    border: 1px dashed #cfd7e6;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    min-height: 150px;
+    overflow: hidden;
+  }
+
+  .visitante-upload-trigger {
+    min-height: 150px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .visitante-upload-preview-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .visitante-upload-preview {
+    width: 100%;
+    max-width: 260px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 1px solid #dbe4f0;
+    background: #f8fafc;
+  }
+
+  .visitante-upload-icon,
+  .visitante-option-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1976d2;
+    background: #eaf3ff;
+    flex-shrink: 0;
+  }
+
+  .visitante-upload-label,
+  .visitante-option-title,
+  .visitante-resident-name {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #24324a;
+  }
+
+  .visitante-upload-description,
+  .visitante-option-description {
+    color: #6f7d92;
+    text-align: left;
+  }
+
+  .visitante-resident-card,
+  .visitante-option-card,
+  .visitante-access-card {
+    border: 1px solid #dbe4f0;
+    border-radius: 16px;
+    background: #ffffff;
+    padding: 16px;
+  }
+
+  .visitante-residents-scroll,
+  .visitante-access-list {
+    max-height: min(310px, 34vh);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .visitante-access-list {
+    border: 1px solid #eef2f6;
+    border-radius: 10px;
+    overflow: hidden;
+    padding-right: 0;
+    gap: 0;
+  }
+
+  .visitante-residents-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .visitante-resident-card {
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    padding: 8px 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    transition: background 0.2s ease, color 0.2s ease;
+
+    &:hover,
+    &:focus {
+      background: #e7f7ef;
+      outline: none;
+    }
+
+    &.selected {
+      background: #d5f0e4;
+      box-shadow: none;
+    }
+  }
+
+  .visitante-resident-main,
+  .visitante-option-card,
+  .visitante-access-card,
+  .visitante-access-copy {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .visitante-resident-main,
+  .visitante-access-card {
+    justify-content: space-between;
+  }
+
+  .visitante-access-card {
+    min-height: 44px;
+    border: 0;
+    border-bottom: 1px solid #eef2f6;
+    border-radius: 0;
+    padding: 8px 12px;
+    background: #ffffff;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    .visitante-option-title {
+      font-size: 13px !important;
+      font-weight: 500 !important;
+      color: #344054;
+    }
+  }
+
+  .visitante-option-card,
+  .visitante-access-copy {
+    justify-content: flex-start;
+  }
+
+  .visitante-option-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .visitante-resident-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #66758c;
+    margin-top: 6px;
+  }
+
+  .visitante-resident-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: red;
+    background: transparent;
+    flex-shrink: 0;
+
+    .MuiSvgIcon-root {
+      font-size: 20px;
+    }
+  }
+
+  .visitante-resident-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .visitante-resident-unit {
+    color: #6f7d92;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+    margin-top: 0 !important;
+  }
+
+  .visitante-resident-name {
+    font-size: 12px !important;
+    line-height: 1.15 !important;
+  }
+
+  .visitante-chip {
+    margin-top: 12px;
+  }
+
+  .visitante-option-card {
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &.selected {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+      background: #f6faff;
+    }
+
+    &.blocked {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .visitante-option-icon.manual {
+    color: #2563eb;
+    background: #dbeafe;
+  }
+
+  .visitante-option-icon.resident {
+    color: #d97706;
+    background: #fef3c7;
+  }
+
+  .visitante-option-icon.area {
+    color: #0284c7;
+    background: #e0f2fe;
+  }
+
+  .visitante-alert,
+  .visitante-resident-fallback {
+    margin-top: 4px;
+  }
+
+  .visitante-error-text {
+    color: #d32f2f;
+    font-size: 12px !important;
+    margin-top: -8px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .visitantes-container {
+    .visitante-search-row {
+      grid-template-columns: 1fr;
+    }
+
+    .visitante-destination-search {
+      grid-template-columns: 1fr;
+    }
+
+    .visitante-resident-main,
+    .visitante-option-card,
+    .visitante-access-card,
+    .visitante-access-copy {
+      align-items: flex-start;
+    }
+  }
+}
