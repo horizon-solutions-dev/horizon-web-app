@@ -724,7 +724,7 @@ export default function Visitantes() {
                   setPage(nextPage);
                   void loadVisitors(selectedCondominium, nextPage);
                 }}
-                items={[...filteredVisitors,...filteredVisitors,...filteredVisitors,...filteredVisitors].map((visitor) => {
+                items={filteredVisitors.map((visitor) => {
                   const badgeStyle = badgeStyles[visitor.visitorType] ?? {
                     color: "#355070",
                     backgroundColor: "#e8edf5",
