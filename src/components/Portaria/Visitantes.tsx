@@ -30,6 +30,7 @@ import {
   Phone,
   Schedule,
   SearchOutlined,
+  Home,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import CardList from "../../shared/components/CardList";
@@ -723,7 +724,7 @@ export default function Visitantes() {
                   setPage(nextPage);
                   void loadVisitors(selectedCondominium, nextPage);
                 }}
-                items={filteredVisitors.map((visitor) => {
+                items={[...filteredVisitors,...filteredVisitors,...filteredVisitors,...filteredVisitors].map((visitor) => {
                   const badgeStyle = badgeStyles[visitor.visitorType] ?? {
                     color: "#355070",
                     backgroundColor: "#e8edf5",
@@ -761,38 +762,27 @@ export default function Visitantes() {
                           </Typography>
                         </Box>
                         <Box
-                          sx={{
+                             sx={{
                             display: "flex",
-                            gap: 2,
+                            alignItems: "center",
+                            gap: 1,
                             color: "text.secondary",
-                            flexWrap: "wrap",
                           }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              minWidth: 0,
-                              flex: "1 1 240px",
-                            }}
                           >
                             <Email sx={{ fontSize: 18 }} />
                             <Typography variant="body2">{visitor.email}</Typography>
                           </Box>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              minWidth: 0,
-                              flex: "1 1 180px",
-                            }}
+                         <Box
+                             sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            color: "text.secondary",
+                          }}
                           >
                             <Phone sx={{ fontSize: 18 }} />
                             <Typography variant="body2">{visitor.phone}</Typography>
                           </Box>
-                        </Box>
                       </Box>
                     ),
                     meta: (
@@ -810,7 +800,7 @@ export default function Visitantes() {
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <Apartment sx={{ fontSize: 18, color: "#5173a8" }} />
+                          <Home sx={{ fontSize: 18, color: "#5173a8" }} />
                           <Typography
                             variant="body2"
                             sx={{ fontWeight: 600 }}
