@@ -1121,7 +1121,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           ? coverFile?.name || photoFile?.name
           : documentPhotoFile?.name
       }
-      height={120}
+      height={136}
       emptyLabel="Adicionar foto"
       onChange={onFileChange}
       sx={{ p: 1.5 }}
@@ -1454,7 +1454,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           >
             {renderPhotoUpload({
               id: "morador-photo-input",
-              title: "Foto de Perfil",
+              title: "👤 Foto do morador",
               preview: coverPreview,
               onFileChange: (file) => {
                 setCoverFile(file);
@@ -1463,7 +1463,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             })}
             {renderPhotoUpload({
               id: "morador-document-photo-input",
-              title: "Foto do Documento",
+              title: "🪪 Documento com foto",
               preview: documentPhotoPreview,
               onFileChange: setDocumentPhotoFile,
             })}
