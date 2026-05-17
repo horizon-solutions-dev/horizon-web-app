@@ -30,7 +30,6 @@ import {
   Phone,
   Schedule,
   SearchOutlined,
-  Textsms,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import CardList from "../../shared/components/CardList";
@@ -130,7 +129,6 @@ const getVisitorTypeLabel = (visitor: VisitorResponse, visitorTypes: VisitorEnum
       String(type.id) === String(visitor.visitorTypeId) ||
       String(type.value) === String(visitor.visitorTypeId),
   );
-
   return visitorType?.description || visitorType?.value || "Visitante";
 };
 
@@ -440,7 +438,7 @@ export default function Visitantes() {
         ? String(visitor.visitReasonId)
         : "",
     );
-    setFinishVisitNotes(visitor.notes === "-" ? "" : visitor.notes);
+    setFinishVisitNotes("");
   };
 
   const handleCloseFinishVisit = () => {
@@ -482,6 +480,10 @@ export default function Visitantes() {
     }
   };
   const handleNewVisit = async (visitor: Visitor) => {
+    if (!visitor.finished) {
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await visitorService.getVisitorById(visitor.id);
@@ -558,11 +560,11 @@ export default function Visitantes() {
             existingVisitor={existingVisitor}
           />
         ) : (
-          <Paper elevation={3} sx={{ p: 3 }}>
+          <Paper elevation={3} sx={{ p: activeView === "visitantes" ? 2 : 3 }}>
             <Box
               sx={{
-                mb: 2,
-                pb: 1.5,
+                mb: activeView === "visitantes" ? 1.5 : 2,
+                pb: activeView === "visitantes" ? 1 : 1.5,
                 display: "flex",
                 alignItems: "center",
                 flexDirection: "column",
@@ -624,7 +626,7 @@ export default function Visitantes() {
               </Box>
             </Box>
 
-            <Paper variant="outlined" sx={{ p: 2 }}>
+            <Paper variant="outlined" sx={{ p: activeView === "visitantes" ? 1.5 : 2 }}>
               {activeView === "condominios" ? (
                 <CardList
                   title="Condominios"
@@ -711,9 +713,10 @@ export default function Visitantes() {
                 showFilters
                 showPagination={true}
                 cardMaxHeight="none"
-                imageWidth={154}
-                imageHeight={112}
-                actionsMarginTop={2}
+                imageWidth={138}
+                imageHeight={96}
+                actionsMarginTop={1}
+                dense
                 page={currentPage}
                 totalPages={visitorsTotalPages}
                 onPageChange={(nextPage) => {
@@ -796,13 +799,12 @@ export default function Visitantes() {
                       <Box
                         sx={{
                           mt: 0,
-                          p: .05,
-                          minHeight: "75px",
+                          p: 0.35,
                           borderRadius: 2,
                           backgroundColor: "rgba(255, 255, 255, 0.55)",
                           display: "flex",
                           flexDirection: "column",
-                          gap: 0.1,
+                          gap: 0.2,
                         }}
                       >
                         <Box
@@ -810,19 +812,17 @@ export default function Visitantes() {
                         >
                           <Apartment sx={{ fontSize: 18, color: "#5173a8" }} />
                           <Typography
-                            variant="subtitle2"
-                            sx={{ fontWeight: 700 }}
+                            variant="body2"
+                            sx={{ fontWeight: 600 }}
                           >
-                            {visitor.unit === "-"
-                              ? visitor.condominium
-                              : `${visitor.condominium} | ${visitor.unit}`}
+                            Unidade: {visitor.unit}
                           </Typography>
                         </Box>
                         <Box
                           sx={{
                             display: "flex",
                             flexDirection: "column",
-                            gap: 0.35,
+                            gap: 0.2,
                             color: "text.secondary",
                           }}
                         >
@@ -864,32 +864,18 @@ export default function Visitantes() {
                             </Typography>
                           </Box>
                         </Box>
-                        <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              minWidth: 0,
-                            }}
-                          >
-                            <Textsms sx={{ fontSize: 18 }} />
-
-                        <Typography variant="body2" color="text.secondary">
-                          Observacoes: {visitor.notes}
-                        </Typography>
-                          </Box>
-                       
                       </Box>
                     ),
                     actions: (
                       <Box
-                        sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 3 }}
+                        sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}
                       >
                         <Button
                           size="small"
                           variant="outlined"
                           className="action-button-edit"
                           startIcon={<Add />}
+                          disabled={!visitor.finished}
                           onClick={() => void handleNewVisit(visitor)}
                         >
                           Nova Visita
@@ -945,7 +931,8 @@ export default function Visitantes() {
   >
     <StepWizardCard
       title="Finalizar visita"
-      steps={["Finalizacao"]}
+      subtitle="Finalização"
+      steps={["Finalização"]}
       activeStep={0}
       showBack
       backLabel="Voltar"

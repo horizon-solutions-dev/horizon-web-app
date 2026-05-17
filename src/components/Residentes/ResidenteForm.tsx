@@ -836,7 +836,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       }
 
       const targetUserId = isEditMode
-        ? formData.userId || editResident?.userId
+        ? editResident?.userId
         : createdUserId;
 
       if (!targetUserId) {
@@ -1121,7 +1121,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           ? coverFile?.name || photoFile?.name
           : documentPhotoFile?.name
       }
-      height={82}
+      height={120}
       emptyLabel="Adicionar foto"
       onChange={onFileChange}
       sx={{ p: 1.5 }}
@@ -1374,7 +1374,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           )}
           <Box
             sx={{
-              mt: 1,
+              mt: '6px',
               border: "1px solid #eef2f6",
               borderRadius: "10px",
               overflow: "hidden",
@@ -1386,7 +1386,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               <Box
                 key={item.key}
                 sx={{
-                  minHeight: 40,
+                  minHeight: 30,
                   px: 1.5,
                   display: "flex",
                   alignItems: "center",
@@ -1542,7 +1542,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   }
                   setActiveStep((prev) => prev - 1);
                 }}
-                width="710px"
+                width={activeStep === STEPS.length - 1 ? "820px" : "710px"}
                 className={
                   activeStep === STEPS.length - 1 ? "resident-final-step" : undefined
                 }
@@ -1594,7 +1594,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 }
                 setActiveStep((prev) => prev - 1);
               }}
-              width="710px"
+              width={activeStep === STEPS.length - 1 ? "820px" : "710px"}
               className={
                 activeStep === STEPS.length - 1 ? "resident-final-step" : undefined
               }

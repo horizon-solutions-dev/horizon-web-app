@@ -51,6 +51,18 @@
     font-weight: 600 !important;
   }
 
+  .action-button-edit.Mui-disabled,
+  .action-button-delete.Mui-disabled {
+    color: #98a2b3 !important;
+    border-color: #d0d5dd !important;
+    background: #f2f4f7 !important;
+    opacity: 1 !important;
+
+    .MuiSvgIcon-root {
+      color: #98a2b3 !important;
+    }
+  }
+
   .action-button-manage {
     min-width: 140px !important;
     height: 32px !important;

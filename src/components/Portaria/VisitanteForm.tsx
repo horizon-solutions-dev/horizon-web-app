@@ -681,7 +681,6 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     setLoading(true);
     try {
       const visitorId =
-        existingVisitor?.id ||
         (await visitorService.createVisitor({
           name: formData.visitorName.trim(),
           documentType: getDocumentTypeValue(formData.documentType),
@@ -700,7 +699,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         releasedByResident: formData.releaseType === "resident",
         typeVisitorReasonId: formData.visitorReasonId,
         notes: formData.notes.trim(),
-        visitorId,
+        visitorId: existingVisitor ? existingVisitor?.id : visitorId,
         condominiumId,
         condominiumUnitId: unitSearchResult.id,
         condominiumUnitResidentId: formData.selectedResidentId,
@@ -1193,6 +1192,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     <>
       <StepWizardCard
         title={existingVisitor ? "Registrar Visita" : "Registrar Visitante"}
+        subtitle={stepLabels[activeStep]}
         steps={stepLabels}
         activeStep={activeStep}
         showBack

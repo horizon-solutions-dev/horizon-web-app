@@ -75,7 +75,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       }}
     >
       {showTitle ? (
-        <Box sx={{ display: "flex", gap: 1.5, mb: 2, alignItems: "center" }}>
+        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
           {showIcon ? (
             <Box
               sx={{

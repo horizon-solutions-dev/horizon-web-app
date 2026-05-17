@@ -61,6 +61,7 @@ interface CardListProps {
   imageHeight?: number;
   actionsMarginTop?: number;
   variant?: "default" | "condominiumSelection";
+  dense?: boolean;
 }
 
 export default function CardList({
@@ -88,6 +89,7 @@ export default function CardList({
   actionsMarginTop = 1,
   haveImage = true,
   variant = "default",
+  dense = false,
 }: CardListProps) {
   const isCondominiumSelection = variant === "condominiumSelection";
   const resolvedCardMaxHeight = isCondominiumSelection ? "none" : cardMaxHeight;
@@ -164,7 +166,14 @@ export default function CardList({
         </Box>
       ) : null}
 
-      <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: dense ? 1.5 : 2,
+          alignItems: "center",
+          mb: dense ? 1.5 : 2,
+        }}
+      >
         <TextField
           fullWidth
           placeholder={searchPlaceholder}
@@ -227,7 +236,7 @@ export default function CardList({
         )}
       </Box>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={dense ? 1.5 : 2}>
         {items.length === 0 ? (
           <Grid item xs={12}>
             <Box
@@ -252,13 +261,13 @@ export default function CardList({
               <Paper
                 elevation={0}
                 sx={{
-                  p: isCondominiumSelection ? 2.25 : 2,
+                  p: isCondominiumSelection ? 2.25 : dense ? 1.5 : 2,
                   borderRadius: isCondominiumSelection ? 2 : 3,
                   background: item.accentColor || "#f6f7fb",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  gap: 2,
+                  gap: dense ? 1.5 : 2,
                   minHeight: isCondominiumSelection ? 172 : undefined,
                   maxHeight: resolvedCardMaxHeight,
                 }}
@@ -269,7 +278,7 @@ export default function CardList({
                       display: "flex",
                       alignItems: "center",
                       gap: 1,
-                      mb: isCondominiumSelection ? 1.75 : "12px",
+                      mb: isCondominiumSelection ? 1.75 : dense ? 1 : "12px",
                     }}
                   >
                     <Typography
@@ -371,7 +380,7 @@ export default function CardList({
       </Grid>
 
       {showPagination ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: dense ? 2 : 3 }}>
           <Pagination
             page={page}
             count={Math.max(1, totalPages)}
