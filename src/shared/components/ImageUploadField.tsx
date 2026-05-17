@@ -30,7 +30,6 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   showIcon = false,
   description,
   previewUrl,
-  fileName,
   accept = "image/*",
   height = 140,
   changeLabel,
@@ -153,8 +152,8 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
           <Box sx={{ textAlign: "center", px: 2 }}>
             <Box
               sx={{
-                width: 58,
-                height: 58,
+                width: 40,
+                height: 40,
                 borderRadius: "50%",
                 mx: "auto",
                 mb: 1.5,

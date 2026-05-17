@@ -17,12 +17,12 @@ import {
   DirectionsCar,
   FitnessCenter,
   HowToReg,
-  LocationOn,
   Pool,
   Security,
   Celebration,
   PersonOutline,
   SearchOutlined,
+  People,
 } from "@mui/icons-material";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import ImageUploadField from "../../shared/components/ImageUploadField";
@@ -34,7 +34,6 @@ import { visitorService } from "../../services/visitorService";
 import { areaService } from "../../services/areaService";
 import type { AreaResponse } from "../../models/area.model";
 import type { VisitorEnum } from "../../models/visitor.model";
-import Face from '../../assets/face.png';
 interface ResidentContactOption {
   id: string;
   fullName: string;
@@ -95,6 +94,8 @@ export interface ExistingVisitorFormData {
   email: string;
   phone: string;
   visitorType?: number | string;
+  visitorReasonId?: number | string;
+  notes?: string;
   facePhotoUrl?: string;
   documentPhotoUrl?: string;
 }
@@ -349,6 +350,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       phone: existingVisitor?.phone || "",
       email: existingVisitor?.email || "",
       visitorType: existingVisitor?.visitorType ? String(existingVisitor.visitorType) : "",
+      visitorReasonId: existingVisitor?.visitorReasonId
+        ? String(existingVisitor.visitorReasonId)
+        : "",
+      notes: existingVisitor?.notes || "",
     });
   }, [open, organizationName, existingVisitor]);
 
@@ -675,17 +680,19 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
 
     setLoading(true);
     try {
-      const visitorResponse = await visitorService.createVisitor({
-        name: formData.visitorName.trim(),
-        documentType: getDocumentTypeValue(formData.documentType),
-        documentNumber: formData.documentNumber.trim(),
-        phone: formData.phone.trim(),
-        email: formData.email.trim(),
-        visitorTypeId: formData.visitorType,
-        facePhoto,
-        documentPhoto,
-        commit: true,
-      });
+      const visitorId =
+        existingVisitor?.id ||
+        (await visitorService.createVisitor({
+          name: formData.visitorName.trim(),
+          documentType: getDocumentTypeValue(formData.documentType),
+          documentNumber: formData.documentNumber.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim(),
+          visitorTypeId: formData.visitorType,
+          facePhoto,
+          documentPhoto,
+          commit: true,
+        }));
 
       const visitResponse = await visitorService.createVisit({
         entryAt: new Date().toISOString().split("T")[0],
@@ -693,13 +700,13 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         releasedByResident: formData.releaseType === "resident",
         typeVisitorReasonId: formData.visitorReasonId,
         notes: formData.notes.trim(),
-        visitorId: visitorResponse,
+        visitorId,
         condominiumId,
         condominiumUnitId: unitSearchResult.id,
         condominiumUnitResidentId: formData.selectedResidentId,
         visitorAccessPermissions: Object.entries(formData.areaAccess).map(
           ([areaId, active]) => ({
-            visitorId: visitorResponse,
+            visitorId,
             areaId,
             active,
           }),
@@ -708,7 +715,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       });
 
       const visitor: VisitorListItem = {
-        id: visitorResponse,
+        id: visitorId,
         fullName: formData.visitorName.trim(),
         document: formData.documentNumber.trim(),
         email: formData.email.trim(),
@@ -778,6 +785,11 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
               <TextField
                 fullWidth
                 select
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 48,
+                  },
+                }}
                 label={formData.documentType ? "" : "Tipo de documento"}
                 value={formData.documentType}
                 disabled={Boolean(existingVisitor)}
@@ -805,6 +817,11 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 48,
+                  },
+                }}
                 placeholder="Documento"
                 value={formData.documentNumber}
                 disabled={Boolean(existingVisitor)}
@@ -845,8 +862,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
             select
             label={formData.visitorType ? "" : "Tipo de Visitante"}
             value={formData.visitorType}
-            disabled={Boolean(existingVisitor)}
-            InputProps={existingVisitor ? { readOnly: true } : undefined}
+
             onChange={(event) => handleChange("visitorType", event.target.value)}
             error={Boolean(errors.visitorType)}
             helperText={errors.visitorType}
@@ -868,7 +884,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
                 label={`Foto do rosto`}
                 icon={<PersonOutline />}
                 showIcon
-                description="Toque para capturar ou enviar uma imagem"
+                description="Toque para capturar ou enviar uma imagem. JPG ou PNG ate 5MB."
                 fileName={formData.facePhoto?.name}
                 previewUrl={facePhotoPreview}
                 onChange={(file) => {
@@ -891,7 +907,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
                 label="Foto do documento"
                 icon={<BadgeOutlined />}
                 showIcon
-                description="Envie a frente ou imagem principal do documento"
+                description="Envie a frente ou imagem principal do documento. JPG ou PNG ate 5MB."
                 fileName={formData.documentPhoto?.name}
                 previewUrl={documentPhotoPreview}
                 onChange={(file) => {
@@ -914,13 +930,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     if (step === 2) {
       return (
         <Box className="visitante-form-grid">
-          <Typography className="visitante-section-title">
-            Unidade destino
-          </Typography>
           <Box className="visitante-search-row">
             <TextField
               fullWidth
-              label={destinationQuery ? "" : "Unidade destino"}
+              placeholder="Unidade destino"
               value={destinationQuery}
               onChange={(event) => {
                 setDestinationQuery(event.target.value);
@@ -994,14 +1007,11 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
                       }}
                     >
                       <Box className="visitante-resident-icon">
-                        <LocationOn />
+                        <People />
                       </Box>
                       <Box className="visitante-resident-copy">
                         <Typography className="visitante-resident-name">
                           {resident.fullName}
-                        </Typography>
-                        <Typography className="visitante-resident-unit">
-                          {unit.label}
                         </Typography>
                       </Box>
                     </Box>
@@ -1128,31 +1138,40 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     }
 
     return (
-      <Box className="visitante-form-grid">
-        <Typography className="visitante-section-title">
-          Controle de acesso por área
-        </Typography>
-
-        <Box className="visitante-access-list">
-          {areas.map((area) => (
-            <Box className="visitante-access-card" key={area.areaId}>
-              <Box className="visitante-access-copy">
-                <Box className="visitante-option-icon area">
-                  {getAreaIcon(area)}
-                </Box>
-                <Typography className="visitante-option-title">
-                  {area.name}
-                </Typography>
-              </Box>
-              <Checkbox
-                checked={Boolean(formData.areaAccess[area.areaId])}
-                onChange={(event) =>
-                  handleAreaToggle(area.areaId, event.target.checked)
-                }
-                sx={{ p: 0.5 }}
-              />
+      <Box className="visitante-form-grid visitante-access-step">
+        <Box className="visitante-section-card">
+          <Box className="visitante-section-header">
+            <Box>
+              <Typography className="visitante-section-card-title">
+                Controle de acesso por área
+              </Typography>
+              <Typography className="visitante-section-card-description">
+                Defina quais áreas este visitante pode acessar.
+              </Typography>
             </Box>
-          ))}
+          </Box>
+
+          <Box className="visitante-access-list">
+            {areas.map((area) => (
+              <Box className="visitante-access-card" key={area.areaId}>
+                <Box className="visitante-access-copy">
+                  <Box className="visitante-option-icon area">
+                    {getAreaIcon(area)}
+                  </Box>
+                  <Typography className="visitante-option-title">
+                    {area.name}
+                  </Typography>
+                </Box>
+                <Checkbox
+                  checked={Boolean(formData.areaAccess[area.areaId])}
+                  onChange={(event) =>
+                    handleAreaToggle(area.areaId, event.target.checked)
+                  }
+                  sx={{ p: 0.5 }}
+                />
+              </Box>
+            ))}
+          </Box>
         </Box>
 
         {areas.length === 0 ? (
@@ -1188,6 +1207,7 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         width={
          "min(1090px, calc(100vw - 32px))"
         }
+        className={activeStep === 3 ? "visitor-release-step" : undefined}
         disableContent={loading}
         actions={
           activeStep === stepLabels.length - 1 ? (

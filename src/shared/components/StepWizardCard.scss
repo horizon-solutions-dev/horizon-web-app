@@ -403,3 +403,65 @@
     border-radius: 12px !important; // ← MAIS UMA VEZ! 12px!
   }
 }
+
+.step-wizard-card.resident-final-step {
+  padding-bottom: 20px;
+
+  .step-wizard-logo {
+    margin-top: 18px;
+
+    img {
+      width: 154px;
+    }
+  }
+
+  .step-wizard-title {
+    margin: 2px 0 2px;
+    font-size: 23px;
+  }
+
+  .step-wizard-content {
+    margin-top: 8px;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  .step-wizard-actions {
+    margin-top: 8px !important;
+  }
+
+  .step-wizard-dots {
+    padding-top: 14px;
+  }
+}
+
+.step-wizard-card.visitor-release-step {
+  padding-bottom: 18px;
+
+  .step-wizard-logo {
+    margin-top: 18px;
+
+    img {
+      width: 154px;
+    }
+  }
+
+  .step-wizard-title {
+    margin: 2px 0 0;
+    font-size: 23px;
+  }
+
+  .step-wizard-content {
+    margin-top: 8px;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  .step-wizard-actions {
+    margin-top: 8px !important;
+  }
+
+  .step-wizard-dots {
+    padding-top: 12px;
+  }
+}

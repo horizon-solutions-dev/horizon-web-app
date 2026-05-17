@@ -63,7 +63,7 @@ interface CondominioFormProps {
 
 type ImageUploadItem = {
   id: string;
-  file: File;
+  file: File | null;
   imageType: ImageType;
   label: string;
   preview: string;
@@ -76,7 +76,7 @@ const DEFAULT_PHYSICAL_STRUCTURES: PhysicalStructureEnum[] = [
 ];
 
 const EXCLUDED_OTHER_IMAGE_TYPES = new Set([
-  "ConventionDocument",
+  "Complementary",
   "Facade",
   "Thumbnail",
   "Banner",
@@ -166,6 +166,11 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     (type) => !EXCLUDED_OTHER_IMAGE_TYPES.has(type.value),
   );
 
+  const toImagePreviewUrl = (contentType?: string, contentFile?: string) =>
+    contentType && contentFile
+      ? `data:${contentType};base64,${contentFile}`
+      : null;
+
   const formatCNPJ = (value: string) => {
     const numbers = value.replace(/\D/g, "");
     if (numbers.length === 0) return "";
@@ -179,6 +184,16 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       /(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/,
       "$1.$2.$3/$4-$5",
     );
+  };
+
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, "").slice(0, 11);
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 6) return numbers.replace(/(\d{2})(\d+)/, "($1) $2");
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
+    }
+    return numbers.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
   };
 
   const formatCEP = (value: string) => {
@@ -250,6 +265,79 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     loadImageTypes();
   }, []);
 
+  const loadExistingImages = async (condominiumId: string) => {
+    if (imageTypes.length === 0) return;
+
+    const requestedTypes = imageTypes.map((type) => type.value as ImageType);
+    const imageLists = await Promise.all(
+      requestedTypes.map(async (imageType) => {
+        try {
+          const images = await condominiumImageService.getCondominiumImages(
+            condominiumId,
+            imageType,
+          );
+          return images.map((image) => ({ ...image, imageType }));
+        } catch {
+          return [];
+        }
+      }),
+    );
+
+    const imageDetails = await Promise.all(
+      imageLists.flat().map(async (image) => {
+        try {
+          const detail = await condominiumImageService.getCondominiumImageById(
+            image.condominiumImageId,
+          );
+          return {
+            imageType: image.imageType,
+            detail,
+          };
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    const loadedOtherImages: ImageUploadItem[] = [];
+    let loadedDocumentPreview: string | null = null;
+    let loadedFacadePreview: string | null = null;
+
+    imageDetails.forEach((item) => {
+      if (!item) return;
+      const preview = toImagePreviewUrl(
+        item.detail.contentType,
+        item.detail.contentFile,
+      );
+      if (!preview) return;
+
+      if (item.imageType === "Complementary") {
+        loadedDocumentPreview ??= preview;
+        return;
+      }
+
+      if (item.imageType === "Facade") {
+        loadedFacadePreview ??= preview;
+        return;
+      }
+
+      if (EXCLUDED_OTHER_IMAGE_TYPES.has(item.imageType)) return;
+
+      const imageType = imageTypes.find((type) => type.value === item.imageType);
+      loadedOtherImages.push({
+        id: item.detail.condominiumImageId,
+        file: null,
+        imageType: item.imageType,
+        label: imageType?.description || item.imageType,
+        preview,
+      });
+    });
+
+    setDocumentPreview(loadedDocumentPreview);
+    setFacadePreview(loadedFacadePreview ?? imageSelected);
+    setOtherImages(loadedOtherImages);
+  };
+
   useEffect(() => {
     if (!open) return;
     setActiveStep(0);
@@ -273,8 +361,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         name: editingCondominium.name,
         doc: formatCNPJ(editingCondominium.doc || ""),
         email: editingCondominium.email || "",
-        phone: editingCondominium.phone || "",
-        mobilePhone: editingCondominium.mobilePhone || "",
+        phone: formatPhone(editingCondominium.phone || ""),
+        mobilePhone: formatPhone(editingCondominium.mobilePhone || ""),
         address: editingCondominium.address,
         addressNumber: editingCondominium.addressNumber,
         complement: editingCondominium.complement || "",
@@ -293,7 +381,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         hasGasByBlock: editingCondominium.hasGasByBlock,
         commit: true,
       });
-      setFacadePreview(imageSelected);
+      void loadExistingImages(editingCondominium.condominiumId);
       return;
     }
 
@@ -303,7 +391,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       organizationId: localStorage.getItem("organizationId") || "",
     });
     setFacadePreview(imageSelected);
-  }, [open, editingCondominium, imageSelected, condominiumTypes, physicalStructureTypes]);
+  }, [open, editingCondominium, imageSelected, condominiumTypes, physicalStructureTypes, imageTypes]);
 
   useEffect(() => () => resetImages(), []);
 
@@ -312,6 +400,9 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const handleChange = (field: string, value: unknown) => {
     let processedValue = value;
     if (field === "doc") processedValue = formatCNPJ(String(value));
+    if (field === "phone" || field === "mobilePhone") {
+      processedValue = formatPhone(String(value));
+    }
     if (field === "zipCode") processedValue = formatCEP(String(value));
     setFormData((prev) => ({ ...prev, [field]: processedValue }));
     if (errors[field]) {
@@ -427,6 +518,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const buildPayload = (commit: boolean): CondominiumRequest => ({
     ...formData,
     doc: formData.doc.replace(/\D/g, ""),
+    phone: formData.phone?.replace(/\D/g, ""),
+    mobilePhone: formData.mobilePhone?.replace(/\D/g, ""),
     zipCode: formData.zipCode.replace(/\D/g, ""),
     condominiumType: normalizeCondominiumTypeValue(formData.condominiumType),
     physicalStructureId: normalizePhysicalStructureValue(formData.physicalStructureId || ""),
@@ -599,7 +692,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const uploadImages = async (condominiumId: string) => {
     if (documentFile) {
       await condominiumImageService.uploadCondominiumImage({
-        imageType: "ConventionDocument",
+        imageType: "Complementary",
         contentFile: documentFile,
         condominiumId,
       });
@@ -612,6 +705,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       });
     }
     for (const image of otherImages) {
+      if (!image.file) continue;
       await condominiumImageService.uploadCondominiumImage({
         imageType: image.imageType,
         contentFile: image.file,
@@ -828,7 +922,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
                       key={image.id}
                       label={image.label}
                       previewUrl={image.preview}
-                      fileName={image.file.name}
+                      fileName={image.file?.name}
                       height={84}
                       showTitle={false}
                       description=""

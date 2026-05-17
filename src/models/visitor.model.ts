@@ -39,6 +39,8 @@ export interface VisitorResponse {
   documentPhotoThumbnailFile?: string;
   entryAt?: string;
   exitAt?: string | null;
+  typeVisitorReasonId?: number | string;
+  notes?: string;
   finished?: boolean;
   active?: boolean;
   createdAt?: string;

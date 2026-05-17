@@ -3,7 +3,6 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { IoIosArrowBack } from "react-icons/io";
 import Logo from "../../assets/logo.svg";
 import { AccountService } from "../../services/accountService";
 import "./password-recovery.scss";
@@ -70,7 +69,6 @@ export default function DefinePassword({
       handler();
     }
   };
-  const steps = ["Definir senha"];
 
 
   return (

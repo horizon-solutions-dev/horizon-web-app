@@ -22,6 +22,7 @@ interface StepWizardCardProps {
   disableContent?: boolean;
   fullScreen?: boolean;
   full?: boolean;
+  className?: string;
 }
 
 export default function StepWizardCard({
@@ -41,12 +42,13 @@ export default function StepWizardCard({
   disableContent = true,
   fullScreen = false,
   full,
+  className,
 }: StepWizardCardProps) {
   return (
     <div
       className={`step-wizard ${fullScreen ? "step-wizard fullscreen" : ""} ${full ? 'full' : ""}`}
     >
-      <Box className="step-wizard-card" sx={{ width }}>
+      <Box className={`step-wizard-card ${className || ""}`.trim()} sx={{ width }}>
         {showBack && onBack ? (
           <button className="step-wizard-back" type="button" onClick={onBack}>
             <IoChevronBack />

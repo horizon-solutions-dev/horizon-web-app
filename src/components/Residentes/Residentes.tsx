@@ -398,12 +398,6 @@ const Residentes: React.FC = () => {
     return value;
   };
 
-  const getDocTypeLabel = (value?: string | number) => {
-    if (value === 1 || value === "1") return "CPF";
-    if (value === 2 || value === "2") return "CNPJ";
-    if (value === 3 || value === "3") return "PASS";
-    return "DOC";
-  };
 
   const formatResidentPhone = (phone?: string) => {
     if (!phone) return "-";

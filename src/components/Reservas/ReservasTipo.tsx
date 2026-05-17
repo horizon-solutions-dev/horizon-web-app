@@ -19,7 +19,6 @@ import {
   Apartment,
   Article,
   AccessTime,
-  CategoryOutlined,
   Close,
   DeleteOutline,
   EditOutlined,
@@ -30,7 +29,6 @@ import {
   SearchOutlined,
   Pool,
 } from "@mui/icons-material";
-import { MdEventAvailable } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
@@ -243,11 +241,6 @@ const areaStepFields: Array<Array<keyof AreaRequest>> = [
   [],
 ];
 
-const getAreaImageUrl = (area: AreaResponse) => {
-  if (!area.thumbnailFile || !area.contentType) return undefined;
-  return `data:${area.contentType};base64,${area.thumbnailFile}`;
-};
-
 const limitText = (value: string, maxLength: number) =>
   value.slice(0, maxLength);
 
@@ -304,6 +297,7 @@ export default function ReservasTipo() {
   const [editingArea, setEditingArea] = useState<AreaResponse | null>(null);
   const [formData, setFormData] = useState<AreaFormState>(emptyForm);
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
+  const [mainAreaPreviews, setMainAreaPreviews] = useState<Record<string, string>>({});
   const imagePreviewsRef = useRef<Record<string, string>>({});
   const { appStateModal, handleClose, showSuccess, showError } =
     useAppStateModal();
@@ -447,6 +441,38 @@ export default function ReservasTipo() {
     }
   };
 
+  const loadMainAreaPreviews = async (items: AreaResponse[]) => {
+    const previews = await Promise.all(
+      items.map(async (area) => {
+        try {
+          const images = await areaImageService.getAreaImages(area.areaId, "Main");
+          const image = images[0];
+          if (!image?.areaImageId) return null;
+
+          const previewUrl =
+            image.contentFile && image.contentType
+              ? `data:${image.contentType};base64,${image.contentFile}`
+              : await getAreaImagePreview(image.areaImageId);
+
+          return previewUrl ? ([area.areaId, previewUrl] as const) : null;
+        } catch (error) {
+          if (axios.isAxiosError(error) && error.response?.status === 404) {
+            return null;
+          }
+          console.error("Erro ao carregar imagem principal da area:", error);
+          return null;
+        }
+      }),
+    );
+
+    setMainAreaPreviews(
+      previews.reduce<Record<string, string>>((acc, entry) => {
+        if (entry) acc[entry[0]] = entry[1];
+        return acc;
+      }, {}),
+    );
+  };
+
   const loadAreas = async (condominium = selectedCondominium) => {
     if (!condominium?.condominiumId) return;
     setLoading(true);
@@ -456,7 +482,9 @@ export default function ReservasTipo() {
         1,
         100,
       );
-      setAreas(response.items ?? []);
+      const items = response.items ?? [];
+      setAreas(items);
+      await loadMainAreaPreviews(items);
     } catch (error) {
     } finally {
       setLoading(false);
@@ -925,7 +953,13 @@ export default function ReservasTipo() {
             </Box>
 
             <Box className="area-switch-row">
-              <Typography>Precisa de reserva</Typography>
+              <Typography
+                className={
+                  formData.hasReservationPrice ? "area-switch-label active" : "area-switch-label"
+                }
+              >
+                Precisa de reserva
+              </Typography>
               <Switch
                 checked={formData.hasReservationPrice}
                 onChange={(event) =>
@@ -937,7 +971,13 @@ export default function ReservasTipo() {
               />
             </Box>
             <Box className="area-switch-row">
-              <Typography>Necessita aprovação</Typography>
+              <Typography
+                className={
+                  formData.hasApprovalRequired ? "area-switch-label active" : "area-switch-label"
+                }
+              >
+                Necessita aprovação
+              </Typography>
               <Switch
                 checked={formData.hasApprovalRequired}
                 onChange={(event) =>
@@ -1127,11 +1167,19 @@ export default function ReservasTipo() {
                   label={getEnumOptionLabel(type)}
                   previewUrl={previewUrl}
                   fileName={selectedFile?.name}
-                  height={90}
+                  height={70}
                   emptyLabel="Selecionar imagem"
                   description="Formatos aceitos: JPG, PNG."
                   onChange={(file) => handleAreaImageChange(imageType, file)}
-                  sx={{ minHeight: "210px" }}
+                  sx={{
+                    minHeight: "188px",
+                    p: 1.5,
+                    "& img": {
+                      width: "100%",
+                      maxWidth: 220,
+                      height: "100%",
+                    },
+                  }}
                 />
               </Box>
             );
@@ -1152,7 +1200,11 @@ export default function ReservasTipo() {
           showBack
           onBack={handleWizardBack}
           onClose={closeWizard}
-          width="min(1200px, calc(100vw - 32px))"
+          width={
+            formStep === areaWizardSteps.length - 1
+              ? "min(980px, calc(100vw - 32px))"
+              : "min(1200px, calc(100vw - 32px))"
+          }
           disableContent={loading}
           actions={
             formStep === areaWizardSteps.length - 1 ? (
@@ -1346,7 +1398,9 @@ export default function ReservasTipo() {
                       <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
                         <PaidOutlined sx={{ fontSize: 16, color: "#14b8a6" }} />
                         <Typography variant="body2" color="text.secondary">
-                          {area.hasFee ? `R$ ${area.feeAmount || 0}` : "Sem taxa"}
+                          {area.hasFee
+                            ? `R$ ${formatCurrencyValue(area.feeAmount || 0)}`
+                            : "Sem taxa"}
                         </Typography>
                       </Box>
                     </Box>
@@ -1373,7 +1427,7 @@ export default function ReservasTipo() {
                       </Button>
                     </Box>
                   ),
-                  imageUrl: getAreaImageUrl(area),
+                  imageUrl: mainAreaPreviews[area.areaId],
                   accentColor: index % 2 === 0 ? "#eef6ee" : "#fdecef",
                 }))}
               />

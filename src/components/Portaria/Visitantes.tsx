@@ -8,7 +8,6 @@ import {
   CircularProgress,
   Container,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
@@ -31,10 +30,12 @@ import {
   Phone,
   Schedule,
   SearchOutlined,
+  Textsms,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import CardList from "../../shared/components/CardList";
 import BreadcrumbTrail from "../../shared/components/BreadcrumbTrail";
+import StepWizardCard from "../../shared/components/StepWizardCard";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import { useAppStateModal } from "../../shared/utils/useAppStateModal";
 import VisitanteForm, { type ExistingVisitorFormData } from "./VisitanteForm";
@@ -47,6 +48,7 @@ import {
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import { formatCNPJ } from "../../shared/utils/funcoes";
+import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
 
 interface Visitor {
   id: string;
@@ -62,8 +64,16 @@ interface Visitor {
   lastVisit: string;
   entryAt: string;
   exitAt: string;
+  visitReasonId?: number | string;
+  visitReason: string;
+  notes: string;
   finished: boolean;
+  active: boolean;
   releasedBy: string;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  updatedBy: string;
   activeVisitId?: string;
   imageUrl?: string;
   documentImageUrl?: string;
@@ -124,6 +134,19 @@ const getVisitorTypeLabel = (visitor: VisitorResponse, visitorTypes: VisitorEnum
   return visitorType?.description || visitorType?.value || "Visitante";
 };
 
+const getVisitorReasonLabel = (
+  visitor: VisitorResponse,
+  visitorReasons: VisitorEnum[],
+) => {
+  const visitorReason = visitorReasons.find(
+    (reason) =>
+      String(reason.id) === String(visitor.typeVisitorReasonId) ||
+      String(reason.value) === String(visitor.typeVisitorReasonId),
+  );
+
+  return visitorReason?.description || visitorReason?.value || "-";
+};
+
 const stringifySearchValue = (value: unknown): string => {
   if (value === null || value === undefined) return "";
   if (typeof value === "string" || typeof value === "number") {
@@ -162,9 +185,19 @@ const getVisitorUnitLabel = (visitor: VisitorResponse) => {
   );
 };
 
-const formatVisitDate = (value?: string | null) =>{
-  return value ? new Date(value).toLocaleString("pt-BR") : "-";
-}
+const formatVisitDate = (value?: string | null) => {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  const datePart = date.toLocaleDateString("pt-BR");
+  const timePart = date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  return `${datePart} ${timePart}`;
+};
 
 const matchesVisitorSearch = (visitor: Visitor, search: string) => {
   const normalizedSearch = search.trim().toLowerCase();
@@ -195,6 +228,7 @@ const mapVisitorResponse = (
   condominiumName: string,
   index: number,
   visitorTypes: VisitorEnum[],
+  visitorReasons: VisitorEnum[],
 ): Visitor => ({
   id: visitor.visitorId,
   fullName: visitor.name || "-",
@@ -209,8 +243,16 @@ const mapVisitorResponse = (
   lastVisit: formatVisitDate(visitor.entryAt || visitor.createdAt),
   entryAt: formatVisitDate(visitor.entryAt),
   exitAt: formatVisitDate(visitor.exitAt),
+  visitReasonId: visitor.typeVisitorReasonId,
+  visitReason: getVisitorReasonLabel(visitor, visitorReasons),
+  notes: visitor.notes || "-",
   finished: Boolean(visitor.finished),
+  active: Boolean(visitor.active),
   releasedBy: visitor.createdByName || visitor.createdBy || "-",
+  createdAt: formatVisitDate(visitor.createdAt),
+  createdBy: visitor.createdByName || visitor.createdBy || "-",
+  updatedAt: formatVisitDate(visitor.updatedAt),
+  updatedBy: visitor.updatedByName || visitor.updatedBy || "-",
   activeVisitId: visitor.visitorHistoryId,
   imageUrl: getVisitorImageUrl(visitor),
   documentImageUrl: getVisitorDocumentImageUrl(visitor),
@@ -325,17 +367,25 @@ export default function Visitantes() {
 
     setLoading(true);
     try {
-      const [response, visitorTypes] = await Promise.all([
+      const [response, visitorTypes, reasons] = await Promise.all([
         visitorService.getVisitors(
           condominium.condominiumId,
           pageNumber,
           pageSize,
         ),
         visitorService.getVisitorTypes(),
+        visitorService.getVisitorReasons(),
       ]);
+      setVisitorReasons(reasons ?? []);
       setVisitors(
         (response.items ?? []).map((visitor, index) =>
-          mapVisitorResponse(visitor, condominium.name, index, visitorTypes ?? []),
+          mapVisitorResponse(
+            visitor,
+            condominium.name,
+            index,
+            visitorTypes ?? [],
+            reasons ?? [],
+          ),
         ),
       );
       setPage(response.paging?.pageNumber ?? pageNumber);
@@ -385,8 +435,12 @@ export default function Visitantes() {
 
   const handleOpenFinishVisit = (visitor: Visitor) => {
     setFinishVisitTarget(visitor);
-    setFinishVisitReasonId("");
-    setFinishVisitNotes("");
+    setFinishVisitReasonId(
+      visitor.visitReasonId !== undefined && visitor.visitReasonId !== null
+        ? String(visitor.visitReasonId)
+        : "",
+    );
+    setFinishVisitNotes(visitor.notes === "-" ? "" : visitor.notes);
   };
 
   const handleCloseFinishVisit = () => {
@@ -439,6 +493,9 @@ export default function Visitantes() {
         email: response.email || visitor.email,
         phone: response.phone || visitor.phone,
         visitorType: response.visitorTypeId || visitor.visitorTypeId || visitor.visitorType,
+        visitorReasonId:
+          response.typeVisitorReasonId ?? visitor.visitReasonId,
+        notes: response.notes || (visitor.notes === "-" ? "" : visitor.notes),
         facePhotoUrl: getVisitorImageUrl(response) || visitor.imageUrl,
         documentPhotoUrl:
           getVisitorDocumentImageUrl(response) || visitor.documentImageUrl,
@@ -453,6 +510,8 @@ export default function Visitantes() {
         email: visitor.email,
         phone: visitor.phone,
         visitorType: visitor.visitorTypeId || visitor.visitorType,
+        visitorReasonId: visitor.visitReasonId,
+        notes: visitor.notes === "-" ? "" : visitor.notes,
         facePhotoUrl: visitor.imageUrl,
         documentPhotoUrl: visitor.documentImageUrl,
       });
@@ -485,8 +544,8 @@ export default function Visitantes() {
   };
 
   return (
-    <Box className="visitantes-container">
-      <Container maxWidth="xl">
+    <Box className="visitantes-container" sx={{position:'relative'}}>
+      <Container maxWidth="xl" >
         {isCadastroOpen ? (
           <VisitanteForm
             open={isCadastroOpen}
@@ -738,7 +797,7 @@ export default function Visitantes() {
                         sx={{
                           mt: 0,
                           p: .05,
-                          height: "75px",
+                          minHeight: "75px",
                           borderRadius: 2,
                           backgroundColor: "rgba(255, 255, 255, 0.55)",
                           display: "flex",
@@ -754,30 +813,42 @@ export default function Visitantes() {
                             variant="subtitle2"
                             sx={{ fontWeight: 700 }}
                           >
-                            {visitor.condominium} | {visitor.unit}
+                            {visitor.unit === "-"
+                              ? visitor.condominium
+                              : `${visitor.condominium} | ${visitor.unit}`}
                           </Typography>
                         </Box>
                         <Box
                           sx={{
                             display: "flex",
-                            gap: 1,
+                            flexDirection: "column",
+                            gap: 0.35,
                             color: "text.secondary",
-                            flexWrap: "wrap",
                           }}
                         >
                           <Box
                             sx={{
-                              display: "flex",
+                              display: "grid",
+                              gridTemplateColumns: "18px 104px 1fr",
                               alignItems: "center",
-                              gap: 1,
-                              minWidth: 0,
-                              flex: "1 1 220px",
+                              columnGap: 1,
                             }}
                           >
                             <Schedule sx={{ fontSize: 18 }} />
-                            <Typography variant="body2">
-                              Início da visita: {visitor.entryAt}
-                            </Typography>
+                            <Typography variant="body2">Inicio da visita:</Typography>
+                            <Typography variant="body2">{visitor.entryAt}</Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "grid",
+                              gridTemplateColumns: "18px 104px 1fr",
+                              alignItems: "center",
+                              columnGap: 1,
+                            }}
+                          >
+                            <Schedule sx={{ fontSize: 18 }} />
+                            <Typography variant="body2">Fim da visita:</Typography>
+                            <Typography variant="body2">{visitor.exitAt}</Typography>
                           </Box>
                           <Box
                             sx={{
@@ -785,15 +856,29 @@ export default function Visitantes() {
                               alignItems: "center",
                               gap: 1,
                               minWidth: 0,
-                              flex: "1 1 220px",
                             }}
                           >
-                            <Schedule sx={{ fontSize: 18 }} />
+                            <Article sx={{ fontSize: 18 }} />
                             <Typography variant="body2">
-                              Fim da visita: {visitor.exitAt}
+                              Motivo: {visitor.visitReason}
                             </Typography>
                           </Box>
                         </Box>
+                        <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              minWidth: 0,
+                            }}
+                          >
+                            <Textsms sx={{ fontSize: 18 }} />
+
+                        <Typography variant="body2" color="text.secondary">
+                          Observacoes: {visitor.notes}
+                        </Typography>
+                          </Box>
+                       
                       </Box>
                     ),
                     actions: (
@@ -844,49 +929,73 @@ export default function Visitantes() {
         )}
       </Container>
 
-      <Dialog
-        open={Boolean(finishVisitTarget)}
-        onClose={handleCloseFinishVisit}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Finalizar visita</DialogTitle>
-        <DialogContent sx={{ pt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-          <TextField
-            select
-            fullWidth
-            placeholder="Motivo da visita"
-            value={finishVisitReasonId}
-            onChange={(event) => setFinishVisitReasonId(event.target.value)}
-          >
-            {visitorReasons.map((reason) => (
-              <MenuItem key={String(reason.id)} value={String(reason.value || reason.id)}>
-                {reason.description || reason.value}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            fullWidth
-            multiline
-            minRows={3}
-            label="Observacoes"
-            value={finishVisitNotes}
-            onChange={(event) => setFinishVisitNotes(event.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button className="action-button-delete" onClick={handleCloseFinishVisit}>Cancelar</Button>
-          <Button
-                                  className="action-button-edit"
+{finishVisitTarget ? (
+  <Box
+    sx={{
+      position: "fixed",
+      inset: 0,
+      backgroundColor: "rgba(0,0,0,0.45)",
+      backdropFilter: "blur(2px)",
+      zIndex: 1300,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      p: 2,
+    }}
+  >
+    <StepWizardCard
+      title="Finalizar visita"
+      steps={["Finalizacao"]}
+      activeStep={0}
+      showBack
+      backLabel="Voltar"
+      onBack={handleCloseFinishVisit}
+      onClose={handleCloseFinishVisit}
+      width="min(650px, calc(100vw - 32px))"
+      disableContent={loading}
+      actions={
+        <Button
+          variant="contained"
+          onClick={() => void handleFinishVisit()}
+          disabled={loading}
+        >
+          {loading ? <CircularProgress size={20} /> : "Concluir"}
+        </Button>
+      }
+    >
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <TextField
+          select
+          disabled
+          sx={desabilitarCampos}
+          fullWidth
+          label={finishVisitReasonId ? "" : "Servico"}
+          value={finishVisitReasonId}
+          onChange={(event) => setFinishVisitReasonId(event.target.value)}
+        >
+          {visitorReasons.map((reason) => (
+            <MenuItem
+              key={String(reason.id)}
+              value={String(reason.id || reason.value)}
+            >
+              {reason.description || reason.value}
+            </MenuItem>
+          ))}
+        </TextField>
 
-            variant="contained"
-            onClick={() => void handleFinishVisit()}
-            disabled={loading}
-          >
-            Finalizar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <TextField
+          fullWidth
+          multiline
+          minRows={4}
+          label={finishVisitNotes ? "" : "Observacoes"}
+          placeholder="Observacoes"
+          value={finishVisitNotes}
+          onChange={(event) => setFinishVisitNotes(event.target.value)}
+        />
+      </Box>
+    </StepWizardCard>
+  </Box>
+) : null}
 
       <Dialog
         open={Boolean(selectedImage)}

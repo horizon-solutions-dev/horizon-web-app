@@ -1121,9 +1121,10 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           ? coverFile?.name || photoFile?.name
           : documentPhotoFile?.name
       }
-      height={95}
+      height={82}
       emptyLabel="Adicionar foto"
       onChange={onFileChange}
+      sx={{ p: 1.5 }}
     />
   );
 
@@ -1357,12 +1358,12 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     }
 
     return (
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 0.5 }}>
         <Box
           sx={{
             border: "1px solid #e2e8f0",
             borderRadius: "12px",
-            p: 2,
+            p: 1.5,
             backgroundColor: "#fff",
           }}
         >
@@ -1373,7 +1374,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           )}
           <Box
             sx={{
-              mt: 1.5,
+              mt: 1,
               border: "1px solid #eef2f6",
               borderRadius: "10px",
               overflow: "hidden",
@@ -1385,7 +1386,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               <Box
                 key={item.key}
                 sx={{
-                  minHeight: 44,
+                  minHeight: 40,
                   px: 1.5,
                   display: "flex",
                   alignItems: "center",
@@ -1430,7 +1431,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           sx={{
             border: "1px solid #e2e8f0",
             borderRadius: "12px",
-            p: 2,
+            p: 1.5,
             backgroundColor: "#fff",
           }}
         >
@@ -1442,10 +1443,10 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
           <Box
             sx={{
-              mt: 1.5,
+              mt: 1,
               display: "grid",
               gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-              gap: 2,
+              gap: 1.5,
               "& > :nth-of-type(n+3)": {
                 display: "none",
               },
@@ -1542,6 +1543,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   setActiveStep((prev) => prev - 1);
                 }}
                 width="710px"
+                className={
+                  activeStep === STEPS.length - 1 ? "resident-final-step" : undefined
+                }
                 onClose={onClose}
                 disableContent={loading}
                 actions={renderActions()}
@@ -1591,6 +1595,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 setActiveStep((prev) => prev - 1);
               }}
               width="710px"
+              className={
+                activeStep === STEPS.length - 1 ? "resident-final-step" : undefined
+              }
               onClose={onClose}
               disableContent={loading}
               actions={renderActions()}

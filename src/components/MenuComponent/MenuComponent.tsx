@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, type CSSProperties, type JSX } from "reac
 import { Link, useLocation } from "react-router-dom";
 import {
   MdDashboard,
-  MdEventAvailable,
   MdAttachMoney,
   MdSecurity,
   MdDirectionsCar,
