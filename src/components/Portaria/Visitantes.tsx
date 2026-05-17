@@ -804,7 +804,7 @@ export default function Visitantes() {
                           gap: 0.2,
                         }}
                       >
-                        <Box
+                      {/*   <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
                           <Home sx={{ fontSize: 18, color: "#5173a8" }} />
@@ -814,7 +814,7 @@ export default function Visitantes() {
                           >
                             Unidade: {visitor.unit}
                           </Typography>
-                        </Box>
+                        </Box> */}
                         <Box
                           sx={{
                             display: "flex",
