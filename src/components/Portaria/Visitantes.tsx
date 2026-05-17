@@ -291,6 +291,7 @@ export default function Visitantes() {
   const [finishVisitTarget, setFinishVisitTarget] = useState<Visitor | null>(null);
   const [finishVisitReasonId, setFinishVisitReasonId] = useState("");
   const [finishVisitNotes, setFinishVisitNotes] = useState("");
+  const [finishVisitNotesError, setFinishVisitNotesError] = useState("");
   const [visitorReasons, setVisitorReasons] = useState<VisitorEnum[]>([]);
   const { appStateModal, handleClose, showSuccess, showError } = useAppStateModal();
 
@@ -349,7 +350,6 @@ export default function Visitantes() {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Erro ao carregar condominios.";
-      showError(message);
     } finally {
       setLoading(false);
     }
@@ -440,12 +440,14 @@ export default function Visitantes() {
         : "",
     );
     setFinishVisitNotes("");
+    setFinishVisitNotesError("");
   };
 
   const handleCloseFinishVisit = () => {
     setFinishVisitTarget(null);
     setFinishVisitReasonId("");
     setFinishVisitNotes("");
+    setFinishVisitNotesError("");
   };
 
   const handleFinishVisit = async () => {
@@ -459,6 +461,11 @@ export default function Visitantes() {
 
     if (!finishVisitReasonId) {
       showError("Selecione o motivo da visita para finalizar.");
+      return;
+    }
+
+    if (!finishVisitNotes.trim()) {
+      setFinishVisitNotesError("Informe a observacao para finalizar a visita.");
       return;
     }
 
@@ -797,7 +804,7 @@ export default function Visitantes() {
                           gap: 0.2,
                         }}
                       >
-                        <Box
+                      {/*   <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
                           <Home sx={{ fontSize: 18, color: "#5173a8" }} />
@@ -807,7 +814,7 @@ export default function Visitantes() {
                           >
                             Unidade: {visitor.unit}
                           </Typography>
-                        </Box>
+                        </Box> */}
                         <Box
                           sx={{
                             display: "flex",
@@ -967,7 +974,14 @@ export default function Visitantes() {
           label={finishVisitNotes ? "" : "Observacoes"}
           placeholder="Observacoes"
           value={finishVisitNotes}
-          onChange={(event) => setFinishVisitNotes(event.target.value)}
+          onChange={(event) => {
+            setFinishVisitNotes(event.target.value);
+            if (finishVisitNotesError) {
+              setFinishVisitNotesError("");
+            }
+          }}
+          error={Boolean(finishVisitNotesError)}
+          helperText={finishVisitNotesError}
         />
       </Box>
     </StepWizardCard>

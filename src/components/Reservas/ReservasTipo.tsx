@@ -359,9 +359,6 @@ export default function ReservasTipo() {
           ),
       );
     } catch (error) {
-      showError(
-        error instanceof Error ? error.message : "Erro ao carregar condominios.",
-      );
     } finally {
       setLoading(false);
     }
