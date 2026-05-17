@@ -1,53 +1,75 @@
-import {
-	createBrowserRouter,
-} from "react-router-dom";
-import LoginFlow from "../components/Login";
+import { lazy } from "react";
+import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../components/Layout/MainLayout";
-import Dashboard from "../components/Dashboard/Dashboard";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicRoute } from "./PublicRoute";
 
-// Reservas
-import ReservasTipo from "../components/Reservas/ReservasTipo";
-import ReservasListagem from "../components/Reservas/ReservasListagem";
-import ReservasCalendario from "../components/Reservas/ReservasCalendario";
-import ReservasDisponibilidade from "../components/Reservas/ReservasDisponibilidade";
-
-// Financeiro
-import Boletos from "../components/Boletos";
-import BalancetesView from "../components/Financeiro/Balancetes/BalancetesView";
-import BalancetesDownload from "../components/Financeiro/Balancetes/BalancetesDownload";
-import BalancetesRelatorio from "../components/Financeiro/Balancetes/BalancetesRelatorio";
-import DespesasCategoria from "../components/Financeiro/Despesas/DespesasCategoria";
-import DespesasAnexo from "../components/Financeiro/Despesas/DespesasAnexo";
-
-// Portaria
-import PortariaUsuarios from "../components/Portaria/PortariaUsuarios";
-import Visitantes from "../components/Portaria/Visitantes";
-import PortariaLiberacao from "../components/Portaria/PortariaLiberacao";
-import PortariaRelatorios from "../components/Portaria/PortariaRelatorios";
-
-
-
-// Condominio
-import CondominioForm from "../components/Condominio/Condominio";
-
-// Fale Conosco
-import FaleConosco from "../components/FaleConosco/FaleConosco";
-
-// Encomendas
-import EncomendasRecebimento from "../components/Encomendas/EncomendasRecebimento";
-import EncomendasNotificacao from "../components/Encomendas/EncomendasNotificacao";
-
 import RouteNames from "./routeNames";
-import Veiculos from "../components/Veiculos/Veiculos";
-import EstruturaCondominio from "../components/Blocos/Blocos";
-import Unidades from "../components/Unidades/Unidades";
-import Residentes from "../components/Residentes/Residentes";
-import Organizacoes from "../components/Organizacoes/Organizacoes";
-import Perfis from "../components/Perfis/Perfis";
-import ValidacaoAcesso from "../components/Pendentes/ValidacaoAcesso";
-import PrimeiroAcessoWizard from "../components/PrimeiroAcesso/PrimeiroAcessoWizard";
+
+const LoginFlow = lazy(() => import("../components/Login"));
+const PrimeiroAcessoWizard = lazy(
+	() => import("../components/PrimeiroAcesso/PrimeiroAcessoWizard"),
+);
+const Dashboard = lazy(() => import("../components/Dashboard/Dashboard"));
+const ReservasTipo = lazy(() => import("../components/Reservas/ReservasTipo"));
+const ReservasListagem = lazy(
+	() => import("../components/Reservas/ReservasListagem"),
+);
+const ReservasCalendario = lazy(
+	() => import("../components/Reservas/ReservasCalendario"),
+);
+const ReservasDisponibilidade = lazy(
+	() => import("../components/Reservas/ReservasDisponibilidade"),
+);
+const Boletos = lazy(() => import("../components/Boletos"));
+const BalancetesView = lazy(
+	() => import("../components/Financeiro/Balancetes/BalancetesView"),
+);
+const BalancetesDownload = lazy(
+	() => import("../components/Financeiro/Balancetes/BalancetesDownload"),
+);
+const BalancetesRelatorio = lazy(
+	() => import("../components/Financeiro/Balancetes/BalancetesRelatorio"),
+);
+const DespesasCategoria = lazy(
+	() => import("../components/Financeiro/Despesas/DespesasCategoria"),
+);
+const DespesasAnexo = lazy(
+	() => import("../components/Financeiro/Despesas/DespesasAnexo"),
+);
+const PortariaUsuarios = lazy(
+	() => import("../components/Portaria/PortariaUsuarios"),
+);
+const Visitantes = lazy(() => import("../components/Portaria/Visitantes"));
+const PortariaLiberacao = lazy(
+	() => import("../components/Portaria/PortariaLiberacao"),
+);
+const PortariaRelatorios = lazy(
+	() => import("../components/Portaria/PortariaRelatorios"),
+);
+const CondominioForm = lazy(
+	() => import("../components/Condominio/Condominio"),
+);
+const FaleConosco = lazy(
+	() => import("../components/FaleConosco/FaleConosco"),
+);
+const EncomendasRecebimento = lazy(
+	() => import("../components/Encomendas/EncomendasRecebimento"),
+);
+const EncomendasNotificacao = lazy(
+	() => import("../components/Encomendas/EncomendasNotificacao"),
+);
+const Veiculos = lazy(() => import("../components/Veiculos/Veiculos"));
+const EstruturaCondominio = lazy(() => import("../components/Blocos/Blocos"));
+const Unidades = lazy(() => import("../components/Unidades/Unidades"));
+const Residentes = lazy(() => import("../components/Residentes/Residentes"));
+const Organizacoes = lazy(
+	() => import("../components/Organizacoes/Organizacoes"),
+);
+const Perfis = lazy(() => import("../components/Perfis/Perfis"));
+const ValidacaoAcesso = lazy(
+	() => import("../components/Pendentes/ValidacaoAcesso"),
+);
 
 
 const router = createBrowserRouter([

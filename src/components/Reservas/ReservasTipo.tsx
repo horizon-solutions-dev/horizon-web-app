@@ -283,12 +283,16 @@ export default function ReservasTipo() {
   );
   const [loading, setLoading] = useState(false);
   const [condominiums, setCondominiums] = useState<Condominium[]>([]);
+  const [condoPage, setCondoPage] = useState(1);
+  const [condoTotalPages, setCondoTotalPages] = useState(1);
   const [condominiumTypes, setCondominiumTypes] = useState<
     CondominiumTypeEnum[]
   >([]);
   const [selectedCondominium, setSelectedCondominium] =
     useState<Condominium | null>(null);
   const [areas, setAreas] = useState<AreaResponse[]>([]);
+  const [areaPage, setAreaPage] = useState(1);
+  const [areaTotalPages, setAreaTotalPages] = useState(1);
   const [areaTypes, setAreaTypes] = useState<AreaEnum[]>([]);
   const [imageTypes, setImageTypes] = useState<AreaEnum[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -326,7 +330,9 @@ export default function ReservasTipo() {
     [areas, searchTerm],
   );
 
-  const loadCondominiums = async () => {
+  const condoPageSize = 4;
+
+  const loadCondominiums = async (pageNumber = 1) => {
     setLoading(true);
     try {
       let organizationId = localStorage.getItem("organizationId") || "";
@@ -339,10 +345,19 @@ export default function ReservasTipo() {
       }
       const response = await condominiumService.getCondominiums(
         organizationId,
-        1,
-        100,
+        pageNumber,
+        condoPageSize,
       );
-      setCondominiums(response.items ?? []);
+      const items = response.items ?? [];
+      setCondominiums(items);
+      setCondoPage(response.paging?.pageNumber ?? pageNumber);
+      setCondoTotalPages(
+        response.paging?.totalPages ??
+          Math.max(
+            1,
+            Math.ceil((response.paging?.total ?? items.length) / condoPageSize),
+          ),
+      );
     } catch (error) {
       showError(
         error instanceof Error ? error.message : "Erro ao carregar condominios.",
@@ -473,17 +488,30 @@ export default function ReservasTipo() {
     );
   };
 
-  const loadAreas = async (condominium = selectedCondominium) => {
+  const areaPageSize = 4;
+
+  const loadAreas = async (
+    condominium = selectedCondominium,
+    pageNumber = areaPage,
+  ) => {
     if (!condominium?.condominiumId) return;
     setLoading(true);
     try {
       const response = await areaService.getAreas(
         condominium.condominiumId,
-        1,
-        100,
+        pageNumber,
+        areaPageSize,
       );
       const items = response.items ?? [];
       setAreas(items);
+      setAreaPage(response.paging?.pageNumber ?? pageNumber);
+      setAreaTotalPages(
+        response.paging?.totalPages ??
+          Math.max(
+            1,
+            Math.ceil((response.paging?.total ?? items.length) / areaPageSize),
+          ),
+      );
       await loadMainAreaPreviews(items);
     } catch (error) {
     } finally {
@@ -492,7 +520,7 @@ export default function ReservasTipo() {
   };
 
   useEffect(() => {
-    void loadCondominiums();
+    void loadCondominiums(1);
     void loadCondominiumTypes();
     void loadAreaTypes();
     void loadAreaImageTypes();
@@ -509,8 +537,10 @@ export default function ReservasTipo() {
   const handleSelectCondominium = async (condominium: Condominium) => {
     setSelectedCondominium(condominium);
     setSearchTerm("");
+    setAreaPage(1);
+    setAreaTotalPages(1);
     setActiveView("areas");
-    await loadAreas(condominium);
+    await loadAreas(condominium, 1);
   };
 
   const openCreate = () => {
@@ -772,7 +802,7 @@ export default function ReservasTipo() {
 
       closeWizard();
       showSuccess(editingArea ? "Área alterada com sucesso." : "Área criada com sucesso.");
-      await loadAreas();
+      await loadAreas(selectedCondominium, areaPage);
     } catch (error) {
       showError(getAreaRequestErrorMessage(error, "Erro ao salvar área."));
     } finally {
@@ -786,7 +816,7 @@ export default function ReservasTipo() {
     try {
       await areaService.deleteArea(area.areaId);
       showSuccess("Área excluida com sucesso.");
-      await loadAreas();
+      await loadAreas(selectedCondominium, areaPage);
     } catch (error) {
       showError(error instanceof Error ? error.message : "Erro ao excluir área.");
     } finally {
@@ -1275,6 +1305,9 @@ export default function ReservasTipo() {
                       setActiveView("condominios");
                       setSelectedCondominium(null);
                       setAreas([]);
+                      setAreaPage(1);
+                      setAreaTotalPages(1);
+                      void loadCondominiums(condoPage);
                       return;
                     }
                     navigate("/dashboard");
@@ -1316,7 +1349,13 @@ export default function ReservasTipo() {
                 addButtonPlacement="toolbar"
                 emptyImageLabel="Sem imagem"
                 showFilters
-                showPagination={false}
+                showPagination={condoTotalPages > 1}
+                page={condoPage}
+                totalPages={condoTotalPages}
+                onPageChange={(nextPage) => {
+                  setCondoPage(nextPage);
+                  void loadCondominiums(nextPage);
+                }}
                 items={filteredCondominiums.map((condominium, index) => ({
                   id: condominium.condominiumId,
                   title: condominium.name,
@@ -1369,10 +1408,16 @@ export default function ReservasTipo() {
                 addButtonPlacement="toolbar"
                 emptyImageLabel="Sem imagem"
                 showFilters
-                showPagination={false}
+                showPagination={areaTotalPages > 1}
                 imageWidth={150}
                 imageHeight={108}
                 cardMaxHeight="none"
+                page={areaPage}
+                totalPages={areaTotalPages}
+                onPageChange={(nextPage) => {
+                  setAreaPage(nextPage);
+                  void loadAreas(selectedCondominium, nextPage);
+                }}
                 items={filteredAreas.map((area, index) => ({
                   id: area.areaId,
                   title: area.name,
