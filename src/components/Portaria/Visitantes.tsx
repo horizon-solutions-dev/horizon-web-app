@@ -30,7 +30,6 @@ import {
   Phone,
   Schedule,
   SearchOutlined,
-  Home,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import CardList from "../../shared/components/CardList";
@@ -348,8 +347,7 @@ export default function Visitantes() {
           ),
       );
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro ao carregar condominios.";
+
     } finally {
       setLoading(false);
     }
