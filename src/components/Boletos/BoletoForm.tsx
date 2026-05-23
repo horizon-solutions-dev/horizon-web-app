@@ -156,7 +156,7 @@ const BoletoForm: React.FC<BoletoFormProps> = ({ open, onClose, onSave, boleto }
       <DialogTitle className="form-title">
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">
-            {boleto ? 'Editar Boleto' : 'Novo Boleto'}
+            {boleto ? 'Boleto' : 'Novo Boleto'}
           </Typography>
           <IconButton onClick={onClose} size="small">
             <Close />

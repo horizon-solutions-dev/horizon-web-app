@@ -405,6 +405,7 @@
 }
 
 .step-wizard-card.resident-final-step {
+  width: min(820px, calc(100vw - 32px)) !important;
   padding-bottom: 20px;
 
   .step-wizard-logo {
@@ -428,6 +429,45 @@
 
   .step-wizard-actions {
     margin-top: 8px !important;
+  }
+
+  .step-wizard-dots {
+    padding-top: 14px;
+  }
+}
+
+.step-wizard-card.resident-form-step {
+  width: min(760px, calc(100vw - 32px)) !important;
+  padding: 0 44px 32px;
+
+  .step-wizard-logo {
+    margin-top: 24px;
+
+    img {
+      width: 162px;
+    }
+  }
+
+  .step-wizard-title {
+    margin: 2px 0 4px;
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .step-wizard-subtitle {
+    margin-bottom: 16px;
+    color: #344054 !important;
+    font-weight: 500 !important;
+  }
+
+  .step-wizard-content {
+    margin-top: 0;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .step-wizard-actions {
+    margin-top: 18px !important;
   }
 
   .step-wizard-dots {
@@ -463,5 +503,254 @@
 
   .step-wizard-dots {
     padding-top: 12px;
+  }
+}
+
+.step-wizard-card.visitor-form-step {
+  padding: 0 38px 26px;
+
+  .step-wizard-logo {
+    margin-top: 22px;
+
+    img {
+      width: 154px;
+    }
+  }
+
+  .step-wizard-title {
+    margin: 2px 0 4px;
+    font-size: 23px;
+    font-weight: 700;
+  }
+
+  .step-wizard-subtitle {
+    margin-bottom: 10px;
+    color: #344054 !important;
+    font-weight: 500 !important;
+  }
+
+  .step-wizard-content {
+    flex: 0 1 auto;
+    margin-top: 8px;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .step-wizard-actions {
+    margin-top: 16px !important;
+  }
+
+  .step-wizard-dots {
+    padding-top: 14px;
+  }
+}
+
+.step-wizard-card.visitor-access-card-step {
+  .step-wizard-content {
+    overflow-y: auto;
+  }
+}
+
+.signup-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-wizard-card.signup-create-card {
+  padding: 0 44px 34px;
+  border-radius: 20px;
+
+  .step-wizard-back {
+    top: 24px;
+    left: 36px;
+    color: #5f6368;
+    font-weight: 600;
+
+    &:hover {
+      color: #1976d2;
+      background: rgba(25, 118, 210, 0.06);
+    }
+
+    span {
+      font-size: 13px !important;
+      font-weight: 600 !important;
+    }
+  }
+
+  .step-wizard-close {
+    top: 20px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border-color: #fecaca;
+    background: #fff7f7;
+
+    .MuiIconButton-root {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+    }
+  }
+
+  .step-wizard-logo {
+    margin: 28px 0 0;
+
+    img {
+      width: 170px;
+    }
+  }
+
+  .step-wizard-title {
+    margin: 0 0 22px;
+    color: #111827;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .step-wizard-content {
+    margin-top: 0;
+    padding-right: 0;
+    overflow: visible;
+
+    .MuiTextField-root {
+      .MuiOutlinedInput-root {
+        border-radius: 10px !important;
+        background: #ffffff !important;
+
+        .MuiOutlinedInput-notchedOutline {
+          border-color: #d9dee5 !important;
+          border-width: 2px !important;
+        }
+
+        &:hover .MuiOutlinedInput-notchedOutline {
+          border-color: #1976d2 !important;
+        }
+
+        &.Mui-focused {
+          box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1) !important;
+
+          .MuiOutlinedInput-notchedOutline {
+            border-color: #1976d2 !important;
+          }
+        }
+
+        &.Mui-error {
+          background: #fffafa !important;
+
+          .MuiOutlinedInput-notchedOutline {
+            border-color: #ef4444 !important;
+          }
+        }
+
+        input {
+          color: #0f172a !important;
+          font-size: 15px !important;
+          font-weight: 500 !important;
+          padding: 13px 14px !important;
+
+          &::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+            font-weight: 500 !important;
+          }
+        }
+      }
+
+      .MuiFormHelperText-root {
+        margin: 6px 0 0 4px !important;
+        color: #475569 !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+
+        &.Mui-error {
+          color: #dc2626 !important;
+          font-weight: 600 !important;
+        }
+      }
+    }
+  }
+
+  .step-wizard-actions {
+    margin-top: 28px !important;
+
+    button.MuiButton-root.MuiButton-contained {
+      min-width: 156px !important;
+      padding: 13px 32px !important;
+      border-radius: 10px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0 !important;
+      background: #1976d2 !important;
+      box-shadow: 0 8px 18px rgba(25, 118, 210, 0.24) !important;
+
+      &:hover {
+        background: #1565c0 !important;
+      }
+
+      &:disabled {
+        color: #ffffff !important;
+        background: #e2e8f0 !important;
+        box-shadow: none !important;
+        opacity: 1 !important;
+      }
+    }
+  }
+
+  .step-wizard-dots {
+    gap: 12px;
+    padding-top: 20px;
+  }
+
+  .step-dot {
+    width: 18px;
+    height: 18px;
+
+    &.active {
+      transform: scale(1.25) !important;
+      box-shadow:
+        0 8px 18px rgba(0, 103, 184, 0.24),
+        0 0 22px rgba(0, 103, 184, 0.2) !important;
+    }
+
+    &.completed {
+      box-shadow: 0 4px 12px rgba(0, 200, 83, 0.22) !important;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .step-wizard-card.visitor-form-step {
+    padding: 0 22px 24px;
+
+    .step-wizard-logo img {
+      width: 136px;
+    }
+
+    .step-wizard-title {
+      font-size: 22px;
+    }
+  }
+
+  .step-wizard-card.signup-create-card {
+    padding: 0 24px 30px;
+
+    .step-wizard-back {
+      left: 18px;
+    }
+
+    .step-wizard-close {
+      right: 18px;
+    }
+
+    .step-wizard-logo img {
+      width: 142px;
+    }
+
+    .step-wizard-title {
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
   }
 }

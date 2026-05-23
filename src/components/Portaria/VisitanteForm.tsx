@@ -756,6 +756,26 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
     }
   };
 
+  const getVisitorWizardWidth = () => {
+    const widths = [
+      "min(680px, calc(100vw - 32px))",
+      "min(760px, calc(100vw - 32px))",
+      "min(640px, calc(100vw - 32px))",
+      "min(620px, calc(100vw - 32px))",
+      "min(620px, calc(100vw - 32px))",
+    ];
+
+    return widths[activeStep] || widths[0];
+  };
+
+  const visitorCardClassName = [
+    "visitor-form-step",
+    activeStep === 3 ? "visitor-release-step" : "",
+    activeStep === stepLabels.length - 1 ? "visitor-access-card-step" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   const renderStepContent = (step: number) => {
     if (step === 0) {
       return (
@@ -1204,10 +1224,8 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           setActiveStep((current) => current - 1);
         }}
         onClose={onClose}
-        width={
-         "min(1090px, calc(100vw - 32px))"
-        }
-        className={activeStep === 3 ? "visitor-release-step" : undefined}
+        width={getVisitorWizardWidth()}
+        className={visitorCardClassName}
         disableContent={loading}
         actions={
           activeStep === stepLabels.length - 1 ? (

@@ -457,7 +457,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
     <>
       <StepWizardCard
         full={full}
-        title={editingOrganization ? "Editar Organizacao" : "Criar Organizacao"}
+        title={editingOrganization ? "Organizacao" : "Criar Organizacao"}
         subtitle={steps[activeStep]}
         steps={steps}
         activeStep={activeStep}

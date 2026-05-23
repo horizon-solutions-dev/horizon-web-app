@@ -20,6 +20,7 @@ interface ImageUploadFieldProps {
   emptyLabel?: string;
   showTitle?: boolean;
   disabled?: boolean;
+  previewImageSx?: SxProps<Theme>;
   sx?: SxProps<Theme>;
   onChange: (file: File | null) => void;
 }
@@ -37,6 +38,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   emptyLabel = "Selecionar imagem",
   showTitle = true,
   disabled = false,
+  previewImageSx,
   sx,
   onChange,
 }) => {
@@ -68,7 +70,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       sx={{
         border: "1px solid #e2e8f0",
         borderRadius: "12px",
-        p: 2,
+        p: .5,
         minWidth: 0,
         backgroundColor: "#fff",
         ...sx,
@@ -141,12 +143,19 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             component="img"
             src={previewUrl}
             alt={label}
-            sx={{
-              width: "254px",
-              height: "132px",
-              objectFit: "contain",
-              backgroundColor: "#f8fafc",
-            }}
+            sx={[
+              {
+                width: "254px",
+                height: "132px",
+                objectFit: "contain",
+                backgroundColor: "#f8fafc",
+              },
+              ...(Array.isArray(previewImageSx)
+                ? previewImageSx
+                : previewImageSx
+                  ? [previewImageSx]
+                  : []),
+            ]}
           />
         ) : (
           <Box sx={{ textAlign: "center", px: 2 }}>

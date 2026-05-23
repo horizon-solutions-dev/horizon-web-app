@@ -167,7 +167,7 @@
   },
   "blocoForm": {
     "createTitle": "Create Block",
-    "editTitle": "Edit Block",
+    "editTitle": "Block",
     "stepData": "Block Data",
     "codePlaceholder": "Code",
     "namePlaceholder": "Name",
@@ -189,7 +189,7 @@
   },
   "condominioForm": {
     "createTitle": "Create Condominium",
-    "editTitle": "Edit Condominium",
+    "editTitle": "Condominium",
     "step0": "Basic Information",
     "step1": "Address",
     "step2": "Settings & Allocation",
@@ -231,7 +231,7 @@
   },
   "unidadeForm": {
     "createTitle": "Create unit",
-    "editTitle": "Edit unit",
+    "editTitle": "Unit",
     "stepData": "Unit data",
     "unitCodePlaceholder": "Ex: A101",
     "unitCodeRequired": "Enter the unit code.",
@@ -270,7 +270,7 @@
   },
   "residenteForm": {
     "title": "Register Resident",
-    "editTitle": "Edit Resident",
+    "editTitle": "Resident",
     "stepPeriod": "Period",
     "stepData": "Resident Data",
     "stepPermissions": "Permissions & Photo",

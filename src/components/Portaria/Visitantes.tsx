@@ -47,7 +47,6 @@ import {
 } from "../../services/condominiumService";
 import { organizationService } from "../../services/organizationService";
 import { formatCNPJ } from "../../shared/utils/funcoes";
-import { desabilitarCampos } from "../../shared/utils/desabilitarCampos";
 
 interface Visitor {
   id: string;
@@ -721,7 +720,7 @@ export default function Visitantes() {
                 cardMaxHeight="none"
                 imageWidth={138}
                 imageHeight={96}
-                actionsMarginTop={1}
+                actionsMarginTop={1.5}
                 dense
                 page={currentPage}
                 totalPages={visitorsTotalPages}
@@ -802,17 +801,6 @@ export default function Visitantes() {
                           gap: 0.2,
                         }}
                       >
-                      {/*   <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Home sx={{ fontSize: 18, color: "#5173a8" }} />
-                          <Typography
-                            variant="body2"
-                            sx={{ fontWeight: 600 }}
-                          >
-                            Unidade: {visitor.unit}
-                          </Typography>
-                        </Box> */}
                         <Box
                           sx={{
                             display: "flex",
@@ -821,6 +809,19 @@ export default function Visitantes() {
                             color: "text.secondary",
                           }}
                         >
+                          <Box
+                            sx={{
+                              display: "grid",
+                              gridTemplateColumns: "18px 104px 1fr",
+                              alignItems: "center",
+                              columnGap: 1,
+                            }}
+                          >
+                            <Apartment sx={{ fontSize: 18 }} />
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {visitor.unit}
+                            </Typography>
+                          </Box>
                           <Box
                             sx={{
                               display: "grid",
@@ -847,23 +848,22 @@ export default function Visitantes() {
                           </Box>
                           <Box
                             sx={{
-                              display: "flex",
+                              display: "grid",
+                              gridTemplateColumns: "18px 104px 1fr",
                               alignItems: "center",
-                              gap: 1,
-                              minWidth: 0,
+                              columnGap: 1,
                             }}
                           >
                             <Article sx={{ fontSize: 18 }} />
-                            <Typography variant="body2">
-                              Motivo: {visitor.visitReason}
-                            </Typography>
+                            <Typography variant="body2">Motivo:</Typography>
+                            <Typography variant="body2">{visitor.visitReason}</Typography>
                           </Box>
                         </Box>
                       </Box>
                     ),
                     actions: (
                       <Box
-                        sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}
+                        sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 1.25 }}
                       >
                         <Button
                           size="small"
@@ -925,15 +925,13 @@ export default function Visitantes() {
     }}
   >
     <StepWizardCard
+      className="finish-visit-card"
       title="Finalizar visita"
       subtitle="Finalização"
       steps={["Finalização"]}
       activeStep={0}
-      showBack
-      backLabel="Voltar"
-      onBack={handleCloseFinishVisit}
       onClose={handleCloseFinishVisit}
-      width="min(650px, calc(100vw - 32px))"
+      width="520px"
       disableContent={loading}
       actions={
         <Button
@@ -948,10 +946,8 @@ export default function Visitantes() {
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <TextField
           select
-          disabled
-          sx={desabilitarCampos}
           fullWidth
-          label={finishVisitReasonId ? "" : "Servico"}
+          label={finishVisitReasonId ? "" : "Motivo"}
           value={finishVisitReasonId}
           onChange={(event) => setFinishVisitReasonId(event.target.value)}
         >
@@ -968,7 +964,7 @@ export default function Visitantes() {
         <TextField
           fullWidth
           multiline
-          minRows={4}
+          minRows={5}
           label={finishVisitNotes ? "" : "Observacoes"}
           placeholder="Observacoes"
           value={finishVisitNotes}

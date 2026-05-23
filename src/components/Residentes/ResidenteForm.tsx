@@ -63,6 +63,29 @@ interface ResidenteFormProps {
 
 type DocumentType = 1 | 2 | 3 | 4;
 
+const base64PreviewToFile = (
+  preview: string,
+  fileName: string,
+  fallbackType = "image/jpeg",
+) => {
+  const dataUrlMatch = preview.match(/^data:([^;]+);base64,(.+)$/);
+  const contentType = dataUrlMatch?.[1] || fallbackType;
+  const base64Content = dataUrlMatch?.[2] || preview;
+
+  try {
+    const binary = atob(base64Content);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    return new File([bytes], fileName, { type: contentType });
+  } catch {
+    return null;
+  }
+};
+
 const formatCpf = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
   if (digits.length <= 3) return digits;
@@ -247,6 +270,30 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   }, [documentPhotoFile]);
 
   useEffect(() => {
+    if (coverPreview && !coverFile) {
+      const previewFile = base64PreviewToFile(
+        coverPreview,
+        "resident-profile.jpg",
+      );
+
+      if (previewFile) {
+        setCoverFile(previewFile);
+        setPhotoFile(previewFile);
+      }
+    }
+
+    if (documentPhotoPreview && !documentPhotoFile) {
+      const previewFile = base64PreviewToFile(
+        documentPhotoPreview,
+        "resident-document.jpg",
+      );
+
+      if (previewFile) {
+        setDocumentPhotoFile(previewFile);
+      }
+    }
+  }, [coverFile, coverPreview, documentPhotoFile, documentPhotoPreview]);
+  useEffect(() => {
     if (!open) return;
     setActiveStep(0);
     setErrors({});
@@ -299,6 +346,16 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     // Fallback visual enquanto as imagens completas da unidade sao carregadas.
     if (residentImageUrl) {
       setCoverPreview(residentImageUrl);
+
+      const residentImageFile = base64PreviewToFile(
+        residentImageUrl,
+        "resident-profile.jpg",
+      );
+
+      if (residentImageFile) {
+        setCoverFile(residentImageFile);
+        setPhotoFile(residentImageFile);
+      }
     }
   }, [open, isEditMode, editUserId, residentImageUrl]);
 
@@ -353,10 +410,31 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
           if (imageType.value === "Profile") {
             setCoverPreview(previewUrl);
+
+            const profileFile = base64PreviewToFile(
+              previewUrl,
+              "resident-profile.jpg",
+              imageDetail.contentType,
+            );
+
+            if (profileFile) {
+              setCoverFile(profileFile);
+              setPhotoFile(profileFile);
+            }
           }
 
           if (imageType.value === "Document") {
             setDocumentPhotoPreview(previewUrl);
+
+            const documentFile = base64PreviewToFile(
+              previewUrl,
+              "resident-document.jpg",
+              imageDetail.contentType,
+            );
+
+            if (documentFile) {
+              setDocumentPhotoFile(documentFile);
+            }
           }
         }
       } catch (error) {
@@ -906,11 +984,17 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           label: `${firstName.trim()} ${lastName.trim()}`.trim(),
         });
 
+          const profileImageFile = coverFile || photoFile;
+
           // Atualizar a imagem se uma nova foi selecionada
-          if (photoFile && condominiumIdPreset && formData.condominiumUnitId) {
+          if (
+            profileImageFile &&
+            condominiumIdPreset &&
+            formData.condominiumUnitId
+          ) {
             await condominiumUnitImageService.uploadUnitImage({
               imageType: 1,
-              contentFile: photoFile,
+              contentFile: profileImageFile,
               condominiumId: condominiumIdPreset,
               condominiumUnitId: formData.condominiumUnitId,
               userId: targetUserId,
@@ -962,7 +1046,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         }
       }
 
-      showSuccess(t("residenteForm.createSuccess"));
+      showSuccess(
+        isEditMode
+          ? t("residenteForm.updateSuccess")
+          : t("residenteForm.createSuccess"),
+      );
 
       setFormData({
         condominiumUnitId: unitIdPreset || "",
@@ -1500,6 +1588,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     );
   };
 
+  const cardClassName =
+    activeStep === STEPS.length - 1
+      ? "resident-final-step"
+      : "resident-form-step";
+
   useEffect(() => {
   const aplicarEstilo = () => {
     const elementos = document.querySelectorAll(
@@ -1542,10 +1635,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   }
                   setActiveStep((prev) => prev - 1);
                 }}
-                width={activeStep === STEPS.length - 1 ? "820px" : "710px"}
-                className={
-                  activeStep === STEPS.length - 1 ? "resident-final-step" : undefined
-                }
+                width={activeStep === STEPS.length - 1 ? "820px" : "760px"}
+                className={cardClassName}
                 onClose={onClose}
                 disableContent={loading}
                 actions={renderActions()}
@@ -1594,10 +1685,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 }
                 setActiveStep((prev) => prev - 1);
               }}
-              width={activeStep === STEPS.length - 1 ? "820px" : "710px"}
-              className={
-                activeStep === STEPS.length - 1 ? "resident-final-step" : undefined
-              }
+              width={activeStep === STEPS.length - 1 ? "820px" : "760px"}
+              className={cardClassName}
               onClose={onClose}
               disableContent={loading}
               actions={renderActions()}

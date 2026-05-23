@@ -5,6 +5,52 @@
   width: 100%;
 }
 
+.step-wizard-card.area-wizard-card {
+  padding: 0 34px 26px;
+
+  .step-wizard-logo {
+    margin-top: 22px;
+
+    img {
+      width: 154px;
+    }
+  }
+
+  .step-wizard-title {
+    margin: 0 0 4px;
+    font-size: 23px;
+    font-weight: 700;
+  }
+
+  .step-wizard-subtitle {
+    margin-bottom: 10px;
+  }
+
+  .step-wizard-content {
+    flex: 0 1 auto;
+    margin-top: 8px;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .step-wizard-actions {
+    margin-top: 16px !important;
+  }
+
+  .step-wizard-dots {
+    padding-top: 14px;
+  }
+}
+
+.step-wizard-card.area-wizard-card-photos {
+  padding-left: 40px;
+  padding-right: 40px;
+
+  .step-wizard-content {
+    overflow-y: auto;
+  }
+}
+
 .action-button-manage {
   min-width: 140px !important;
   height: 32px !important;
@@ -269,6 +315,14 @@ textarea {
 }
 
 @media (max-width: 767px) {
+  .step-wizard-card.area-wizard-card {
+    padding: 0 18px 24px;
+
+    .step-wizard-logo img {
+      width: 136px;
+    }
+  }
+
   .area-wizard-panel {
     padding: 14px;
   }
