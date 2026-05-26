@@ -204,7 +204,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   };
 
   const isValidEmail = (value: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+    /^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/.test(value.trim());
 
   const normalizeCondominiumTypeValue = (value: string | number) => {
     const match = condominiumTypes.find(

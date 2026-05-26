@@ -646,7 +646,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
     if (!email.trim()) {
       nextErrors.email = t("residenteForm.emailRequired");
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/.test(email.trim())) {
       nextErrors.email = t("residenteForm.emailInvalid");
     }
 

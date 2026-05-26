@@ -86,7 +86,7 @@ const formatCEP = (value: string) => {
   return numbers.replace(/(\d{5})(\d+)/, "$1-$2");
 };
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailRegex = /^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/;
 const phoneRegex = /^(\+55\s?)?(\(?\d{2}\)?\s?)?\d{4,5}[- ]?\d{4}$/;
 const stateRegex = /^[A-Z]{2}$/;
 
@@ -231,7 +231,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
     if (!trimmedEmail) {
       nextErrors.email = "Email obrigatorio.";
     } else if (trimmedEmail.length > 254 || !emailRegex.test(trimmedEmail)) {
-      nextErrors.email = "Email invalido.";
+      nextErrors.email = "Informe um e-mail válido";
     }
 
     if (!trimmedPhone) {

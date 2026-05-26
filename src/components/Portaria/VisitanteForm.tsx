@@ -510,8 +510,10 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
       }
       if (!formData.email.trim()) {
         nextErrors.email = "Informe o email.";
-      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        nextErrors.email = "Email inválido.";
+      } else if (
+        !/^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/.test(formData.email.trim())
+      ) {
+        nextErrors.email = "Informe um e-mail válido";
       }
     }
 

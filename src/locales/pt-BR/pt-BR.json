@@ -71,7 +71,7 @@
     "accountCreatedRedirect": "Conta criada! Faça login com suas credenciais."
   },
   "validation": {
-    "emailInvalid": "Email inválido",
+    "emailInvalid": "Informe um e-mail válido",
     "emailRequired": "Email é obrigatório",
     "passwordRequired": "Senha é obrigatória",
     "companyRequired": "Selecione um condomínio",
@@ -298,7 +298,7 @@
     "cpfInvalid": "CPF invalido.",
     "cnpjInvalid": "CNPJ invalido.",
     "emailRequired": "Email obrigatorio.",
-    "emailInvalid": "Email invalido.",
+    "emailInvalid": "Informe um e-mail válido",
     "phoneRequired": "Celular obrigatorio.",
     "duplicateDocument": "Documento ou e-mail já cadastrado.",
     "createSuccess": "Morador criado com sucesso!",

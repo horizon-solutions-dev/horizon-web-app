@@ -31,6 +31,7 @@ const initialForm: ContactForm = {
 };
 
 const steps = ['Seus dados', 'Mensagem', 'Revisao'];
+const emailRegex = /^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/;
 
 export default function FaleConosco() {
   const [activeStep, setActiveStep] = useState(0);
@@ -50,7 +51,11 @@ export default function FaleConosco() {
 
     if (step === 0) {
       if (!formData.name.trim()) nextErrors.name = 'Nome e obrigatorio';
-      if (!formData.email.trim()) nextErrors.email = 'Email e obrigatorio';
+      if (!formData.email.trim()) {
+        nextErrors.email = 'Email e obrigatorio';
+      } else if (!emailRegex.test(formData.email.trim())) {
+        nextErrors.email = 'Informe um e-mail válido';
+      }
     }
 
     if (step === 1) {

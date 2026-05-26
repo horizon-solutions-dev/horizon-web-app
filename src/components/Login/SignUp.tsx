@@ -50,7 +50,7 @@ const fallbackDocTypes: TypesDoc[] = [
   { id: 3, value: "Passport", description: "Passaporte" },
 ];
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailRegex = /^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/;
 const phoneRegex = /^\+?[0-9()\s-]{8,32}$/;
 
 const fieldSx = {
