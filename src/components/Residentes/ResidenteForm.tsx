@@ -107,6 +107,47 @@ const formatCnpj = (value: string) => {
   return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/, "$1.$2.$3/$4-$5");
 };
 
+const formatCnh = (value: string) => value.replace(/\D/g, "").slice(0, 11);
+
+const formatPassport = (value: string) =>
+  value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
+
+const normalizeDocumentNumber = (value: string, documentType: DocumentType) => {
+  if (documentType === 4) {
+    return value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+  }
+
+  return value.replace(/\D/g, "");
+};
+
+const validateCpf = (cpf: string) => {
+  const cpfClean = cpf.replace(/\D/g, "");
+
+  if (cpfClean.length !== 11 || /^(\d)\1+$/.test(cpfClean)) {
+    return false;
+  }
+
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) {
+    sum += parseInt(cpfClean.charAt(i), 10) * (10 - i);
+  }
+
+  let result = (sum * 10) % 11;
+  if (result === 10) result = 0;
+  if (result !== parseInt(cpfClean.charAt(9), 10)) {
+    return false;
+  }
+
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) {
+    sum += parseInt(cpfClean.charAt(i), 10) * (11 - i);
+  }
+
+  result = (sum * 10) % 11;
+  if (result === 10) result = 0;
+  return result === parseInt(cpfClean.charAt(10), 10);
+};
+
 const validateCnpj = (cnpj: string) => {
   const cnpjClean = cnpj.replace(/\D/g, "");
 
@@ -150,6 +191,16 @@ const validateCnpj = (cnpj: string) => {
   }
 
   return true;
+};
+
+const validateCnh = (cnh: string) => {
+  const cnhClean = cnh.replace(/\D/g, "");
+  return cnhClean.length === 11 && !/^(\d)\1+$/.test(cnhClean);
+};
+
+const validatePassport = (passport: string) => {
+  const normalizedPassport = passport.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+  return /^[A-Z]{1,2}\d{6,8}$/.test(normalizedPassport);
 };
 
 const formatPhone = (value: string) => {
@@ -597,8 +648,19 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setDocumentNumber(formatCpf(value));
     } else if (documentType === 2) {
       setDocumentNumber(formatCnpj(value));
+    } else if (documentType === 4) {
+      setDocumentNumber(formatCnh(value));
+    } else if (documentType === 3) {
+      setDocumentNumber(formatPassport(value));
     } else {
       setDocumentNumber(value);
+    }
+    if (errors.documentNumber) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.documentNumber;
+        return next;
+      });
     }
   };
 
@@ -607,6 +669,14 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const getTypes = async () => {
     const result = await AccountService.accountTypes();
     setTypeDoc(result);
+  };
+
+  const getDocumentMaxLength = () => {
+    if (documentType === 1) return 14;
+    if (documentType === 2) return 18;
+    if (documentType === 3) return 11;
+    if (documentType === 4) return 10;
+    return 20;
   };
 
   const getPeriodErrors = () => {
@@ -631,16 +701,26 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     if (!lastName.trim())
       nextErrors.lastName = t("residenteForm.lastNameRequired");
 
-    const cleanDoc = documentNumber.replace(/\D/g, "");
+    const cleanDoc = normalizeDocumentNumber(documentNumber, documentType);
     if (!cleanDoc) {
       nextErrors.documentNumber = t("residenteForm.documentRequired");
     } else if (documentType === 1) {
-      if (cleanDoc.length !== 11) {
+      if (!validateCpf(cleanDoc)) {
         nextErrors.documentNumber = t("residenteForm.cpfInvalid");
       }
     } else if (documentType === 2) {
       if (!validateCnpj(cleanDoc)) {
         nextErrors.documentNumber = t("residenteForm.cnpjInvalid");
+      }
+    } else if (documentType === 4) {
+      if (!validateCnh(cleanDoc)) {
+        nextErrors.documentNumber =
+          t("residenteForm.cnhInvalid") || "CNH inválida";
+      }
+    } else if (documentType === 3) {
+      if (!validatePassport(cleanDoc)) {
+        nextErrors.documentNumber =
+          t("residenteForm.passportInvalid") || "Passaporte inválido";
       }
     }
 
@@ -700,7 +780,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       userId: residentUserId,
       fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
       docType: documentType,
-      doc: documentNumber.replace(/\D/g, ""),
+      doc: normalizeDocumentNumber(documentNumber, documentType),
       email: email.trim(),
       phone: normalizePhoneToE164(phone),
       unitType: formData.unitType,
@@ -833,7 +913,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           name: firstName.trim(),
           surname: lastName.trim(),
           docType: documentType,
-          doc: documentNumber.replace(/\D/g, ""),
+          doc: normalizeDocumentNumber(documentNumber, documentType),
           email: email.trim(),
           phone: normalizePhoneToE164(phone),
         });
@@ -844,7 +924,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           name: firstName.trim(),
           surname: lastName.trim(),
           docType: documentType,
-          doc: documentNumber.replace(/\D/g, ""),
+          doc: normalizeDocumentNumber(documentNumber, documentType),
           email: email.trim(),
           phone: normalizePhoneToE164(phone),
         });
@@ -927,7 +1007,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           userId: targetUserId,
           fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
           docType: documentType,
-          doc: documentNumber.replace(/\D/g, ""),
+          doc: normalizeDocumentNumber(documentNumber, documentType),
           email: email.trim(),
           phone: normalizePhoneToE164(phone),
           unitType: formData.unitType,
@@ -952,7 +1032,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             name: firstName.trim(),
             surname: lastName.trim(),
             docType: documentType,
-            doc: documentNumber.replace(/\D/g, ""),
+            doc: normalizeDocumentNumber(documentNumber, documentType),
             email: email.trim(),
             phone: normalizePhoneToE164(phone),
           });
@@ -966,7 +1046,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           userId: targetUserId,
           fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
           docType: documentType,
-          doc: documentNumber.replace(/\D/g, ""),
+          doc: normalizeDocumentNumber(documentNumber, documentType),
           email: email.trim(),
           phone: normalizePhoneToE164(phone),
           unitType: formData.unitType,
@@ -1382,6 +1462,13 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 onChange={(e) => {
                   setDocumentType(Number(e.target.value) as DocumentType);
                   setDocumentNumber("");
+                  if (errors.documentNumber) {
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.documentNumber;
+                      return next;
+                    });
+                  }
                 }}
               >
                 {typeDoc !== null &&
@@ -1407,7 +1494,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 onChange={(e) => handleDocumentChange(e.target.value)}
                 error={Boolean(errors.documentNumber)}
                 helperText={errors.documentNumber}
-                inputProps={{ maxLength: 18 }}
+                inputProps={{ maxLength: getDocumentMaxLength() }}
               />
             </Grid>
           </Grid>

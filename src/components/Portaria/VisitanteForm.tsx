@@ -179,6 +179,34 @@ const formatDocument = (value: string, documentType: string) => {
   return value.slice(0, 20);
 };
 
+const validateCpf = (cpf: string) => {
+  const cpfClean = cpf.replace(/\D/g, "");
+
+  if (cpfClean.length !== 11 || /^(\d)\1+$/.test(cpfClean)) {
+    return false;
+  }
+
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) {
+    sum += parseInt(cpfClean.charAt(i), 10) * (10 - i);
+  }
+
+  let result = (sum * 10) % 11;
+  if (result === 10) result = 0;
+  if (result !== parseInt(cpfClean.charAt(9), 10)) {
+    return false;
+  }
+
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) {
+    sum += parseInt(cpfClean.charAt(i), 10) * (11 - i);
+  }
+
+  result = (sum * 10) % 11;
+  if (result === 10) result = 0;
+  return result === parseInt(cpfClean.charAt(10), 10);
+};
+
 const getCurrentUserUnit = () => {
   const possibleKeys = ["unitCode", "unidade", "residentUnit", "unitLabel"];
   for (const key of possibleKeys) {
@@ -500,9 +528,8 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
         nextErrors.documentNumber = "Informe o documento.";
       }
       if (formData.documentType === "cpf") {
-        const digits = formData.documentNumber.replace(/\D/g, "");
-        if (digits.length !== 11) {
-          nextErrors.documentNumber = "CPF inválido.";
+        if (!validateCpf(formData.documentNumber)) {
+          nextErrors.documentNumber = "CPF inválido";
         }
       }
       if (!formData.phone.trim()) {

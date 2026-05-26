@@ -203,6 +203,29 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     return numbers.replace(/(\d{5})(\d+)/, "$1-$2");
   };
 
+  const validateCnpj = (value: string) => {
+    const cnpj = value.replace(/\D/g, "");
+    if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
+
+    const validateDigit = (size: number) => {
+      const numbers = cnpj.substring(0, size);
+      const digit = parseInt(cnpj.charAt(size), 10);
+      let sum = 0;
+      let pos = size - 7;
+
+      for (let i = size; i >= 1; i -= 1) {
+        sum += parseInt(numbers.charAt(size - i), 10) * pos;
+        pos -= 1;
+        if (pos < 2) pos = 9;
+      }
+
+      const result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+      return result === digit;
+    };
+
+    return validateDigit(12) && validateDigit(13);
+  };
+
   const isValidEmail = (value: string) =>
     /^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/.test(value.trim());
 
@@ -417,7 +440,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   const validateStep0 = () => {
     const nextErrors: Record<string, string> = {};
     if (!formData.name.trim()) nextErrors.name = t("condominioForm.nameRequired");
-    if (formData.doc.replace(/\D/g, "").length !== 14) {
+    if (!validateCnpj(formData.doc)) {
       nextErrors.doc = t("condominioForm.cnpjInvalid");
     }
     if (!formData.email.trim()) {

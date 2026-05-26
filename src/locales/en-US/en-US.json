@@ -297,6 +297,8 @@
     "documentRequired": "Document is required.",
     "cpfInvalid": "Invalid CPF.",
     "cnpjInvalid": "Invalid CNPJ.",
+    "cnhInvalid": "Invalid CNH.",
+    "passportInvalid": "Invalid passport.",
     "emailRequired": "Email is required.",
     "emailInvalid": "Invalid email.",
     "phoneRequired": "Mobile is required.",
