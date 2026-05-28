@@ -68,9 +68,6 @@ export default function OrganizationTypeStep({
         ) : (
           options.map((type) => {
             const selfManaged = isSelfManagedType(type);
-            const Icon = selfManaged
-              ? ApartmentOutlinedIcon
-              : BusinessOutlinedIcon;
 
             return (
               <Button
@@ -91,7 +88,6 @@ export default function OrganizationTypeStep({
                   },
                 }}
               >
-                <Icon sx={{ color: "#1976d2" }} />
                 <Box>
                   <Typography sx={{ fontWeight: 700, fontSize: 15 }}>
                     {type.description || type.value}
