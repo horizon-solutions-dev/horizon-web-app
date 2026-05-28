@@ -964,11 +964,12 @@ export default function Visitantes() {
         <TextField
           fullWidth
           multiline
-          minRows={5}
           label={finishVisitNotes ? "" : "Observacoes"}
           placeholder="Observacoes"
           value={finishVisitNotes}
           onChange={(event) => {
+            const value = event.target.value;
+            if(value.length >= 300) return;
             setFinishVisitNotes(event.target.value);
             if (finishVisitNotesError) {
               setFinishVisitNotesError("");

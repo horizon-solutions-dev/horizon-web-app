@@ -27,6 +27,13 @@ export interface CondominiumRequest {
   commit: boolean;
 }
 
+export type CondominiumWithOrganizationRequest = Omit<
+  CondominiumRequest,
+  "organizationId"
+> & {
+  orgType: number | string;
+};
+
 export interface Condominium extends CondominiumRequest {
   condominiumId: string;
   active: boolean;
@@ -67,6 +74,36 @@ class CondominiumService {
   async validateCondominium(condominium: CondominiumRequest) {
     try {
       await apiClient.post<{ condominiumId?: string }>(this.baseUrl, condominium);
+      return { valid: true, validations: [] as Array<{ field: string; message: string }> };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        const data = error.response?.data as
+          | { validations?: Array<{ field: string; message: string }> }
+          | undefined;
+        return { valid: false, validations: data?.validations ?? [] };
+      }
+      throw error;
+    }
+  }
+
+  async createCondominiumWithOrganization(
+    condominium: CondominiumWithOrganizationRequest,
+  ): Promise<string> {
+    const data = await apiClient.post<string | { condominiumId: string }>(
+      `${this.baseUrl}/with-organization`,
+      condominium,
+    );
+    return typeof data === "string" ? data : data.condominiumId;
+  }
+
+  async validateCondominiumWithOrganization(
+    condominium: CondominiumWithOrganizationRequest,
+  ) {
+    try {
+      await apiClient.post<{ condominiumId?: string }>(
+        `${this.baseUrl}/with-organization`,
+        condominium,
+      );
       return { valid: true, validations: [] as Array<{ field: string; message: string }> };
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 422) {

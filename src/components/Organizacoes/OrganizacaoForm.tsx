@@ -35,6 +35,8 @@ interface OrganizacaoFormProps {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   firstAccessMode?: boolean;
+  presetOrgType?: number | string;
+  lockOrgType?: boolean;
   onCreated?: (payload: {
     organizationId: string;
     orgType: number;
@@ -124,6 +126,8 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   loading,
   setLoading,
   firstAccessMode = false,
+  presetOrgType,
+  lockOrgType = false,
   onCreated,
   onCompleted,
 }) => {
@@ -197,8 +201,11 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
       return;
     }
 
-    setFormData(initialForm);
-  }, [open, editingOrganization]);
+    setFormData({
+      ...initialForm,
+      orgType: presetOrgType ?? initialForm.orgType,
+    });
+  }, [open, editingOrganization, presetOrgType]);
 
   if (!open) return null;
 
@@ -545,6 +552,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                 }}
                 fullWidth
                 select
+                disabled={lockOrgType}
                 label={formData.orgType?  "" : "Tipo de Organizacao"}
                 value={formData.orgType ?? ""}
                 onChange={(e) => handleChange("orgType", e.target.value)}

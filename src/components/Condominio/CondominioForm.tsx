@@ -26,6 +26,7 @@ import {
   condominiumService,
   type Condominium,
   type CondominiumRequest,
+  type CondominiumWithOrganizationRequest,
   type CondominiumTypeEnum,
   type PhysicalStructureEnum,
 } from "../../services/condominiumService";
@@ -57,6 +58,7 @@ interface CondominioFormProps {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   firstAccessMode?: boolean;
+  createWithOrganizationOrgType?: number | string;
   onCreated?: (payload: { condominiumId: string; label: string }) => void;
   onCompleted?: () => void;
 }
@@ -98,6 +100,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
   loading,
   setLoading,
   firstAccessMode = false,
+  createWithOrganizationOrgType,
   onCreated,
   onCompleted,
 }) => {
@@ -485,6 +488,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
 
   const fieldMap: Record<string, keyof CondominiumRequest> = {
     organizationid: "organizationId",
+    orgtype: "organizationId",
     name: "name",
     doc: "doc",
     email: "email",
@@ -549,6 +553,19 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     commit,
   });
 
+  const buildWithOrganizationPayload = (
+    commit: boolean,
+  ): CondominiumWithOrganizationRequest => {
+    const { organizationId: _organizationId, ...payload } = buildPayload(commit);
+    return {
+      ...payload,
+      orgType: createWithOrganizationOrgType || "",
+    };
+  };
+
+  const shouldCreateWithOrganization =
+    firstAccessMode && !!createWithOrganizationOrgType && !editingId;
+
   const handleNext = async () => {
     const localErrors = activeStep === 0 ? validateStep0() : validateStep1();
     if (Object.keys(localErrors).length > 0) {
@@ -558,12 +575,16 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
     try {
       setLoading(true);
       const payload = buildPayload(false);
-      const { valid, validations } = editingId
-        ? await condominiumService.validateCondominiumEdit(
-            payload,
-            editingCondominium?.condominiumId || "",
+      const { valid, validations } = shouldCreateWithOrganization
+        ? await condominiumService.validateCondominiumWithOrganization(
+            buildWithOrganizationPayload(false),
           )
-        : await condominiumService.validateCondominium(payload);
+        : editingId
+          ? await condominiumService.validateCondominiumEdit(
+              payload,
+              editingCondominium?.condominiumId || "",
+            )
+          : await condominiumService.validateCondominium(payload);
       if (!valid && validations.length > 0) {
         const { nextErrors } = mapBackendValidationErrors(validations, activeStep);
         if (Object.keys(nextErrors).length > 0) {
@@ -743,20 +764,24 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       setErrors(step2Errors);
       return;
     }
-    if (!formData.organizationId.trim()) return;
+    if (!shouldCreateWithOrganization && !formData.organizationId.trim()) return;
 
     try {
       setLoading(true);
       const payload = buildPayload(true);
-      const { valid, validations } = editingId
-        ? await condominiumService.validateCondominiumEdit(
-            { ...payload, commit: false },
-            editingCondominium?.condominiumId || "",
+      const { valid, validations } = shouldCreateWithOrganization
+        ? await condominiumService.validateCondominiumWithOrganization(
+            buildWithOrganizationPayload(false),
           )
-        : await condominiumService.validateCondominium({
-            ...payload,
-            commit: false,
-          });
+        : editingId
+          ? await condominiumService.validateCondominiumEdit(
+              { ...payload, commit: false },
+              editingCondominium?.condominiumId || "",
+            )
+          : await condominiumService.validateCondominium({
+              ...payload,
+              commit: false,
+            });
 
       if (!valid && validations.length > 0) {
         const { nextErrors, targetStep } = mapBackendValidationErrors(validations);
@@ -767,9 +792,13 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         }
       }
 
-      const response = editingId
-        ? await condominiumService.updateCondominium(editingId, payload)
-        : await condominiumService.createCondominium(payload);
+      const response = shouldCreateWithOrganization
+        ? await condominiumService.createCondominiumWithOrganization(
+            buildWithOrganizationPayload(true),
+          )
+        : editingId
+          ? await condominiumService.updateCondominium(editingId, payload)
+          : await condominiumService.createCondominium(payload);
       const condominiumId = response || editingId || "";
       if (condominiumId) await uploadImages(condominiumId);
 
@@ -934,7 +963,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
               />
             </Grid>
             <Grid item xs={12} md={4}>
-              <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 1.5,height:'100%' }}>
+              <Box sx={{ border: "1px solid #e2e8f0", borderRadius: "12px", p: 1.5,height:'100%', maxHeight:220, overflowY:'auto' }}>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
                   <Typography sx={{ fontWeight: 700, fontSize: 16 }}>Outros</Typography>
                   <IconButton size="small" onClick={() => setImageTypeDialogOpen(true)} disabled={imageTypesLoading}><AddOutlined /></IconButton>

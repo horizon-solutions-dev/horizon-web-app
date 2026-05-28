@@ -48,6 +48,8 @@ interface UnidadeFormProps {
 }
 
 type FormErrors = {
+  condominiumId?: string;
+  condominiumBlockId?: string;
   unitCode?: string;
   unitType?: string;
   allocationType?: string;
@@ -211,10 +213,15 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
         "unidadeForm.allocationTypeValueRequired",
       );
     }
+    if (!formData.condominiumId) {
+      nextErrors.condominiumId = t("unidadeForm.condominiumIdRequired");
+    }
+    if (!formData.condominiumBlockId) {
+      nextErrors.condominiumBlockId = t("unidadeForm.blockIdRequired");
+    }
 
     setErrors(nextErrors);
-    const hasIdErrors = !formData.condominiumId || !formData.condominiumBlockId;
-    return !hasIdErrors && Object.keys(nextErrors).length === 0;
+    return Object.keys(nextErrors).length === 0;
   };
 
   const fieldMap: Record<string, keyof CondominiumUnitRequest> = {
@@ -255,7 +262,7 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!validate() && firstAccessMode == false) return;
+    if (!validate()) return;
 
     setLoading(true);
     try {
@@ -396,6 +403,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
             value={resolvedCondominiumName}
             fullWidth
             disabled
+            error={Boolean(errors.condominiumId)}
+            helperText={errors.condominiumId}
           />
 
           <TextField
@@ -414,6 +423,8 @@ const UnidadeForm: React.FC<UnidadeFormProps> = ({
             value={resolvedBlockName}
             fullWidth
             disabled
+            error={Boolean(errors.condominiumBlockId)}
+            helperText={errors.condominiumBlockId}
           />
 
           <TextField
