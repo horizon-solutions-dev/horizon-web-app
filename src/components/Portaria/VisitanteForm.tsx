@@ -722,19 +722,19 @@ const VisitanteForm: React.FC<VisitanteFormProps> = ({
           commit: true,
         }));
 
+      const previousVisitorId = existingVisitor?.id || visitorId;
       const visitResponse = await visitorService.createVisit({
-        entryAt: new Date().toISOString().split("T")[0],
-        exitAt: null,
+        entryAt: new Date().toISOString(),
         releasedByResident: formData.releaseType === "resident",
         typeVisitorReasonId: formData.visitorReasonId,
         notes: formData.notes.trim(),
-        visitorId: existingVisitor ? existingVisitor?.id : visitorId,
+        visitorId,
+        previousVisitorId,
         condominiumId,
         condominiumUnitId: unitSearchResult.id,
         condominiumUnitResidentId: formData.selectedResidentId,
         visitorAccessPermissions: Object.entries(formData.areaAccess).map(
           ([areaId, active]) => ({
-            visitorId,
             areaId,
             active,
           }),
