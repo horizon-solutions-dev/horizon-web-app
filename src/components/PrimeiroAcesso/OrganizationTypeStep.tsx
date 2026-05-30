@@ -1,6 +1,4 @@
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
-import ApartmentOutlinedIcon from "@mui/icons-material/ApartmentOutlined";
-import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import StepWizardCard from "../../shared/components/StepWizardCard";
 import type { OrganizationTypeEnum } from "../../services/organizationService";
 

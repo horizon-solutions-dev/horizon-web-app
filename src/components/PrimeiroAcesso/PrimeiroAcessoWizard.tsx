@@ -59,9 +59,6 @@ const getInitialStage = (): WizardStage => {
   if (!context?.orgType) return "organizationType";
   if (orgType === 2) {
     if (!context.selectedCondominiumId) return "condominium";
-    if (!context.block) return "block";
-    if (!context.unit) return "unit";
-    if (!context.resident) return "resident";
     return "done";
   }
   if (!context.organization) return "organization";
@@ -369,7 +366,7 @@ export default function PrimeiroAcessoWizard() {
             });
             markFirstAccessStepCompleted("condominium");
           }
-          setStage(isSelfManagedFlow ? "block" : "done");
+          setStage("done");
         }}
       />
     );
@@ -493,6 +490,7 @@ export default function PrimeiroAcessoWizard() {
   return (
     <FirstAccessComplete
       onFinish={finishWizard}
+      showPostLoginSetupMessage={isSelfManagedFlow}
       showAdditionalCondominiumsMessage={!isSelfManagedFlow}
     />
   );

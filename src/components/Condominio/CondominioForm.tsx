@@ -1006,10 +1006,8 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
         onBack={handleBack}
         width={activeStep === 2 ? "1200px" : "650px"}
         disableContent={loading}
-      >
-        <div className="condominio-form">{renderStepContent(activeStep)}</div>
-        <Box sx={{ display: "flex", justifyContent: "center",  }}>
-          {activeStep === steps.length - 1 ? (
+        actions={
+          activeStep === steps.length - 1 ? (
             <Button sx={{ textTransform: "none" }} variant="contained" color="primary" onClick={handleSubmit} disabled={loading}>
               {loading ? <CircularProgress size={20} /> : t("common.finish")}
             </Button>
@@ -1017,8 +1015,10 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
             <Button sx={{ textTransform: "none" }} variant="contained" onClick={handleNext} disabled={loading}>
               {t("common.next")}
             </Button>
-          )}
-        </Box>
+          )
+        }
+      >
+        <div className="condominio-form">{renderStepContent(activeStep)}</div>
       </StepWizardCard>
 
       <Dialog open={imageTypeDialogOpen} onClose={() => setImageTypeDialogOpen(false)} maxWidth="md" fullWidth>

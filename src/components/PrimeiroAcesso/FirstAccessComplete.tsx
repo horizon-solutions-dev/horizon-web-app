@@ -5,11 +5,13 @@ import "./FirstAccessComplete.scss";
 
 interface FirstAccessCompleteProps {
   onFinish: () => void;
+  showPostLoginSetupMessage?: boolean;
   showAdditionalCondominiumsMessage?: boolean;
 }
 
 export default function FirstAccessComplete({
   onFinish,
+  showPostLoginSetupMessage = false,
   showAdditionalCondominiumsMessage = false,
 }: FirstAccessCompleteProps) {
   return (
@@ -25,7 +27,9 @@ export default function FirstAccessComplete({
           </Typography>
 
           <Typography className="first-access-complete-subtitle">
-            {showAdditionalCondominiumsMessage
+            {showPostLoginSetupMessage
+              ? "O processo de criacao da conta foi concluido. As demais configuracoes e cadastros devem ser feitos depois que voce entrar com a conta que acabou de criar."
+              : showAdditionalCondominiumsMessage
               ? "O primeiro condomínio foi cadastrado. Outros condomínios podem ser cadastrados após o login no sistema."
               : "A configuração inicial foi finalizada e sua organização já está pronta para uso."}
           </Typography>
