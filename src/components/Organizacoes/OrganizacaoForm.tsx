@@ -416,7 +416,10 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
         }
 
         const token = AuthService.getToken();
-        const userId = TokenService.getUserId(token);
+        const userId =
+          firstAccessMode
+            ? localStorage.getItem("userId") || TokenService.getUserId(token)
+            : TokenService.getUserId(token);
 
         if (!userId) {
           throw new Error("Nao foi possivel obter userId do usuario logado.");

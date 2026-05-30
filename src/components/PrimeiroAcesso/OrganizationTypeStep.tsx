@@ -80,6 +80,7 @@ export default function OrganizationTypeStep({
                   borderColor: "#d9dee5",
                   color: "#111827",
                   background: "#ffffff",
+                  textTransform: "none",
                   "&:hover": {
                     borderColor: "#1976d2",
                     background: "rgba(25, 118, 210, 0.04)",
@@ -89,11 +90,6 @@ export default function OrganizationTypeStep({
                 <Box>
                   <Typography sx={{ fontWeight: 700, fontSize: 15 }}>
                     {type.description || type.value}
-                  </Typography>
-                  <Typography sx={{ color: "#64748b", fontSize: 13 }}>
-                    {selfManaged
-                      ? "Cadastre diretamente o condominio da sua conta."
-                      : "Cadastre a organizacao e depois o primeiro condominio."}
                   </Typography>
                 </Box>
               </Button>

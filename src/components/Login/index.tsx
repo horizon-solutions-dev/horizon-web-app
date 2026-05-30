@@ -80,6 +80,7 @@ export default function MultiStepLogin() {
     localStorage.removeItem("condominium");
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("organizationId");
+    localStorage.removeItem("userId");
   }, [showSessionExpired]);
 
   const validationSchema = Yup.object({
@@ -705,6 +706,7 @@ export default function MultiStepLogin() {
           onSuccess={({ email, userId }) => {
             setCreatedAccountEmail(email);
             setCreatedAccountUserId(userId);
+            localStorage.setItem("userId", userId);
             formik.setFieldValue("email", email);
             formik.setFieldValue("password", "");
             formik.setFieldValue("condominium", null);
