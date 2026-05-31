@@ -197,6 +197,7 @@
     "nameRequired": "Condominium name is required.",
     "cnpjInvalid": "Invalid CNPJ.",
     "typeRequired": "Condominium type is required.",
+    "physicalStructureRequired": "Physical structure is required.",
     "unitCountRequired": "Number of units must be greater than 0.",
     "zipInvalid": "Invalid ZIP code.",
     "addressRequired": "Street address is required.",
