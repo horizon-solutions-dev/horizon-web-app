@@ -11,6 +11,8 @@ interface PasswordRecoveryProps {
   onBack: () => void;
 }
 
+const emailRegex = /^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/;
+
 export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
@@ -19,7 +21,11 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
 
   const emailValidationSchema = Yup.object({
     email: Yup.string()
-      .email(t("validation.emailInvalid"))
+      .trim()
+      .matches(emailRegex, {
+        message: t("validation.emailInvalid"),
+        excludeEmptyString: true,
+      })
       .required(t("validation.emailRequired")),
   });
 
@@ -49,7 +55,7 @@ export default function PasswordRecovery({ onBack }: PasswordRecoveryProps) {
         // TODO: Implementar quando AuthService.requestPasswordRecovery estiver disponível
         // await AuthService.requestPasswordRecovery({ email: values.email });
         
-        setRecoveryEmail(values.email);
+        setRecoveryEmail(values.email.trim());
         toast.success(
           t("toast.recoveryCodeSent") || "Código de verificação enviado para seu e-mail"
         );

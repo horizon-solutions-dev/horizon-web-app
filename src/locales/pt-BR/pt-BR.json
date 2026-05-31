@@ -71,7 +71,7 @@
     "accountCreatedRedirect": "Conta criada! Faça login com suas credenciais."
   },
   "validation": {
-    "emailInvalid": "Email inválido",
+    "emailInvalid": "Informe um e-mail válido",
     "emailRequired": "Email é obrigatório",
     "passwordRequired": "Senha é obrigatória",
     "companyRequired": "Selecione um condomínio",
@@ -167,7 +167,7 @@
   },
   "blocoForm": {
     "createTitle": "Criar estrutura do condomínio",
-    "editTitle": "Editar estrutura do condomínio",
+    "editTitle": "Estrutura do condomínio",
     "stepData": "Dados do estrutura do condomínio",
     "codePlaceholder": "Código",
     "namePlaceholder": "Nome",
@@ -189,7 +189,7 @@
   },
   "condominioForm": {
     "createTitle": "Criar Condominio",
-    "editTitle": "Editar Condominio",
+    "editTitle": "Condominio",
     "step0": "Informações Básicas",
     "step1": "Endereço",
     "step2": "Configurações e Rateio",
@@ -231,7 +231,7 @@
   },
   "unidadeForm": {
     "createTitle": "Criar unidade",
-    "editTitle": "Editar unidade",
+    "editTitle": "Unidade",
     "stepData": "Dados da unidade",
     "unitCodePlaceholder": "Ex: A101",
     "unitCodeRequired": "Informe o código da unidade.",
@@ -270,7 +270,7 @@
   },
   "residenteForm": {
     "title": "Registrar Morador",
-    "editTitle": "Editar Morador",
+    "editTitle": "Morador",
     "stepPeriod": "Período",
     "stepData": "Dados do Morador",
     "stepPermissions": "Permissões e Foto",
@@ -294,11 +294,13 @@
     "startDateRequired": "Início de Residência é obrigatorio.",
     "firstNameRequired": "Nome obrigatorio.",
     "lastNameRequired": "Sobrenome obrigatorio.",
-    "documentRequired": "Documento obrigatorio.",
-    "cpfInvalid": "CPF invalido.",
-    "cnpjInvalid": "CNPJ invalido.",
+    "documentRequired": "Documento obrigatório.",
+    "cpfInvalid": "CPF inválido",
+    "cnpjInvalid": "CNPJ inválido",
+    "cnhInvalid": "CNH inválida",
+    "passportInvalid": "Passaporte inválido",
     "emailRequired": "Email obrigatorio.",
-    "emailInvalid": "Email invalido.",
+    "emailInvalid": "Informe um e-mail válido",
     "phoneRequired": "Celular obrigatorio.",
     "duplicateDocument": "Documento ou e-mail já cadastrado.",
     "createSuccess": "Morador criado com sucesso!",

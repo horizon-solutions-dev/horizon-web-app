@@ -55,18 +55,17 @@ export interface VisitorResponse {
 export type VisitorPagedResponse = PagedResponse<VisitorResponse>;
 
 export interface VisitorAccessPermissionRequest {
-  visitorId: string;
   areaId: string;
   active: boolean;
 }
 
 export interface CreateVisitorVisitRequest {
   entryAt: string;
-  exitAt?: string | null;
   releasedByResident: boolean;
   typeVisitorReasonId: string | number;
   notes?: string;
   visitorId: string;
+  previousVisitorId: string;
   condominiumId: string;
   condominiumUnitId: string;
   condominiumUnitResidentId: string;

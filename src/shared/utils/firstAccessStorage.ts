@@ -10,6 +10,7 @@ export type FirstAccessEntityRef = {
 export type FirstAccessContext = {
   enabled: boolean;
   orgType?: number;
+  orgTypeValue?: string;
   organization?: FirstAccessEntityRef;
   condominiums: FirstAccessEntityRef[];
   blocks: FirstAccessEntityRef[];

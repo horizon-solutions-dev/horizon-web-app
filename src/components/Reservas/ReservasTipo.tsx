@@ -828,6 +828,18 @@ export default function ReservasTipo() {
     return match ? getEnumOptionLabel(match) : String(value || "-");
   };
 
+  const getAreaWizardWidth = () => {
+    const widths = [
+      "min(680px, calc(100vw - 32px))",
+      "min(700px, calc(100vw - 32px))",
+      "min(700px, calc(100vw - 32px))",
+      "min(700px, calc(100vw - 32px))",
+      "min(980px, calc(100vw - 32px))",
+    ];
+
+    return widths[formStep] || widths[0];
+  };
+
   const renderWizardStep = (formStep: number) => {
     if (formStep === 0) {
       const selectedAreaType = normalizeEnumOptionValue(formData.type, areaTypes);
@@ -1194,18 +1206,20 @@ export default function ReservasTipo() {
                   label={getEnumOptionLabel(type)}
                   previewUrl={previewUrl}
                   fileName={selectedFile?.name}
-                  height={70}
+                  height={125}
                   emptyLabel="Selecionar imagem"
                   description="Formatos aceitos: JPG, PNG."
                   onChange={(file) => handleAreaImageChange(imageType, file)}
+                  previewImageSx={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
                   sx={{
-                    minHeight: "188px",
-                    p: 1.5,
-                    "& img": {
-                      width: "100%",
-                      maxWidth: 220,
-                      height: "100%",
-                    },
+                    height: "100%",
+                    minHeight: "205px",
+                    display: "flex",
+                    flexDirection: "column",
                   }}
                 />
               </Box>
@@ -1227,10 +1241,11 @@ export default function ReservasTipo() {
           showBack
           onBack={handleWizardBack}
           onClose={closeWizard}
-          width={
+          width={getAreaWizardWidth()}
+          className={
             formStep === areaWizardSteps.length - 1
-              ? "min(980px, calc(100vw - 32px))"
-              : "min(1200px, calc(100vw - 32px))"
+              ? "area-wizard-card area-wizard-card-photos"
+              : "area-wizard-card"
           }
           disableContent={loading}
           actions={

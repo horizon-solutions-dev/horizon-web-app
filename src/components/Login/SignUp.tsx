@@ -50,8 +50,12 @@ const fallbackDocTypes: TypesDoc[] = [
   { id: 3, value: "Passport", description: "Passaporte" },
 ];
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailRegex = /^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/;
 const phoneRegex = /^\+?[0-9()\s-]{8,32}$/;
+
+const fieldSx = {
+  "& .MuiOutlinedInput-root": { height: 50 },
+};
 
 const formatCpf = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -458,15 +462,10 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
   };
 
   return (
-    <Box className="page-container" sx={{
-          height: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-    }}>
+    <Box className="page-container signup-page">
       <Container maxWidth="xl">
       <StepWizardCard
-      
+        className="signup-create-card"
         title={t("signup.title") || "Criar Conta"}
         steps={steps}
         activeStep={activeStep}
@@ -477,7 +476,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
         disableContent={isSubmitting}
         width="720px"
         actions={
-          <Box sx={{ display: "flex", justifyContent: "center", width: "100%", mt:2 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
             {activeStep === steps.length - 1 ? (
               <Button
                 variant="contained"
@@ -507,7 +506,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
           </Box>
         }
       >
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.25 }}>
           {activeStep === 0 ? (
             <>
               <TextField
@@ -518,7 +517,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
                 error={!!errors.name}
                 helperText={errors.name}
                 inputProps={{ maxLength: 64 }}
-                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+                sx={fieldSx}
               />
 
               <TextField
@@ -529,7 +528,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
                 error={!!errors.surname}
                 helperText={errors.surname}
                 inputProps={{ maxLength: 128 }}
-                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+                sx={fieldSx}
               />
 
               <TextField
@@ -540,7 +539,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
                 onChange={(e) => handleChange("docType", e.target.value)}
                 error={!!errors.docType}
                 helperText={errors.docType}
-                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+                sx={fieldSx}
               >
                 {typesLoading ? (
                   <MenuItem value="" disabled>
@@ -570,7 +569,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
                         ? 18
                         : 20,
                 }}
-                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+                sx={fieldSx}
               />
             </>
           ) : (
@@ -584,7 +583,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
                 error={!!errors.email}
                 helperText={errors.email}
                 inputProps={{ maxLength: 256 }}
-                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+                sx={fieldSx}
               />
 
               <TextField
@@ -594,7 +593,7 @@ export default function SignUp({ onBack, onSuccess }: SignUpProps) {
                 onChange={(e) => handleChange("phone", e.target.value)}
                 error={!!errors.phone}
                 helperText={errors.phone || "+55 (11) 99999-9999"}
-                sx={{ "& .MuiOutlinedInput-root": { height: 46 } }}
+                sx={fieldSx}
               />
             </>
           )}

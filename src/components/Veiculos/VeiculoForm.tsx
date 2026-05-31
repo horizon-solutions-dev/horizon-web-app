@@ -91,7 +91,7 @@ const VeiculoForm: React.FC<VeiculoFormProps> = ({ open, onClose, onSave, veicul
       <DialogTitle className="form-title">
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">
-            {veiculo ? 'Editar Veículo' : 'Novo Veículo'}
+            {veiculo ? 'Veículo' : 'Novo Veículo'}
           </Typography>
           <IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
             <Close />

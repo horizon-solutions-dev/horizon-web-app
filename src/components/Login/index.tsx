@@ -32,6 +32,8 @@ interface LoginFormValues {
   condominium: OrganizationMeResponse | null;
 }
 
+const emailRegex = /^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/;
+
 const STEP_CONFIG = {
   1: { fields: ["email"], nextButton: "next" },
   2: { fields: ["password"], nextButton: "enter" },
@@ -78,11 +80,16 @@ export default function MultiStepLogin() {
     localStorage.removeItem("condominium");
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("organizationId");
+    localStorage.removeItem("userId");
   }, [showSessionExpired]);
 
   const validationSchema = Yup.object({
     email: Yup.string()
-      .email(t("validation.emailInvalid"))
+      .trim()
+      .matches(emailRegex, {
+        message: t("validation.emailInvalid"),
+        excludeEmptyString: true,
+      })
       .required(t("validation.emailRequired")),
     password: Yup.string().required(t("validation.passwordRequired")),
     condominium: Yup.object()
@@ -227,12 +234,20 @@ export default function MultiStepLogin() {
     }
   };
 
-  const handleEmailNext = () => {
-    formik.validateField("email").then(() => {
-      if (!formik.errors.email && formik.values.email) {
-        setStep(2);
-      }
-    });
+  const isEmailValid = (email: string) => emailRegex.test(email.trim());
+
+  const handleEmailNext = async () => {
+    const trimmedEmail = formik.values.email.trim();
+
+    formik.setFieldTouched("email", true, false);
+
+    if (!trimmedEmail || !isEmailValid(trimmedEmail)) {
+      await formik.validateField("email");
+      return;
+    }
+
+    await formik.setFieldValue("email", trimmedEmail);
+    setStep(2);
   };
 
   const handlePasswordNext = () => {
@@ -329,7 +344,7 @@ export default function MultiStepLogin() {
   };
 
   const canGoNext = () => {
-    if (step === 1) return !formik.errors.email && !!formik.values.email;
+    if (step === 1) return isEmailValid(formik.values.email);
     if (step === 2) return !formik.errors.password && !!formik.values.password;
     if (step === 3) {
       return !formik.errors.condominium && !!formik.values.condominium;
@@ -691,6 +706,7 @@ export default function MultiStepLogin() {
           onSuccess={({ email, userId }) => {
             setCreatedAccountEmail(email);
             setCreatedAccountUserId(userId);
+            localStorage.setItem("userId", userId);
             formik.setFieldValue("email", email);
             formik.setFieldValue("password", "");
             formik.setFieldValue("condominium", null);

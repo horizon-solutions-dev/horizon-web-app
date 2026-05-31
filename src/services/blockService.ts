@@ -15,14 +15,19 @@ export interface CondominiumBlock extends CondominiumBlockRequest {
 }
 
 export type CondominiumBlockPagedResponse = PagedResponse<CondominiumBlock>;
+type CondominiumBlockCreateResponse = { condominiumBlockId: string } | string;
 
 class BlockService {
   private baseUrl =
     'https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/condominium-structure-types';
 
-  async createBlock(block: CondominiumBlockRequest) {
+  async createBlock(block: CondominiumBlockRequest): Promise<string> {
     try {
-      return await apiClient.post<{ condominiumBlockId: string }>(this.baseUrl, block);
+      const response = await apiClient.post<CondominiumBlockCreateResponse>(
+        this.baseUrl,
+        block,
+      );
+      return typeof response === 'string' ? response : response.condominiumBlockId;
     } catch (error) {
       console.error('Erro ao criar bloco:', error);
       throw error;

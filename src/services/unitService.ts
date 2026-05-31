@@ -36,13 +36,19 @@ export interface UnitTypeEnum {
   description: string;
 }
 
+type CondominiumUnitCreateResponse = { condominiumUnitId: string } | string;
+
 class UnitService {
   private baseUrl =
     'https://horizondigitalapi-fcgsehgwa7a5hpaf.australiaeast-01.azurewebsites.net/api/v1/units';
 
-  async createUnit(unit: CondominiumUnitRequest) {
+  async createUnit(unit: CondominiumUnitRequest): Promise<string> {
     try {
-      return await apiClient.post<{ condominiumUnitId: string }>(this.baseUrl, unit);
+      const response = await apiClient.post<CondominiumUnitCreateResponse>(
+        this.baseUrl,
+        unit,
+      );
+      return typeof response === 'string' ? response : response.condominiumUnitId;
     } catch (error) {
       console.error('Erro ao criar unidade:', error);
       throw error;

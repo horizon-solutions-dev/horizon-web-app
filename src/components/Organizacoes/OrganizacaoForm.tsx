@@ -35,6 +35,8 @@ interface OrganizacaoFormProps {
   loading: boolean;
   setLoading: (loading: boolean) => void;
   firstAccessMode?: boolean;
+  presetOrgType?: number | string;
+  lockOrgType?: boolean;
   onCreated?: (payload: {
     organizationId: string;
     orgType: number;
@@ -70,6 +72,29 @@ const formatCNPJ = (value: string) => {
   );
 };
 
+const validateCnpj = (value: string) => {
+  const cnpj = value.replace(/\D/g, "");
+  if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
+
+  const validateDigit = (size: number) => {
+    const numbers = cnpj.substring(0, size);
+    const digit = parseInt(cnpj.charAt(size), 10);
+    let sum = 0;
+    let pos = size - 7;
+
+    for (let i = size; i >= 1; i -= 1) {
+      sum += parseInt(numbers.charAt(size - i), 10) * pos;
+      pos -= 1;
+      if (pos < 2) pos = 9;
+    }
+
+    const result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+    return result === digit;
+  };
+
+  return validateDigit(12) && validateDigit(13);
+};
+
 const formatPhone = (value: string) => {
   const numbers = value.replace(/\D/g, "").slice(0, 11);
   if (numbers.length <= 2) return numbers;
@@ -86,7 +111,7 @@ const formatCEP = (value: string) => {
   return numbers.replace(/(\d{5})(\d+)/, "$1-$2");
 };
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailRegex = /^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/;
 const phoneRegex = /^(\+55\s?)?(\(?\d{2}\)?\s?)?\d{4,5}[- ]?\d{4}$/;
 const stateRegex = /^[A-Z]{2}$/;
 
@@ -101,6 +126,8 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
   loading,
   setLoading,
   firstAccessMode = false,
+  presetOrgType,
+  lockOrgType = false,
   onCreated,
   onCompleted,
 }) => {
@@ -174,8 +201,11 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
       return;
     }
 
-    setFormData(initialForm);
-  }, [open, editingOrganization]);
+    setFormData({
+      ...initialForm,
+      orgType: presetOrgType ?? initialForm.orgType,
+    });
+  }, [open, editingOrganization, presetOrgType]);
 
   if (!open) return null;
 
@@ -213,8 +243,8 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
       nextErrors.legalName = "Razao social deve ter entre 2 e 200 caracteres.";
     }
 
-    if (formData.doc.replace(/\D/g, "").length !== 14) {
-      nextErrors.doc = "CNPJ invalido.";
+    if (!validateCnpj(formData.doc)) {
+      nextErrors.doc = "CNPJ inválido";
     }
     if (!formData.orgType) nextErrors.orgType = "Selecione o tipo.";
     setErrors(nextErrors);
@@ -231,7 +261,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
     if (!trimmedEmail) {
       nextErrors.email = "Email obrigatorio.";
     } else if (trimmedEmail.length > 254 || !emailRegex.test(trimmedEmail)) {
-      nextErrors.email = "Email invalido.";
+      nextErrors.email = "Informe um e-mail válido";
     }
 
     if (!trimmedPhone) {
@@ -386,7 +416,10 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
         }
 
         const token = AuthService.getToken();
-        const userId = TokenService.getUserId(token);
+        const userId =
+          firstAccessMode
+            ? localStorage.getItem("userId") || TokenService.getUserId(token)
+            : TokenService.getUserId(token);
 
         if (!userId) {
           throw new Error("Nao foi possivel obter userId do usuario logado.");
@@ -457,7 +490,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
     <>
       <StepWizardCard
         full={full}
-        title={editingOrganization ? "Editar Organizacao" : "Criar Organizacao"}
+        title={editingOrganization ? "Organizacao" : "Criar Organizacao"}
         subtitle={steps[activeStep]}
         steps={steps}
         activeStep={activeStep}
@@ -522,6 +555,7 @@ const OrganizacaoForm: React.FC<OrganizacaoFormProps> = ({
                 }}
                 fullWidth
                 select
+                disabled={lockOrgType}
                 label={formData.orgType?  "" : "Tipo de Organizacao"}
                 value={formData.orgType ?? ""}
                 onChange={(e) => handleChange("orgType", e.target.value)}

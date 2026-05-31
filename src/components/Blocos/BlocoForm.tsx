@@ -119,9 +119,9 @@ const BlocoForm: React.FC<BlocoFormProps> = ({
         await blockService.updateBlock(editingId, formData);
         showSuccess(t("blocoForm.updateSuccess"));
       } else {
-        const response = await blockService.createBlock(formData);
+        const condominiumBlockId = await blockService.createBlock(formData);
         onCreated?.({
-          blockId: response.condominiumBlockId,
+          blockId: condominiumBlockId,
           label: formData.name.trim(),
         });
         showSuccess(t("blocoForm.createSuccess"));

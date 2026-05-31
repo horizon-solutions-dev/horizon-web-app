@@ -63,6 +63,29 @@ interface ResidenteFormProps {
 
 type DocumentType = 1 | 2 | 3 | 4;
 
+const base64PreviewToFile = (
+  preview: string,
+  fileName: string,
+  fallbackType = "image/jpeg",
+) => {
+  const dataUrlMatch = preview.match(/^data:([^;]+);base64,(.+)$/);
+  const contentType = dataUrlMatch?.[1] || fallbackType;
+  const base64Content = dataUrlMatch?.[2] || preview;
+
+  try {
+    const binary = atob(base64Content);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    return new File([bytes], fileName, { type: contentType });
+  } catch {
+    return null;
+  }
+};
+
 const formatCpf = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
   if (digits.length <= 3) return digits;
@@ -82,6 +105,47 @@ const formatCnpj = (value: string) => {
   if (digits.length <= 12)
     return digits.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, "$1.$2.$3/$4");
   return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/, "$1.$2.$3/$4-$5");
+};
+
+const formatCnh = (value: string) => value.replace(/\D/g, "").slice(0, 11);
+
+const formatPassport = (value: string) =>
+  value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
+
+const normalizeDocumentNumber = (value: string, documentType: DocumentType) => {
+  if (documentType === 4) {
+    return value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+  }
+
+  return value.replace(/\D/g, "");
+};
+
+const validateCpf = (cpf: string) => {
+  const cpfClean = cpf.replace(/\D/g, "");
+
+  if (cpfClean.length !== 11 || /^(\d)\1+$/.test(cpfClean)) {
+    return false;
+  }
+
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) {
+    sum += parseInt(cpfClean.charAt(i), 10) * (10 - i);
+  }
+
+  let result = (sum * 10) % 11;
+  if (result === 10) result = 0;
+  if (result !== parseInt(cpfClean.charAt(9), 10)) {
+    return false;
+  }
+
+  sum = 0;
+  for (let i = 0; i < 10; i += 1) {
+    sum += parseInt(cpfClean.charAt(i), 10) * (11 - i);
+  }
+
+  result = (sum * 10) % 11;
+  if (result === 10) result = 0;
+  return result === parseInt(cpfClean.charAt(10), 10);
 };
 
 const validateCnpj = (cnpj: string) => {
@@ -127,6 +191,16 @@ const validateCnpj = (cnpj: string) => {
   }
 
   return true;
+};
+
+const validateCnh = (cnh: string) => {
+  const cnhClean = cnh.replace(/\D/g, "");
+  return cnhClean.length === 11 && !/^(\d)\1+$/.test(cnhClean);
+};
+
+const validatePassport = (passport: string) => {
+  const normalizedPassport = passport.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+  return /^[A-Z]{1,2}\d{6,8}$/.test(normalizedPassport);
 };
 
 const formatPhone = (value: string) => {
@@ -247,6 +321,30 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   }, [documentPhotoFile]);
 
   useEffect(() => {
+    if (coverPreview && !coverFile) {
+      const previewFile = base64PreviewToFile(
+        coverPreview,
+        "resident-profile.jpg",
+      );
+
+      if (previewFile) {
+        setCoverFile(previewFile);
+        setPhotoFile(previewFile);
+      }
+    }
+
+    if (documentPhotoPreview && !documentPhotoFile) {
+      const previewFile = base64PreviewToFile(
+        documentPhotoPreview,
+        "resident-document.jpg",
+      );
+
+      if (previewFile) {
+        setDocumentPhotoFile(previewFile);
+      }
+    }
+  }, [coverFile, coverPreview, documentPhotoFile, documentPhotoPreview]);
+  useEffect(() => {
     if (!open) return;
     setActiveStep(0);
     setErrors({});
@@ -299,6 +397,16 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     // Fallback visual enquanto as imagens completas da unidade sao carregadas.
     if (residentImageUrl) {
       setCoverPreview(residentImageUrl);
+
+      const residentImageFile = base64PreviewToFile(
+        residentImageUrl,
+        "resident-profile.jpg",
+      );
+
+      if (residentImageFile) {
+        setCoverFile(residentImageFile);
+        setPhotoFile(residentImageFile);
+      }
     }
   }, [open, isEditMode, editUserId, residentImageUrl]);
 
@@ -353,10 +461,31 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
 
           if (imageType.value === "Profile") {
             setCoverPreview(previewUrl);
+
+            const profileFile = base64PreviewToFile(
+              previewUrl,
+              "resident-profile.jpg",
+              imageDetail.contentType,
+            );
+
+            if (profileFile) {
+              setCoverFile(profileFile);
+              setPhotoFile(profileFile);
+            }
           }
 
           if (imageType.value === "Document") {
             setDocumentPhotoPreview(previewUrl);
+
+            const documentFile = base64PreviewToFile(
+              previewUrl,
+              "resident-document.jpg",
+              imageDetail.contentType,
+            );
+
+            if (documentFile) {
+              setDocumentPhotoFile(documentFile);
+            }
           }
         }
       } catch (error) {
@@ -519,8 +648,19 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       setDocumentNumber(formatCpf(value));
     } else if (documentType === 2) {
       setDocumentNumber(formatCnpj(value));
+    } else if (documentType === 4) {
+      setDocumentNumber(formatCnh(value));
+    } else if (documentType === 3) {
+      setDocumentNumber(formatPassport(value));
     } else {
       setDocumentNumber(value);
+    }
+    if (errors.documentNumber) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.documentNumber;
+        return next;
+      });
     }
   };
 
@@ -529,6 +669,14 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const getTypes = async () => {
     const result = await AccountService.accountTypes();
     setTypeDoc(result);
+  };
+
+  const getDocumentMaxLength = () => {
+    if (documentType === 1) return 14;
+    if (documentType === 2) return 18;
+    if (documentType === 3) return 11;
+    if (documentType === 4) return 10;
+    return 20;
   };
 
   const getPeriodErrors = () => {
@@ -553,22 +701,32 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     if (!lastName.trim())
       nextErrors.lastName = t("residenteForm.lastNameRequired");
 
-    const cleanDoc = documentNumber.replace(/\D/g, "");
+    const cleanDoc = normalizeDocumentNumber(documentNumber, documentType);
     if (!cleanDoc) {
       nextErrors.documentNumber = t("residenteForm.documentRequired");
     } else if (documentType === 1) {
-      if (cleanDoc.length !== 11) {
+      if (!validateCpf(cleanDoc)) {
         nextErrors.documentNumber = t("residenteForm.cpfInvalid");
       }
     } else if (documentType === 2) {
       if (!validateCnpj(cleanDoc)) {
         nextErrors.documentNumber = t("residenteForm.cnpjInvalid");
       }
+    } else if (documentType === 4) {
+      if (!validateCnh(cleanDoc)) {
+        nextErrors.documentNumber =
+          t("residenteForm.cnhInvalid") || "CNH inválida";
+      }
+    } else if (documentType === 3) {
+      if (!validatePassport(cleanDoc)) {
+        nextErrors.documentNumber =
+          t("residenteForm.passportInvalid") || "Passaporte inválido";
+      }
     }
 
     if (!email.trim()) {
       nextErrors.email = t("residenteForm.emailRequired");
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/.test(email.trim())) {
       nextErrors.email = t("residenteForm.emailInvalid");
     }
 
@@ -622,7 +780,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
       userId: residentUserId,
       fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
       docType: documentType,
-      doc: documentNumber.replace(/\D/g, ""),
+      doc: normalizeDocumentNumber(documentNumber, documentType),
       email: email.trim(),
       phone: normalizePhoneToE164(phone),
       unitType: formData.unitType,
@@ -755,7 +913,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           name: firstName.trim(),
           surname: lastName.trim(),
           docType: documentType,
-          doc: documentNumber.replace(/\D/g, ""),
+          doc: normalizeDocumentNumber(documentNumber, documentType),
           email: email.trim(),
           phone: normalizePhoneToE164(phone),
         });
@@ -766,7 +924,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           name: firstName.trim(),
           surname: lastName.trim(),
           docType: documentType,
-          doc: documentNumber.replace(/\D/g, ""),
+          doc: normalizeDocumentNumber(documentNumber, documentType),
           email: email.trim(),
           phone: normalizePhoneToE164(phone),
         });
@@ -849,7 +1007,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           userId: targetUserId,
           fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
           docType: documentType,
-          doc: documentNumber.replace(/\D/g, ""),
+          doc: normalizeDocumentNumber(documentNumber, documentType),
           email: email.trim(),
           phone: normalizePhoneToE164(phone),
           unitType: formData.unitType,
@@ -874,7 +1032,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             name: firstName.trim(),
             surname: lastName.trim(),
             docType: documentType,
-            doc: documentNumber.replace(/\D/g, ""),
+            doc: normalizeDocumentNumber(documentNumber, documentType),
             email: email.trim(),
             phone: normalizePhoneToE164(phone),
           });
@@ -888,7 +1046,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           userId: targetUserId,
           fullname: `${firstName.trim()} ${lastName.trim()}`.trim(),
           docType: documentType,
-          doc: documentNumber.replace(/\D/g, ""),
+          doc: normalizeDocumentNumber(documentNumber, documentType),
           email: email.trim(),
           phone: normalizePhoneToE164(phone),
           unitType: formData.unitType,
@@ -906,11 +1064,17 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
           label: `${firstName.trim()} ${lastName.trim()}`.trim(),
         });
 
+          const profileImageFile = coverFile || photoFile;
+
           // Atualizar a imagem se uma nova foi selecionada
-          if (photoFile && condominiumIdPreset && formData.condominiumUnitId) {
+          if (
+            profileImageFile &&
+            condominiumIdPreset &&
+            formData.condominiumUnitId
+          ) {
             await condominiumUnitImageService.uploadUnitImage({
               imageType: 1,
-              contentFile: photoFile,
+              contentFile: profileImageFile,
               condominiumId: condominiumIdPreset,
               condominiumUnitId: formData.condominiumUnitId,
               userId: targetUserId,
@@ -962,7 +1126,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
         }
       }
 
-      showSuccess(t("residenteForm.createSuccess"));
+      showSuccess(
+        isEditMode
+          ? t("residenteForm.updateSuccess")
+          : t("residenteForm.createSuccess"),
+      );
 
       setFormData({
         condominiumUnitId: unitIdPreset || "",
@@ -1294,6 +1462,13 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 onChange={(e) => {
                   setDocumentType(Number(e.target.value) as DocumentType);
                   setDocumentNumber("");
+                  if (errors.documentNumber) {
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.documentNumber;
+                      return next;
+                    });
+                  }
                 }}
               >
                 {typeDoc !== null &&
@@ -1319,7 +1494,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 onChange={(e) => handleDocumentChange(e.target.value)}
                 error={Boolean(errors.documentNumber)}
                 helperText={errors.documentNumber}
-                inputProps={{ maxLength: 18 }}
+                inputProps={{ maxLength: getDocumentMaxLength() }}
               />
             </Grid>
           </Grid>
@@ -1500,6 +1675,11 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     );
   };
 
+  const cardClassName =
+    activeStep === STEPS.length - 1
+      ? "resident-final-step"
+      : "resident-form-step";
+
   useEffect(() => {
   const aplicarEstilo = () => {
     const elementos = document.querySelectorAll(
@@ -1542,10 +1722,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                   }
                   setActiveStep((prev) => prev - 1);
                 }}
-                width={activeStep === STEPS.length - 1 ? "820px" : "710px"}
-                className={
-                  activeStep === STEPS.length - 1 ? "resident-final-step" : undefined
-                }
+                width={activeStep === STEPS.length - 1 ? "820px" : "760px"}
+                className={cardClassName}
                 onClose={onClose}
                 disableContent={loading}
                 actions={renderActions()}
@@ -1594,10 +1772,8 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
                 }
                 setActiveStep((prev) => prev - 1);
               }}
-              width={activeStep === STEPS.length - 1 ? "820px" : "710px"}
-              className={
-                activeStep === STEPS.length - 1 ? "resident-final-step" : undefined
-              }
+              width={activeStep === STEPS.length - 1 ? "820px" : "760px"}
+              className={cardClassName}
               onClose={onClose}
               disableContent={loading}
               actions={renderActions()}

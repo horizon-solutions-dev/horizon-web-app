@@ -8,6 +8,7 @@ import BlocoForm from "../Blocos/BlocoForm";
 import UnidadeForm from "../Unidades/UnidadeForm";
 import ResidenteForm from "../Residentes/ResidenteForm";
 import FirstAccessComplete from "./FirstAccessComplete";
+import OrganizationTypeStep from "./OrganizationTypeStep";
 import {
   organizationService,
   type OrganizationTypeEnum,
@@ -29,7 +30,21 @@ import {
 } from "../../shared/utils/firstAccessStorage";
 import { AuthService } from "../../services/authService";
 
+const FALLBACK_ORGANIZATION_TYPES: OrganizationTypeEnum[] = [
+  {
+    id: 2,
+    value: "SelfManagedCondominium",
+    description: "Administrado pelo próprio condomínio",
+  },
+  {
+    id: 1,
+    value: "PropertyManagementCompany",
+    description: "Administradora",
+  },
+];
+
 type WizardStage =
+  | "organizationType"
   | "organization"
   | "condominium"
   | "block"
@@ -39,7 +54,15 @@ type WizardStage =
 
 const getInitialStage = (): WizardStage => {
   const context = readFirstAccessContext();
-  if (!context?.organization) return "organization";
+  const orgType = Number(context?.orgType || 0);
+
+  if (!context?.orgType) return "organizationType";
+  if (orgType === 2) {
+    if (!context.selectedCondominiumId) return "condominium";
+    return "done";
+  }
+  if (!context.organization) return "organization";
+  if (!context.selectedCondominiumId) return "condominium";
   return "done";
 };
 
@@ -162,6 +185,13 @@ export default function PrimeiroAcessoWizard() {
   }, [stage]);
 
   const context = readFirstAccessContext();
+  const effectiveOrganizationTypes = useMemo(
+    () =>
+      organizationTypes.length > 0
+        ? organizationTypes
+        : FALLBACK_ORGANIZATION_TYPES,
+    [organizationTypes],
+  );
   const selectedCondominium = useMemo(() => {
     const currentId = context?.selectedCondominiumId;
     return (
@@ -193,6 +223,22 @@ export default function PrimeiroAcessoWizard() {
 
   const handleWizardClose = () => {
     endFirstAccessAndGoToLogin();
+  };
+
+  const isSelfManagedFlow = Number(context?.orgType || 0) === 2;
+  const getCondominiumWithOrganizationOrgType = () => {
+    const selectedType = organizationTypes.find(
+      (type) => type.id === Number(context?.orgType || 0),
+    ) || effectiveOrganizationTypes.find(
+      (type) => type.id === Number(context?.orgType || 0),
+    );
+
+    return (
+      context?.orgTypeValue ||
+      selectedType?.value ||
+      context?.orgType ||
+      ""
+    );
   };
 
   if (bootstrapLoading || !context) {
@@ -227,6 +273,24 @@ export default function PrimeiroAcessoWizard() {
     );
   }
 
+  if (stage === "organizationType") {
+    return (
+      <OrganizationTypeStep
+        organizationTypes={organizationTypes}
+        loading={bootstrapLoading}
+        onClose={handleWizardClose}
+        onSelect={(type) => {
+          patchFirstAccessContext({
+            orgType: type.id,
+            orgTypeValue: type.value,
+          });
+          localStorage.setItem("onboardingOrgType", String(type.id));
+          setStage(type.id === 2 ? "condominium" : "organization");
+        }}
+      />
+    );
+  }
+
   if (stage === "organization") {
     return (
       <OrganizacaoForm
@@ -235,12 +299,14 @@ export default function PrimeiroAcessoWizard() {
         editingOrganization={null}
         onClose={handleWizardClose}
         onSaved={() => {}}
-        organizationTypes={organizationTypes}
+        organizationTypes={effectiveOrganizationTypes}
         typesLoading={false}
         typesError={null}
         loading={busy}
         setLoading={setBusy}
         firstAccessMode={true}
+        presetOrgType={context.orgType}
+        lockOrgType={true}
         onCreated={({ organizationId, orgType: createdOrgType, label }) => {
           patchFirstAccessContext({
             orgType: createdOrgType,
@@ -250,7 +316,7 @@ export default function PrimeiroAcessoWizard() {
           markFirstAccessStepCompleted("organization");
         }}
         onCompleted={() => {
-          setStage("done");
+          setStage("condominium");
         }}
       />
     );
@@ -273,6 +339,9 @@ export default function PrimeiroAcessoWizard() {
         loading={busy}
         setLoading={setBusy}
         firstAccessMode={true}
+        createWithOrganizationOrgType={
+          isSelfManagedFlow ? getCondominiumWithOrganizationOrgType() : undefined
+        }
         onCreated={({ condominiumId, label }) => {
           patchFirstAccessContext({
             condominiums: [{ id: condominiumId, label }],
@@ -282,7 +351,7 @@ export default function PrimeiroAcessoWizard() {
           markFirstAccessStepCompleted("condominium");
         }}
         onCompleted={() => {
-          if (Number(context?.orgType || 0) === 2 && existingCondominium) {
+          if (isSelfManagedFlow && existingCondominium) {
             patchFirstAccessContext({
               condominiums: [
                 {
@@ -297,7 +366,7 @@ export default function PrimeiroAcessoWizard() {
             });
             markFirstAccessStepCompleted("condominium");
           }
-          setStage("block");
+          setStage("done");
         }}
       />
     );
@@ -418,5 +487,11 @@ export default function PrimeiroAcessoWizard() {
     );
   }
 
-  return <FirstAccessComplete onFinish={finishWizard} />;
+  return (
+    <FirstAccessComplete
+      onFinish={finishWizard}
+      showPostLoginSetupMessage={isSelfManagedFlow}
+      showAdditionalCondominiumsMessage={!isSelfManagedFlow}
+    />
+  );
 }

@@ -232,6 +232,68 @@
     }
   }
 
+  .finish-visit-card {
+    width: min(520px, calc(100vw - 32px)) !important;
+    padding: 0 44px 28px !important;
+    border-radius: 18px !important;
+
+    .step-wizard-close {
+      top: 20px;
+      right: 22px;
+    }
+
+    .step-wizard-logo {
+      margin-top: 26px;
+
+      img {
+        width: 160px;
+      }
+    }
+
+    .step-wizard-title {
+      margin: 2px 0 8px;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .step-wizard-subtitle {
+      color: #344054 !important;
+      font-weight: 500 !important;
+      margin-bottom: 18px;
+    }
+
+    .step-wizard-content {
+      margin-top: 0;
+      overflow: visible;
+      padding-right: 0;
+
+      .MuiTextField-root {
+        .MuiOutlinedInput-root {
+          border-radius: 10px !important;
+          background: #ffffff !important;
+        }
+
+        textarea {
+          min-height: 128px !important;
+          resize: vertical;
+        }
+      }
+    }
+
+    .step-wizard-actions {
+      margin-top: 22px !important;
+
+      .MuiButton-root {
+        min-width: 154px !important;
+      }
+    }
+
+    .step-wizard-dots {
+      padding-top: 18px;
+    }
+  }
+
   .visitante-upload-box {
     border: 1px dashed #cfd7e6;
     border-radius: 18px;
@@ -501,6 +563,18 @@
     .visitante-access-card,
     .visitante-access-copy {
       align-items: flex-start;
+    }
+
+    .finish-visit-card {
+      padding: 0 24px 26px !important;
+
+      .step-wizard-logo {
+        margin-top: 24px;
+
+        img {
+          width: 138px;
+        }
+      }
     }
   }
 }

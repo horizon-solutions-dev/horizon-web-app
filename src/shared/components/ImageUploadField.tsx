@@ -20,6 +20,7 @@ interface ImageUploadFieldProps {
   emptyLabel?: string;
   showTitle?: boolean;
   disabled?: boolean;
+  previewImageSx?: SxProps<Theme>;
   sx?: SxProps<Theme>;
   onChange: (file: File | null) => void;
 }
@@ -37,6 +38,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   emptyLabel = "Selecionar imagem",
   showTitle = true,
   disabled = false,
+  previewImageSx,
   sx,
   onChange,
 }) => {
@@ -68,7 +70,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       sx={{
         border: "1px solid #e2e8f0",
         borderRadius: "12px",
-        p: 2,
+        p: .5,
         minWidth: 0,
         backgroundColor: "#fff",
         ...sx,
@@ -141,12 +143,19 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             component="img"
             src={previewUrl}
             alt={label}
-            sx={{
-              width: "254px",
-              height: "132px",
-              objectFit: "contain",
-              backgroundColor: "#f8fafc",
-            }}
+            sx={[
+              {
+                width: "254px",
+                height: "132px",
+                objectFit: "contain",
+                backgroundColor: "#f8fafc",
+              },
+              ...(Array.isArray(previewImageSx)
+                ? previewImageSx
+                : previewImageSx
+                  ? [previewImageSx]
+                  : []),
+            ]}
           />
         ) : (
           <Box sx={{ textAlign: "center", px: 2 }}>
@@ -181,9 +190,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         />
       </Box>
 
-      <Typography sx={{ mt: 0.75, fontSize: 11, color: "#667085" }}>
-        {description || "JPG ou PNG ate 5MB"}
-      </Typography>
+  
 
 {/*       {fileName ? (
         <Typography
@@ -202,7 +209,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       ) : null} */}
 
       {hasPreview ? (
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "nowrap", mt: 1 }}>
           <Button
             variant="outlined"
             className="action-button-edit"
@@ -210,7 +217,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             disabled={disabled}
             startIcon={<EditOutlined />}
             onClick={openFilePicker}
-            sx={{ textTransform: "none", height: "32px !important" }}
+            sx={{width:'100%', textTransform: "none", height: "32px !important" }}
           >
             {buttonText}
           </Button>
@@ -222,13 +229,15 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             disabled={disabled}
             startIcon={<DeleteOutline />}
             onClick={() => onChange(null)}
-            sx={{ textTransform: "none", height: "32px !important" }}
+            sx={{width:'100%', textTransform: "none", height: "32px !important" }}
           >
             {removeLabel === "Remover" ? "Excluir" : removeLabel}
           </Button>
         </Box>
       ) : null}
-
+    <Typography sx={{ mt: 0.75, fontSize: 11, color: "#667085" }}>
+        {description || "JPG ou PNG ate 5MB"}
+      </Typography>
 
     </Box>
   );
