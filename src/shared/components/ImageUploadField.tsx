@@ -190,9 +190,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
         />
       </Box>
 
-      <Typography sx={{ mt: 0.75, fontSize: 11, color: "#667085" }}>
-        {description || "JPG ou PNG ate 5MB"}
-      </Typography>
+  
 
 {/*       {fileName ? (
         <Typography
@@ -237,7 +235,9 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
           </Button>
         </Box>
       ) : null}
-
+    <Typography sx={{ mt: 0.75, fontSize: 11, color: "#667085" }}>
+        {description || "JPG ou PNG ate 5MB"}
+      </Typography>
 
     </Box>
   );
