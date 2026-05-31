@@ -197,6 +197,7 @@
     "nameRequired": "Nome do Condominio é obrigatório.",
     "cnpjInvalid": "CNPJ inválido.",
     "typeRequired": "Tipo de Condominio é obrigatório.",
+    "physicalStructureRequired": "Estrutura física é obrigatória.",
     "unitCountRequired": "Quantidade de Unidades deve ser maior que 0.",
     "zipInvalid": "CEP inválido.",
     "addressRequired": "Logradouro é obrigatório.",
