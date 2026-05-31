@@ -479,10 +479,7 @@ const CondominioForm: React.FC<CondominioFormProps> = ({
       nextErrors.condominiumType = t("condominioForm.typeRequired");
     }
     if (!formData.physicalStructureId) {
-      nextErrors.physicalStructureId =
-        t("condominioForm.physicalStructureRequired", {
-          defaultValue: "Selecione a estrutura fisica.",
-        });
+      nextErrors.physicalStructureId = "Estrutura física é obrigatória.";
     }
     return nextErrors;
   };
