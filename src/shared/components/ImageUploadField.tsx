@@ -209,7 +209,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       ) : null} */}
 
       {hasPreview ? (
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "nowrap", mt: 1 }}>
           <Button
             variant="outlined"
             className="action-button-edit"
@@ -217,7 +217,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             disabled={disabled}
             startIcon={<EditOutlined />}
             onClick={openFilePicker}
-            sx={{ textTransform: "none", height: "32px !important" }}
+            sx={{width:'100%', textTransform: "none", height: "32px !important" }}
           >
             {buttonText}
           </Button>
@@ -229,7 +229,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             disabled={disabled}
             startIcon={<DeleteOutline />}
             onClick={() => onChange(null)}
-            sx={{ textTransform: "none", height: "32px !important" }}
+            sx={{width:'100%', textTransform: "none", height: "32px !important" }}
           >
             {removeLabel === "Remover" ? "Excluir" : removeLabel}
           </Button>

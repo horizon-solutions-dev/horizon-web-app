@@ -22,7 +22,7 @@ const FALLBACK_ORGANIZATION_TYPES: OrganizationTypeEnum[] = [
   },
 ];
 
-const isSelfManagedType = (type: OrganizationTypeEnum) => {
+/* const isSelfManagedType = (type: OrganizationTypeEnum) => {
   const normalized = `${type.value} ${type.description}`
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -34,7 +34,7 @@ const isSelfManagedType = (type: OrganizationTypeEnum) => {
     normalized.includes("proprio condominio") ||
     normalized.includes("selfmanaged")
   );
-};
+}; */
 
 export default function OrganizationTypeStep({
   organizationTypes,
@@ -65,7 +65,7 @@ export default function OrganizationTypeStep({
           </Box>
         ) : (
           options.map((type) => {
-            const selfManaged = isSelfManagedType(type);
+          //  const selfManaged = isSelfManagedType(type);
 
             return (
               <Button
