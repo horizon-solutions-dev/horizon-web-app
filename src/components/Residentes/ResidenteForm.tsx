@@ -23,7 +23,11 @@ import {
   type CondominiumUnitResident,
   type CondominiumUnitResidentRequest,
 } from "../../services/unitResidentService";
-import type { CondominiumUnit, UnitType } from "../../services/unitService";
+import type {
+  CondominiumUnit,
+  UnitType,
+  UnitTypeEnum,
+} from "../../services/unitService";
 import { AppStateModal } from "../../shared/components/AppStateModal";
 import ImageUploadField from "../../shared/components/ImageUploadField";
 import StepWizardCard from "../../shared/components/StepWizardCard";
@@ -52,6 +56,9 @@ interface ResidenteFormProps {
   unitIdPreset?: string;
   unitCodePreset?: string;
   unitOptions?: CondominiumUnit[];
+  unitTypes?: UnitTypeEnum[];
+  unitTypesLoading?: boolean;
+  unitTypesError?: string | null;
   editResident?: CondominiumUnitResident | null;
   editUserId?: string;
   residentImageUrl?: string; // NOVA PROP
@@ -244,6 +251,9 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   unitIdPreset,
   unitCodePreset,
   unitOptions = [],
+  unitTypes = [],
+  unitTypesLoading = false,
+  unitTypesError = null,
   editResident,
   editUserId,
   residentImageUrl,
@@ -514,7 +524,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
   const getUnitOptionLabel = (option: CondominiumUnit) =>
     option.unitCode || option.condominiumUnitId;
 
-  const normalizeUnitType = (value: UnitType) => {
+  const normalizeUnitType = (value?: UnitType) => {
     const normalized = String(value || "");
     if (normalized === "1" || normalized.toLowerCase() === "owner") {
       return "Owner";
@@ -522,16 +532,61 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
     if (normalized === "2" || normalized.toLowerCase() === "tenant") {
       return "Tenant";
     }
-    return formData.unitType;
+    return value || formData.unitType || "Owner";
+  };
+
+  const getUnitTypeOptionValue = (type: UnitTypeEnum) => type.id;
+
+  const findUnitTypeOption = (value?: UnitType) => {
+    const normalized = String(value || "").toLowerCase();
+    if (!normalized) return undefined;
+
+    return unitTypes.find(
+      (type) =>
+        String(type.id).toLowerCase() === normalized ||
+        String(type.value).toLowerCase() === normalized,
+    );
   };
 
   const getSelectedUnitTypeValue = () => {
-    const normalizedFormValue = normalizeUnitType(formData.unitType!);
-    if (normalizedFormValue === "Owner" || normalizedFormValue === "Tenant") {
-      return normalizedFormValue;
+    if (unitTypes.length > 0) {
+      const selectedType =
+        findUnitTypeOption(formData.unitType) ??
+        findUnitTypeOption(unit) ??
+        findUnitTypeOption(normalizeUnitType(formData.unitType));
+
+      return selectedType ? getUnitTypeOptionValue(selectedType) : "";
     }
 
+    const normalizedFormValue = normalizeUnitType(formData.unitType);
+    if (normalizedFormValue) return normalizedFormValue;
+
     return unit == 1 || unit === "1" ? "Owner" : "Tenant";
+  };
+
+  const renderUnitTypeOptions = () => {
+    if (unitTypesLoading) {
+      return (
+        <MenuItem value={getSelectedUnitTypeValue()} disabled>
+          {t("common.loading")}
+        </MenuItem>
+      );
+    }
+
+    if (unitTypes.length > 0) {
+      return unitTypes.map((type) => (
+        <MenuItem key={type.id} value={getUnitTypeOptionValue(type)}>
+          {type.description || type.value}
+        </MenuItem>
+      ));
+    }
+
+    return (
+      <>
+        <MenuItem value="Owner">{t("common.owner")}</MenuItem>
+        <MenuItem value="Tenant">{t("common.tenant")}</MenuItem>
+      </>
+    );
   };
 
   const handleUnitChange = (unitId: string) => {
@@ -1361,7 +1416,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             <TextField
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  height: "45px !impotant",
+                  height: 45,
                 },
               }}
               select
@@ -1369,11 +1424,10 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
               value={getSelectedUnitTypeValue()}
               onChange={(e) => handleChange("unitType", e.target.value)}
               error={Boolean(errors.unitType)}
-              helperText={errors.unitType}
+              helperText={errors.unitType || unitTypesError || ""}
               fullWidth
             >
-              <MenuItem value="Owner">{t("common.owner")}</MenuItem>
-              <MenuItem value="Tenant">{t("common.tenant")}</MenuItem>
+              {renderUnitTypeOptions()}
             </TextField>
             <LocalizationProvider
               dateAdapter={AdapterDateFns}
@@ -1381,7 +1435,7 @@ const ResidenteForm: React.FC<ResidenteFormProps> = ({
             >
               <DatePicker
                 sx={{
-                  height: "46px !impotant",
+                  height: 46,
                   "&.MuiPickersOutlinedInput-root": {
                     height: "46px !important",
                   },

@@ -250,6 +250,23 @@ const Organizacoes: React.FC = () => {
                   onClick={() => navigate("/dashboard")}
                   className="close-button"
                   aria-label="Fechar"
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    background: "white",
+                    border: "2px solid #e0e4e8",
+                    borderRadius: "10px",
+                    color: "#666",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      background: "white",
+                      borderColor: "#ef4444",
+                      color: "#ef4444",
+                    },
+                    "& .MuiSvgIcon-root": {
+                      color: "inherit !important",
+                    },
+                  }}
                 >
                   <Close sx={{ fontSize: 20 }} />
                 </IconButton>
@@ -285,7 +302,6 @@ const Organizacoes: React.FC = () => {
                     onPageChange={setListPage}
                     items={paginatedOrganizations.map(
                       (organization, index) => ({
-                        badge: "teste",
                         id: organization.organizationId,
                         title: organization.name || "Sem nome",
                         meta: getOrgTypeLabel(organization.orgType),

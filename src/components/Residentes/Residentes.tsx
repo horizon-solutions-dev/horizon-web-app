@@ -30,7 +30,11 @@ import {
   unitResidentService,
   type CondominiumUnitResident,
 } from "../../services/unitResidentService";
-import { unitService, type CondominiumUnit } from "../../services/unitService";
+import {
+  unitService,
+  type CondominiumUnit,
+  type UnitTypeEnum,
+} from "../../services/unitService";
 import {
   blockService,
   type CondominiumBlock,
@@ -71,6 +75,9 @@ const Residentes: React.FC = () => {
     useState<Condominium | null>(null);
 
   const [units, setUnits] = useState<CondominiumUnit[]>([]);
+  const [unitTypes, setUnitTypes] = useState<UnitTypeEnum[]>([]);
+  const [unitTypesLoading, setUnitTypesLoading] = useState(false);
+  const [unitTypesError, setUnitTypesError] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<CondominiumBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
   const [unitsLoading, setUnitsLoading] = useState(false);
@@ -120,6 +127,24 @@ const Residentes: React.FC = () => {
     const data = await condominiumService.getCondominiumTypes();
     setCondominiumTypes(data ?? []);
   };
+
+  const loadUnitTypes = async () => {
+    setUnitTypesLoading(true);
+    setUnitTypesError(null);
+    try {
+      const data = await unitService.getUnitTypes();
+      setUnitTypes(data ?? []);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar tipos de unidade.";
+      setUnitTypesError(message);
+    } finally {
+      setUnitTypesLoading(false);
+    }
+  };
+
   const loadCondominiums = async (pageNumber = 1) => {
     setCondoLoading(true);
     setCondoError(null);
@@ -256,6 +281,7 @@ const Residentes: React.FC = () => {
   useEffect(() => {
     loadCondominiums(1);
     loadCondominiumTypes();
+    loadUnitTypes();
   }, []);
 
   const resetResidentsContext = () => {
@@ -393,6 +419,10 @@ const Residentes: React.FC = () => {
 
   const getUnitTypeLabel = (value?: string) => {
     if (!value) return "-";
+    const match = unitTypes.find(
+      (type) => String(type.id) === value || String(type.value) === value,
+    );
+    if (match) return match.description || match.value;
     if (value === "1" || value === "Owner") return t("common.owner");
     if (value === "2" || value === "Tenant") return t("common.tenant");
     return value;
@@ -685,6 +715,9 @@ const Residentes: React.FC = () => {
                 }
                 unitIdPreset={selectedUnit?.condominiumUnitId}
                 unitOptions={units}
+                unitTypes={unitTypes}
+                unitTypesLoading={unitTypesLoading}
+                unitTypesError={unitTypesError}
                 condominiumNamePreset={selectedCondominium?.name}
                 blockNamePreset={
                   blocks.find(

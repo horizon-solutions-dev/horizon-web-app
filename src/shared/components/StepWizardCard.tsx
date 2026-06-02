@@ -59,10 +59,10 @@ export default function StepWizardCard({
           <Box className="step-wizard-close">
             <Tooltip title="Clique aqui para Fechar a janela">
               <IconButton
-                color="error"
                 onClick={() => {
                   onClose?.();
                 }}
+                aria-label="Fechar"
               >
                 <Close />
               </IconButton>

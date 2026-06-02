@@ -27,14 +27,31 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  border: 1px solid #f1c0c0;
-  background: #fff5f5;
-  color: #d32f2f;
+  border: 1px solid #d9dee5;
+  background: #ffffff;
+  color: #667085;
   font-size: 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  .MuiIconButton-root {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    color: inherit;
+  }
+
+  .MuiSvgIcon-root {
+    color: inherit !important;
+  }
+
+  &:hover {
+    border-color: #c8d0da;
+    background: #f8fafc;
+    color: #344054;
+  }
 }
 
 .MuiBox-root:has(> .MuiTextField-root[placeholder*="Buscar"]) {
@@ -584,8 +601,8 @@
     right: 24px;
     width: 40px;
     height: 40px;
-    border-color: #fecaca;
-    background: #fff7f7;
+    border-color: #d9dee5;
+    background: #ffffff;
 
     .MuiIconButton-root {
       width: 100%;
